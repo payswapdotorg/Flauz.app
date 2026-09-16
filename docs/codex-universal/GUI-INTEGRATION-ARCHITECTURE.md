@@ -4,7 +4,7 @@
 **GUI base:** `payswapdotorg/Flauz.app` (fork of `Kiwunaka/codexRS`)
 **Universal runtime:** `payswapdotorg/codex`
 **Reference client:** codexRS / OpenAI Codex Desktop behavioral surface
-**Universal architecture:** 0.3.0 with governed Pack/System-State model
+**Universal architecture:** 0.4.0 with governed Pack/System-State and portable client/adapter model
 
 ## 1. Mission
 
@@ -13,6 +13,8 @@ Flauz.app is the native desktop GUI client for Codex Universal.
 The forked codexRS implementation is the GUI foundation. Do not rebuild the Desktop GUI from scratch. Preserve its native GPUI architecture, app-server supervision, protocol implementation, platform layer, Git/worktree handling, terminal, Browser, Computer Use, settings, persistence, and release machinery unless a concrete integration requirement requires a bounded change.
 
 `payswapdotorg/codex` remains the authoritative Universal runtime and Workflow/Pack Platform. Flauz.app is a client/presentation layer over those contracts.
+
+Codex Universal is intentionally client-portable. The same underlying contracts must support future Web, Mobile, browser-extension, VS Code/IDE, remote/device, and other host integrations without creating alternate semantic engines.
 
 ## 2. Runtime ownership
 
@@ -157,11 +159,46 @@ A bounded local transport is preferred when a long-running Universal service is 
 - authorization/error semantics;
 - version compatibility;
 - restart/reconnect behavior;
+- cancellation;
 - redaction and secret handling.
 
 Do not couple Universal workflow or Pack semantics directly to GPUI reducers or widgets.
 
-## 6. Reuse before extension
+## 6. Client / adapter portability
+
+Flauz.app is one client surface, not the client architecture itself.
+
+The Universal client contract must make it straightforward to add:
+
+```text
+Desktop       -> Flauz.app
+Web           -> browser-native client
+Mobile        -> iOS/Android client
+Browser Ext.  -> page-context extension
+VS Code       -> VS Code extension
+IDE           -> other editor/IDE integrations
+Remote        -> remote desktop/device clients
+SDK           -> programmatic automation clients
+```
+
+Client-specific UX may differ, but the underlying semantic contracts remain shared.
+
+A new client should primarily require:
+
+```text
+host/presentation layer
++ authentication/session integration
++ protocol bindings
++ capability negotiation
++ streaming/cancellation/reconnect handling
++ platform packaging
+```
+
+It should not require a second implementation of Workflow semantics, Pack semantics, evidence authority, authorization, credential handling, or the Codex runtime.
+
+Client adapters and execution adapters remain distinct concepts. Browser extensions and VS Code extensions may implement both client and execution-facing functionality, but neither gains durable semantic authority by doing so.
+
+## 7. Reuse before extension
 
 Before adding code, inspect existing codexRS implementations and existing Universal crates/contracts.
 
@@ -169,11 +206,11 @@ Prefer:
 
 1. existing codexRS UI/state/platform primitive;
 2. existing OpenAI Codex app-server/public protocol;
-3. existing Universal workflow/model/execution/Pack contract;
+3. existing Universal workflow/model/execution/Pack/client contract;
 4. a small explicit adapter;
 5. only then a new abstraction.
 
-## 7. Product goal
+## 8. Product goal
 
 The resulting desktop application should feel like a first-class Codex desktop client while extending that interaction model to the Universal workflow/system product.
 
@@ -194,18 +231,19 @@ A user should be able to:
 
 The user should not need the terminal for the normal workflow lifecycle.
 
-## 8. Branding
+## 9. Branding
 
 Do not make irreversible branding changes solely because the repository is named `Flauz.app`.
 The implementation may use `Flauz.app` as the working product/repository name while the Codex Universal product naming and final distribution identity are finalized separately.
 
-## 9. Non-goals
+## 10. Non-goals
 
 - Reimplementing codexRS UI components solely to change technology.
 - Replacing the Codex runtime.
 - Replacing the existing workflow engine.
 - Building a Pack generator/evolution engine inside the GUI.
+- Building separate semantic engines for Web, Mobile, browser extensions, or VS Code extensions.
 - Building a web UI as a shortcut for desktop delivery.
-- Adding Electron, Tauri, Wry, WebView or Node runtime dependencies.
+- Adding Electron, Tauri, Wry, WebView or Node runtime dependencies to the native desktop shell.
 - Directly reading/writing live `CODEX_HOME` databases or logs.
 - Moving durable workflow or Pack authority into local UI state.
