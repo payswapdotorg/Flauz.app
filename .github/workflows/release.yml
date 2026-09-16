@@ -237,7 +237,28 @@ jobs:
         run: |
           set -euo pipefail
           notes="$(cat <<'EOF'
-          ## Unsigned portable technical preview
+          ## Flauz.app — Codex Universal native desktop GUI
+
+          Flauz.app is the Codex Universal desktop GUI on the codexRS
+          native base: the full agent workspace plus the Universal
+          workflow surface — teach (demonstrate / instruct / hybrid),
+          compile, governed approve and publish, run, evidence with an
+          environment timeline, immutable versions, fork and governed
+          improvement — with no terminal fallback and no second engine.
+
+          ### Runtime requirements
+
+          Base surfaces work with the official Codex CLI (see
+          `docs/platform-support.md` for the compatibility oracle). The
+          Universal workflow surface requires a Codex Universal runtime
+          that serves the `workflow/*` app-server family — today the
+          `rust-v0.1.0` release of `payswapdotorg/codex`. With a runtime
+          that does not serve the family, every workflow request fails
+          closed with an actionable error and the rest of the app stays
+          usable. The full policy is in
+          `docs/codex-universal/RUNTIME-COMPATIBILITY.md`.
+
+          ### Unsigned portable technical preview
 
           These Windows ZIP and Linux tar.gz assets are unsigned portable
           previews. Download only from this GitHub Release and verify the
@@ -270,7 +291,7 @@ jobs:
           fi
           gh release create "${GITHUB_REF_NAME}" dist/* \
             --repo "${GITHUB_REPOSITORY}" \
-            --title "codexRS ${GITHUB_REF_NAME}" \
+            --title "Flauz.app ${GITHUB_REF_NAME}" \
             --notes "$notes" \
             --generate-notes \
             "${options[@]}"
