@@ -1,6 +1,6 @@
 # Codex Universal GUI Integration Work Orders
 
-**Status:** READY FOR TECH LEAD
+**Status:** IN EXECUTION — GUI-001 COMPLETE (`docs/codex-universal/reports/GUI-001-report.md`, merged PR #1); GUI-003 COMPLETE (`docs/codex-universal/reports/GUI-003-report.md`, branch `gui-003/workflow-vertical-slice`)
 **Repository:** `payswapdotorg/Flauz.app`
 **Authority:** `docs/codex-universal/GUI-INTEGRATION-ARCHITECTURE.md`
 **Universal source of truth:** `payswapdotorg/codex`
@@ -94,6 +94,7 @@ Acceptance:
 
 ## GUI-003 — Universal Workflow Client Integration
 
+**Status:** COMPLETE — see `docs/codex-universal/reports/GUI-003-report.md`
 **Depends on:** GUI-001
 
 Build the first complete Universal workflow vertical slice in the native GUI.

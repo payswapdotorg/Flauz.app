@@ -51,7 +51,10 @@ use codex_core::{
     MAX_REMOTE_DEVICE_ID_BYTES, MAX_REMOTE_DEVICE_LABEL_BYTES, MAX_REMOTE_ENVIRONMENT_ID_BYTES,
     MAX_REMOTE_PAIRING_CODE_BYTES, MAX_RETRYABLE_TURN_MESSAGES, MAX_TERMINAL_TABS,
     MAX_TIMELINE_ITEMS, MAX_TURN_DIFF_BYTES, MAX_USER_INPUT_OPTIONS, MAX_USER_INPUT_QUESTIONS,
-    MAX_USER_INPUT_VALUE_BYTES, MAX_VISIBLE_THREADS, MAX_WORKTREE_ROOT_BYTES, MainRoute,
+    MAX_USER_INPUT_VALUE_BYTES, MAX_VISIBLE_THREADS, MAX_WORKFLOW_DIGEST_BYTES,
+    MAX_WORKFLOW_EVIDENCE_REFERENCES, MAX_WORKFLOW_FIELD_BYTES, MAX_WORKFLOW_FINDINGS,
+    MAX_WORKFLOW_ID_BYTES, MAX_WORKFLOW_INSTANCES, MAX_WORKFLOW_NAME_BYTES,
+    MAX_WORKFLOW_PATH_NODES, MAX_WORKFLOW_STEPS, MAX_WORKTREE_ROOT_BYTES, MainRoute,
     MarketplaceSourceCard, MarketplaceUpgradeFailure, McpAuthStatus as CoreMcpAuthStatus,
     McpBrowserOriginElicitation, McpBrowserResourceElicitation, McpElicitation,
     McpElicitationContent, McpElicitationDecision, McpElicitationValue, McpFormElicitation,
@@ -80,8 +83,18 @@ use codex_core::{
     ThreadGoal as CoreThreadGoal, ThreadGoalStatus as CoreThreadGoalStatus, TimelineCitation,
     TimelineItem, TimelineKind, TimelineSource, UsageLimitWindow, UserInputAnswers,
     UserInputOption as CoreUserInputOption, UserInputQuestion as CoreUserInputQuestion,
-    UserInputRequest, appearance_code_theme_supports_variant, computer_app_id_matches,
-    is_appearance_code_theme_id, is_valid_account_daily_usage_date,
+    UserInputRequest, WorkflowApprovalDecision as CoreWorkflowApprovalDecision,
+    WorkflowCandidateState as CoreWorkflowCandidateState,
+    WorkflowCandidateStatus as CoreWorkflowCandidateStatus,
+    WorkflowDemonstrationKind as CoreWorkflowDemonstrationKind, WorkflowFindingCard,
+    WorkflowInstanceCard, WorkflowInstanceDetail,
+    WorkflowInstanceStatus as CoreWorkflowInstanceStatus, WorkflowPublishedVersion,
+    WorkflowRequest as CoreWorkflowRequest, WorkflowStepCard,
+    WorkflowStepOrigin as CoreWorkflowStepOrigin, WorkflowTeachMode as CoreWorkflowTeachMode,
+    WorkflowTeachSessionState, WorkflowTeachSessionStatus as CoreWorkflowTeachSessionStatus,
+    WorkflowValidationCard, WorkflowValidationSeverity as CoreWorkflowValidationSeverity,
+    appearance_code_theme_supports_variant, computer_app_id_matches, is_appearance_code_theme_id,
+    is_valid_account_daily_usage_date,
 };
 use codex_platform::{
     AppServerConfig, AppServerConnection, AppServerError, AppServerEvent, ArtifactFileKind,
@@ -180,6 +193,16 @@ use codex_protocol::{
     ThreadUnarchiveParams, ThreadUnsubscribeParams, ToolRequestUserInputAnswer,
     ToolRequestUserInputParams, ToolRequestUserInputResponse, TurnDiffUpdatedNotification,
     TurnInterruptParams, TurnStartParams, TurnSteerParams, UserInput,
+    WorkflowApprovalDecision as ProtocolWorkflowApprovalDecision, WorkflowApproveParams,
+    WorkflowCandidateStatus as ProtocolWorkflowCandidateStatus, WorkflowCompileParams,
+    WorkflowDemonstrationKind as ProtocolWorkflowDemonstrationKind, WorkflowInstanceGetParams,
+    WorkflowInstanceRunParams, WorkflowInstanceStatus as ProtocolWorkflowInstanceStatus,
+    WorkflowPublishParams, WorkflowReviewParams,
+    WorkflowSimulationOutcomeKind as ProtocolWorkflowSimulationOutcomeKind,
+    WorkflowStepOrigin as ProtocolWorkflowStepOrigin, WorkflowTeachDemonstrateParams,
+    WorkflowTeachInstructParams, WorkflowTeachMode as ProtocolWorkflowTeachMode,
+    WorkflowTeachReconcileParams, WorkflowTeachSessionStatus as ProtocolWorkflowTeachSessionStatus,
+    WorkflowTeachStartParams, WorkflowValidationSeverity as ProtocolWorkflowValidationSeverity,
 };
 use codex_storage::{
     BrowserDownloadRecordStatus, MAX_BROWSER_DOWNLOAD_RECORDS, Store, StoredBrowserDownload,
@@ -2638,6 +2661,7 @@ const fn route_key(route: MainRoute) -> &'static str {
         MainRoute::Repository => "repository",
         MainRoute::PullRequests => "pull-requests",
         MainRoute::Marketplace => "marketplace",
+        MainRoute::Workflows => "workflows",
         MainRoute::Settings => "settings",
     }
 }
@@ -2648,6 +2672,7 @@ fn parse_route(value: &str) -> Option<MainRoute> {
         "repository" => Some(MainRoute::Repository),
         "pull-requests" => Some(MainRoute::PullRequests),
         "marketplace" => Some(MainRoute::Marketplace),
+        "workflows" => Some(MainRoute::Workflows),
         "settings" => Some(MainRoute::Settings),
         _ => None,
     }
@@ -5363,6 +5388,13 @@ fn run_effect(
                 Action::PendingWorktreeForkConversationFailed {
                     request_id,
                     message: "app-server is unavailable".to_owned(),
+                },
+            ),
+            Effect::WorkflowRequest(request) => emit(
+                events,
+                Action::WorkflowRequestFailed {
+                    request,
+                    message: WORKFLOW_RUNTIME_UNAVAILABLE.to_owned(),
                 },
             ),
             _ => emit(events, Action::ConnectionLost),
@@ -8261,6 +8293,7 @@ fn run_effect(
                 Action::HooksFailed(format!("failed to load hooks: {error}")),
             ),
         },
+        Effect::WorkflowRequest(request) => run_workflow_request(app_server, events, request),
         Effect::SetHookEnabled { key, enabled } => {
             let result = app_server.batch_write_config(ConfigBatchWriteParams {
                 edits: vec![ConfigEdit {
@@ -17048,6 +17081,486 @@ fn push_bounded(output: &mut String, value: &str, limit: usize) {
 
 fn emit(events: &dyn ActionEmitter, action: Action) {
     events.emit(action);
+}
+
+// ---------------------------------------------------------------------------
+// Universal Workflow control-plane requests (GUI-003)
+//
+// One backend dispatcher for the typed `workflow/*` app-server family. The
+// backend only maps between the core view types and the protocol wire types;
+// every workflow semantic value (ids, statuses, counts, digests) comes from
+// control-plane responses and is surfaced verbatim.
+// ---------------------------------------------------------------------------
+
+const WORKFLOW_RUNTIME_UNAVAILABLE: &str =
+    "The Codex runtime is not connected; the workflow control plane is unavailable.";
+
+const fn map_workflow_teach_mode(mode: CoreWorkflowTeachMode) -> ProtocolWorkflowTeachMode {
+    match mode {
+        CoreWorkflowTeachMode::Demonstrate => ProtocolWorkflowTeachMode::Demonstrate,
+        CoreWorkflowTeachMode::Instruct => ProtocolWorkflowTeachMode::Instruct,
+        CoreWorkflowTeachMode::Hybrid => ProtocolWorkflowTeachMode::Hybrid,
+    }
+}
+
+const fn map_workflow_teach_mode_response(
+    mode: ProtocolWorkflowTeachMode,
+) -> CoreWorkflowTeachMode {
+    match mode {
+        ProtocolWorkflowTeachMode::Demonstrate => CoreWorkflowTeachMode::Demonstrate,
+        ProtocolWorkflowTeachMode::Instruct => CoreWorkflowTeachMode::Instruct,
+        ProtocolWorkflowTeachMode::Hybrid => CoreWorkflowTeachMode::Hybrid,
+    }
+}
+
+const fn map_workflow_teach_session_status(
+    status: ProtocolWorkflowTeachSessionStatus,
+) -> CoreWorkflowTeachSessionStatus {
+    match status {
+        ProtocolWorkflowTeachSessionStatus::Open => CoreWorkflowTeachSessionStatus::Open,
+        ProtocolWorkflowTeachSessionStatus::Closed => CoreWorkflowTeachSessionStatus::Closed,
+    }
+}
+
+const fn map_workflow_demonstration_kind(
+    kind: CoreWorkflowDemonstrationKind,
+) -> ProtocolWorkflowDemonstrationKind {
+    match kind {
+        CoreWorkflowDemonstrationKind::Observation => {
+            ProtocolWorkflowDemonstrationKind::Observation
+        }
+        CoreWorkflowDemonstrationKind::Action => ProtocolWorkflowDemonstrationKind::Action,
+        CoreWorkflowDemonstrationKind::Result => ProtocolWorkflowDemonstrationKind::Result,
+        CoreWorkflowDemonstrationKind::Recovery => ProtocolWorkflowDemonstrationKind::Recovery,
+    }
+}
+
+const fn map_workflow_approval_decision(
+    decision: CoreWorkflowApprovalDecision,
+) -> ProtocolWorkflowApprovalDecision {
+    match decision {
+        CoreWorkflowApprovalDecision::Approved => ProtocolWorkflowApprovalDecision::Approved,
+        CoreWorkflowApprovalDecision::Rejected => ProtocolWorkflowApprovalDecision::Rejected,
+    }
+}
+
+const fn map_workflow_candidate_status(
+    status: ProtocolWorkflowCandidateStatus,
+) -> CoreWorkflowCandidateStatus {
+    match status {
+        ProtocolWorkflowCandidateStatus::Compiled => CoreWorkflowCandidateStatus::Compiled,
+        ProtocolWorkflowCandidateStatus::Validated => CoreWorkflowCandidateStatus::Validated,
+        ProtocolWorkflowCandidateStatus::Approved => CoreWorkflowCandidateStatus::Approved,
+        ProtocolWorkflowCandidateStatus::PublicationReady => {
+            CoreWorkflowCandidateStatus::PublicationReady
+        }
+    }
+}
+
+const fn map_workflow_step_origin(origin: ProtocolWorkflowStepOrigin) -> CoreWorkflowStepOrigin {
+    match origin {
+        ProtocolWorkflowStepOrigin::Observed => CoreWorkflowStepOrigin::Observed,
+        ProtocolWorkflowStepOrigin::Instructed => CoreWorkflowStepOrigin::Instructed,
+    }
+}
+
+const fn map_workflow_validation_severity(
+    severity: ProtocolWorkflowValidationSeverity,
+) -> CoreWorkflowValidationSeverity {
+    match severity {
+        ProtocolWorkflowValidationSeverity::Error => CoreWorkflowValidationSeverity::Error,
+        ProtocolWorkflowValidationSeverity::Warning => CoreWorkflowValidationSeverity::Warning,
+    }
+}
+
+const fn map_workflow_instance_status(
+    status: ProtocolWorkflowInstanceStatus,
+) -> CoreWorkflowInstanceStatus {
+    match status {
+        ProtocolWorkflowInstanceStatus::Pending => CoreWorkflowInstanceStatus::Pending,
+        ProtocolWorkflowInstanceStatus::Running => CoreWorkflowInstanceStatus::Running,
+        ProtocolWorkflowInstanceStatus::Paused => CoreWorkflowInstanceStatus::Paused,
+        ProtocolWorkflowInstanceStatus::Succeeded => CoreWorkflowInstanceStatus::Succeeded,
+        ProtocolWorkflowInstanceStatus::Failed => CoreWorkflowInstanceStatus::Failed,
+        ProtocolWorkflowInstanceStatus::Cancelled => CoreWorkflowInstanceStatus::Cancelled,
+    }
+}
+
+const fn workflow_terminal_kind_label(
+    kind: codex_protocol::WorkflowRunTerminalKind,
+) -> &'static str {
+    match kind {
+        codex_protocol::WorkflowRunTerminalKind::Completed => "completed",
+        codex_protocol::WorkflowRunTerminalKind::Paused => "paused",
+        codex_protocol::WorkflowRunTerminalKind::Failed => "failed",
+    }
+}
+
+const fn workflow_simulation_outcome_label(
+    outcome: ProtocolWorkflowSimulationOutcomeKind,
+) -> &'static str {
+    match outcome {
+        ProtocolWorkflowSimulationOutcomeKind::Completed => "completed",
+        ProtocolWorkflowSimulationOutcomeKind::Paused => "paused",
+        ProtocolWorkflowSimulationOutcomeKind::Indeterminate => "indeterminate",
+        ProtocolWorkflowSimulationOutcomeKind::Aborted => "aborted",
+    }
+}
+
+fn workflow_teach_session_from_start(
+    response: codex_protocol::WorkflowTeachStartResponse,
+) -> WorkflowTeachSessionState {
+    WorkflowTeachSessionState {
+        session_id: bounded(response.session_id, MAX_WORKFLOW_ID_BYTES),
+        name: bounded(response.name, MAX_WORKFLOW_NAME_BYTES),
+        mode: map_workflow_teach_mode_response(response.mode),
+        status: map_workflow_teach_session_status(response.status),
+        record_count: response.record_count,
+        last_sequence: 0,
+        instruction_records: None,
+        demonstration_records: None,
+    }
+}
+
+fn workflow_validation_card(
+    validation: codex_protocol::WorkflowValidationSummary,
+) -> WorkflowValidationCard {
+    let mut findings = validation
+        .findings
+        .into_iter()
+        .take(MAX_WORKFLOW_FINDINGS)
+        .map(|finding| WorkflowFindingCard {
+            severity: map_workflow_validation_severity(finding.severity),
+            code: bounded(finding.code, MAX_WORKFLOW_FIELD_BYTES),
+            message: bounded(finding.message, MAX_WORKFLOW_FIELD_BYTES),
+        })
+        .collect::<Vec<_>>();
+    findings.truncate(MAX_WORKFLOW_FINDINGS);
+    WorkflowValidationCard {
+        clean: validation.clean,
+        error_count: validation.error_count,
+        warning_count: validation.warning_count,
+        findings,
+    }
+}
+
+fn workflow_candidate_from_compile(
+    response: codex_protocol::WorkflowCompileResponse,
+) -> CoreWorkflowCandidateState {
+    CoreWorkflowCandidateState {
+        candidate_id: bounded(response.candidate_id, MAX_WORKFLOW_ID_BYTES),
+        status: map_workflow_candidate_status(response.status),
+        origin: map_workflow_teach_mode_response(response.origin),
+        epoch: response.epoch,
+        step_count: response.step_count,
+        steps: Vec::new(),
+        validation: workflow_validation_card(response.validation),
+        simulation_outcome: Some(
+            workflow_simulation_outcome_label(response.simulation.outcome).to_owned(),
+        ),
+        simulation_node: response
+            .simulation
+            .node
+            .map(|node| bounded(node, MAX_WORKFLOW_ID_BYTES)),
+        simulation_steps_taken: response.simulation.steps_taken,
+    }
+}
+
+fn workflow_candidate_from_review(
+    response: codex_protocol::WorkflowReviewResponse,
+) -> CoreWorkflowCandidateState {
+    let step_count = response.steps.len() as u64;
+    let mut steps = response
+        .steps
+        .into_iter()
+        .take(MAX_WORKFLOW_STEPS)
+        .map(|step| WorkflowStepCard {
+            node_id: bounded(step.node_id, MAX_WORKFLOW_ID_BYTES),
+            origin: map_workflow_step_origin(step.origin),
+            description: step
+                .description
+                .map(|description| bounded(description, MAX_WORKFLOW_FIELD_BYTES)),
+            evidence_count: step.evidence_count,
+        })
+        .collect::<Vec<_>>();
+    steps.truncate(MAX_WORKFLOW_STEPS);
+    CoreWorkflowCandidateState {
+        candidate_id: bounded(response.candidate_id, MAX_WORKFLOW_ID_BYTES),
+        status: map_workflow_candidate_status(response.status),
+        origin: map_workflow_teach_mode_response(response.origin),
+        epoch: response.epoch,
+        step_count,
+        steps,
+        validation: workflow_validation_card(response.validation),
+        simulation_outcome: Some(
+            workflow_simulation_outcome_label(response.simulation.outcome).to_owned(),
+        ),
+        simulation_node: response
+            .simulation
+            .node
+            .map(|node| bounded(node, MAX_WORKFLOW_ID_BYTES)),
+        simulation_steps_taken: response.simulation.steps_taken,
+    }
+}
+
+fn workflow_published_version(
+    response: codex_protocol::WorkflowPublishResponse,
+) -> WorkflowPublishedVersion {
+    WorkflowPublishedVersion {
+        workflow: bounded(response.workflow, MAX_WORKFLOW_NAME_BYTES),
+        version_id: bounded(response.version_id, MAX_WORKFLOW_DIGEST_BYTES),
+        semantic_version: bounded(response.semantic_version, MAX_WORKFLOW_NAME_BYTES),
+        repository: bounded(response.repository, MAX_WORKFLOW_FIELD_BYTES),
+        commit_sha: bounded(response.commit_sha, MAX_WORKFLOW_ID_BYTES),
+        definition_digest: bounded(response.definition_digest, MAX_WORKFLOW_DIGEST_BYTES),
+        dependency_lock_digest: bounded(response.dependency_lock_digest, MAX_WORKFLOW_DIGEST_BYTES),
+    }
+}
+
+fn workflow_instance_card(record: codex_protocol::WorkflowInstanceRecord) -> WorkflowInstanceCard {
+    WorkflowInstanceCard {
+        instance_id: bounded(record.instance_id, MAX_WORKFLOW_ID_BYTES),
+        workflow: bounded(record.workflow, MAX_WORKFLOW_NAME_BYTES),
+        version_id: bounded(record.version_id, MAX_WORKFLOW_DIGEST_BYTES),
+        status: map_workflow_instance_status(record.status),
+        steps_taken: record
+            .position
+            .map(|position| position.steps_taken)
+            .unwrap_or_default(),
+    }
+}
+
+fn workflow_instance_detail_from_run(
+    response: codex_protocol::WorkflowInstanceRunResponse,
+) -> WorkflowInstanceDetail {
+    let instance = WorkflowInstanceCard {
+        instance_id: bounded(response.instance_id, MAX_WORKFLOW_ID_BYTES),
+        workflow: bounded(response.workflow, MAX_WORKFLOW_NAME_BYTES),
+        version_id: bounded(response.version_id, MAX_WORKFLOW_DIGEST_BYTES),
+        status: map_workflow_instance_status(response.status),
+        steps_taken: response.path.len() as u64,
+    };
+    let mut path = response
+        .path
+        .into_iter()
+        .take(MAX_WORKFLOW_PATH_NODES)
+        .map(|node| bounded(node, MAX_WORKFLOW_ID_BYTES))
+        .collect::<Vec<_>>();
+    path.truncate(MAX_WORKFLOW_PATH_NODES);
+    WorkflowInstanceDetail {
+        instance,
+        terminal_kind: Some(workflow_terminal_kind_label(response.terminal.kind).to_owned()),
+        terminal_reason: response
+            .terminal
+            .reason
+            .map(|reason| bounded(reason, MAX_WORKFLOW_FIELD_BYTES)),
+        path,
+        evidence: Vec::new(),
+    }
+}
+
+fn workflow_instance_detail_from_get(
+    response: codex_protocol::WorkflowInstanceGetResponse,
+) -> WorkflowInstanceDetail {
+    let instance = workflow_instance_card(response.instance);
+    let mut evidence = response
+        .evidence
+        .into_iter()
+        .take(MAX_WORKFLOW_EVIDENCE_REFERENCES)
+        .map(|reference| codex_core::WorkflowEvidenceCard {
+            kind: bounded(reference.kind, MAX_WORKFLOW_NAME_BYTES),
+            locator: bounded(reference.locator, MAX_WORKFLOW_FIELD_BYTES),
+            digest: bounded(reference.digest, MAX_WORKFLOW_DIGEST_BYTES),
+        })
+        .collect::<Vec<_>>();
+    evidence.truncate(MAX_WORKFLOW_EVIDENCE_REFERENCES);
+    WorkflowInstanceDetail {
+        instance,
+        terminal_kind: None,
+        terminal_reason: None,
+        path: Vec::new(),
+        evidence,
+    }
+}
+
+/// Executes one Universal workflow control-plane request through the typed
+/// app-server boundary and emits the matching completion action. Errors —
+/// control-plane (lifecycle gates, unknown ids, invalid input) or transport
+/// — are surfaced verbatim as `WorkflowRequestFailed`; the GUI never
+/// retries non-idempotent requests on its own.
+fn run_workflow_request(
+    app_server: &AppServerConnection,
+    events: &UiEventSender,
+    request: CoreWorkflowRequest,
+) {
+    // Failure reporting needs the request back; clone it up front so the
+    // dispatch below can move its fields into the wire params.
+    let failed_request = request.clone();
+    let failure = |message: String| {
+        emit(
+            events,
+            Action::WorkflowRequestFailed {
+                request: failed_request.clone(),
+                message,
+            },
+        )
+    };
+    match request {
+        CoreWorkflowRequest::TeachStart { mode, name } => {
+            match app_server.workflow_teach_start(WorkflowTeachStartParams {
+                mode: map_workflow_teach_mode(mode),
+                name: Some(name),
+            }) {
+                Ok(response) => {
+                    let session = workflow_teach_session_from_start(response);
+                    emit(events, Action::WorkflowTeachStarted(session));
+                }
+                Err(error) => failure(format!("Could not start workflow teaching: {error}")),
+            }
+        }
+        CoreWorkflowRequest::TeachInstruct { session_id, text } => {
+            match app_server.workflow_teach_instruct(WorkflowTeachInstructParams {
+                session_id,
+                text,
+                evidence: Vec::new(),
+            }) {
+                Ok(response) => emit(
+                    events,
+                    Action::WorkflowTeachRecorded {
+                        session_id: bounded(response.session_id, MAX_WORKFLOW_ID_BYTES),
+                        mode: map_workflow_teach_mode_response(response.mode),
+                        status: map_workflow_teach_session_status(response.status),
+                        sequence: response.sequence,
+                        record_count: response.record_count,
+                    },
+                ),
+                Err(error) => failure(format!("Could not record the instruction: {error}")),
+            }
+        }
+        CoreWorkflowRequest::TeachDemonstrate {
+            session_id,
+            kind,
+            text,
+        } => match app_server.workflow_teach_demonstrate(WorkflowTeachDemonstrateParams {
+            session_id,
+            kind: map_workflow_demonstration_kind(kind),
+            text,
+            evidence: Vec::new(),
+        }) {
+            Ok(response) => emit(
+                events,
+                Action::WorkflowTeachRecorded {
+                    session_id: bounded(response.session_id, MAX_WORKFLOW_ID_BYTES),
+                    mode: map_workflow_teach_mode_response(response.mode),
+                    status: map_workflow_teach_session_status(response.status),
+                    sequence: response.sequence,
+                    record_count: response.record_count,
+                },
+            ),
+            Err(error) => failure(format!("Could not record the demonstration event: {error}")),
+        },
+        CoreWorkflowRequest::TeachReconcile { session_id } => {
+            match app_server.workflow_teach_reconcile(WorkflowTeachReconcileParams { session_id }) {
+                Ok(response) => emit(
+                    events,
+                    Action::WorkflowTeachReconciled {
+                        session_id: bounded(response.session_id, MAX_WORKFLOW_ID_BYTES),
+                        mode: map_workflow_teach_mode_response(response.mode),
+                        status: map_workflow_teach_session_status(response.status),
+                        demonstration_records: response.demonstration_records,
+                        instruction_records: response.instruction_records,
+                    },
+                ),
+                Err(error) => failure(format!("Could not reconcile the teaching session: {error}")),
+            }
+        }
+        CoreWorkflowRequest::Compile { session_id } => {
+            match app_server.workflow_compile(WorkflowCompileParams { session_id }) {
+                Ok(response) => {
+                    let candidate = workflow_candidate_from_compile(response);
+                    emit(events, Action::WorkflowCompiled(candidate));
+                }
+                Err(error) => failure(format!("Could not compile the workflow: {error}")),
+            }
+        }
+        CoreWorkflowRequest::Review { candidate_id } => {
+            match app_server.workflow_review(WorkflowReviewParams { candidate_id }) {
+                Ok(response) => {
+                    let candidate = workflow_candidate_from_review(response);
+                    emit(events, Action::WorkflowReviewed(candidate));
+                }
+                Err(error) => failure(format!("Could not review the candidate: {error}")),
+            }
+        }
+        CoreWorkflowRequest::Approve {
+            candidate_id,
+            approver,
+            reference,
+            decision,
+        } => match app_server.workflow_approve(WorkflowApproveParams {
+            candidate_id,
+            approver,
+            reference,
+            decision: map_workflow_approval_decision(decision),
+        }) {
+            Ok(response) => emit(
+                events,
+                Action::WorkflowApproved {
+                    candidate_id: bounded(response.candidate_id, MAX_WORKFLOW_ID_BYTES),
+                    status: map_workflow_candidate_status(response.status),
+                    epoch: response.epoch,
+                },
+            ),
+            Err(error) => failure(format!("Could not record the approval decision: {error}")),
+        },
+        CoreWorkflowRequest::Publish {
+            candidate_id,
+            commit_sha,
+            repository,
+            semantic_version,
+        } => match app_server.workflow_publish(WorkflowPublishParams {
+            candidate_id,
+            repository,
+            commit_sha,
+            semantic_version,
+        }) {
+            Ok(response) => {
+                let version = workflow_published_version(response);
+                emit(events, Action::WorkflowPublished(version));
+            }
+            Err(error) => failure(format!("Could not publish the workflow version: {error}")),
+        },
+        CoreWorkflowRequest::InstanceRun { version_id } => {
+            match app_server.workflow_instance_run(WorkflowInstanceRunParams { version_id }) {
+                Ok(response) => {
+                    let detail = workflow_instance_detail_from_run(response);
+                    emit(events, Action::WorkflowInstanceRunCompleted(detail));
+                }
+                Err(error) => failure(format!("Could not run the workflow version: {error}")),
+            }
+        }
+        CoreWorkflowRequest::InstanceList => match app_server.workflow_instance_list() {
+            Ok(response) => {
+                let instances = response
+                    .instances
+                    .into_iter()
+                    .take(MAX_WORKFLOW_INSTANCES)
+                    .map(workflow_instance_card)
+                    .collect::<Vec<_>>();
+                emit(events, Action::WorkflowInstancesLoaded(instances));
+            }
+            Err(error) => failure(format!("Could not list workflow instances: {error}")),
+        },
+        CoreWorkflowRequest::InstanceGet { instance_id } => {
+            match app_server.workflow_instance_get(WorkflowInstanceGetParams { instance_id }) {
+                Ok(response) => {
+                    let detail = workflow_instance_detail_from_get(response);
+                    emit(events, Action::WorkflowInstanceLoaded(detail));
+                }
+                Err(error) => failure(format!("Could not read the workflow instance: {error}")),
+            }
+        }
+    }
 }
 
 #[cfg(test)]
