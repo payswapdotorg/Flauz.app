@@ -51,17 +51,18 @@ use codex_core::{
     MAX_REMOTE_DEVICE_ID_BYTES, MAX_REMOTE_DEVICE_LABEL_BYTES, MAX_REMOTE_ENVIRONMENT_ID_BYTES,
     MAX_REMOTE_PAIRING_CODE_BYTES, MAX_RETRYABLE_TURN_MESSAGES, MAX_TERMINAL_TABS,
     MAX_TIMELINE_ITEMS, MAX_TURN_DIFF_BYTES, MAX_USER_INPUT_OPTIONS, MAX_USER_INPUT_QUESTIONS,
-    MAX_USER_INPUT_VALUE_BYTES, MAX_VISIBLE_THREADS, MAX_WORKFLOW_DIGEST_BYTES,
+    MAX_USER_INPUT_VALUE_BYTES, MAX_VISIBLE_THREADS, MAX_WORKFLOW_BINDING_PROPOSALS,
+    MAX_WORKFLOW_CAPABILITY_HINTS, MAX_WORKFLOW_DIGEST_BYTES, MAX_WORKFLOW_ERROR_BYTES,
     MAX_WORKFLOW_EVIDENCE_REFERENCES, MAX_WORKFLOW_FIELD_BYTES, MAX_WORKFLOW_FINDINGS,
     MAX_WORKFLOW_ID_BYTES, MAX_WORKFLOW_INSTANCES, MAX_WORKFLOW_NAME_BYTES,
-    MAX_WORKFLOW_PATH_NODES, MAX_WORKFLOW_STEPS, MAX_WORKTREE_ROOT_BYTES, MainRoute,
-    MarketplaceSourceCard, MarketplaceUpgradeFailure, McpAuthStatus as CoreMcpAuthStatus,
-    McpBrowserOriginElicitation, McpBrowserResourceElicitation, McpElicitation,
-    McpElicitationContent, McpElicitationDecision, McpElicitationValue, McpFormElicitation,
-    McpFormField, McpFormFieldKind, McpFormImagePickerItem, McpFormOption, McpFormStringFormat,
-    McpResourceCard, McpResourceContentCard, McpResourceTemplateCard, McpServerCard,
-    McpServerDraft, McpServerInfoCard,
-    McpServerStartupFailureReason as CoreMcpServerStartupFailureReason,
+    MAX_WORKFLOW_PATH_NODES, MAX_WORKFLOW_RUN_PROVENANCE, MAX_WORKFLOW_STEPS,
+    MAX_WORKFLOW_TRIGGER_INTENTS, MAX_WORKTREE_ROOT_BYTES, MainRoute, MarketplaceSourceCard,
+    MarketplaceUpgradeFailure, McpAuthStatus as CoreMcpAuthStatus, McpBrowserOriginElicitation,
+    McpBrowserResourceElicitation, McpElicitation, McpElicitationContent, McpElicitationDecision,
+    McpElicitationValue, McpFormElicitation, McpFormField, McpFormFieldKind,
+    McpFormImagePickerItem, McpFormOption, McpFormStringFormat, McpResourceCard,
+    McpResourceContentCard, McpResourceTemplateCard, McpServerCard, McpServerDraft,
+    McpServerInfoCard, McpServerStartupFailureReason as CoreMcpServerStartupFailureReason,
     McpServerStartupState as CoreMcpServerStartupState, McpToolCard, McpTransportKind,
     McpUrlElicitation, ModelOption, ModelUpgradeNotice,
     NetworkApprovalContext as CoreNetworkApprovalContext,
@@ -86,15 +87,16 @@ use codex_core::{
     UserInputRequest, WorkflowApprovalDecision as CoreWorkflowApprovalDecision,
     WorkflowCandidateState as CoreWorkflowCandidateState,
     WorkflowCandidateStatus as CoreWorkflowCandidateStatus,
-    WorkflowDemonstrationKind as CoreWorkflowDemonstrationKind, WorkflowFindingCard,
-    WorkflowInstanceCard, WorkflowInstanceDetail,
+    WorkflowDemonstrationKind as CoreWorkflowDemonstrationKind, WorkflowEvidenceCard,
+    WorkflowFindingCard, WorkflowImproveApprovedState, WorkflowImprovePublishedState,
+    WorkflowImproveValidatedState, WorkflowInstanceCard, WorkflowInstanceDetail,
     WorkflowInstanceStatus as CoreWorkflowInstanceStatus, WorkflowPublishedVersion,
     WorkflowRequest as CoreWorkflowRequest, WorkflowStepCard,
     WorkflowStepOrigin as CoreWorkflowStepOrigin, WorkflowTeachMode as CoreWorkflowTeachMode,
     WorkflowTeachSessionState, WorkflowTeachSessionStatus as CoreWorkflowTeachSessionStatus,
     WorkflowValidationCard, WorkflowValidationSeverity as CoreWorkflowValidationSeverity,
-    appearance_code_theme_supports_variant, computer_app_id_matches, is_appearance_code_theme_id,
-    is_valid_account_daily_usage_date,
+    WorkflowValidationStageCard, appearance_code_theme_supports_variant, computer_app_id_matches,
+    is_appearance_code_theme_id, is_valid_account_daily_usage_date,
 };
 use codex_platform::{
     AppServerConfig, AppServerConnection, AppServerError, AppServerEvent, ArtifactFileKind,
@@ -17293,6 +17295,10 @@ fn workflow_candidate_from_compile(
             .node
             .map(|node| bounded(node, MAX_WORKFLOW_ID_BYTES)),
         simulation_steps_taken: response.simulation.steps_taken,
+        description: None,
+        capability_hints: Vec::new(),
+        binding_proposals: Vec::new(),
+        trigger_intents: Vec::new(),
     }
 }
 
@@ -17314,6 +17320,37 @@ fn workflow_candidate_from_review(
         })
         .collect::<Vec<_>>();
     steps.truncate(MAX_WORKFLOW_STEPS);
+    let mut capability_hints = response
+        .capability_inferences
+        .into_iter()
+        .map(|hint| codex_core::WorkflowCapabilityHintCard {
+            node_id: bounded(hint.node_id, MAX_WORKFLOW_ID_BYTES),
+            hint: bounded(hint.hint, MAX_WORKFLOW_FIELD_BYTES),
+            rationale: bounded(hint.rationale, MAX_WORKFLOW_FIELD_BYTES),
+        })
+        .collect::<Vec<_>>();
+    capability_hints.truncate(MAX_WORKFLOW_CAPABILITY_HINTS);
+    let mut binding_proposals = response
+        .binding_proposals
+        .into_iter()
+        .map(|proposal| codex_core::WorkflowBindingProposalCard {
+            node_id: bounded(proposal.node_id, MAX_WORKFLOW_ID_BYTES),
+            kind: bounded(proposal.kind, MAX_WORKFLOW_FIELD_BYTES),
+            reference: bounded(proposal.reference, MAX_WORKFLOW_FIELD_BYTES),
+            rationale: bounded(proposal.rationale, MAX_WORKFLOW_FIELD_BYTES),
+            requires_approval: proposal.requires_approval,
+        })
+        .collect::<Vec<_>>();
+    binding_proposals.truncate(MAX_WORKFLOW_BINDING_PROPOSALS);
+    let mut trigger_intents = response
+        .trigger_intents
+        .into_iter()
+        .map(|intent| codex_core::WorkflowTriggerIntentCard {
+            class_hint: bounded(intent.class_hint, MAX_WORKFLOW_FIELD_BYTES),
+            description: bounded(intent.description, MAX_WORKFLOW_FIELD_BYTES),
+        })
+        .collect::<Vec<_>>();
+    trigger_intents.truncate(MAX_WORKFLOW_TRIGGER_INTENTS);
     CoreWorkflowCandidateState {
         candidate_id: bounded(response.candidate_id, MAX_WORKFLOW_ID_BYTES),
         status: map_workflow_candidate_status(response.status),
@@ -17330,6 +17367,12 @@ fn workflow_candidate_from_review(
             .node
             .map(|node| bounded(node, MAX_WORKFLOW_ID_BYTES)),
         simulation_steps_taken: response.simulation.steps_taken,
+        description: response
+            .description
+            .map(|description| bounded(description, MAX_WORKFLOW_ERROR_BYTES)),
+        capability_hints,
+        binding_proposals,
+        trigger_intents,
     }
 }
 
@@ -17590,6 +17633,268 @@ fn run_workflow_request(
                 Err(error) => failure(format!("Could not read the workflow instance: {error}")),
             }
         }
+        CoreWorkflowRequest::Fork {
+            version_id,
+            fork_repository,
+        } => match app_server.workflow_fork(codex_protocol::WorkflowForkParams {
+            version_id,
+            fork_repository,
+            semantic_version: None,
+            commit_sha: None,
+            owner: None,
+            license: None,
+            attribution: vec![codex_protocol::WorkflowForkAttribution {
+                name: "Flauz.app".to_owned(),
+                contact: None,
+            }],
+        }) {
+            Ok(response) => {
+                let lineage = workflow_fork_lineage_card(response.lineage);
+                let version = WorkflowPublishedVersion {
+                    workflow: bounded(response.workflow, MAX_WORKFLOW_NAME_BYTES),
+                    version_id: bounded(response.version_id, MAX_WORKFLOW_DIGEST_BYTES),
+                    semantic_version: bounded(response.semantic_version, MAX_WORKFLOW_NAME_BYTES),
+                    repository: bounded(response.repository, MAX_WORKFLOW_FIELD_BYTES),
+                    commit_sha: bounded(response.commit_sha, MAX_WORKFLOW_ID_BYTES),
+                    definition_digest: bounded(
+                        response.definition_digest,
+                        MAX_WORKFLOW_DIGEST_BYTES,
+                    ),
+                    dependency_lock_digest: bounded(
+                        response.dependency_lock_digest,
+                        MAX_WORKFLOW_DIGEST_BYTES,
+                    ),
+                };
+                emit(events, Action::WorkflowForked { version, lineage });
+            }
+            Err(error) => failure(format!("Could not fork the workflow version: {error}")),
+        },
+        CoreWorkflowRequest::ImprovePropose { version_id } => {
+            match app_server.workflow_improve_propose(
+                codex_protocol::WorkflowImproveProposeParams { version_id },
+            ) {
+                Ok(response) => {
+                    let candidates = response
+                        .candidates
+                        .into_iter()
+                        .map(workflow_improvement_candidate_card)
+                        .collect::<Vec<_>>();
+                    emit(
+                        events,
+                        Action::WorkflowImproveProposed {
+                            incumbent_version_id: bounded(
+                                response.incumbent_version_id,
+                                MAX_WORKFLOW_DIGEST_BYTES,
+                            ),
+                            incumbent_semantic_version: bounded(
+                                response.incumbent_semantic_version,
+                                MAX_WORKFLOW_NAME_BYTES,
+                            ),
+                            candidates,
+                        },
+                    );
+                }
+                Err(error) => failure(format!("Could not propose improvements: {error}")),
+            }
+        }
+        CoreWorkflowRequest::ImproveValidate {
+            candidate_id,
+            successor_version,
+        } => match app_server.workflow_improve_validate(
+            codex_protocol::WorkflowImproveValidateParams {
+                candidate_id,
+                successor_version,
+            },
+        ) {
+            Ok(response) => {
+                let validated = WorkflowImproveValidatedState {
+                    candidate_id: bounded(response.candidate_id, MAX_WORKFLOW_ID_BYTES),
+                    workflow: bounded(response.workflow, MAX_WORKFLOW_NAME_BYTES),
+                    successor_version: bounded(response.successor_version, MAX_WORKFLOW_NAME_BYTES),
+                    passed: response.passed,
+                    stages: response
+                        .stages
+                        .into_iter()
+                        .map(|stage| WorkflowValidationStageCard {
+                            stage: workflow_validation_stage_label(stage.stage),
+                            passed: stage.passed,
+                        })
+                        .collect::<Vec<_>>(),
+                };
+                emit(events, Action::WorkflowImproveValidated(validated));
+            }
+            Err(error) => failure(format!("Could not validate the improvement: {error}")),
+        },
+        CoreWorkflowRequest::ImproveApprove {
+            candidate_id,
+            approver,
+            decision,
+            note,
+            reason,
+        } => match app_server.workflow_improve_approve(
+            codex_protocol::WorkflowImproveApproveParams {
+                candidate_id,
+                approver,
+                decision: map_workflow_improvement_decision(decision),
+                note,
+                reason,
+            },
+        ) {
+            Ok(response) => {
+                let approved = WorkflowImproveApprovedState {
+                    candidate_id: bounded(response.candidate_id, MAX_WORKFLOW_ID_BYTES),
+                    approved: response.approved,
+                    approver: bounded(response.approver, MAX_WORKFLOW_FIELD_BYTES),
+                    validation_digest: bounded(
+                        response.validation_digest,
+                        MAX_WORKFLOW_DIGEST_BYTES,
+                    ),
+                    note: response
+                        .note
+                        .map(|note| bounded(note, MAX_WORKFLOW_FIELD_BYTES)),
+                    reason: response
+                        .reason
+                        .map(|reason| bounded(reason, MAX_WORKFLOW_ERROR_BYTES)),
+                };
+                emit(events, Action::WorkflowImproveApproved(approved));
+            }
+            Err(error) => failure(format!("Could not record the approval decision: {error}")),
+        },
+        CoreWorkflowRequest::ImprovePublish {
+            candidate_id,
+            release_tag,
+        } => match app_server.workflow_improve_publish(
+            codex_protocol::WorkflowImprovePublishParams {
+                candidate_id,
+                release_tag: release_tag.clone(),
+            },
+        ) {
+            Ok(response) => {
+                let published = WorkflowImprovePublishedState {
+                    version_id: bounded(response.version_id, MAX_WORKFLOW_DIGEST_BYTES),
+                    semantic_version: bounded(response.semantic_version, MAX_WORKFLOW_NAME_BYTES),
+                    release_tag: bounded(release_tag, MAX_WORKFLOW_FIELD_BYTES),
+                    lineage: workflow_improvement_lineage_card(response.lineage),
+                    evidence: workflow_evidence_summary_card(response.evidence),
+                };
+                emit(events, Action::WorkflowImprovePublished(published));
+            }
+            Err(error) => failure(format!("Could not publish the improvement: {error}")),
+        },
+    }
+}
+
+fn workflow_validation_stage_label(stage: codex_protocol::WorkflowValidationStageName) -> String {
+    match stage {
+        codex_protocol::WorkflowValidationStageName::Replay => "replay".to_owned(),
+        codex_protocol::WorkflowValidationStageName::Differential => "differential".to_owned(),
+        codex_protocol::WorkflowValidationStageName::Policy => "policy".to_owned(),
+    }
+}
+
+fn workflow_fork_lineage_card(
+    lineage: codex_protocol::WorkflowForkLineage,
+) -> codex_core::WorkflowForkLineageCard {
+    codex_core::WorkflowForkLineageCard {
+        workflow: bounded(lineage.workflow, MAX_WORKFLOW_NAME_BYTES),
+        version_id: bounded(lineage.version_id, MAX_WORKFLOW_DIGEST_BYTES),
+        semantic_version: bounded(lineage.semantic_version, MAX_WORKFLOW_NAME_BYTES),
+        repository: bounded(lineage.repository, MAX_WORKFLOW_FIELD_BYTES),
+        definition_digest: bounded(lineage.definition_digest, MAX_WORKFLOW_DIGEST_BYTES),
+        dependency_lock_digest: bounded(lineage.dependency_lock_digest, MAX_WORKFLOW_DIGEST_BYTES),
+        commit_sha: bounded(lineage.commit_sha, MAX_WORKFLOW_ID_BYTES),
+    }
+}
+
+fn workflow_improvement_lineage_card(
+    lineage: codex_protocol::WorkflowImprovementLineage,
+) -> codex_core::WorkflowImprovementLineageCard {
+    codex_core::WorkflowImprovementLineageCard {
+        workflow: bounded(lineage.workflow, MAX_WORKFLOW_NAME_BYTES),
+        predecessor_version_id: bounded(lineage.predecessor_version_id, MAX_WORKFLOW_DIGEST_BYTES),
+        predecessor_semantic_version: bounded(
+            lineage.predecessor_semantic_version,
+            MAX_WORKFLOW_NAME_BYTES,
+        ),
+        successor_version_id: bounded(lineage.successor_version_id, MAX_WORKFLOW_DIGEST_BYTES),
+        successor_semantic_version: bounded(
+            lineage.successor_semantic_version,
+            MAX_WORKFLOW_NAME_BYTES,
+        ),
+        candidate_id: bounded(lineage.candidate_id, MAX_WORKFLOW_ID_BYTES),
+        validation_digest: bounded(lineage.validation_digest, MAX_WORKFLOW_DIGEST_BYTES),
+        validation_stages: lineage
+            .validation_stages
+            .into_iter()
+            .map(|stage| codex_core::WorkflowValidationStageCard {
+                stage: workflow_validation_stage_label(stage.stage),
+                passed: stage.passed,
+            })
+            .collect::<Vec<_>>(),
+        approver: bounded(lineage.approver, MAX_WORKFLOW_FIELD_BYTES),
+        release_tag: bounded(lineage.release_tag, MAX_WORKFLOW_FIELD_BYTES),
+    }
+}
+
+fn workflow_evidence_summary_card(
+    summary: codex_protocol::WorkflowEvidenceSummary,
+) -> codex_core::WorkflowEvidenceSummaryCard {
+    let mut references = summary
+        .references
+        .into_iter()
+        .map(|reference| WorkflowEvidenceCard {
+            kind: bounded(reference.kind, MAX_WORKFLOW_FIELD_BYTES),
+            locator: bounded(reference.locator, MAX_WORKFLOW_FIELD_BYTES),
+            digest: bounded(reference.digest, MAX_WORKFLOW_DIGEST_BYTES),
+        })
+        .collect::<Vec<_>>();
+    references.truncate(MAX_WORKFLOW_EVIDENCE_REFERENCES);
+    let mut runs = summary
+        .runs
+        .into_iter()
+        .map(|run| codex_core::WorkflowRunProvenanceCard {
+            version_id: bounded(run.version_id, MAX_WORKFLOW_DIGEST_BYTES),
+            fingerprint: bounded(run.fingerprint, MAX_WORKFLOW_DIGEST_BYTES),
+            status: map_workflow_instance_status(run.status),
+        })
+        .collect::<Vec<_>>();
+    runs.truncate(MAX_WORKFLOW_RUN_PROVENANCE);
+    codex_core::WorkflowEvidenceSummaryCard { references, runs }
+}
+
+fn workflow_improvement_candidate_card(
+    candidate: codex_protocol::WorkflowImprovementCandidate,
+) -> codex_core::WorkflowImprovementCandidateCard {
+    codex_core::WorkflowImprovementCandidateCard {
+        candidate_id: bounded(candidate.candidate_id, MAX_WORKFLOW_ID_BYTES),
+        workflow: bounded(candidate.workflow, MAX_WORKFLOW_NAME_BYTES),
+        incumbent_version_id: bounded(candidate.incumbent_version_id, MAX_WORKFLOW_DIGEST_BYTES),
+        change_kind: workflow_change_kind_label(candidate.change_kind),
+        rationale: bounded(candidate.rationale, MAX_WORKFLOW_ERROR_BYTES),
+        evidence: workflow_evidence_summary_card(candidate.evidence),
+    }
+}
+
+fn map_workflow_improvement_decision(
+    decision: CoreWorkflowApprovalDecision,
+) -> codex_protocol::WorkflowImprovementDecision {
+    match decision {
+        CoreWorkflowApprovalDecision::Approved => {
+            codex_protocol::WorkflowImprovementDecision::Approved
+        }
+        CoreWorkflowApprovalDecision::Rejected => {
+            codex_protocol::WorkflowImprovementDecision::Rejected
+        }
+    }
+}
+
+fn workflow_change_kind_label(kind: codex_protocol::WorkflowChangeKind) -> String {
+    match kind {
+        codex_protocol::WorkflowChangeKind::DefinitionDelta => "definition delta".to_owned(),
+        codex_protocol::WorkflowChangeKind::CapabilityBinding => "capability binding".to_owned(),
+        codex_protocol::WorkflowChangeKind::RecoveryPolicy => "recovery policy".to_owned(),
+        codex_protocol::WorkflowChangeKind::DependencyChoice => "dependency choice".to_owned(),
+        codex_protocol::WorkflowChangeKind::ScheduleTuning => "schedule tuning".to_owned(),
     }
 }
 

@@ -21,6 +21,8 @@ use codex_core::{
     WorkflowState, WorkflowTeachMode, WorkflowTeachSessionState, WorkflowTeachSessionStatus,
     WorkflowValidationSeverity,
 };
+
+use codex_core::WorkflowImproveState;
 use gpui::prelude::*;
 use gpui::{
     AnyElement, App, Context, Entity, FontWeight, Hsla, IntoElement, SharedString, div, px,
@@ -81,6 +83,16 @@ pub(super) fn render_workflows(
         .is_empty();
     let commit_empty = workspace
         .workflow_commit_sha
+        .read(cx)
+        .value()
+        .trim()
+        .is_empty();
+    let fork_repository_input = workspace.workflow_fork_repository.clone();
+    let improve_semver_input = workspace.workflow_improve_semver.clone();
+    let improve_approver_input = workspace.workflow_improve_approver.clone();
+    let improve_release_tag_input = workspace.workflow_improve_release_tag.clone();
+    let fork_repository_empty = workspace
+        .workflow_fork_repository
         .read(cx)
         .value()
         .trim()
@@ -170,7 +182,21 @@ pub(super) fn render_workflows(
                         cx,
                     ))
                 })
-                .child(render_versions_pane(&state, cx))
+                .child(render_versions_pane(
+                    &state,
+                    &fork_repository_input,
+                    fork_repository_empty,
+                    cx,
+                ))
+                .when(state.improve.is_some(), |column| {
+                    column.child(render_improve_pane(
+                        state.improve.as_ref(),
+                        &improve_semver_input,
+                        &improve_approver_input,
+                        &improve_release_tag_input,
+                        cx,
+                    ))
+                })
                 .child(render_instances_pane(&state, cx)),
         )
         .into_any_element()
@@ -701,6 +727,107 @@ fn render_candidate_pane(
                     })),
             )
         })
+        .when_some(candidate.description.clone(), |pane, description| {
+            pane.child(
+                div()
+                    .text_sm()
+                    .text_color(cx.theme().muted_foreground)
+                    .child(description),
+            )
+        })
+        .when(!candidate.capability_hints.is_empty(), |pane| {
+            pane.child(
+                v_flex()
+                    .gap_1()
+                    .child(
+                        div()
+                            .text_sm()
+                            .font_weight(FontWeight::MEDIUM)
+                            .child("Capability hints"),
+                    )
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(cx.theme().muted_foreground)
+                            .child(
+                                "Advisory hints derived by the teaching compiler; binding \
+                                 decisions belong to the execution plane.",
+                            ),
+                    )
+                    .children(candidate.capability_hints.iter().map(|hint| {
+                        h_flex()
+                            .gap_2()
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .font_family(cx.theme().mono_font_family.clone())
+                                    .text_color(cx.theme().muted_foreground)
+                                    .child(hint.node_id.clone()),
+                            )
+                            .child(div().text_sm().child(hint.hint.clone()))
+                            .when(!hint.rationale.is_empty(), |row| {
+                                row.child(
+                                    div()
+                                        .text_xs()
+                                        .text_color(cx.theme().muted_foreground)
+                                        .child(hint.rationale.clone()),
+                                )
+                            })
+                    })),
+            )
+        })
+        .when(!candidate.binding_proposals.is_empty(), |pane| {
+            pane.child(
+                v_flex()
+                    .gap_1()
+                    .child(
+                        div()
+                            .text_sm()
+                            .font_weight(FontWeight::MEDIUM)
+                            .child("Binding proposals"),
+                    )
+                    .children(candidate.binding_proposals.iter().map(|proposal| {
+                        h_flex()
+                            .gap_2()
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .font_family(cx.theme().mono_font_family.clone())
+                                    .text_color(cx.theme().muted_foreground)
+                                    .child(proposal.node_id.clone()),
+                            )
+                            .child(div().text_sm().child(format!(
+                                "{} → {}{}",
+                                proposal.kind,
+                                proposal.reference,
+                                if proposal.requires_approval {
+                                    " · requires approval"
+                                } else {
+                                    ""
+                                },
+                            )))
+                    })),
+            )
+        })
+        .when(!candidate.trigger_intents.is_empty(), |pane| {
+            pane.child(
+                v_flex()
+                    .gap_1()
+                    .child(
+                        div()
+                            .text_sm()
+                            .font_weight(FontWeight::MEDIUM)
+                            .child("Trigger intents"),
+                    )
+                    .children(candidate.trigger_intents.iter().map(|intent| {
+                        h_flex().gap_2().child(
+                            div()
+                                .text_sm()
+                                .child(format!("[{}] {}", intent.class_hint, intent.description,)),
+                        )
+                    })),
+            )
+        })
         .child(
             v_flex()
                 .gap_1()
@@ -874,7 +1001,12 @@ fn render_candidate_pane(
         .into_any_element()
 }
 
-fn render_versions_pane(state: &WorkflowState, cx: &mut Context<WorkspaceView>) -> AnyElement {
+fn render_versions_pane(
+    state: &WorkflowState,
+    fork_repository_input: &Entity<InputState>,
+    fork_repository_empty: bool,
+    cx: &mut Context<WorkspaceView>,
+) -> AnyElement {
     v_flex()
         .w(px(WORKFLOW_PANE_WIDTH))
         .max_w_full()
@@ -973,7 +1105,525 @@ fn render_versions_pane(state: &WorkflowState, cx: &mut Context<WorkspaceView>) 
                         }
                     })),
                 )
+                .child(
+                    Button::new(SharedString::from(format!(
+                        "workflow-fork-{}",
+                        version.version_id
+                    )))
+                    .label(if state.fork_pending.as_deref() == Some(version.version_id.as_str()) {
+                        "Forking…"
+                    } else {
+                        "Fork"
+                    })
+                    .small()
+                    .ghost()
+                    .disabled(
+                        state.fork_pending.is_some()
+                            || fork_repository_empty
+                            || state.improve_propose_pending.is_some(),
+                    )
+                    .on_click(cx.listener({
+                        let version_id = version.version_id.clone();
+                        move |this, _, _, cx| {
+                            let fork_repository = this
+                                .workflow_fork_repository
+                                .read(cx)
+                                .value()
+                                .trim()
+                                .to_owned();
+                            this.dispatch(
+                                Action::WorkflowForkVersion {
+                                    version_id: version_id.clone(),
+                                    fork_repository,
+                                },
+                                cx,
+                            );
+                        }
+                    })),
+                )
+                .child(
+                    Button::new(SharedString::from(format!(
+                        "workflow-improve-{}",
+                        version.version_id
+                    )))
+                    .label(
+                        if state.improve_propose_pending.as_deref()
+                            == Some(version.version_id.as_str())
+                        {
+                            "Proposing…"
+                        } else {
+                            "Improve"
+                        },
+                    )
+                    .small()
+                    .ghost()
+                    .disabled(
+                        state.improve_propose_pending.is_some()
+                            || state.fork_pending.is_some(),
+                    )
+                    .on_click(cx.listener({
+                        let version_id = version.version_id.clone();
+                        move |this, _, _, cx| {
+                            this.dispatch(
+                                Action::WorkflowImproveStart {
+                                    version_id: version_id.clone(),
+                                },
+                                cx,
+                            );
+                        }
+                    })),
+                )
         }))
+        .when(!state.published.is_empty(), |pane| {
+            pane.child(
+                v_flex()
+                    .gap_2()
+                    .child(
+                        h_flex()
+                            .gap_2()
+                            .items_center()
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .font_weight(FontWeight::MEDIUM)
+                                    .child("Fork a published version"),
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(cx.theme().muted_foreground)
+                                    .child(
+                                        "Derives a new immutable release carrying the upstream                                          lineage; the fork repository identity must differ from                                          the upstream's.",
+                                    ),
+                            ),
+                    )
+                    .child(
+                        h_flex().gap_2().child(
+                            div()
+                                .flex_1()
+                                .min_w_0()
+                                .child(
+                                    Input::new(fork_repository_input),
+                                ),
+                        ),
+                    ),
+            )
+        })
+        .when_some(state.fork_lineage.clone(), |pane, lineage| {
+            pane.child(
+                v_flex()
+                    .gap_1()
+                    .rounded_lg()
+                    .border_1()
+                    .border_color(cx.theme().border)
+                    .p_3()
+                    .child(
+                        div()
+                            .text_sm()
+                            .font_weight(FontWeight::MEDIUM)
+                            .child("Latest fork lineage (engine-sealed)"),
+                    )
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(cx.theme().muted_foreground)
+                            .child(format!(
+                                "forked from {} {} ({}) · commit {} · definition {} · lock {}",
+                                lineage.workflow,
+                                lineage.semantic_version,
+                                lineage.repository,
+                                lineage.commit_sha,
+                                lineage.definition_digest,
+                                lineage.dependency_lock_digest,
+                            )),
+                    ),
+            )
+        })
+        .into_any_element()
+}
+
+fn render_improve_pane(
+    improve: Option<&WorkflowImproveState>,
+    semver_input: &Entity<InputState>,
+    approver_input: &Entity<InputState>,
+    release_tag_input: &Entity<InputState>,
+    cx: &mut Context<WorkspaceView>,
+) -> AnyElement {
+    let Some(improve) = improve else {
+        return div().into_any_element();
+    };
+    let selected = improve
+        .selected_candidate_id
+        .as_deref()
+        .and_then(|candidate_id| {
+            improve
+                .candidates
+                .iter()
+                .find(|candidate| candidate.candidate_id == candidate_id)
+        });
+    v_flex()
+        .w(px(WORKFLOW_PANE_WIDTH))
+        .max_w_full()
+        .gap_3()
+        .rounded_lg()
+        .border_1()
+        .border_color(cx.theme().border)
+        .p_4()
+        .child(
+            h_flex()
+                .gap_2()
+                .items_center()
+                .child(
+                    div()
+                        .text_base()
+                        .font_weight(FontWeight::SEMIBOLD)
+                        .child("Improve workflow"),
+                )
+                .child(
+                    div()
+                        .text_xs()
+                        .text_color(cx.theme().muted_foreground)
+                        .child(format!(
+                            "incumbent {} · governed evolution: propose → validate → approve → publish",
+                            improve.incumbent_semantic_version,
+                        )),
+                )
+                .child(
+                    Button::new("workflow-improve-dismiss")
+                        .label("Close")
+                        .small()
+                        .ghost()
+                        .on_click(cx.listener(|this, _, _, cx| {
+                            this.dispatch(Action::WorkflowImproveDismiss, cx);
+                        })),
+                ),
+        )
+        .when(improve.candidates.is_empty(), |pane| {
+            pane.child(
+                div()
+                    .text_sm()
+                    .text_color(cx.theme().muted_foreground)
+                    .child(
+                        "No improvement candidates were supported by the recorded execution \
+                         evidence. Run the workflow to record evidence first.",
+                    ),
+            )
+        })
+        .children(improve.candidates.iter().map(|candidate| {
+            let candidate_selected = improve.selected_candidate_id.as_deref()
+                == Some(candidate.candidate_id.as_str());
+            v_flex()
+                .gap_1()
+                .rounded_lg()
+                .border_1()
+                .border_color(cx.theme().border)
+                .p_3()
+                .when(candidate_selected, |card| {
+                    card.border_color(cx.theme().ring)
+                })
+                .child(
+                    h_flex()
+                        .gap_2()
+                        .items_center()
+                        .child(
+                            Button::new(SharedString::from(format!(
+                                "workflow-improve-select-{}",
+                                candidate.candidate_id
+                            )))
+                            .label(if candidate_selected {
+                                "Selected"
+                            } else {
+                                "Select"
+                            })
+                            .small()
+                            .ghost()
+                            .disabled(candidate_selected)
+                            .on_click(cx.listener({
+                                let candidate_id = candidate.candidate_id.clone();
+                                move |this, _, _, cx| {
+                                    this.dispatch(
+                                        Action::WorkflowImproveSelectCandidate {
+                                            candidate_id: candidate_id.clone(),
+                                        },
+                                        cx,
+                                    );
+                                }
+                            })),
+                        )
+                        .child(
+                            div()
+                                .text_sm()
+                                .font_weight(FontWeight::MEDIUM)
+                                .child(candidate.change_kind.clone()),
+                        )
+                        .child(
+                            div()
+                                .text_xs()
+                                .text_color(cx.theme().muted_foreground)
+                                .child(format!(
+                                    "candidate {} · {} evidence refs · {} cited runs",
+                                    candidate.candidate_id,
+                                    candidate.evidence.references.len(),
+                                    candidate.evidence.runs.len(),
+                                )),
+                        ),
+                )
+                .child(
+                    div()
+                        .text_sm()
+                        .text_color(cx.theme().muted_foreground)
+                        .child(candidate.rationale.clone()),
+                )
+        }))
+        .when_some(selected, |pane, _candidate| {
+            pane.child(
+                v_flex()
+                    .gap_2()
+                    .child(
+                        h_flex()
+                            .gap_2()
+                            .items_center()
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .font_weight(FontWeight::MEDIUM)
+                                    .child("Validate the selected candidate"),
+                            )
+                            .child(
+                                div()
+                                    .w(px(220.0))
+                                    .child(
+                                        Input::new(semver_input),
+                                    ),
+                            )
+                            .child(
+                                Button::new("workflow-improve-validate")
+                                    .label(if improve.validate_pending.is_some() {
+                                        "Validating…"
+                                    } else {
+                                        "Validate"
+                                    })
+                                    .small()
+                                    .disabled(improve.validate_pending.is_some())
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        let successor_version = this
+                                            .workflow_improve_semver
+                                            .read(cx)
+                                            .value()
+                                            .trim()
+                                            .to_owned();
+                                        this.dispatch(
+                                            Action::WorkflowImproveValidate { successor_version },
+                                            cx,
+                                        );
+                                    })),
+                            ),
+                    ),
+            )
+        })
+        .when_some(improve.validated.as_ref(), |pane, validated| {
+            pane.child(
+                v_flex()
+                    .gap_1()
+                    .rounded_lg()
+                    .border_1()
+                    .border_color(cx.theme().border)
+                    .p_3()
+                    .child(
+                        h_flex().gap_2().child(
+                            div()
+                                .text_sm()
+                                .font_weight(FontWeight::MEDIUM)
+                                .child(format!(
+                                    "Validation {} · successor {}",
+                                    if validated.passed { "passed" } else { "failed" },
+                                    validated.successor_version,
+                                )),
+                        ),
+                    )
+                    .children(validated.stages.iter().map(|stage| {
+                        div()
+                            .text_xs()
+                            .text_color(if stage.passed {
+                                cx.theme().muted_foreground
+                            } else {
+                                cx.theme().danger
+                            })
+                            .child(format!(
+                                "{}: {}",
+                                stage.stage,
+                                if stage.passed { "passed" } else { "failed" },
+                            ))
+                    })),
+            )
+        })
+        .when_some(improve.validated.as_ref(), |pane, _| {
+            pane.child(
+                h_flex()
+                    .gap_2()
+                    .items_center()
+                    .child(
+                        div()
+                            .w(px(220.0))
+                            .child(Input::new(approver_input)),
+                    )
+                    .child(
+                        Button::new("workflow-improve-approve")
+                            .label(if improve.approve_pending.is_some() {
+                                "Recording…"
+                            } else {
+                                "Approve"
+                            })
+                            .small()
+                            .primary()
+                            .disabled(improve.approve_pending.is_some())
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                let approver = this
+                                    .workflow_improve_approver
+                                    .read(cx)
+                                    .value()
+                                    .trim()
+                                    .to_owned();
+                                this.dispatch(
+                                    Action::WorkflowImproveApprove {
+                                        approver,
+                                        decision: codex_core::WorkflowApprovalDecision::Approved,
+                                        note: String::new(),
+                                        reason: String::new(),
+                                    },
+                                    cx,
+                                );
+                            })),
+                    )
+                    .child(
+                        Button::new("workflow-improve-reject")
+                            .label("Reject")
+                            .small()
+                            .ghost()
+                            .disabled(improve.approve_pending.is_some())
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                let approver = this
+                                    .workflow_improve_approver
+                                    .read(cx)
+                                    .value()
+                                    .trim()
+                                    .to_owned();
+                                this.dispatch(
+                                    Action::WorkflowImproveApprove {
+                                        approver,
+                                        decision: codex_core::WorkflowApprovalDecision::Rejected,
+                                        note: String::new(),
+                                        reason: "Rejected from the Flauz.app improve surface"
+                                            .to_owned(),
+                                    },
+                                    cx,
+                                );
+                            })),
+                    ),
+            )
+        })
+        .when_some(improve.approved.as_ref(), |pane, approved| {
+            pane.child(
+                div()
+                    .text_sm()
+                    .text_color(if approved.approved {
+                        cx.theme().muted_foreground
+                    } else {
+                        cx.theme().danger
+                    })
+                    .child(format!(
+                        "decision recorded by {} · validation {}",
+                        approved.approver,
+                        approved.validation_digest,
+                    )),
+            )
+        })
+        .when_some(
+            improve
+                .approved
+                .as_ref()
+                .filter(|approved| approved.approved),
+            |pane, _| {
+                pane.child(
+                    h_flex()
+                        .gap_2()
+                        .items_center()
+                        .child(
+                            div()
+                                .w(px(220.0))
+                                .child(
+                                    Input::new(release_tag_input),
+                                ),
+                        )
+                        .child(
+                            Button::new("workflow-improve-publish")
+                                .label(if improve.publish_pending.is_some() {
+                                    "Publishing…"
+                                } else {
+                                    "Publish successor"
+                                })
+                                .small()
+                                .primary()
+                                .disabled(improve.publish_pending.is_some())
+                                .on_click(cx.listener(|this, _, _, cx| {
+                                    let release_tag = this
+                                        .workflow_improve_release_tag
+                                        .read(cx)
+                                        .value()
+                                        .trim()
+                                        .to_owned();
+                                    this.dispatch(
+                                        Action::WorkflowImprovePublish { release_tag },
+                                        cx,
+                                    );
+                                })),
+                        ),
+                )
+            },
+        )
+        .when_some(improve.published.as_ref(), |pane, published| {
+            pane.child(
+                v_flex()
+                    .gap_1()
+                    .rounded_lg()
+                    .border_1()
+                    .border_color(cx.theme().border)
+                    .p_3()
+                    .child(
+                        div()
+                            .text_sm()
+                            .font_weight(FontWeight::MEDIUM)
+                            .child(format!(
+                                "Published successor {} ({})",
+                                published.semantic_version, published.release_tag,
+                            )),
+                    )
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(cx.theme().muted_foreground)
+                            .child(format!(
+                                "lineage: {} {} → {} · candidate {} · approver {} · {} stages",
+                                published.lineage.workflow,
+                                published.lineage.predecessor_semantic_version,
+                                published.lineage.successor_semantic_version,
+                                published.lineage.candidate_id,
+                                published.lineage.approver,
+                                published.lineage.validation_stages.len(),
+                            )),
+                    )
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(cx.theme().muted_foreground)
+                            .child(format!(
+                                "cites {} evidence references and {} recorded runs",
+                                published.evidence.references.len(),
+                                published.evidence.runs.len(),
+                            )),
+                    ),
+            )
+        })
         .into_any_element()
 }
 
@@ -1022,15 +1672,12 @@ fn render_instances_pane(state: &WorkflowState, cx: &mut Context<WorkspaceView>)
                     }),
             )
         })
-        .children(state.instances.iter().map(|instance| {
-            h_flex()
-                .gap_2()
-                .items_center()
-                .child(
+        .children(
+            group_instances_by_version(&state.instances)
+                .into_iter()
+                .map(|(version_id, instances)| {
                     v_flex()
-                        .gap_1()
-                        .flex_1()
-                        .min_w_0()
+                        .gap_2()
                         .child(
                             h_flex()
                                 .gap_2()
@@ -1039,59 +1686,99 @@ fn render_instances_pane(state: &WorkflowState, cx: &mut Context<WorkspaceView>)
                                         .text_xs()
                                         .font_family(cx.theme().mono_font_family.clone())
                                         .text_color(cx.theme().muted_foreground)
-                                        .child(instance.instance_id.clone()),
+                                        .child(version_id),
                                 )
-                                .child(div().text_sm().child(instance.workflow.clone()))
                                 .child(
                                     div()
-                                        .text_sm()
-                                        .text_color(workflow_instance_status_color(
-                                            instance.status,
-                                            cx,
-                                        ))
-                                        .child(workflow_instance_status_label(instance.status)),
+                                        .text_xs()
+                                        .text_color(cx.theme().muted_foreground)
+                                        .child(format!(
+                                            "{} run{}",
+                                            instances.len(),
+                                            if instances.len() == 1 { "" } else { "s" }
+                                        )),
                                 ),
                         )
-                        .child(
-                            div()
-                                .text_xs()
-                                .text_color(cx.theme().muted_foreground)
-                                .child(format!(
-                                    "version {} · {} steps taken",
-                                    instance.version_id, instance.steps_taken,
-                                )),
-                        ),
-                )
-                .child(
-                    Button::new(SharedString::from(format!(
-                        "workflow-inspect-{}",
-                        instance.instance_id
-                    )))
-                    .label(
-                        if state.instance_get_pending.as_deref()
-                            == Some(instance.instance_id.as_str())
-                        {
-                            "Inspecting…"
-                        } else {
-                            "Inspect"
-                        },
-                    )
-                    .small()
-                    .ghost()
-                    .disabled(state.instance_get_pending.is_some())
-                    .on_click(cx.listener({
-                        let instance_id = instance.instance_id.clone();
-                        move |this, _, _, cx| {
-                            this.dispatch(
-                                Action::WorkflowInstanceGet {
-                                    instance_id: instance_id.clone(),
-                                },
-                                cx,
-                            );
-                        }
-                    })),
-                )
-        }))
+                        .children(instances.into_iter().map(|instance| {
+                            h_flex()
+                                .gap_2()
+                                .items_center()
+                                .child(
+                                    v_flex()
+                                        .gap_1()
+                                        .flex_1()
+                                        .min_w_0()
+                                        .child(
+                                            h_flex()
+                                                .gap_2()
+                                                .child(
+                                                    div()
+                                                        .text_xs()
+                                                        .font_family(
+                                                            cx.theme().mono_font_family.clone(),
+                                                        )
+                                                        .text_color(cx.theme().muted_foreground)
+                                                        .child(instance.instance_id.clone()),
+                                                )
+                                                .child(
+                                                    div()
+                                                        .text_sm()
+                                                        .child(instance.workflow.clone()),
+                                                )
+                                                .child(
+                                                    div()
+                                                        .text_sm()
+                                                        .text_color(workflow_instance_status_color(
+                                                            instance.status,
+                                                            cx,
+                                                        ))
+                                                        .child(workflow_instance_status_label(
+                                                            instance.status,
+                                                        )),
+                                                ),
+                                        )
+                                        .child(
+                                            div()
+                                                .text_xs()
+                                                .text_color(cx.theme().muted_foreground)
+                                                .child(format!(
+                                                    "version {} · {} steps taken",
+                                                    instance.version_id, instance.steps_taken,
+                                                )),
+                                        ),
+                                )
+                                .child(
+                                    Button::new(SharedString::from(format!(
+                                        "workflow-inspect-{}",
+                                        instance.instance_id
+                                    )))
+                                    .label(
+                                        if state.instance_get_pending.as_deref()
+                                            == Some(instance.instance_id.as_str())
+                                        {
+                                            "Inspecting…"
+                                        } else {
+                                            "Inspect"
+                                        },
+                                    )
+                                    .small()
+                                    .ghost()
+                                    .disabled(state.instance_get_pending.is_some())
+                                    .on_click(cx.listener({
+                                        let instance_id = instance.instance_id.clone();
+                                        move |this, _, _, cx| {
+                                            this.dispatch(
+                                                Action::WorkflowInstanceGet {
+                                                    instance_id: instance_id.clone(),
+                                                },
+                                                cx,
+                                            );
+                                        }
+                                    })),
+                                )
+                        }))
+                }),
+        )
         .when_some(state.instance_detail.clone(), |pane, detail| {
             pane.child(
                 v_flex()
@@ -1263,4 +1950,23 @@ fn workflow_instance_status_color(status: WorkflowInstanceStatus, cx: &App) -> H
         WorkflowInstanceStatus::Failed => cx.theme().danger,
         WorkflowInstanceStatus::Cancelled => cx.theme().muted_foreground,
     }
+}
+
+/// Groups durable instances by their pinned immutable version, preserving
+/// the control plane's instance order inside each group.
+fn group_instances_by_version(
+    instances: &[codex_core::WorkflowInstanceCard],
+) -> Vec<(String, Vec<codex_core::WorkflowInstanceCard>)> {
+    let mut groups: Vec<(String, Vec<codex_core::WorkflowInstanceCard>)> = Vec::new();
+    for instance in instances {
+        if let Some(group) = groups
+            .iter_mut()
+            .find(|(version_id, _)| *version_id == instance.version_id)
+        {
+            group.1.push(instance.clone());
+        } else {
+            groups.push((instance.version_id.clone(), vec![instance.clone()]));
+        }
+    }
+    groups
 }
