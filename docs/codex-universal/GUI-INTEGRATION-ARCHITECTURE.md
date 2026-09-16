@@ -4,6 +4,7 @@
 **GUI base:** `payswapdotorg/Flauz.app` (fork of `Kiwunaka/codexRS`)
 **Universal runtime:** `payswapdotorg/codex`
 **Reference client:** codexRS / OpenAI Codex Desktop behavioral surface
+**Universal architecture:** 0.3.0 with governed Pack/System-State model
 
 ## 1. Mission
 
@@ -11,7 +12,7 @@ Flauz.app is the native desktop GUI client for Codex Universal.
 
 The forked codexRS implementation is the GUI foundation. Do not rebuild the Desktop GUI from scratch. Preserve its native GPUI architecture, app-server supervision, protocol implementation, platform layer, Git/worktree handling, terminal, Browser, Computer Use, settings, persistence, and release machinery unless a concrete integration requirement requires a bounded change.
 
-`payswapdotorg/codex` remains the authoritative Universal runtime and Workflow Platform. Flauz.app is a client/presentation layer over those contracts.
+`payswapdotorg/codex` remains the authoritative Universal runtime and Workflow/Pack Platform. Flauz.app is a client/presentation layer over those contracts.
 
 ## 2. Runtime ownership
 
@@ -24,6 +25,8 @@ Flauz.app GUI
    |
    +--> Codex Universal workflow/application contracts
    |
+   +--> Codex Universal Pack/system-state contracts
+   |
    +--> Universal runtime/model/workflow/execution services
 ```
 
@@ -32,9 +35,10 @@ The GUI MUST NOT create:
 - a second agent runtime;
 - a second workflow engine;
 - a second skills/plugins runtime;
+- a Pack runtime or Pack optimizer inside the GUI;
 - provider-specific workflow semantics;
 - direct writes to live `CODEX_HOME` state owned by app-server;
-- alternate durable workflow authority in GUI state.
+- alternate durable workflow or Pack authority in GUI state.
 
 ## 3. Two product surfaces
 
@@ -61,11 +65,12 @@ Maintain codexRS parity for:
 
 The codexRS parity matrix remains the GUI parity reference.
 
-### Universal Workflow surface
+### Workflow / System surface
 
 Add first-class GUI affordances for:
 
 - workflow library;
+- Packs and Pack identity where applicable;
 - create/teach workflow;
 - teaching modes `DEMONSTRATE`, `INSTRUCT`, `HYBRID`;
 - live teaching session state;
@@ -73,7 +78,12 @@ Add first-class GUI affordances for:
 - compilation and semantic validation;
 - capability/resource/dependency inspection;
 - workflow approval/publication;
-- immutable version history;
+- immutable WorkflowVersion history;
+- Pack revision and system-state inspection;
+- mission/value/context display;
+- Pack Constitution/policy summary;
+- candidate vs promoted system state;
+- evaluation/assurance evidence;
 - run/instance monitoring;
 - step timeline and evidence;
 - pause/resume/cancel/recovery;
@@ -83,13 +93,15 @@ Add first-class GUI affordances for:
 - installation/resource binding;
 - workflow sharing/distribution.
 
+Pack is an information and governance abstraction inside the Workflow/System surface, not a third competing top-level product surface.
+
 ## 4. Universal architecture compatibility
 
-The Codex Universal frozen architecture remains authoritative for workflow semantics, model portability, execution environments, evidence, resources, security, Git-native workflow identity and durable control-plane transitions.
+The Codex Universal frozen architecture remains authoritative for workflow semantics, Pack/system-state semantics, model portability, execution environments, evidence, resources, security, Git-native workflow identity, immutable Pack revisions, and durable control-plane transitions.
 
 The GUI may display or request those semantics but never redefine them.
 
-For example:
+Workflow example:
 
 ```text
 GUI: "Teach workflow"
@@ -107,7 +119,25 @@ Control-plane approval
 Immutable WorkflowVersion
 ```
 
-The GUI must not encode the workflow graph as UI-only state and then invent its own execution semantics.
+Pack example:
+
+```text
+GUI: "Inspect Pack / improve system"
+      |
+      v
+Universal Pack contracts
+      |
+      v
+PackCandidate / PackSystemState
+      |
+      v
+Control-plane assurance / approval
+      |
+      v
+Immutable PackRevision
+```
+
+The GUI must not encode either the workflow graph or Pack system state as UI-only durable state and then invent its own execution semantics.
 
 ## 5. Integration boundary
 
@@ -115,7 +145,7 @@ Prefer a typed app/application protocol boundary.
 
 The existing codexRS app-server supervisor remains responsible for the official Codex app-server lifecycle and live Codex session state.
 
-Universal-specific services should be integrated through explicit client-facing contracts rather than importing the entire `payswapdotorg/codex` runtime into the GPUI process.
+Universal-specific Workflow and Pack services should be integrated through explicit client-facing contracts rather than importing the entire `payswapdotorg/codex` runtime into the GPUI process.
 
 A bounded local transport is preferred when a long-running Universal service is required. The transport must define:
 
@@ -129,7 +159,7 @@ A bounded local transport is preferred when a long-running Universal service is 
 - restart/reconnect behavior;
 - redaction and secret handling.
 
-Do not couple Universal workflow semantics directly to GPUI reducers or widgets.
+Do not couple Universal workflow or Pack semantics directly to GPUI reducers or widgets.
 
 ## 6. Reuse before extension
 
@@ -139,13 +169,13 @@ Prefer:
 
 1. existing codexRS UI/state/platform primitive;
 2. existing OpenAI Codex app-server/public protocol;
-3. existing Universal workflow/model/execution contract;
+3. existing Universal workflow/model/execution/Pack contract;
 4. a small explicit adapter;
 5. only then a new abstraction.
 
 ## 7. Product goal
 
-The resulting desktop application should feel like a first-class Codex desktop client while extending that interaction model to the Universal workflow product.
+The resulting desktop application should feel like a first-class Codex desktop client while extending that interaction model to the Universal workflow/system product.
 
 A user should be able to:
 
@@ -153,12 +183,14 @@ A user should be able to:
 2. chat with an agent;
 3. teach an arbitrary computer workflow;
 4. review the resulting workflow;
-5. publish an immutable version;
-6. run it;
-7. inspect live progress/evidence;
-8. recover or resume it;
-9. fork/improve/share it;
-10. combine workflows and schedule them.
+5. publish an immutable WorkflowVersion;
+6. inspect or enter a Pack context when applicable;
+7. run it;
+8. inspect live progress/evidence;
+9. recover or resume it;
+10. fork/improve/share it;
+11. combine workflows and schedule them;
+12. inspect Pack mission/system-state/assurance information without leaving the desktop product.
 
 The user should not need the terminal for the normal workflow lifecycle.
 
@@ -172,7 +204,8 @@ The implementation may use `Flauz.app` as the working product/repository name wh
 - Reimplementing codexRS UI components solely to change technology.
 - Replacing the Codex runtime.
 - Replacing the existing workflow engine.
+- Building a Pack generator/evolution engine inside the GUI.
 - Building a web UI as a shortcut for desktop delivery.
 - Adding Electron, Tauri, Wry, WebView or Node runtime dependencies.
 - Directly reading/writing live `CODEX_HOME` databases or logs.
-- Moving durable workflow authority into local UI state.
+- Moving durable workflow or Pack authority into local UI state.
