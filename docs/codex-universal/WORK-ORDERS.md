@@ -1,6 +1,6 @@
 # Codex Universal GUI Integration Work Orders
 
-**Status:** IN EXECUTION — GUI-001 (PR #1), GUI-003 (PR #2), GUI-002 (PR #3), GUI-004 (PR #4) MERGED; GUI-005 COMPLETE (`docs/codex-universal/reports/GUI-005-report.md`, branch `gui-005/multi-environment-ux`)
+**Status:** IN EXECUTION — GUI-001 (PR #1), GUI-003 (PR #2), GUI-002 (PR #3), GUI-004 (PR #4), GUI-005 (PR #5), GUI-006 (PR #7) MERGED; release `v0.1.0-rc.13` published. Remaining: GUI-007 (final validation)
 **Repository:** `payswapdotorg/Flauz.app`
 **Authority:** `docs/codex-universal/GUI-INTEGRATION-ARCHITECTURE.md`
 **Universal source of truth:** `payswapdotorg/codex`
@@ -201,7 +201,7 @@ Acceptance:
 
 ## GUI-006 — Distribution + Release
 
-**Status:** IN EXECUTION — version `v0.1.0-rc.13` cut; runtime compatibility policy, release notes, changelog and parity closure merged; release build running in CI; report to follow
+**Status:** COMPLETE — release `v0.1.0-rc.13` published and fresh-machine validated; see `docs/codex-universal/reports/GUI-006-report.md`
 **Depends on:** GUI-004
 
 Produce a real desktop application release.
