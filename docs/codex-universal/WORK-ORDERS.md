@@ -201,6 +201,7 @@ Acceptance:
 
 ## GUI-006 — Distribution + Release
 
+**Status:** IN EXECUTION — version `v0.1.0-rc.13` cut; runtime compatibility policy, release notes, changelog and parity closure merged; release build running in CI; report to follow
 **Depends on:** GUI-004
 
 Produce a real desktop application release.

@@ -16,22 +16,22 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Kiwunaka/codexRS/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Kiwunaka/codexRS/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/releases"><img alt="Release" src="https://img.shields.io/github/v/release/Kiwunaka/codexRS?include_prereleases&sort=semver"></a>
-  <a href="LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/github/license/Kiwunaka/codexRS"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/Kiwunaka/codexRS?style=flat"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/graphs/contributors"><img alt="Contributors" src="https://img.shields.io/github/contributors/Kiwunaka/codexRS"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/payswapdotorg/Flauz.app/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases"><img alt="Release" src="https://img.shields.io/github/v/release/payswapdotorg/Flauz.app?include_prereleases&sort=semver"></a>
+  <a href="LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/github/license/payswapdotorg/Flauz.app"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/payswapdotorg/Flauz.app?style=flat"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/graphs/contributors"><img alt="Contributors" src="https://img.shields.io/github/contributors/payswapdotorg/Flauz.app"></a>
   <img alt="Windows and Linux" src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-2f81f7">
 </p>
 
 <p align="center">
-  <a href="https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/codexrs-v0.1.0-rc.12-windows-x86_64.zip"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows%20x86__64-2f81f7?style=for-the-badge&logo=windows11&logoColor=white"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/codexrs-v0.1.0-rc.12-linux-x86_64.tar.gz"><img alt="Download for Linux" src="https://img.shields.io/badge/Download-Linux%20x86__64-f0a050?style=for-the-badge&logo=linux&logoColor=white"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/SHA256SUMS.txt"><img alt="SHA-256 checksums" src="https://img.shields.io/badge/Verify-SHA--256-3fb950?style=for-the-badge"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-windows-x86_64.zip"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows%20x86__64-2f81f7?style=for-the-badge&logo=windows11&logoColor=white"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-linux-x86_64.tar.gz"><img alt="Download for Linux" src="https://img.shields.io/badge/Download-Linux%20x86__64-f0a050?style=for-the-badge&logo=linux&logoColor=white"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/SHA256SUMS.txt"><img alt="SHA-256 checksums" src="https://img.shields.io/badge/Verify-SHA--256-3fb950?style=for-the-badge"></a>
 </p>
 
 <p align="center">
-  <sub>v0.1.0-rc.12 · unsigned portable preview · official Codex CLI required</sub>
+  <sub>v0.1.0-rc.13 · unsigned portable preview · official Codex CLI required</sub>
 </p>
 
 > [!WARNING]
@@ -151,17 +151,17 @@ If it is not on `PATH`, set `CODEX_RS_CODEX_BIN` to the native `codex` or
 
 ### 2. Download the portable preview
 
-Current preview: **v0.1.0-rc.12**.
+Current preview: **v0.1.0-rc.13**.
 
-- [Windows x86_64 ZIP](https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/codexrs-v0.1.0-rc.12-windows-x86_64.zip)
-- [Linux x86_64 tar.gz](https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/codexrs-v0.1.0-rc.12-linux-x86_64.tar.gz)
-- [SHA-256 checksums](https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/SHA256SUMS.txt)
-- [All releases and release notes](https://github.com/Kiwunaka/codexRS/releases)
+- [Windows x86_64 ZIP](https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-windows-x86_64.zip)
+- [Linux x86_64 tar.gz](https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-linux-x86_64.tar.gz)
+- [SHA-256 checksums](https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/SHA256SUMS.txt)
+- [All releases and release notes](https://github.com/payswapdotorg/Flauz.app/releases)
 
 Verify the archive before extraction. On Linux, run
-`grep 'codexrs-v0.1.0-rc.12-linux-x86_64.tar.gz$' SHA256SUMS.txt | sha256sum -c -`.
+`grep 'codexrs-v0.1.0-rc.13-linux-x86_64.tar.gz$' SHA256SUMS.txt | sha256sum -c -`.
 On Windows, compare
-`(Get-FileHash .\codexrs-v0.1.0-rc.12-windows-x86_64.zip -Algorithm SHA256).Hash`
+`(Get-FileHash .\codexrs-v0.1.0-rc.13-windows-x86_64.zip -Algorithm SHA256).Hash`
 with the matching entry. The checksum detects transfer corruption; it is not an
 independent publisher signature.
 
@@ -194,7 +194,7 @@ Install Git, Rust through `rustup`, and the native packages listed under
 [Platform support](docs/platform-support.md), then:
 
 ```text
-git clone https://github.com/Kiwunaka/codexRS.git
+git clone https://github.com/payswapdotorg/Flauz.app.git
 cd codexRS
 cargo build --release -p codex-app
 ```
@@ -235,9 +235,9 @@ Contributions are welcome. Start with
 focused on an observable requirement or failure. Large features should begin
 as an issue or discussion so the contract is clear before implementation.
 
-- [Good first issues](https://github.com/Kiwunaka/codexRS/labels/good%20first%20issue)
-- [Help wanted](https://github.com/Kiwunaka/codexRS/labels/help%20wanted)
-- [Discussions](https://github.com/Kiwunaka/codexRS/discussions)
+- [Good first issues](https://github.com/payswapdotorg/Flauz.app/labels/good%20first%20issue)
+- [Help wanted](https://github.com/payswapdotorg/Flauz.app/labels/help%20wanted)
+- [Discussions](https://github.com/payswapdotorg/Flauz.app/discussions)
 - [Roadmap](ROADMAP.md)
 - [Codex Desktop parity matrix](docs/parity-matrix.md)
 - [Support](SUPPORT.md)
@@ -250,13 +250,13 @@ find the project.
 
 ## Contributors
 
-<a href="https://github.com/Kiwunaka/codexRS/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Kiwunaka/codexRS" alt="codexRS contributors">
+<a href="https://github.com/payswapdotorg/Flauz.app/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=payswapdotorg/Flauz.app" alt="codexRS contributors">
 </a>
 
 ## Star history
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Kiwunaka/codexRS&type=Date)](https://www.star-history.com/?repos=Kiwunaka%2FcodexRS&type=date&legend=top-left)
+[![Star History Chart](https://api.star-history.com/svg?repos=payswapdotorg/Flauz.app&type=Date)](https://www.star-history.com/?repos=Kiwunaka%2FcodexRS&type=date&legend=top-left)
 
 ## License and upstream notice
 

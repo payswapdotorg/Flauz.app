@@ -16,22 +16,22 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Kiwunaka/codexRS/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Kiwunaka/codexRS/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/releases"><img alt="Релиз" src="https://img.shields.io/github/v/release/Kiwunaka/codexRS?include_prereleases&sort=semver"></a>
-  <a href="LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/github/license/Kiwunaka/codexRS"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/stargazers"><img alt="Звёзды" src="https://img.shields.io/github/stars/Kiwunaka/codexRS?style=flat"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/graphs/contributors"><img alt="Контрибьюторы" src="https://img.shields.io/github/contributors/Kiwunaka/codexRS"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/payswapdotorg/Flauz.app/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases"><img alt="Релиз" src="https://img.shields.io/github/v/release/payswapdotorg/Flauz.app?include_prereleases&sort=semver"></a>
+  <a href="LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/github/license/payswapdotorg/Flauz.app"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/stargazers"><img alt="Звёзды" src="https://img.shields.io/github/stars/payswapdotorg/Flauz.app?style=flat"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/graphs/contributors"><img alt="Контрибьюторы" src="https://img.shields.io/github/contributors/payswapdotorg/Flauz.app"></a>
   <img alt="Windows и Linux" src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-2f81f7">
 </p>
 
 <p align="center">
-  <a href="https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/codexrs-v0.1.0-rc.12-windows-x86_64.zip"><img alt="Скачать для Windows" src="https://img.shields.io/badge/Скачать-Windows%20x86__64-2f81f7?style=for-the-badge&logo=windows11&logoColor=white"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/codexrs-v0.1.0-rc.12-linux-x86_64.tar.gz"><img alt="Скачать для Linux" src="https://img.shields.io/badge/Скачать-Linux%20x86__64-f0a050?style=for-the-badge&logo=linux&logoColor=white"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/SHA256SUMS.txt"><img alt="Контрольные суммы SHA-256" src="https://img.shields.io/badge/Проверить-SHA--256-3fb950?style=for-the-badge"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-windows-x86_64.zip"><img alt="Скачать для Windows" src="https://img.shields.io/badge/Скачать-Windows%20x86__64-2f81f7?style=for-the-badge&logo=windows11&logoColor=white"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-linux-x86_64.tar.gz"><img alt="Скачать для Linux" src="https://img.shields.io/badge/Скачать-Linux%20x86__64-f0a050?style=for-the-badge&logo=linux&logoColor=white"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/SHA256SUMS.txt"><img alt="Контрольные суммы SHA-256" src="https://img.shields.io/badge/Проверить-SHA--256-3fb950?style=for-the-badge"></a>
 </p>
 
 <p align="center">
-  <sub>v0.1.0-rc.12 · неподписанный portable preview · нужна официальная Codex CLI</sub>
+  <sub>v0.1.0-rc.13 · неподписанный portable preview · нужна официальная Codex CLI</sub>
 </p>
 
 > [!WARNING]
@@ -150,17 +150,17 @@ codex --version
 
 ### 2. Скачайте portable preview
 
-Текущий preview: **v0.1.0-rc.12**.
+Текущий preview: **v0.1.0-rc.13**.
 
-- [Windows x86_64, ZIP](https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/codexrs-v0.1.0-rc.12-windows-x86_64.zip)
-- [Linux x86_64, tar.gz](https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/codexrs-v0.1.0-rc.12-linux-x86_64.tar.gz)
-- [Контрольные суммы SHA-256](https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/SHA256SUMS.txt)
-- [Все релизы и release notes](https://github.com/Kiwunaka/codexRS/releases)
+- [Windows x86_64, ZIP](https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-windows-x86_64.zip)
+- [Linux x86_64, tar.gz](https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-linux-x86_64.tar.gz)
+- [Контрольные суммы SHA-256](https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/SHA256SUMS.txt)
+- [Все релизы и release notes](https://github.com/payswapdotorg/Flauz.app/releases)
 
 Проверьте архив до распаковки. В Linux выполните
-`grep 'codexrs-v0.1.0-rc.12-linux-x86_64.tar.gz$' SHA256SUMS.txt | sha256sum -c -`.
+`grep 'codexrs-v0.1.0-rc.13-linux-x86_64.tar.gz$' SHA256SUMS.txt | sha256sum -c -`.
 В Windows сравните
-`(Get-FileHash .\codexrs-v0.1.0-rc.12-windows-x86_64.zip -Algorithm SHA256).Hash`
+`(Get-FileHash .\codexrs-v0.1.0-rc.13-windows-x86_64.zip -Algorithm SHA256).Hash`
 с нужной строкой. Checksum помогает найти повреждение при передаче, но не
 является независимой подписью издателя.
 
@@ -192,7 +192,7 @@ XWayland не поддерживается.
 [поддержки платформ](docs/platform-support.md), затем:
 
 ```text
-git clone https://github.com/Kiwunaka/codexRS.git
+git clone https://github.com/payswapdotorg/Flauz.app.git
 cd codexRS
 cargo build --release -p codex-app
 ```
@@ -233,9 +233,9 @@ cargo run -p codex-app --bin codexrs
 решать понятную задачу или подтверждённую ошибку. Большие функции лучше сначала
 обсудить в issue или Discussions, чтобы до кода согласовать контракт.
 
-- [Задачи для первого контрибьюта](https://github.com/Kiwunaka/codexRS/labels/good%20first%20issue)
-- [Нужна помощь](https://github.com/Kiwunaka/codexRS/labels/help%20wanted)
-- [Обсуждения](https://github.com/Kiwunaka/codexRS/discussions)
+- [Задачи для первого контрибьюта](https://github.com/payswapdotorg/Flauz.app/labels/good%20first%20issue)
+- [Нужна помощь](https://github.com/payswapdotorg/Flauz.app/labels/help%20wanted)
+- [Обсуждения](https://github.com/payswapdotorg/Flauz.app/discussions)
 - [План развития](ROADMAP.md)
 - [Матрица паритета с Codex Desktop](docs/parity-matrix.md)
 - [Поддержка](SUPPORT.md)
@@ -248,13 +248,13 @@ cargo run -p codex-app --bin codexrs
 
 ## Контрибьюторы
 
-<a href="https://github.com/Kiwunaka/codexRS/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Kiwunaka/codexRS" alt="Контрибьюторы codexRS">
+<a href="https://github.com/payswapdotorg/Flauz.app/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=payswapdotorg/Flauz.app" alt="Контрибьюторы codexRS">
 </a>
 
 ## Рост проекта
 
-[![История звёзд](https://api.star-history.com/svg?repos=Kiwunaka/codexRS&type=Date)](https://www.star-history.com/?repos=Kiwunaka%2FcodexRS&type=date&legend=top-left)
+[![История звёзд](https://api.star-history.com/svg?repos=payswapdotorg/Flauz.app&type=Date)](https://www.star-history.com/?repos=Kiwunaka%2FcodexRS&type=date&legend=top-left)
 
 ## Лицензия и связь с upstream
 

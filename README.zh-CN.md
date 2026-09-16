@@ -16,22 +16,22 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Kiwunaka/codexRS/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Kiwunaka/codexRS/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/releases"><img alt="Release" src="https://img.shields.io/github/v/release/Kiwunaka/codexRS?include_prereleases&sort=semver"></a>
-  <a href="LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/github/license/Kiwunaka/codexRS"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/Kiwunaka/codexRS?style=flat"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/graphs/contributors"><img alt="Contributors" src="https://img.shields.io/github/contributors/Kiwunaka/codexRS"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/payswapdotorg/Flauz.app/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases"><img alt="Release" src="https://img.shields.io/github/v/release/payswapdotorg/Flauz.app?include_prereleases&sort=semver"></a>
+  <a href="LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/github/license/payswapdotorg/Flauz.app"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/payswapdotorg/Flauz.app?style=flat"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/graphs/contributors"><img alt="Contributors" src="https://img.shields.io/github/contributors/payswapdotorg/Flauz.app"></a>
   <img alt="Windows 与 Linux" src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-2f81f7">
 </p>
 
 <p align="center">
-  <a href="https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/codexrs-v0.1.0-rc.12-windows-x86_64.zip"><img alt="下载 Windows 版本" src="https://img.shields.io/badge/下载-Windows%20x86__64-2f81f7?style=for-the-badge&logo=windows11&logoColor=white"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/codexrs-v0.1.0-rc.12-linux-x86_64.tar.gz"><img alt="下载 Linux 版本" src="https://img.shields.io/badge/下载-Linux%20x86__64-f0a050?style=for-the-badge&logo=linux&logoColor=white"></a>
-  <a href="https://github.com/Kiwunaka/codexRS/releases/download/v0.1.0-rc.12/SHA256SUMS.txt"><img alt="SHA-256 校验和" src="https://img.shields.io/badge/校验-SHA--256-3fb950?style=for-the-badge"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-windows-x86_64.zip"><img alt="下载 Windows 版本" src="https://img.shields.io/badge/下载-Windows%20x86__64-2f81f7?style=for-the-badge&logo=windows11&logoColor=white"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-linux-x86_64.tar.gz"><img alt="下载 Linux 版本" src="https://img.shields.io/badge/下载-Linux%20x86__64-f0a050?style=for-the-badge&logo=linux&logoColor=white"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/SHA256SUMS.txt"><img alt="SHA-256 校验和" src="https://img.shields.io/badge/校验-SHA--256-3fb950?style=for-the-badge"></a>
 </p>
 
 <p align="center">
-  <sub>v0.1.0-rc.12 · 未签名便携预览版 · 需要官方 Codex CLI</sub>
+  <sub>v0.1.0-rc.13 · 未签名便携预览版 · 需要官方 Codex CLI</sub>
 </p>
 
 > [!IMPORTANT]
@@ -101,7 +101,7 @@ codex --version
 
 ### 2. 下载便携预览版
 
-仅从 [GitHub Releases](https://github.com/Kiwunaka/codexRS/releases)
+仅从 [GitHub Releases](https://github.com/payswapdotorg/Flauz.app/releases)
 页面下载。每个预览版都包含 `codexrs-<tag>-windows-x86_64.zip`、
 `codexrs-<tag>-linux-x86_64.tar.gz` 和 `SHA256SUMS.txt`；请将 `<tag>`
 替换为所选 release 的完整 tag。
@@ -132,7 +132,7 @@ XWayland 的纯 Wayland。
 中列出的原生依赖：
 
 ```text
-git clone https://github.com/Kiwunaka/codexRS.git
+git clone https://github.com/payswapdotorg/Flauz.app.git
 cd codexRS
 cargo build --release -p codex-app
 ```
@@ -168,9 +168,9 @@ cargo run -p codex-app --bin codexrs
 欢迎贡献。请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 与
 [AGENTS.md](AGENTS.md)。大型功能应先通过 issue 或 Discussions 明确行为契约。
 
-- [适合首次贡献的任务](https://github.com/Kiwunaka/codexRS/labels/good%20first%20issue)
-- [需要帮助](https://github.com/Kiwunaka/codexRS/labels/help%20wanted)
-- [讨论区](https://github.com/Kiwunaka/codexRS/discussions)
+- [适合首次贡献的任务](https://github.com/payswapdotorg/Flauz.app/labels/good%20first%20issue)
+- [需要帮助](https://github.com/payswapdotorg/Flauz.app/labels/help%20wanted)
+- [讨论区](https://github.com/payswapdotorg/Flauz.app/discussions)
 - [路线图](ROADMAP.md)
 - [Codex Desktop 对等矩阵](docs/parity-matrix.md)
 - [支持](SUPPORT.md)
@@ -180,13 +180,13 @@ cargo run -p codex-app --bin codexrs
 
 ## 贡献者
 
-<a href="https://github.com/Kiwunaka/codexRS/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Kiwunaka/codexRS" alt="codexRS 贡献者">
+<a href="https://github.com/payswapdotorg/Flauz.app/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=payswapdotorg/Flauz.app" alt="codexRS 贡献者">
 </a>
 
 ## Star 趋势
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Kiwunaka/codexRS&type=Date)](https://www.star-history.com/?repos=Kiwunaka%2FcodexRS&type=date&legend=top-left)
+[![Star History Chart](https://api.star-history.com/svg?repos=payswapdotorg/Flauz.app&type=Date)](https://www.star-history.com/?repos=Kiwunaka%2FcodexRS&type=date&legend=top-left)
 
 ## 许可证与上游声明
 

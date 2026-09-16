@@ -1,9 +1,39 @@
 # Changelog
 
-All notable changes to codexRS are documented here. The project follows
+All notable changes are documented here. The project follows
 [Semantic Versioning](https://semver.org/) once release tags are published.
 
 ## [Unreleased]
+
+## [0.1.0-rc.13] - 2026-09-16
+
+First Flauz.app release: the Codex Universal native desktop GUI on the
+codexRS base.
+
+### Added
+
+- Universal workflow surface through the supervised app-server
+  boundary: teaching sessions (demonstrate, instruct, hybrid),
+  compilation with findings, governed approve and publish anchored at
+  a commit, run with execution path and evidence, durable instance
+  list and inspection, and instance resume/cancel with reason.
+- Immutable version lifecycle: published versions with binding
+  resolution audit records, fork with engine-sealed lineage, and the
+  governed improvement chain (propose, select, validate, approve,
+  publish).
+- Multi-environment UX: evidence classified onto Universal
+  environment classes (Browser, Computer, Terminal, API/tool/MCP,
+  human gate, binding), a numbered environment timeline with explicit
+  boundary-crossing markers, and per-instance environment summaries.
+- Runtime compatibility policy
+  (`docs/codex-universal/RUNTIME-COMPATIBILITY.md`): base surfaces
+  target the official Codex CLI; the workflow family requires the
+  `workflow/*` app-server methods first served by
+  `payswapdotorg/codex` `rust-v0.1.0`, and fails closed with
+  actionable errors on runtimes without it.
+- Release distribution: unsigned portable archives for Windows and
+  Linux with SHA-256 checksums, startup smokes, and
+  `SHA256SUMS.txt` (`v0.1.0-rc.13`).
 
 ## [0.1.0-rc.12] - 2026-08-03
 

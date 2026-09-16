@@ -338,8 +338,8 @@ parity tracking.
 | Cloud environments | bounded | OpenAI cloud backend (proprietary, unavailable) |
 | Voice | bounded | proprietary realtime stack (unavailable) |
 | Pets and Codex Micro | bounded | proprietary companion surface (unavailable) |
-| Windows | deferred to GUI-006 | packaging, signing, integration |
-| Linux | deferred to GUI-006 | Wayland portals, packaging, tray, global shortcuts |
+| Windows | bounded (GUI-006) | unsigned portable ZIP is the release strategy; code signing (certificate + HSM + notarization) is unavailable to this program, so artifacts ship unsigned with SHA-256 checksums and the documented verify step; no MSI/installer — extract-and-run with both executables kept together |
+| Linux | bounded (GUI-006) | unsigned portable tar.gz with explicit `--install-desktop-entry` per-user integration; no system package, Wayland portals, tray, or global shortcuts — documented in `docs/platform-support.md` |
 
 Release-critical closure in GUI-002 itself: the Projects and chats row's
 manual project ordering gap is closed (persisted manual order within
