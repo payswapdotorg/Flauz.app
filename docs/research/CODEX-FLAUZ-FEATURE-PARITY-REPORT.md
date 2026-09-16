@@ -1,13 +1,13 @@
 # Codex ↔ Flauz Feature Parity Report
 
-> **STATUS: PRE-A/B BASELINE — pending reconciliation by Worker C2.**
-> This document is the canonical parity report SKELETON. The matrix rows below
-> are pre-populated from historical repo records only
-> (`docs/parity-matrix.md`, `docs/known-failures.md`). They have **not** yet
-> been reconciled against `CODEX-REFERENCE-MATRIX.md` (Worker A) or
-> `FLAUZ-REFERENCE-MATRIX.md` (Worker B). Every pre-populated row is marked
-> `PRE-A/B` in its Evidence column. Worker C2 reconciles; nobody else edits
-> statuses.
+> **STATUS: RECONCILED (post A/B audit) — pending Tech Lead convergence.**
+> This document is the canonical parity report. The matrix in §5 was reconciled by
+> Worker C2 (2026-09-16) from Worker A's `docs/research/CODEX-REFERENCE-MATRIX.md`
+> (branch `parity/codex-reference-matrix`, commit `c083c38`), Worker B2's
+> `docs/research/FLAUZ-REFERENCE-MATRIX.md` (branch `parity/flauz-reference-matrix`,
+> commit `a2343d3`), and the historical repo records, following the reconciliation
+> procedure in §7. Every cell carries its provenance label; overrides are recorded
+> in §9. Statuses are reconciled — only C2 / the Tech Lead edit them from here.
 
 **Repository:** `payswapdotorg/Flauz.app`
 **Framework authority:** this file + `docs/research/FEATURE-PARITY-WORK-ORDERS.md`
@@ -55,16 +55,22 @@ LINUX_GUI_LAB:   available (LOCAL Debian 13 sandbox — proven end-to-end)
 Consequences for this matrix:
 
 - The official Codex GUI is a closed-source Electron app shipped for
-  Windows/macOS only; it **cannot run on Linux anywhere**. Official-side
+  Windows/macOS at baseline; it does not run in this lab. Official-side
   (Linux-A) evidence therefore consists of reference **layers** with
-  provenance labels, not live runs — except official *runtime* behavior that
-  is reproducible in this lab (official CLI `0.146.0-alpha.3.1`,
+  provenance labels, not live GUI runs — except official *runtime* behavior
+  that is reproducible in this lab (official CLI `0.146.0-alpha.3.1`,
   `codexrs probe`/`info`).
 - Windows-pair and macOS-pair validation is **deferred** until those
   environments exist. Windows/macOS cells in this matrix may only carry
   `[historical-record]`, `[docs-derived]`, or `[source-derived]` evidence.
 - No silent platform substitution: a Linux observation never fills a Windows
   cell, and vice versa (see §7.4).
+- **2026-09-16 annotation (Worker A finding, `[docs-derived]`):** an OFFICIAL
+  Linux desktop app now exists in preview (since 2026-08-11; `.deb`/`.rpm`;
+  Ubuntu 24.04/26.04, Debian 13, Fedora 43/44; x64 + ARM64). The lab bounds
+  above are **unchanged** — upgrading Linux-A from evidence-layers to
+  runtime-observed requires running that app in LINUX_GUI_LAB first, tracked
+  as WO-LAB-001 (see §8.4). Platform bounds are never changed silently.
 
 ## 4. Definitions (operator-specified — do not reword)
 
@@ -112,7 +118,7 @@ Consequences for this matrix:
 | --- | --- |
 | `Capability` | One capability per row, named after the reference behavior, grouped under the fixed feature sections (§5). |
 | `Official Codex` | Reference behavior (from Worker A's matrix / historical record), with provenance label. |
-| `Flauz` | Current behavior (from Worker B's matrix / historical record), with provenance label. |
+| `Flauz` | Current behavior (from Worker B2's matrix / historical record), with provenance label. |
 | `Platform` | Platform slices this row's evidence covers (`win`, `linux`, `macos`). Split rows per platform when statuses differ — never merge silently. |
 | `Backend` | Status of the backend/protocol/engine layer. |
 | `UI` | Status of the UI surface layer. |
@@ -120,150 +126,176 @@ Consequences for this matrix:
 | `UX parity` | Status vs the "behaves materially differently" bar. |
 | `Functional parity` | Overall end-to-end functional status (the roll-up cell). |
 | `Recovery` | Recovery/verification path: how a user or the lab recovers or re-verifies this capability (reconnect timers, retry, fallback, lab scene). `—` if none recorded. |
-| `Evidence` | `PRE-A/B` marker + provenance label + source citation. After C2 reconciliation: A/B matrix row references. |
+| `Evidence` | Provenance labels + source citations: A-matrix section, B2-matrix section, historical record, evidence captures. |
 | `Gap` | Gap type (§4.1) + priority class (§4.4), or `none recorded`. Work-order ID once one exists. |
 
 Cell conventions:
 
-- `—` = not derivable from the current evidence layer; **C2 fills it**.
-- A cell status is one of §4.2 only (plus `—` pre-reconciliation).
-- Pre-populated mapping from the historical ledger (for C2 to revisit):
+- `—` = not derivable from any evidence layer (named bound).
+- A cell status is one of §4.2 only (plus `—`).
+- Historical-status mapping applied at pre-population and revisited by C2:
   `done → complete`, `partial → partial`, `missing → missing`,
   `platform → platform-limited`, ledger verdict `bounded` (proprietary
   backend / pending public protocol) → status `deferred`; ledger delta class
-  `polish → P3`, `enhancement → P2`.
+  `polish → P3`, `enhancement → P2`. C2 overrides where the A/B audit
+  produced higher-order evidence (§9).
 
 ---
 
-## 5. Canonical parity matrix (PRE-A/B baseline)
+## 5. Canonical parity matrix (RECONCILED post A/B audit)
 
-Citations: **PM** = `docs/parity-matrix.md`, **KF** = `docs/known-failures.md`.
-All rows are `[historical-record]` unless stated otherwise. **PM ledger**
-refers to PM §"Release-critical parity ledger (GUI-002)".
+Citations: **PM** = `docs/parity-matrix.md`; **KF** = `docs/known-failures.md`;
+**A §n** = `CODEX-REFERENCE-MATRIX.md` §n (Worker A, commit `c083c38`);
+**B2 §n** = `FLAUZ-REFERENCE-MATRIX.md` §n (Worker B2, commit `a2343d3`);
+**ev/NN** = `docs/research/evidence/flauz/NN-*.png` (B2 curated runtime
+captures). Rows carried from the C1 skeleton keep their historical-layer
+content, now merged with A/B evidence; rows marked **(added by C2 audit)**
+were surfaced by the A/B matrices with no canonical predecessor (§7.2
+A-row-without-B-counterpart rule; Flauz-side absence verified by source sweep
+at `main f113515`). Linux cells are `[runtime-observed]` where B2 evidenced
+them; Windows/macOS official behavior is `[historical-record]`/`[docs-derived]`
+only — no platform validation is claimed.
 
 ### 5.1 Agent / task lifecycle
 
 | Capability | Official Codex | Flauz | Platform | Backend | UI | Discoverability | UX parity | Functional parity | Recovery | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Runtime bootstrap | Packaged-CLI hash pin + explicit override/fallback order | Implemented: exact packaged CLI hash check, override/fallback order preserved | win, linux | complete | complete | — | — | complete | fallback order on CLI mismatch | PRE-A/B · [historical-record] PM "Runtime bootstrap" | none recorded |
-| App-server supervision | Stable startup capabilities declaration, legacy-notification opt-out, reconnect, loaded/background session recovery | Bounded `thread/loaded/list` hydration via `thread/read`, prioritized + resumed after connect; deduplicated 1/2/4/8/16/20 s reconnect timer; retryable startup failure; pending: remaining stable methods, network-aware transport diagnostics | win, linux | partial | partial | — | — | partial | reconnect timer + manual retry; resume after reconnect | PRE-A/B · [historical-record] PM "App-server supervision" | backend — P2 |
-| Projects and chats | Grouping, bounded full-text chat search, unified command menu, archive/unarchive/delete, rename, pinning | Bounded search with stable snippets + pagination, command menu, archive/delete/rename, codexRS-owned bounded pinning; pending: multi-root sources, unread state, richer metadata (PM ledger: polish) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Projects and chats" | ux — P3 |
-| Thread execution | Start, steer, interrupt, reconnect, active-turn restoration, edit latest message, manual compaction | Typed stable methods incl. `thread/rollback` + replacement `turn/start`; pending: compaction provenance, richer edit metadata (ledger: polish) | win, linux | partial | partial | — | — | partial | selected active-turn restoration; reconnect | PRE-A/B · [historical-record] PM "Thread execution" | ux — P3 |
-| Approvals and user input | Stable public `item/commandExecution/requestApproval`, `item/fileChange/requestApproval`, `item/permissions/requestApproval` | Native command/file/permission/dynamic-tool approvals with bounded typed payloads; pending: connector-specific methods where public contracts expose them (ledger: bounded) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Approvals and user input" | backend — deferred (public protocol) |
-| Streaming timeline | Compact `Explored`/`Ran`, file-change, web-search, subagent, image-inspection/generation, background-terminal summaries | Bottom-aligned variable-height native list with stable-style summaries; pending: activity grouping, citation navigation, source aggregation (ledger: polish) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Streaming timeline" | ux — P3 |
-| Scheduled tasks | Suggestions, manual/chat-assisted creation, schedule editor, run history, unread/archive states, plugin templates, pause/edit/delete, notifications | Not implemented — cloud tasks backend proprietary (ledger: bounded) | win, linux | deferred | deferred | — | — | deferred | — | PRE-A/B · [historical-record] PM "Scheduled tasks" | backend (proprietary) — deferred |
+| Runtime bootstrap | Packaged-CLI hash pin + explicit override/fallback order `[historical-record] PM` | Exact packaged-CLI hash check, override/fallback order preserved `[historical-record] PM`; boots to entry surface with app-server online footer `[runtime-observed] B2 ev/06` | win `[historical-record]`; linux `[runtime-observed]` | complete | complete | complete (automatic) | complete | complete | fallback order on CLI mismatch | PM "Runtime bootstrap"; B2 §1 | none recorded |
+| App-server supervision | Stable startup capabilities declaration, legacy-notification opt-out, deduplicated 1/2/4/8/16/20 s reconnect, `thread/loaded/list` rehydration incl. active-turn state `[historical-record] A §1` | Bounded `thread/loaded/list` hydration via `thread/read`, resumed after connect; same reconnect timer; retryable startup failure; pending remaining stable methods `[historical-record] PM`; /bin/false runtime → app stays up, status "Resolving…", silent auto-retry, no crash `[runtime-observed] B2 ev/24` | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | complete (persistent footer status + Retry action, ev/06/24) | partial | partial | reconnect timer + manual retry; resume after reconnect | PM "App-server supervision"; A §1 Reconnect; B2 §1 Retry/Reconnect | backend — P2 (remaining stable methods; no WO — bounded by public protocol surface) |
+| Projects and chats | Grouping, bounded full-text chat search, archive/unarchive/delete, rename, pinning `[historical-record] A §1`; **multi-folder local projects in-baseline (26.715)** — `Edit project` adds related folders + primary choice; new chats, Git, AGENTS.md/skills/config.toml discovery use the primary folder; secondary folders for file search/read/edit `[docs-derived] A §6`; unified pinned threads + shared thread snapshots (2026-08-20) are cloud-side `[docs-derived] A §9` | Bounded search with stable snippets + pagination, command menu, archive/delete/rename, codexRS-owned bounded pinning `[historical-record] PM`; sidebar Chats list + Ctrl+G palette entry render `[runtime-observed] ev/06, ev/08`; project registry is single-path (`LocalProjectSummary.path`, 64-entry; `recent_workspaces` table) — no multi-folder model `[source-derived] core lib.rs:908, 4719; B2 §6` | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | complete (persistent sidebar affordances) | partial | partial | — | PM "Projects and chats"; A §1/§6; B2 §1/§6, ev/06/08 | backend — P1 (multi-folder local projects, in-baseline) → **WO-P1-003**; cloud sync deltas (unified pins, shared snapshots) deferred (proprietary); P3 residual (richer metadata) |
+| Thread execution | Start, steer, interrupt (`turn/interrupt`), reconnect, active-turn restoration, edit latest message (`thread/rollback` + replacement `turn/start`), manual compaction (`thread/compact/start`), safety-buffering faster-model retry `[historical-record] A §1` | Same typed stable methods incl. rollback + replacement start; compaction guards ("Compact requires an empty composer", "disabled while a chat is in progress"); Stop/Steer/Send button states wired `[source-derived] ui.rs:23363-23396, core lib.rs:12739/12753; `[historical-record] PM`; live states bound unauthenticated | win `[historical-record]`; linux `[source-derived]` | partial | partial | partial (Edit hidden in-turn; `/compact` slash-only; Stop/Steer contextual in composer) | partial | partial | selected active-turn restoration; reconnect | PM "Thread execution"; A §1; B2 §1/§2 | ux — P3 (compaction provenance, richer edit metadata) |
+| Approvals and user input | Stable public `item/commandExecution/requestApproval`, `item/fileChange/requestApproval`, `item/permissions/requestApproval`; tool user-input cards with countdown/snooze `[historical-record] A §1/§8` | Native command/file/permission/dynamic-tool approvals with bounded typed payloads `[historical-record] PM`; approval dropdown beside composer "+" affordance `[runtime-observed] ev/01`; pending connector-specific methods (ledger bounded) | win `[historical-record]`; linux `[runtime-observed shell]` | partial | partial | partial (contextual cards; composer dropdown persistent) | partial | partial | — | PM "Approvals and user input"; A §8; B2 §2 ev/01 | backend — deferred (connector-specific public contracts) |
+| Streaming timeline | Compact `Explored`/`Ran`, file-change, web-search, subagent, image-inspection/generation, background-terminal summaries; bottom-aligned variable-height list `[historical-record] A §1]` | Same stable-style summaries in native list `[historical-record] PM`; live streaming bound unauthenticated (no turns possible) `[runtime-observed bound] B2 §1` | win `[historical-record]`; linux `[historical-record]` (runtime-bound) | partial | partial | complete (timeline is the primary chat surface) | partial | partial | — | PM "Streaming timeline"; A §1; B2 §1 | ux — P3 (activity grouping, citation navigation, source aggregation) |
+| Scheduled tasks | `/automations` route + Scheduled: suggestions, manual/chat-assisted creation, schedule editor, run history, unread/archive states, pause/edit/delete, notifications — cloud-backed `[historical-record] A §10`; **26.825: event-triggered tasks (Gmail/Slack/GitHub events, filters, `Run now`, Scheduled inbox)** `[docs-derived]` | Not implemented — cloud tasks backend proprietary; no surface in UI or source beyond plugin includes `[historical-record] PM; source-derived absence B2 audit]` | win `[historical-record]`; linux `[source-derived absence]` | deferred | deferred | — (no surface) | — | deferred | — | PM "Scheduled tasks"; A §10; B2 corrected-count audit | backend (proprietary) — deferred (event triggers same bound) |
+| Side chats **(added by C2 audit)** | `Open side chat` Ctrl/Cmd+Alt+S; temporary side conversation without interrupting the main chat; `/side` in current command set `[historical-record + docs-derived] A §1 (confidence medium-high — 26.707 "side conversations" note + current docs)` | No side-chat surface: no Ctrl+Alt+S binding in the key registry, no `/side` in the slash executor `[source-derived absence: ui.rs:4459-4552 key registry; ui.rs:7510-7621 slash executor; sweep at f113515]` | win `[historical-record]`; linux `[source-derived absence]` | missing | missing | missing | — | missing | — | A §1 Side chats; B2 shortcut inventory (no Ctrl+Alt+S); C2 source sweep | backend — P2 → **WO-P2-006** |
 
 ### 5.2 Composer
 
 | Capability | Official Codex | Flauz | Platform | Backend | UI | Discoverability | UX parity | Functional parity | Recovery | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Composer (input surface) | File/folder/image attachments; Plan, Goal, Send, Steer, Stop states | All listed states work; Goal mode in new + existing chats incl. file-backed Goal attachments via public starter-turn path; pending: remaining slash commands (polish), cloud projects/voice (proprietary) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Composer" | ux — P3 |
-| Model, effort, and speed picker | Catalog-backed model, reasoning-effort, Standard/Fast/Ultrafast service-tier selection | Implemented with `config/read` + managed `configRequirements/read` defaults, profile-aware `config/batchWrite` (ledger: none listed) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Model, effort, and speed picker" | none recorded (P3 residual) |
-| Permission profiles | Stable Ask for approval / Auto-review / Full access / Read only presets + custom profiles | Catalog-backed built-in/custom selection matching presets with catalog descriptions in native picker; pending: granular/custom editor, sandbox detail, per-project resolution (ledger: enhancement) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Permission profiles" | ux — P2 |
-| Voice input | Dictation, realtime voice, handoff target, stage layout, settings, accessibility states | Not implemented — proprietary realtime stack (ledger: bounded) | win, linux | deferred | deferred | — | — | deferred | — | PRE-A/B · [historical-record] PM "Voice" | backend (proprietary) — deferred |
+| Composer (input surface) | Send/Steer/Stop states; Plan (`/plan`), Goal (`/goal` + file-backed attachments); attachments Add photos (PNG/JPEG/GIF/WebP) + file/folder; baseline slash set of 15 `[historical-record] A §2`; **current target lists 24 slash commands** (`/approve /cloud /cloud-environment /compact /fast /feedback /fork /goal /ide-context /init /local /mcp /memories /model /pet /personality /plan /project /reasoning /review /side /status /task /worktree`; skills via `$`; custom prompts via `/prompts:`) `[docs-derived] A §2`; `@` mention order Plugins → Desktop apps → Apps → Skills → Files `[historical-record]` | All states work; Plan via `/plan` + composer popup item; Goal editor via `/goal`; "+" attachment menu (Image/File/Scan/Paste from clipboard/Take screenshot) `[runtime-observed ev/16, ev/20]`; native named slash set of 16 (baseline 15 + `/review`) plus dynamic `/service-tier:<id>` and `/skill:<path>` rows `[source-derived ui.rs:7510-7621, 22892-23120 — C2 re-verified, overrides B2's 15-item enumeration, §9]`; `@` typed trigger (no popup unauthenticated/without project) `[runtime-observed b2g-11]`; `Continue in` Work picker on Git chats `[historical-record] PM` | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | partial (`/goal` slash-only; `@` hidden typed trigger; `/plan` also in composer menu) | partial | partial | failed submission restores draft without overwriting newer drafts `[historical-record]` | PM "Composer"; A §2; B2 §2 ev/01/16/19/20/21 | ux — P2 (current-target slash coverage → **WO-P2-005**); P3 residual (attachment surface copy deltas) |
+| Model, effort, and speed picker | Catalog-backed searchable model picker (Ctrl/Cmd+Shift+M), reasoning effort, Standard/Fast/Ultrafast tiers `[historical-record] A §2`; model churn post-baseline: GPT-5.4/5.4-mini retired 2026-08-31, GPT-6-Astra added, GPT-5.5 retires 2026-10-14 → GPT-5.6 Sol `[docs-derived] A §2` | Implemented with `config/read` + managed defaults, profile-aware `config/batchWrite`; service-tier slash rows incl. exact Fast on/off copy `[historical-record] PM`; composer-bar selectors render live ("GPT-6-Astra", "Low", "Standard") `[runtime-observed ev/01, ev/19]` — catalog already carries GPT-6-Astra | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | complete (persistent composer-bar affordances + Ctrl+Shift+M) | partial | partial | — | PM "Model, effort, and speed picker"; A §2; B2 §2 ev/01/19 | none recorded (P3 residual: model churn is catalog-data-side, picker is data-driven) |
+| Permission profiles | Stable Ask for approval / Auto-review / Full access / Read only presets + granular/custom editor + sandbox detail + per-project resolution (present in stable, not yet reproduced) `[historical-record] A §9` | Catalog-backed built-in/custom selection matching presets with catalog descriptions in native picker; approval dropdown beside composer "+" `[runtime-observed ev/01]`; pending granular/custom editor, sandbox detail, per-project resolution (ledger enhancement) `[historical-record] PM` | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | complete (persistent composer dropdown) | partial | partial | — | PM "Permission profiles"; A §9; B2 §2 ev/01 | ux — P2 (granular editor, sandbox detail, per-project resolution; no WO yet — needs scoping) |
+| Voice input | Dictation, realtime voice, handoff target, stage layout, settings, accessibility states `[historical-record] PM`; Voice shipped 26.715 (GPT-Live) `[docs-derived] A §5` | Not implemented — proprietary realtime stack `[historical-record] PM; source-derived absence B2 audit]` | win, macos `[historical-record]` | deferred | deferred | — | — | deferred | — | PM "Voice"; A §5/§10; B2 audit | backend (proprietary) — deferred |
 
 ### 5.3 Terminal
 
 | Capability | Official Codex | Flauz | Platform | Backend | UI | Discoverability | UX parity | Functional parity | Recovery | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Terminal (sessions) | Per-chat terminal tabs as a first-class surface | Bounded per-chat PTY/ConPTY tabs in bottom or right dock; new-tab, selection, close-one, stop, restart, bounded input/output, truncation; `Ctrl+\`` binding at `crates/codex-app/src/ui.rs:4499`, dock toggle action at `crates/codex-core/src/lib.rs:4923` (ledger: green) | win, linux | partial | partial | audit pending — reachable only via `Ctrl+\``, palette, dock/menu; no persistent primary affordance (WO-P1-DRAFT-001) | — | partial | stop/restart per session | PRE-A/B · [historical-record] PM "Terminal"; [source-derived] ui.rs/lib.rs | ui-integration? — P1 DRAFT (pending C2) |
-| Process Manager | Stable-shaped manager for the selected chat | `Ctrl+Alt+M`, command palette, and completed background-terminal activity open the native manager; bounded `thread/backgroundTerminals/list`, per-process `terminate`, chat-wide stop (ledger: green) | win, linux | partial | partial | — (three affordances recorded) | — | partial | — | PRE-A/B · [historical-record] PM "Process Manager" | none recorded |
+| Terminal (sessions) | Persistent per-chat terminal dock (bottom or right); `Toggle bottom panel` Ctrl/Cmd+J distinct from `Open terminal`; hiding preserves live sessions `[historical-record] A §3`; current docs add `Toggle terminal` Ctrl/Cmd+`` ` `` + `Clear terminal` Ctrl+L/Ctrl+K when focused (post-baseline; intro date `[unverified]`) `[docs-derived] A §3` | Bounded per-chat PTY/ConPTY tabs in bottom/right dock; new-tab, selection, close-one, stop, restart, bounded I/O, truncation `[historical-record] PM`; `portable_pty` backend `[source-derived] terminal.rs`; ctrl-` binding ui.rs:4499, `Action::ToggleTerminalDock` core lib.rs:4923, palette "Open terminal" (Ctrl+`) ui.rs:3322/3411 `[source-derived]`; **Ctrl+` on the new-chat entry surface is a silent no-op — post-toggle frame byte-identical (md5) to pre-toggle; dock opens with zero tabs and renders nothing; guard "Select a task before opening a terminal." core lib.rs:8163** `[runtime-observed] ev/25 vs ev/19` | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | missing (shortcut/palette-only; no persistent affordance; entry-surface no-op) | partial | partial | stop/restart per session | PM "Terminal"; A §3; B2 §3 + Finding 1, ev/25/19; C2 anchor re-verification | ui-integration — P1 → **WO-P1-001** |
+| Process Manager | Ctrl+Alt+M / command palette / completed background-terminal activity open the stable-shaped manager: paginated `thread/backgroundTerminals/list`, per-process `terminate`, chat-wide clean, 1 s refresh `[historical-record] A §3]` | Palette command + Ctrl+Alt+M (ui.rs:3310) `[source-derived]`; completed background-terminal activity opens manager `[historical-record] PM`; bounded list/terminate/stop `[historical-record] PM`; live flows bound unauthenticated | win `[historical-record]`; linux `[source-derived]` | partial | partial | complete (matches the official affordance set: shortcut + palette + activity trigger) | partial | partial | — | PM "Process Manager"; A §3; B2 §1 | none recorded |
 
 ### 5.4 Browser
 
 | Capability | Official Codex | Flauz | Platform | Backend | UI | Discoverability | UX parity | Functional parity | Recovery | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| In-app browser | Browser as a normally discoverable surface | Native GPUI panel: bounded tabs, URL/navigation state, JPEG frame streaming, keyboard/pointer/scrolling vs supervised isolated Edge/Chrome/Chromium profile; same runtime exposes stable `codex-browser` (ledger: green); reachable via `InspectorPane::Browser` (`crates/codex-core/src/lib.rs:259–267`) + palette/contextual paths only | win, linux | partial | partial | audit pending — hidden in inspector pane set; no persistent primary affordance (WO-P1-DRAFT-002) | — | partial | — | PRE-A/B · [historical-record] PM "In-app browser"; [source-derived] lib.rs | ui-integration? — P1 DRAFT (pending C2) |
-| Browser permissions & settings | General Approval, site-specific rules, Full CDP switch; origin/download/upload/raw-CDP elicitation cards; persistent vs session grants | Stable-shaped Browser settings incl. bounded site Browse/Download/Upload/Debug rules + Full CDP switch, single-writer storage, hot-apply; exact typed MCP elicitations intercepted; `Allow once`/`Allow for this site`/`Allow for all sites` + file-transfer cards; `_meta.persist` always/session handoff; existing rules resolve prompts without UI | win, linux | partial | partial | — | — | partial | existing Block/Allow rules + global modes resolve later prompts without UI | PRE-A/B · [historical-record] PM §"In-app Browser permission status" | none recorded |
+| In-app browser | Native browser panel with bounded tabs, URL/navigation state, JPEG frame streaming, keyboard/pointer/scroll input vs supervised isolated Edge/Chrome/Chromium profile; `Open browser tab` Ctrl/Cmd+T, `Toggle browser panel` Ctrl/Cmd+Shift+B (baseline-verified bindings) `[historical-record] A §4`; **26.727: address bar revisits browsing history or searches Google on no match; browsing-history management in Settings; agent can search history** `[docs-derived] A §4]` | Native GPUI panel: `BrowserSession::spawn`/navigate/back/forward/reload/stop, tabs, downloads store (`browser_downloads` table) `[source-derived] browser.rs, B2 §4; runtime-observed DB schema]`; panel is `InspectorPane::Browser` core lib.rs:259-267 `[source-derived]`; **Ctrl+T / Ctrl+Shift+B on the entry surface are silent no-ops; `OpenBrowserTab` refused without an open chat — "Open a chat before opening the Browser." core lib.rs:14521** `[runtime-observed] b2g-06; source-derived]` | win `[historical-record]`; linux `[runtime-observed no-op]` | partial | partial | missing (palette/shortcut-only; hidden in inspector pane set; chat-scoped guard) | partial | partial | — | PM "In-app browser"; A §4; B2 §4 + Finding 2; C2 anchor re-verification | ui-integration — P1 → **WO-P1-002**; ux — P2 (address-bar history/Google fallback, 26.727; no WO yet — needs scoping) |
+| Browser permissions & settings | General Approval + site-specific Browse/Download/Upload/Debug rules + Full CDP switch; origin/download/upload/raw-CDP elicitation cards; `Allow once`/`Allow for this site`/`Allow for all sites`; persistent vs session grants `[historical-record] A §4]` | Stable-shaped Browser settings incl. bounded site rules + Full CDP switch, single-writer storage, hot-apply; typed MCP elicitations intercepted; `AllowAllBrowserSites` modal `[source-derived] ui.rs:4542-4550; `[historical-record] PM`; live cards bound unauthenticated | win `[historical-record]`; linux `[source-derived]` | partial | partial | partial (Settings page persistent; cards contextual) | partial | partial | existing Block/Allow rules + global modes resolve later prompts without UI | PM §"In-app Browser permission status"; A §4; B2 §4 | none recorded |
+| WebMCP site tools **(added by C2 audit)** | **26.825: WebMCP "site tools" available in the desktop app's built-in browser for ChatGPT Work and Codex (GPT-5.6 Sol/Terra; not Luna; not Enterprise/Edu)** — was internal/Public-Beta gated at baseline `[docs-derived] A §4; changelog 2026-08-25]` | No WebMCP surface; browser panel streams frames/session only `[source-derived absence: browser.rs; sweep at f113515]` | win, macos `[docs-derived]`; linux `[source-derived absence]` | missing | missing | missing | — | missing | — | A §4 Browser state/capabilities; C2 source sweep | backend — P2 (no WO — blocked on fork-runtime WebMCP capability; future work order when runtime supports it) |
+| Browser extension (adjacent surface) **(added by C2 audit)** | Chrome extension at baseline (tab mention/side chat); **26.825: Edge, Brave, Opera, Vivaldi (Opera without side chat), configured in Settings > Computer Use; right-click "Ask ChatGPT"** `[docs-derived] A §4]` | No extension surface (extension is a browser-store artifact pairing with the app; none shipped) `[source-derived absence]` | win, macos, linux `[docs-derived]` | missing | missing | missing | — | missing | — | A §4 Browser extension; C2 source sweep | backend (adjacent deliverable) — P2 (out of parity-wave scope; distribution surface beyond the app binary) |
 
 ### 5.5 Computer use
 
 | Capability | Official Codex | Flauz | Platform | Backend | UI | Discoverability | UX parity | Functional parity | Recovery | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Computer Use — Windows | Any App control: case-preserved AUMIDs, known-folder GUID IDs, absolute executable paths | Native Any App with oversized-ID/shared-host rejection, self-control exclusion, ask-before-every-app's-first-read/control, managed approvals (ledger: green Windows) | win | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Computer Use"; PM ledger | none recorded (Windows) |
-| Computer Use — Linux | (Same Any App surface on the reference platform matrix) | Screenshot-only, bounded X11/XWayland observation when `DISPLAY` is set; no pure Wayland, text extraction, input, app launch, persistent approvals, overlays, or interruption monitoring; portal-backed selection path = future work (WO-PLAT-DRAFT-001) | linux | platform-limited | platform-limited | — | — | platform-limited | future: portal-backed selection path | PRE-A/B · [historical-record] KF "Active release-candidate limitations"; PM ledger | platform — WO-PLAT-DRAFT-001 |
-| Dynamic Computer Use tools | Tools available across a task's lifetime | Attached at `thread/start` only; an existing task cannot gain them after creation | win, linux | partial | partial | — | difference recorded | partial | — | PRE-A/B · [historical-record] KF "Active release-candidate limitations" | ux — P2 |
+| Computer Use — Windows | Any App control: case-preserved AUMIDs, known-folder GUID IDs, absolute executable paths; ask-before-first-read/control; product-policy guard; Window2 action surface; screenshot bounds; URL policy; Escape interruption; overlay indicator `[historical-record] A §5]` | Native Any App with oversized-ID/shared-host rejection, self-control exclusion, ask-before-every-app's-first-read/control, managed approvals (ledger green Windows) `[historical-record] PM]` | win `[historical-record]` | partial | partial | partial (Settings page + `@` Desktop apps + inspector) | partial | partial | — | PM "Computer Use"; A §5 | none recorded (Windows; WINDOWS_GUI_LAB unavailable — unvalidated at runtime by bounds, not by absence) |
+| Computer Use — Linux | No official Linux app at baseline; official Linux preview app exists since 2026-08-11 but its Computer Use scope is `[unverified]` `[docs-derived] A §5 platform table]` | Screenshot-only, bounded X11/XWayland observation when `DISPLAY` is set; pure Wayland, text extraction, input, app launch, persistent approvals, overlays, interruption monitoring unavailable; portal-backed selection path = future work; in-app copy is platform-honest ("Let ChatGPT observe screenshots of X11/Wayland apps — Enabled") `[source-derived] computer_use.rs:34-57; runtime-observed] ev/14` | linux `[runtime-observed]` | platform-limited | platform-limited | partial (Settings page persistent + palette "Open Computer Use") | platform-limited (by design, honestly labeled) | platform-limited | future: portal-backed selection path | KF "Active release-critical limitations"; PM ledger; B2 §5 + Finding 3, ev/14 | platform gap (not a missing feature) → **WO-PLAT-001** |
+| Dynamic Computer Use tools | Tools available across a task's lifetime `[historical-record]` | Attached at `thread/start` only; an existing task cannot gain them after creation `[historical-record] KF "Active release-candidate limitations"]` | win, linux `[historical-record]` | partial | partial | — | difference recorded | partial | — | KF limitations | ux — P2 (no WO yet — needs runtime contract analysis) |
 
 ### 5.6 Files / workspace
 
 | Capability | Official Codex | Flauz | Platform | Backend | UI | Discoverability | UX parity | Functional parity | Recovery | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Artifacts and outputs | Stable discovery for completed file changes, `::output` citations, generated images | Bounded native Outputs inspector: latest-first dedupe, directives hidden, exact empty state; pending: PDF/Office renderers, AVIF/GIF, canvas actions (ledger: enhancement) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Artifacts and files" | ux — P2 |
-| Multi-root workspace handling | No multi-root white screen (public failure report documents the official failure) | Native `Path`/`PathBuf`, no browser path shim — Windows multi-root white screen controlled (acceptance test) | win | complete | complete | — | — | complete | — | PRE-A/B · [historical-record] KF failure table | none (regression control) |
-| Sites | Create, preview, annotate, version, share, publish, return-to-chat | Not implemented — OpenAI cloud surface (ledger: bounded) | win, linux | deferred | deferred | — | — | deferred | — | PRE-A/B · [historical-record] PM "Sites" | backend (proprietary) — deferred |
-| Visualizations | Native chart/report rendering, source inspection, interaction, export, editor handoff | Not implemented — OpenAI cloud surface (ledger: bounded) | win, linux | deferred | deferred | — | — | deferred | — | PRE-A/B · [historical-record] PM "Visualizations" | backend (proprietary) — deferred |
+| Artifacts and outputs | Outputs inspector: completed file changes, `::output` citations, generated images; Markdown/CSV/TSV + PNG/JPEG/WebP previews; 40 MiB guard; Reveal; end-resource cards; 680 px viewer; `Download` with Save As suggestion `[historical-record] A §6`; **26.727: generated-image editing (Focused/Canvas views, comments, targeted edits)** `[docs-derived]`; 26.908 Sources-panel open/download = reference+1 (out of target) | Bounded native Outputs inspector: latest-first dedupe, directives hidden, exact empty state `[historical-record] PM`; Outputs pane renders via `InspectorPane::Outputs` `[source-derived]`; pending PDF/Office renderers, AVIF/GIF, canvas actions (ledger enhancement); no image-editing surface `[historical-record] PM + source-derived absence]` | win `[historical-record]`; linux `[source-derived]` | partial | partial | partial (inspector pane; chat-scoped) | partial | partial | — | PM "Artifacts and files"; A §6; B2 §6 | ux — P2 (renderers, canvas actions; + generated-image editing 26.727; no WO yet — needs scoping) |
+| Multi-root workspace handling | No multi-root white screen (public failure report documents the official failure) `[historical-record] KF]` | Native `Path`/`PathBuf`, no browser path shim — Windows multi-root white screen controlled (acceptance test) `[historical-record] KF]` | win `[historical-record]` | complete | complete | complete (automatic) | complete | complete | — | KF failure table | none (regression control) |
+| In-app Markdown/code editing **(added by C2 audit)** | **26.707 (in-baseline): edit Markdown and code directly in the app, inline annotations, ask Codex to revise selected content** `[docs-derived] A §6 (changelog 2026-07-09)]` | Preview/Outputs surfaces only; no in-app editing or inline-annotation surface `[source-derived absence: Files/Outputs inspectors are render-only; sweep at f113515]` | win, macos `[docs-derived]`; linux `[source-derived absence]` | missing | missing | missing | — | missing | — | A §6 Markdown/code editing; B2 §6 (preview only); C2 source sweep | backend — P2 (no WO yet — editor surface needs Tech Lead scoping before a bounded order can be written) |
+| Sites | Create, preview, annotate, version, share, publish, return-to-chat; custom domains (26.707); co-editing + editable URLs (2026-08-20) — OpenAI cloud surface `[historical-record] PM; docs-derived A §6]` | Not implemented `[historical-record] PM; source-derived absence B2 audit]` | win `[historical-record]` | deferred | deferred | — | — | deferred | — | PM "Sites"; A §6 | backend (proprietary) — deferred |
+| Visualizations | Native chart/report rendering, source inspection, interaction, export, editor handoff — OpenAI cloud surface `[historical-record] PM]` | Not implemented `[historical-record] PM; source-derived absence B2 audit]` | win `[historical-record]` | deferred | deferred | — | — | deferred | — | PM "Visualizations" | backend (proprietary) — deferred |
 
 ### 5.7 Git
 
 | Capability | Official Codex | Flauz | Platform | Backend | UI | Discoverability | UX parity | Functional parity | Recovery | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Repository status | Current branch, ahead/behind, bounded changed files, local branches, worktrees, ≤30 unique commits | Native repository snapshot incl. stable-shaped wide `Uncommitted changes` surface (ledger: green) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Repository status" | none recorded beyond row text |
-| Diff review | Unstaged/Staged bounded query, real old/new line numbers, hunk headers, added/removed colors | Implemented with source-switch invalidation; multi-file Changes baseline (grouped patches, expanded-by-default, keyboard-focusable folds, Unified/Split across Last Turn/Uncommitted/Committed/Branch); open: syntax highlighting, inline comments, per-hunk actions, guarded revert | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Diff review" + §"Multi-file diff baseline" | ux — P3 |
-| Branches and worktrees | Local branches, stable create-and-checkout dialog, worktree as explicit chat workspace | Implemented; official `thread/start` receives the worktree (ledger: green) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Branches and worktrees" | none recorded beyond row text |
-| Pull requests | 420 px Create PR flow: title, generated description, preflight | Stable-shaped flow incl. `gh --version`, authenticated-status fallback, existing open-PR lookup; pending: branch prefix, force push, draft/merge-method options (ledger: polish) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Pull requests" | ux — P3 |
-| Git process hygiene | No `git.exe` process storm (public failure report documents the official failure) | 300 ms debounce, notification coalescing, one backend Git operation at a time (acceptance test) | win | complete | complete | — | — | complete | — | PRE-A/B · [historical-record] KF failure table | none (regression control) |
+| Repository status | Current branch, ahead/behind, bounded changed files, local branches, worktrees, ≤30 unique commits; wide `Uncommitted changes` surface; repository picker still open official-side `[historical-record] A §7`; **26.727: multi-repository review across a multi-folder project's repos** `[docs-derived] A §7]` | Native repository snapshot incl. stable-shaped wide `Uncommitted changes`; Repository page renders stats row (Changes/Staged/Branches/Worktrees) with honest "No Git repository detected." empty state `[historical-record] PM; runtime-observed ev/02]`; multi-repo review not possible (single-root projects) `[source-derived]` | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | complete (dedicated persistent sidebar page) | partial | partial | — | PM "Repository status"; A §7; B2 §7 ev/02 | ux — P2 (multi-repository review, 26.727; blocked-by **WO-P1-003**; repository picker P3 residual) |
+| Diff review | Changes inspector sources Last Turn/Uncommitted/Unstaged/Staged/Committed/Branch; Unified/Split; Stage all/Unstage all; per-file numstat `[historical-record] A §7]` | Implemented with source-switch invalidation; multi-file Changes baseline (grouped patches, expanded-by-default, keyboard-focusable folds, Unified/Split); "BOUNDED DIFF REVIEW" panel + toggle observed `[historical-record] PM; runtime-observed ev/02]`; open: syntax highlighting, inline comments, per-hunk actions, guarded revert | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | complete (Repository page + Changes inspector) | partial | partial | — | PM "Diff review" + §"Multi-file diff baseline"; A §7; B2 §7 ev/02 | ux — P3 (syntax highlighting, inline comments, per-hunk actions, guarded revert) |
+| Branches and worktrees | Branch switching/create-and-checkout without force or implicit stash; managed fork worktrees under persisted Worktree root; Settings > Worktrees `[historical-record] A §7]; 0.154 runtime adds experimental `/worktree` (browse + resume) — GUI surfacing at 26.825 `[unverified]` `[docs-derived]` | Implemented; `thread/start` receives the worktree; New Worktree form (branch + path) on Repository page `[historical-record] PM; runtime-observed ev/02]`; `/fork` → worktree destination picker `[source-derived] ui.rs:2746, 7558-7560]` | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | complete (Repository page sections + palette) | partial | partial | — | PM "Branches and worktrees"; A §7; B2 §7 ev/02 | none recorded (watch: `/worktree` GUI surfacing `[unverified]` at 26.825) |
+| Pull requests | 420 px Create PR flow: gh preflight, title, generated description, commit-and-push, draft/ready/error states; `/pull-requests` review/merge surface `[historical-record] A §7]; GitLab cloud support (2026-08-19) is cloud-side `[docs-derived]` | Stable-shaped flow incl. `gh --version`, authenticated-status fallback, existing open-PR lookup; PR page renders tabs/filters/search then honest gh-missing banner with "Install GitHub CLI" / "Check again" `[historical-record] PM; runtime-observed ev/03 — lab bound: no gh binary]`; pending branch prefix, force push, draft/merge-method options | win `[historical-record]`; linux `[runtime-observed honest bound]` | partial | partial | complete (dedicated persistent sidebar page) | partial | partial | install gh → "Check again" re-detects | PM "Pull requests"; A §7; B2 §7 ev/03 | ux — P3 (branch prefix, force push, draft/merge-method options) |
+| Git process hygiene | No `git.exe` process storm (public failure report documents the official failure) `[historical-record] KF]` | 300 ms debounce, notification coalescing, one backend Git operation at a time (acceptance test) `[historical-record] KF]` | win `[historical-record]` | complete | complete | complete (automatic) | complete | complete | — | KF failure table | none (regression control) |
 
 ### 5.8 MCP / Apps / Skills / Plugins
 
 | Capability | Official Codex | Flauz | Platform | Backend | UI | Discoverability | UX parity | Functional parity | Recovery | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Plugins marketplace | `plugin/list`, `plugin/read`, install/uninstall, search, refresh, enable/disable; OpenAI/Shared/Created/Workspace/Local directories | End-to-end native with exact marketplace kinds; pending: OAuth/no-auth callback completion (awaits official protocol — ledger: bounded) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Plugins marketplace" | backend — deferred (public protocol) |
-| Marketplace admin-disabled install | `DISABLED_BY_ADMIN` availability; disabled catalog actions + tooltip; `Disabled by admin` details | Implemented: availability preserved, actions disabled with recovered `Access is turned off by your admin` tooltip, details show `Disabled by admin` | win, linux | complete | complete | — | — | complete | — | PRE-A/B · [historical-record] PM "Marketplace admin-disabled install" | none recorded |
-| Skills | `skills/list` discovery, browse + Manage search, scope/path metadata, partial scan errors, refresh/invalidation, `skills/config/write` enable/disable | Implemented against selected project context; Manage loads installed Skills; pending: recommended/install flows, creation surfaces (ledger: enhancement) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Skills" | ux — P2 |
-| MCP and apps | Manage Apps / Manage MCPs: bounded list/search, App tool inspection (`app/read`), App `Try now`, enablement, external management, browser install/connect fallback, full MCP tool/schema/resource detail | Implemented for the listed surface; pending: App OAuth completion (awaits official protocol — ledger: bounded) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "MCP and apps" | backend — deferred (public protocol) |
+| Plugins marketplace | `plugin/list`/`read`/install/uninstall, search, refresh, enable/disable; OpenAI/Shared/Created/Workspace/Local kinds; marketplace add/upgrade/remove; plugin sharing in protocol `[historical-record] A §8]; 0.146-0.147 runtime: Agent Plugins manifests, workspace publishing, Bedrock + Claude Code marketplaces, portable plugins, cross-catalog search `[docs-derived]` | End-to-end native with exact marketplace kinds `[historical-record] PM]`; marketplace repo syncs to `CODEX_HOME/.tmp/plugins` with 64 curated plugins on disk `[runtime-observed filesystem] B2 §8`; UI catalog empty unauthenticated — "No plugin marketplaces returned entries for this host" with Retry `[runtime-observed ev/04 — BOUND: cannot distinguish auth-bound listing from integration gap without credentials; recorded as watch item, §9]; pending OAuth/no-auth callback completion (ledger bounded) | win `[historical-record]`; linux `[runtime-observed bound]` | partial | partial | complete (dedicated persistent sidebar page) | partial | partial | Retry action re-fetches catalog | PM "Plugins marketplace"; A §8; B2 §8 ev/04 | backend — deferred (OAuth callback, public protocol); watch item: unauthenticated catalog-empty vs disk-sync (needs authenticated re-run, no WO) |
+| Marketplace admin-disabled install | `DISABLED_BY_ADMIN` availability; disabled catalog actions + tooltip; `Disabled by admin` details `[historical-record]` | Implemented: availability preserved, actions disabled with recovered `Access is turned off by your admin` tooltip, details show `Disabled by admin` `[historical-record] PM]` | win `[historical-record]` | complete | complete | complete | complete | complete | — | PM "Marketplace admin-disabled install" | none recorded |
+| Skills | `skills/list` discovery, scope/path metadata, refresh, `skills/config/write` enable/disable; enabled skills as slash rows + `@` Skills section `[historical-record] A §8]; current docs: skills invoked explicitly with `$`; enabled skills appear in slash list; `/prompts:` custom prompts `[docs-derived]` | Implemented against selected project context; enabled absolute-path skills register `/skill:<path>` rows + `@` Skills section `[source-derived] ui.rs:7550; `[historical-record] PM`; Skills tab on Plugins page `[runtime-observed ev/04]`; `skills/` dir created in CODEX_HOME `[runtime-observed filesystem]`; pending recommended/install flows, creation surfaces; `$` invocation not present `[source-derived absence]` | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | complete (Plugins-page tab + palette "Go to skills") | partial | partial | Force reload skills palette action | PM "Skills"; A §8; B2 §8 ev/04 | ux — P2 (recommended/install flows, creation surfaces, `$` invocation; no WO yet — needs scoping) |
+| MCP and apps | Manage Apps / Manage MCPs: bounded list/search, `app/read`, App `Try now`, enablement, browser install/connect fallback, full MCP tool/schema/resource detail; MCP config editor + OAuth + elicitation forms `[historical-record] A §8]` | Implemented for the listed surface `[historical-record] PM]; Settings > MCP servers nav + `/mcp` submenu + `McpElicitation` modal `[source-derived] ui.rs:2193-2197, 7576, 4504; runtime-observed nav ev/07/23]`; pending App OAuth completion (awaits official protocol — ledger bounded) | win `[historical-record]`; linux `[runtime-observed nav]` | partial | partial | complete (Settings nav persistent + slash) | partial | partial | — | PM "MCP and apps"; A §8; B2 §8 | backend — deferred (App OAuth, public protocol) |
+| Record & Replay **(added by C2 audit)** | 26.727-era entry: demonstrate a workflow once and turn it into a reusable skill; Computer Use must be available and enabled `[docs-derived] A §8 (changelog 2026-07-30, docs/extend/record-and-replay.md)]` | No Record & Replay surface `[source-derived absence: sweep at f113515]`; Linux Computer Use is screenshot-only (see §5.5) which bounds the demonstrate step on Linux | win, macos `[docs-derived]`; linux `[source-derived absence + platform-bound]` | missing | missing | missing | — | missing | — | A §8 Record & Replay; C2 source sweep | backend — P2 (no WO — Computer-Use-dependent; Linux slice platform-bound; future work order after CU modality decisions) |
 
 ### 5.9 Settings / account
 
 | Capability | Official Codex | Flauz | Platform | Backend | UI | Discoverability | UX parity | Functional parity | Recovery | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Settings shell | Stable-shaped 274 px Settings shell: `Back to app`, bounded search (Ctrl/Cmd+F), Personal/Integrations/Coding/Archived groups, filtering, no-results state | Implemented stable-shaped; remaining sections only with working host contracts (ledger: bounded) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Settings" | backend — deferred (host contracts) |
-| Account and usage | `account/read`, login start/cancel, logout, rate limits, usage | Separate stable-shaped settings surfaces over one typed official surface; pending: billing entry points (ledger: enhancement) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Account and usage" | ux — P2 |
-| Personalization and memory | Pinned renderer `Friendly`/`Pragmatic` tone contract | Native Personalization route follows the contract and fixes the renderer's known `None` omission using the pinned app-server's `none`/`friendly`/`pragmatic` values | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Personalization and memory" | none recorded |
-| Import and migration | `externalAgentConfig/detect`, `import`, `import/readHistories` for Claude Code, Claude Coworker, … | Native Personal → Import route implemented; pending: unsupported-project reporting (awaits public protocol — ledger: bounded) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Import and migration" | backend — deferred (public protocol) |
-| Remote control and SSH | `remoteControl/status/read`, enable/disable, pairing, paginated client discovery, revoke; keep-awake, SSH profiles, remote chats | Native Connections UI implemented for the public methods; pending: SSH profiles/remote chats (await public contracts — ledger: bounded) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Remote control and SSH" | backend — deferred (public contracts) |
-| Cloud environments | List/detail/create links, repository/machine metadata, target selection, connection state, cloud execution | Not implemented — OpenAI cloud backend (ledger: bounded) | win, linux | deferred | deferred | — | — | deferred | — | PRE-A/B · [historical-record] PM "Cloud environments" | backend (proprietary) — deferred |
+| Settings shell | 274 px shell: `Back to app`, bounded search (Ctrl/Cmd+F), Personal/Integrations/Coding/Archived groups, filtering, no-results state; full stable registry of 26 sections `[historical-record] A §9]; **2026-08-11: Settings > Import added** `[docs-derived]` | Stable-shaped shell implemented; nav renders 15 rows in 3 groups; SettingsSection enum has 18 sections (CodeReview/Worktrees/ArchivedChats contextual/hidden) `[source-derived] ui.rs:2398-2417; runtime-observed ev/07]; settings search filters nav correctly ("import" → Personal + Import) `[runtime-observed ev/23]; remaining sections only with working host contracts (ledger bounded) | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | complete (persistent sidebar Settings + Ctrl+, + palette) | partial | partial | — | PM "Settings"; A §9; B2 §9 ev/07/23 | backend — deferred (host contracts); cross-ref WO-P2-004 (palette indexing of settings pages) |
+| Account and usage | `account/read`, login start/cancel, logout, rate limits, usage; Profile + Usage & billing surfaces `[historical-record] A §9]; usage-limit banners with actions (0.152 runtime) `[docs-derived]` | Separate stable-shaped settings surfaces over one typed official surface; Usage page renders honest sign-in wall ("Sign in to view usage and billing") `[runtime-observed ev/12]; pending billing entry points (ledger enhancement) | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | complete (settings nav persistent) | partial | partial | sign-in unlocks account-powered surfaces | PM "Account and usage"; A §9; B2 §9 ev/12 | ux — P2 (billing entry points; no WO yet — needs scoping) |
+| Personalization and memory | None/Friendly/Pragmatic personality (app-server enum authoritative); memory controls feature-gated; `Reset memories` `[historical-record] A §9]; Computer History (2026-08-13, macOS, Pro/Business/Enterprise, opt-in) augments memories — platform + cloud bound `[docs-derived]` | Native Personalization route follows the contract and fixes the renderer's known `None` omission; `memories_1.sqlite` created by runtime; `/memories` + Reset modal `[historical-record] PM; runtime-observed DB + ev/14-adjacent B2 §1/§9]` | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | complete (settings page + slash) | partial | partial | — | PM "Personalization and memory"; A §9; B2 §1/§9 | none recorded (Computer History = deferred: macOS + cloud) |
+| Import and migration | Baseline: NO official import surface — `externalAgentConfig/*` typed methods existed in the pinned app-server only `[historical-record] A §9]; **current target (2026-08-11): Settings > Import for Claude Code / Claude Cowork / Cursor** with auto-update sync `[docs-derived]` | Native Personal → Import route implemented with the same three providers (`ImportProvider::{ClaudeCode,ClaudeCowork,Cursor}`) `[source-derived] core lib.rs:3478-3485, ui.rs:34696+]; nav row + search filter observed `[runtime-observed ev/23]; full page content not captured (coordinate-navigation bound) `[runtime-observed bound] B2 §9]; pending unsupported-project reporting (awaits public protocol) — Flauz is AHEAD of the historical baseline here (implemented before the official UI shipped) | win `[historical-record]`; linux `[runtime-observed nav]` | partial | partial | complete (settings nav persistent; palette indexing gap → WO-P2-004) | partial | partial | — | PM "Import and migration"; A §9; B2 §9 ev/23 | backend — deferred (unsupported-project reporting, public protocol) |
+| Remote control and SSH | `remoteControl/status/read`, enable/disable, pairing, paginated client discovery, revoke; keep-awake, SSH profiles, remote chats `[historical-record]` | Native Connections UI implemented for the public methods; "Remote control — This computer (Disabled)" + paired-devices empty state observed `[runtime-observed ev/13]; pending SSH profiles/remote chats (await public contracts — ledger bounded) | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | complete (settings nav persistent) | partial | partial | — | PM "Remote control and SSH"; B2 §9 ev/13 | backend — deferred (public contracts) |
+| Cloud environments | List/detail/create links, repository/machine metadata, target selection, connection state, cloud execution — OpenAI cloud backend `[historical-record]` | Not implemented `[historical-record] PM; source-derived absence B2 audit]` | win `[historical-record]` | deferred | deferred | — | — | deferred | — | PM "Cloud environments" | backend (proprietary) — deferred |
 
 ### 5.10 Product shell
 
 | Capability | Official Codex | Flauz | Platform | Backend | UI | Discoverability | UX parity | Functional parity | Recovery | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| First run and updates | About window: package version, copyright, focus behavior | Help → `About codexRS` native 380×360 floating window, centered, refocuses existing instance, OK/Escape close; pending: fuller welcome, dependency diagnostics, update prompt (ledger: enhancement) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "First run and updates" | ux — P2 |
-| Keyboard and accessibility | Ctrl/Cmd+K, Shift+P, G, P search-files drill-in, arrows/Enter/Escape; complete focus order, screen-reader labels | Native command menu with verified stable registry subset; pending: remaining stable commands, complete focus order, screen-reader labels, reduced-motion (ledger: enhancement) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Keyboard and accessibility" + §"Keyboard accessibility baseline" | ux — P2 |
-| Keyboard shortcut reference | Exact stable `Keyboard shortcuts` dialog listing only active bindings | Implemented: opens from Help + Ctrl/Cmd+/, stable category order | win, linux | complete | complete | — | — | complete | — | PRE-A/B · [historical-record] PM "Active keyboard shortcut reference" | none recorded |
-| Notifications and tray | Background completion notification; tray status | Bounded in-app banner (Open/Dismiss) + matching window-title/notification-area tooltip; pending: tray groups, badges, sounds (ledger: enhancement); Linux tray/global shortcuts unavailable (see packaging row) | win, linux | partial | partial | — | — | partial | — | PRE-A/B · [historical-record] PM "Notifications and tray" | ux — P2 |
-| Feedback | Exact stable `Feedback` command + `/feedback`; five category IDs; required details; default-on session logs | Implemented as a native `Share feedback` dialog with the five recovered category IDs, validation, default-on logs, no browser-tabs control | win, linux | complete | complete | — | — | complete | — | PRE-A/B · [historical-record] PM "Feedback" | none recorded |
-| Appshots | Foreground-window capture, destination policy, hotkey, sound, preview, text/offscreen context | Not implemented — proprietary capture flow (ledger: bounded) | win, linux | deferred | deferred | — | — | deferred | — | PRE-A/B · [historical-record] PM "Appshots" | backend (proprietary) — deferred |
-| Pets and Codex Micro | Overlay lifecycle, device integration, commands, settings, mini-game/composer, sound, accessibility | Not implemented — proprietary companion surface (ledger: bounded) | win, linux | deferred | deferred | — | — | deferred | — | PRE-A/B · [historical-record] PM "Pets and Codex Micro" | backend (proprietary) — deferred |
-| Windows packaging | Signed MSIX installer + desktop integration + updating | Unsigned portable ZIP release strategy (code signing unavailable to this program); SHA-256 checksums + documented verify step; no MSI/installer/updater | win | partial | partial | — | difference documented | partial | verify via published SHA-256 | PRE-A/B · [historical-record] PM ledger "Windows"; KF limitations | intentional difference — documented (GUI-006) |
-| Linux packaging | (Reference ships Windows/macOS only — no official Linux target exists) | Unsigned portable tar.gz; explicit `codexrs --install-desktop-entry` per-user integration (never overwrites); no system package, Wayland portals, tray, or global shortcuts — documented in `docs/platform-support.md` | linux | platform-limited | platform-limited | — | — | platform-limited | documented `--install-desktop-entry` path | PRE-A/B · [historical-record] PM ledger "Linux"; KF limitations; docs/platform-support.md | platform — documented |
-| Stable-failure regression controls | Public failure reports: Windows multi-root white screen; 594 MB JSONL line; ~9 GB startup history scan; `git.exe` storm; process-cleanup storm; unbounded logging | All six controlled as acceptance tests: native paths; bounded app-server pages + `useStateDbOnly: true`; 300 ms Git debounce; one supervised tree + Windows Job Object; narrowly scoped owned logging | win, linux | complete | complete | — | — | complete | controls are standing acceptance tests | PRE-A/B · [historical-record] KF failure table | none (regression controls) |
+| First run and updates | About window: package version, copyright, focus behavior; first-run/login flow; failed backend connection visible with Retry/restart guidance `[historical-record] A §10]` | Help → `About codexRS` native 380×360 floating window, centered, refocuses existing instance, OK/Escape close; no-runtime error state degrades gracefully ("Resolving…" + auto-retry) `[historical-record] PM; runtime-observed ev/24]; pending fuller welcome, dependency diagnostics, update prompt (ledger enhancement) | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | complete (Help menu persistent) | partial | partial | retry/restart guidance visible in empty Tasks area | PM "First run and updates"; A §10; B2 §10 ev/24 | ux — P2 (welcome, diagnostics, update prompt; no WO yet — needs scoping) |
+| Keyboard and accessibility | Ctrl/Cmd+K, Shift+P, G, P search-files drill-in, arrows/Enter/Escape; dynamic Settings group in palette; editable shortcut registry with stable grouping; complete focus order, screen-reader labels `[historical-record] A §10]; current docs add Clear terminal (Ctrl+L/Ctrl+K), font-size Ctrl+±/0, Toggle file tree Ctrl+Shift+E (post-baseline, intro dates `[unverified]`) `[docs-derived]` | Native command palette with verified stable registry subset (45-command registry `[source-derived] ui.rs:3244+]); Ctrl+/ overlay + editable settings page `[runtime-observed ev/11, ev/15]; **palette does not index all settings pages — "import" → "No matches" while the Import page exists in settings nav** `[runtime-observed ev/18 vs ev/23; source-derived: PaletteCommand has no entries for Profile/Import/Browser/Configuration/Hooks/Git settings]; pending remaining stable commands, complete focus order, screen-reader labels, reduced-motion | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | partial (palette lacks settings-page entries; no toolbar button for palette) | partial | partial | — | PM "Keyboard and accessibility" + §"Keyboard accessibility baseline"; A §10; B2 §10 ev/08-11/15/18 | ux — P2 (palette settings-page indexing → **WO-P2-004**; remaining stable commands, focus order, screen-reader labels); P3 (Clear terminal / font-size / file-tree shortcut deltas) |
+| Keyboard shortcut reference | Exact stable `Keyboard shortcuts` dialog listing only active bindings `[historical-record]` | Implemented: opens from Help + Ctrl/Cmd+/, stable category order; overlay + searchable editable settings page both visually confirmed `[historical-record] PM; runtime-observed ev/11, ev/15]` | win `[historical-record]`; linux `[runtime-observed]` | complete | complete | complete (Help + Ctrl+/) | complete | complete | — | PM "Active keyboard shortcut reference"; B2 §10 ev/11/15 | none recorded |
+| Notifications and tray | Background completion notification (banner + Windows quiet-hours toast / Linux freedesktop best-effort); tray tooltip count `[historical-record] A §10]` | Bounded in-app banner (Open/Dismiss) + matching window-title/notification-area tooltip; gh-missing toast banners observed on multiple pages `[runtime-observed ev/03/04]; pending tray groups, badges, sounds (ledger enhancement); Linux tray/global shortcuts unavailable (see packaging row) | win `[historical-record]`; linux `[runtime-observed]` | partial | partial | partial (passive banners) | partial | partial | — | PM "Notifications and tray"; A §10; B2 §9 ev/03/04 | ux — P2 (tray groups, badges, sounds; no WO yet — needs scoping) |
+| Feedback | Exact stable `Feedback` command + `/feedback`; five category IDs; required details; default-on session logs `[historical-record]` | Implemented as native `Share feedback` dialog with the five recovered category IDs, validation, default-on logs, no browser-tabs control; palette entry exists `[historical-record] PM; source-derived palette]` | win `[historical-record]`; linux `[source-derived]` | complete | complete | complete (palette + slash + Help paths) | complete | complete | — | PM "Feedback"; B2 audit | none recorded |
+| Appshots | macOS-only at baseline (foreground-window capture flow; Settings `appshots` section in stable registry) `[historical-record] A §5]; **26.908 (reference+1): Appshots on Windows — NOT part of the 26.825 target** `[docs-derived]` | Not implemented — proprietary capture flow (ledger bounded) `[historical-record] PM; source-derived absence B2 audit]` | macos `[historical-record]` | deferred | deferred | — | — | deferred | — | PM "Appshots"; A §5/§9 | backend (proprietary) — deferred (26.908 Windows arrival is reference+1, out of target) |
+| Pets and Codex Micro | Settings sections registered at baseline (`pets`, `codex-micro`) `[historical-record] A §10]; **26.908 (reference+1): Pets quick chat + Codex Micro `Insert text` — NOT part of the 26.825 target** `[docs-derived]` | Not implemented — proprietary companion surface (ledger bounded) `[historical-record] PM; source-derived absence B2 audit]` | win, macos `[historical-record]` | deferred | deferred | — | — | deferred | — | PM "Pets and Codex Micro"; A §10 | backend (proprietary) — deferred (26.908 features are reference+1, out of target) |
+| Windows packaging | Signed MSIX installer + desktop integration + updating `[historical-record]` | Unsigned portable ZIP release strategy (code signing unavailable to this program); SHA-256 checksums + documented verify step; no MSI/installer/updater `[historical-record] PM ledger; KF limitations]` | win `[historical-record]` | partial | partial | partial (documented verify step) | difference documented | partial | verify via published SHA-256 | PM ledger "Windows"; KF limitations | intentional difference — documented (GUI-006) |
+| Linux packaging | No official Linux target at baseline `[historical-record]`; **official Linux preview app exists since 2026-08-11** `[docs-derived] A platform table]` | Unsigned portable tar.gz; explicit `codexrs --install-desktop-entry` per-user integration (never overwrites); no system package, Wayland portals, tray, or global shortcuts — documented in `docs/platform-support.md` `[historical-record] PM ledger; KF; runtime-observed B2 wave]` | linux `[runtime-observed]` | platform-limited | platform-limited | partial (documented `--install-desktop-entry` path) | platform-limited (documented) | platform-limited | documented `--install-desktop-entry` path | PM ledger "Linux"; KF limitations; docs/platform-support.md | platform — documented; lab-upgrade opportunity WO-LAB-001 may re-baseline this row's reference layer |
+| Stable-failure regression controls | Public failure reports: Windows multi-root white screen; 594 MB JSONL line; ~9 GB startup history scan; `git.exe` storm; process-cleanup storm; unbounded logging `[historical-record] KF]` | All six controlled as acceptance tests: native paths; bounded app-server pages + `useStateDbOnly: true`; 300 ms Git debounce; one supervised tree + Windows Job Object; narrowly scoped owned logging `[historical-record] KF]` | win, linux `[historical-record]` | complete | complete | complete (automatic) | complete | complete | controls are standing acceptance tests | KF failure table | none (regression controls) |
+| Activity view & unread attention **(added by C2 audit)** | **26.727: Activity view** — bell icon / Ctrl/Cmd+Alt+U shows recently engaged chats needing attention; Shift+Esc clears unread indicators; Ctrl/Cmd+Alt+A next chat needing attention `[historical-record + docs-derived] A §10]` | No Activity view or unread-attention surface: no bell, no Ctrl+Alt+U / Ctrl+Alt+A / Shift+Esc bindings, no unread state `[source-derived absence: key registry ui.rs:4459-4552; sweep at f113515]` | win, macos `[docs-derived]`; linux `[source-derived absence]` | missing | missing | missing | — | missing | — | A §10 Sidebar; B2 shortcut inventory; C2 source sweep | backend — P2 (unread-state dependent; no WO yet — needs scoping; upgrades the PM ledger's P3 "unread state" note, §9) |
 
 ---
 
-## 6. Pre-population method (audit trail)
+## 6. Pre-population and reconciliation method (audit trail)
 
-- Source records: `docs/parity-matrix.md` (§Product parity table, §Installed
-  Desktop route inventory, §Settings inventory, §Protocol progress,
-  §Release-critical parity ledger) and `docs/known-failures.md` (failure
-  table + active release-candidate limitations). All are `[historical-record]`
-  evidence pinned to the 26.721.3996.0 baseline.
-- One canonical row per historical capability row, regrouped into the ten
-  operator feature sections. Rows that the historical record splits by
-  platform (Computer Use, packaging) are split here too.
-- Historical status mapping: §4.5. `—` marks cells the historical layer
-  cannot honestly fill (Backend/UI decomposition, Discoverability, UX parity
-  per-row) — these are exactly what Workers A/B matrices and C2
-  reconciliation exist to fill.
-- Known gaps in the pre-populated data: the historical matrix does not
-  decompose discoverability; the route inventory (PM §"Installed Desktop
-  route inventory") and settings-section inventory (PM §"Settings inventory")
-  are recorded as inventories only and are not yet row-matched — C2 uses them
-  as cross-checks (a Flauz surface missing for an inventoried official route
-  or settings section is a candidate UI-integration/backend gap).
-- The `26.825.51511` delta is NOT reflected in these rows yet (see
-  `docs/research/CODEX-FLAUZ-CURRENT-VERSION-DELTA.md`, pending Worker A).
+- **Pre-population (C1):** one canonical row per historical capability row from
+  `docs/parity-matrix.md` (§Product parity table, §Installed Desktop route
+  inventory, §Settings inventory, §Protocol progress, §Release-critical parity
+  ledger) and `docs/known-failures.md`, regrouped into the ten operator
+  feature sections; platform-split rows preserved (Computer Use, packaging).
+- **Reconciliation (C2, 2026-09-16):** inputs were (1) Worker A's
+  `CODEX-REFERENCE-MATRIX.md` at `c083c38` (official side, 11 sections +
+  runtime surface + journeys + shortcuts), (2) Worker B2's
+  `FLAUZ-REFERENCE-MATRIX.md` at `a2343d3` (Flauz side, 10 sections +
+  journeys + 35-row shortcut inventory + 3 findings + corrected counts), (3)
+  A's `evidence/codex-ref/version-delta-notes.md` (+ changelog extract,
+  CLI runtime surface, features list, doctor), (4) B2's
+  `evidence/flauz/` (25 curated runtime captures + 8 scene scripts), and
+  (5) the C1 skeleton at `5d8ad61`.
+- C2 re-verified load-bearing Flauz-side source claims directly at
+  `main f113515` (read-only): slash executor + menu catalog
+  (`ui.rs:7510-7621`, `22892-23120`), `PaletteCommand::ALL` (45 commands,
+  `ui.rs:3195-3241+`), `SettingsSection` enum (`ui.rs:2398-2417`), terminal
+  guard (`core lib.rs:8163`), browser guard (`core lib.rs:14521`),
+  `InspectorPane` (`core lib.rs:259-267`), ctrl-` binding (`ui.rs:4499`),
+  `Action::ToggleTerminalDock` (`core lib.rs:4923`), Computer Use Linux gate
+  (`computer_use.rs:34-57`), project model (`LocalProjectSummary` single
+  path, `core lib.rs:908/4719`), and absence sweeps for side chats, unread/
+  Activity view, in-app editing, Record & Replay, WebMCP, browser extension.
+- Row-matching followed §7; conflicts resolved by §7.3 order with every
+  override recorded in §9. Six rows were added under the §7.2
+  A-row-without-B-counterpart rule (marked "added by C2 audit"), each with
+  the Flauz-side absence source-verified before declaring.
+- The `26.825.51511` delta is annotated inside the affected rows (per §7.7)
+  and detailed in `docs/research/CODEX-FLAUZ-CURRENT-VERSION-DELTA.md`.
+  Historical rows were never deleted.
 
-## 7. Reconciliation procedure (for C2)
+## 7. Reconciliation procedure (for C2 — executed 2026-09-16; retained as governing record)
 
 ### 7.1 Inputs
 
@@ -296,13 +328,12 @@ refers to PM §"Release-critical parity ledger (GUI-002)".
 ### 7.3 Conflict resolution order
 
 ```text
-runtime-observed > source-derived > docs-derived > historical-record
+runtime-observed > source-derived > docs-derived > [historical-record]
 ```
 
 - A higher-order label **overrides** a lower-order label for the same cell;
-  the losing value is recorded in the Evidence cell (e.g.,
-  "`[source-derived]` overrides `[historical-record]`") so the audit trail
-  survives.
+  the losing value is recorded in the Evidence cell (and §9) so the audit
+  trail survives.
 - Within the same label class, the more recent capture wins; ties are broken
   by Worker A (official side) / Worker B (Flauz side) ownership of the cell,
   and recorded.
@@ -320,7 +351,7 @@ runtime-observed > source-derived > docs-derived > historical-record
   bound named (e.g., "Windows: unvalidated — WINDOWS_GUI_LAB unavailable").
 - `platform-limited` is only used with the binding platform named in the
   `Platform` column (Computer Use — Linux is the precedent;
-  WO-PLAT-DRAFT-001 keeps it a platform gap, not a missing feature).
+  WO-PLAT-001 keeps it a platform gap, not a missing feature).
 
 ### 7.5 Confirmed-gap → work-order flow
 
@@ -350,8 +381,223 @@ the historical evidence. Historical rows are never deleted.
 
 ---
 
-## 8. Change log
+## 8. Reconciliation summary (C2, post A/B audit)
+
+### 8.1 Final counts
+
+**53 rows** (47 carried from the C1 skeleton — all preserved — plus 6 added
+by the audit per §7.2):
+
+| Status | Count | Rows |
+| --- | --- | --- |
+| `complete` | **7** | Runtime bootstrap; Multi-root workspace handling (regression control); Git process hygiene; Marketplace admin-disabled install; Keyboard shortcut reference; Feedback; Stable-failure regression controls |
+| `partial` | **31** | all §5.1-§5.10 rows not listed elsewhere (incl. Terminal, In-app browser, Projects and chats, Settings shell, Import and migration, etc.) |
+| `missing` | **6** | Side chats; WebMCP site tools; Browser extension (adjacent); In-app Markdown/code editing; Record & Replay; Activity view & unread attention |
+| `platform-limited` | **2** | Computer Use — Linux; Linux packaging |
+| `deferred` | **7** | Scheduled tasks; Voice input; Sites; Visualizations; Cloud environments; Appshots; Pets and Codex Micro |
+
+Relationship to B2's corrected historical counts (4 done / 29 partial /
+7 missing / 1 platform over 41 PM rows): **zero status flips** — B2's 13-row
+audit sample confirmed the historical record for what it claims. The 7 PM
+"missing" rows are carried here as `deferred` per the C1 mapping rule
+(ledger verdict `bounded` → deferred: proprietary cloud backend or pending
+public protocol). The 6 `missing` rows are capabilities the historical
+ledger never decomposed, surfaced by the A/B audit (side chats, WebMCP,
+browser extension, in-app editing, Record & Replay, Activity view) — each
+with Flauz-side absence source-verified at `f113515` before declaring.
+
+### 8.2 Priority lists (derived from the reconciled Gap cells)
+
+**P0 — none confirmed.** No gap blocks normal usage: the app boots to a
+working entry surface, auth is honest, and degradation paths recover. The
+P1 discoverability gaps make existing features hard to find, not the app
+unusable.
+
+**P1 — major feature missing or effectively undiscoverable (3, all with
+work orders):**
+
+1. Terminal discoverability — existing terminal reachable only via
+   shortcut/palette; Ctrl+` is a silent no-op on the new-chat entry surface;
+   no persistent affordance → **WO-P1-001**.
+2. Browser discoverability — Browser hidden in the inspector pane set;
+   palette/shortcut-only; Ctrl+T refused without an open chat (silent no-op
+   on the entry surface) → **WO-P1-002**.
+3. Multi-folder local projects — in-baseline official capability (26.715)
+   wholly absent (single-path project model) → **WO-P1-003**.
+
+**P2 — meaningful difference (with work orders, 3):**
+
+4. Command palette does not index all settings pages ("import" → No matches
+   while the Import page exists in nav; 6 nav pages unindexed) → **WO-P2-004**.
+5. Slash-command coverage delta vs current 24-command set (11 literal names
+   absent; subset implementable now) → **WO-P2-005**.
+6. Side chats (in-baseline Ctrl+Alt+S + `/side`) → **WO-P2-006**.
+
+**P2 — recorded in rows, no work order yet (needs scoping / blocked, 11):**
+
+7. In-app Markdown/code editing (26.707, in-baseline) — editor surface needs
+   Tech Lead scoping before a bounded order can be written.
+8. Activity view & unread attention (26.727) — depends on unread state.
+9. WebMCP site tools (26.825) — blocked on fork-runtime WebMCP capability.
+10. Record & Replay (26.727-era) — Computer-Use-dependent; Linux slice
+    platform-bound.
+11. Browser extension beyond Chrome (26.825) — adjacent deliverable, out of
+    parity-wave scope (distribution surface beyond the app binary).
+12. Browser address-bar history / Google fallback (26.727).
+13. Multi-repository review (26.727) — blocked-by WO-P1-003.
+14. Permission profiles granular/custom editor, sandbox detail, per-project
+    resolution (ledger enhancement).
+15. Artifacts/outputs renderers + canvas actions + generated-image editing
+    (26.727) (ledger enhancement).
+16. Dynamic Computer Use tools (attach after creation) (KF limitation).
+17. Remaining stable app-server methods (supervision); Account billing entry
+    points; First-run welcome/diagnostics/update prompt; remaining stable
+    palette commands + focus order + screen-reader labels + reduced-motion;
+    tray groups/badges/sounds; Skills recommended/install flows + `$`
+    invocation (ledger enhancements).
+
+**P3 — cosmetic (7):** thread-execution compaction provenance + edit
+metadata; streaming-timeline grouping/citation navigation; projects richer
+metadata; model-catalog churn residuals (data-side); diff-review syntax
+highlighting/inline comments/per-hunk actions/guarded revert; PR branch
+prefix/force push/draft-merge options; shortcut deltas (Clear terminal
+Ctrl+L/Ctrl+K, font-size Ctrl+±/0, Toggle file tree Ctrl+Shift+E — current
+docs, not in Flauz registry).
+
+**Deferred (no priority class — bounded, 15 items; 7 whole rows + 8 in-row
+bounds):** Scheduled tasks (+
+event-triggered, 26.825); Voice; Sites; Visualizations; Cloud environments;
+Appshots (26.908 Windows = reference+1); Pets (26.908 = reference+1);
+approvals connector-specific methods; plugins OAuth/no-auth callback; App
+OAuth; import unsupported-project reporting; SSH profiles/remote chats;
+Settings host contracts; Computer History (macOS + cloud); unified
+pins/shared thread snapshots (cloud).
+
+**Intentional differences (documented, not fixed):** Windows unsigned
+portable packaging (GUI-006); native GPUI instead of Electron (program-level).
+
+### 8.3 Journey table (J1-J6)
+
+| Journey | Official expected flow (Worker A) | Flauz result (Worker B2) | Works | Bound | GAP → work order |
+| --- | --- | --- | --- | --- | --- |
+| J1 Coding | New chat → Open folder (Ctrl+O) → task + streaming timeline + approvals → terminal + Process Manager → outputs/changes → diff/commit (+ multi-repo review 26.727+) `[historical-record]` | Entry surface + composer pickers + palette "Open folder" + settings all render (ev/01/08/19); Repository page full Git surface (ev/02) | Shell + Git surfaces work | Authenticated turn execution (send blocked unauth, ev/21 — draft retained, sign-in card) | None beyond auth; terminal affordance → WO-P1-001; multi-folder → WO-P1-003 |
+| J2 Browser-assisted | Browser context per turn → Ctrl+T / Ctrl+Shift+B → permission cards → downloads (+ site tools 26.825) `[historical-record + docs-derived]` | Ctrl+T/Ctrl+Shift+B silent no-ops on entry surface; panel source-verified (`browser.rs`) | In-chat panel (source-derived) | Needs open chat → auth | WO-P1-002 (discoverability); WebMCP row (P2, no WO) |
+| J3 Planning | `/plan` → `/goal` → progress row → `/status` → `/compact` `[historical-record]` | `/plan` + composer menu item, `/goal` editor, model/effort/speed selectors visible (ev/01/19/20) | Composer surfaces work | Plan/goal execution needs a thread (auth) | None beyond auth |
+| J4 Git | Snapshot → worktree fork → diffs → review → commit/push → PR `[historical-record]` | Repository page (stats, changed files, branches, worktree form, bounded diff review, "Commit or push") renders (ev/02); PR page renders then honest gh-missing banner (ev/03) | Works (commit/push prior-wave validated `[historical-record]`) | gh CLI absent in lab (honest, actionable banner) | None; multi-repo review blocked-by WO-P1-003 |
+| J5 Recovery | Interrupt → reconnect timer → `thread/loaded/list` rehydrate → resume `[historical-record]` | Restart persistence verified end-to-end (window 1100×900 + route + inspector restored; state-DB row verified, ev/22); no-runtime graceful degradation ("Resolving…", auto-retry, no crash, ev/24) | Works | Mid-turn crash recovery needs an account | None |
+| J6 Extensibility | MCP add/oauth/status → plugin install → skills (`$`/slash) → approvals (+ Record & Replay 26.727-era) `[historical-record + docs-derived]` | Plugins/Skills pages render with filters/search (ev/04); marketplace repo synced to disk (64 curated plugins) `[runtime-observed filesystem]`; MCP settings nav + `/mcp`; Workflows page (frozen area) (ev/05) | Surfaces work | Catalog UI empty unauthenticated ("No plugin marketplaces returned entries for this host"); install/enable flows not evidenced | None confirmed — catalog-empty vs disk-sync recorded as BOUND watch item (§9); settings-page discovery → WO-P2-004 |
+
+### 8.4 Lab upgrade opportunity (follow-up)
+
+Worker A discovered that an **OFFICIAL Linux desktop app now exists in
+preview** (since 2026-08-11; `.deb`/`.rpm`/install script; Ubuntu 24.04/26.04,
+Debian 13, Fedora 43/44 + Arch; x64 + ARM64; install host
+`persistent.oaistatic.com/codex-app-prod/linux/...`) `[docs-derived]`. The
+local LINUX_GUI_LAB sandbox is Debian 13 — inside the app's supported
+matrix. **Recommendation (follow-up work order WO-LAB-001, NOT a silent
+change to the platform bounds):** attempt to run the official Linux preview
+app inside the local lab (userspace `.deb` extraction per the established
+`fetch_debs.py` pattern; Xvfb + picom + capture). If it runs, Linux-A
+official-side evidence upgrades from evidence-layers to
+`[runtime-observed]` for every captured surface, the E2B-PARITY-ENVIRONMENT
+bounds doc is updated through the Tech Lead, and several `[unverified]`
+questions (Linux Computer Use scope, Activity view, terminal/browser
+affordance shapes) become directly checkable. Until then, all platform
+bounds in §3 stand unchanged. Constraints to respect: unauthenticated lab
+(account surfaces stay bound), preview-quality app, ~600 MB free disk.
+
+---
+
+## 9. Override audit trail (C2 reconciliation)
+
+Every application of the §7.3 conflict order that changed or reclassified a
+cell, in report order:
+
+1. **Flauz slash inventory (B2 enumeration → C2 source re-verification).**
+   B2 §2 enumerated 15 native named commands. Direct source read at `f113515`
+   shows **16** named commands (baseline 15 + `/review` — "Code review",
+   executor `ui.rs:7557-7570`, menu `ui.rs:22935-22946`) plus dynamic
+   `/service-tier:<id>` and `/skill:<path>` rows. Same evidence class
+   (`[source-derived]`), more recent capture wins per §7.3 → C2's 16-command
+   inventory stands. Consequence: Flauz already matches the current official
+   `/review` command; the coverage delta is 11 missing literal names, not 12.
+2. **Baseline slash count (A enumeration vs count).** A §2 labels the
+   baseline set "(15)" but enumerates 14 names; the 15th (`/shell`) is
+   evidenced in A §3 and PM "Thread execution". Resolution: baseline set =
+   15 incl. `/shell`; Flauz covers the baseline set 15/15. No status change;
+   discrepancy recorded, not silently resolved.
+3. **Projects "multi-root sources" classification (P3 polish → P1 backend
+   gap).** The PM ledger carried "multi-root sources" as `polish` (P3).
+   A's finding that multi-folder local projects are **in-baseline**
+   (26.715 < 26.721, `[docs-derived]`) plus C2's source verification that
+   Flauz's project model is single-path (`[source-derived]`) reclassifies
+   this to a backend gap, P1 → WO-P1-003. Higher-order evidence (docs +
+   source) overrides the historical ledger's delta class per §7.3.
+4. **Unread state (P3 polish → P2, current target).** Same pattern: PM
+   ledger listed "unread state" as polish; A's Activity view finding
+   (26.727, in the current target) makes unread/attention a P2 capability
+   (Activity view row). Historical evidence retained; the current-target
+   bar moves it per §7.7.
+5. **Slash "remaining slash commands (polish)" (P3 → resolved for baseline;
+   P2 for current target).** PM ledger P3 note referred to the baseline set;
+   C2 reconciliation shows the baseline set fully covered (15/15) plus
+   `/review` extra. The current-target delta (11 missing literal names) is
+   a P2 gap → WO-P2-005, scope-limited to commands with existing backing
+   capability.
+6. **Terminal row: "ledger green" vs entry-surface no-op.** Not a
+   contradiction: the ledger's green verdict covers in-chat terminal
+   functionality `[historical-record]`; B2's `[runtime-observed]` no-op
+   concerns the entry surface and discoverability only. Row stays `partial`
+   with a UI-integration gap (P1, WO-P1-001); no status flip, explicit
+   merge recorded.
+7. **Plugins marketplace: "end-to-end native" (ledger) vs catalog-empty
+   (B2 runtime).** Not a contradiction: the ledger claim rests on
+   authenticated/native-fixture validation `[historical-record]`; B2's lab
+   is unauthenticated. The catalog-empty vs 64-plugin-disk-sync observation
+   is recorded as a **BOUND watch item** (cannot distinguish auth-bound
+   listing from integration gap without credentials; official reference
+   behavior unauthenticated is `[unverified]` — auth-walled). No work order
+   (rule 6: no reference behavior); re-verification path: authenticated
+   J6 re-run.
+8. **Experimental method count (126 vs 89).** PM `[historical-record]`
+   claims "experimental schema: 126 client request methods"; A's
+   `[runtime-observed]` schema generator emits 89 `ClientRequest` methods
+   in both stable and v2 bundles. A's resolution adopted: measurement
+   difference (extra methods presumably runtime-negotiated behind
+   `experimentalApi: true`), not a contradiction. Runtime observation
+   outranks the historical claim for the reproducible number.
+9. **"Multi-root workspace handling" (complete) vs multi-folder gap (P1).**
+   Both rows stand: the former is the Windows multi-root white-screen
+   regression control (KF failure table); the latter is official multi-folder
+   project management (A §6). Different capabilities — no merge, no
+   substitution.
+10. **Process Manager affordances.** B2 §1 called it "palette-only
+    (+shortcut)"; PM records three affordances (palette, Ctrl+Alt+M,
+    background-terminal activity). Merged: the historical record retains the
+    third affordance; Discoverability cell reads complete (matches official
+    affordance set). No conflict of classes.
+11. **Ctrl+` binding provenance.** Official `Toggle terminal` Ctrl+` is a
+    current-docs binding with `[unverified]` introduction date (post-baseline
+    per A §3); Flauz already binds ctrl-` (`ui.rs:4499`). No gap on the
+    binding itself — WO-P1-001 concerns the missing persistent affordance
+    and the entry-surface no-op, not the key binding.
+12. **Import and migration direction.** A §9 records that officially there
+    was NO import UI at baseline (protocol methods only); Flauz implemented
+    the typed methods + native Import route before the official Settings >
+    Import shipped (2026-08-11). Flauz is ahead of the historical baseline
+    and ≈ at parity with the current target (same three providers); the
+    remaining bound (unsupported-project reporting) stays deferred. Row
+    stays `partial` pending that public protocol.
+13. **Computer Use — Linux reference layer.** The official reference for
+    this row is Windows `[historical-record]`; the official Linux preview
+    app's Computer Use scope is `[unverified]` `[docs-derived]`. No Linux
+    official claim is made; WO-PLAT-001 documents the bound as-is.
+
+---
+
+## 10. Change log
 
 | Date | Change |
 | --- | --- |
 | 2026-09-16 | Skeleton + definitions + PRE-A/B pre-population from `docs/parity-matrix.md` + `docs/known-failures.md` (Worker C1). Pending reconciliation by Worker C2. |
+| 2026-09-16 | **RECONCILED (Worker C2):** all 47 rows reconciled from A (`c083c38`) + B2 (`a2343d3`) + historical records per §7; 6 audit-surfaced rows added (§5.1 side chats, §5.4 WebMCP + browser extension, §5.6 in-app editing, §5.8 Record & Replay, §5.10 Activity view); Discoverability/UX-parity cells filled; §8 summary (counts 7/31/6/2/7, P0-P3 lists, J1-J6 journeys, lab-upgrade note); §9 override audit trail (13 entries); work orders confirmed in `FEATURE-PARITY-WORK-ORDERS.md` (WO-P1-001/002/003, WO-P2-004/005/006, WO-PLAT-001, WO-LAB-001). Pending Tech Lead convergence. |
