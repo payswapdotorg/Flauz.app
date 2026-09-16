@@ -197,9 +197,405 @@ pub(super) fn render_workflows(
                         cx,
                     ))
                 })
-                .child(render_instances_pane(&state, cx)),
+                .child(render_instances_pane(&state, cx))
+                .child(render_pack_system_states(workspace, cx)),
         )
         .into_any_element()
+}
+
+/// Renders the Pack system-state section of the Workflow / System
+/// Experience (PACK-UX-001).
+///
+/// Packs are governed, typed, immutable system states above Universal
+/// workflows. The section is read-only: the GUI renders contract
+/// responses verbatim (opaque ids and digests), never recomputes
+/// anything, and never becomes durable pack authority. Until the
+/// app-server grows pack protocol methods, the embedded golden catalog
+/// stands in as the contract source.
+fn render_pack_system_states(
+    workspace: &mut WorkspaceView,
+    cx: &mut Context<WorkspaceView>,
+) -> AnyElement {
+    // Lazy one-time load through the pack contract seam. A load failure
+    // surfaces as an error banner, never as fabricated data.
+    if workspace.state.pack.records.is_empty() && workspace.state.pack.error.is_none() {
+        workspace.state.pack = crate::pack_contracts::load_pack_state();
+    }
+    let pack_state = workspace.state.pack.clone();
+    let selected_revision = pack_state.selected.clone();
+
+    let mut section = v_flex().gap_3().child(
+        v_flex()
+            .gap_1()
+            .child(
+                div()
+                    .text_lg()
+                    .font_weight(FontWeight::SEMIBOLD)
+                    .child("Pack system states"),
+            )
+            .child(
+                div()
+                    .text_sm()
+                    .text_color(cx.theme().muted_foreground)
+                    .child(
+                        "Governed packs over immutable workflow versions — mission, \
+                             governance, dependencies, assurance, and provenance, read \
+                             from the pack contracts",
+                    ),
+            ),
+    );
+
+    if let Some(error) = &pack_state.error {
+        section = section.child(render_error_banner(error, cx));
+        return section.into_any_element();
+    }
+    if pack_state.records.is_empty() {
+        return section.into_any_element();
+    }
+
+    // Catalog rows: kind badge + identity + parentage.
+    let mut catalog = v_flex().gap_2();
+    for record in &pack_state.records {
+        let revision_id = record.revision_id.clone();
+        let is_selected = selected_revision.as_deref() == Some(record.revision_id.as_str());
+        let (kind_label, kind_color) = match record.kind {
+            codex_core::PackRecordKind::Candidate => ("CANDIDATE", cx.theme().warning),
+            codex_core::PackRecordKind::Promoted => ("PROMOTED", cx.theme().success),
+        };
+        let parentage = record
+            .parent_revision
+            .as_ref()
+            .map(|(revision, label)| {
+                format!(
+                    "builds on {}{}",
+                    &revision[..13],
+                    label
+                        .as_ref()
+                        .map(|label| format!(" ({label})"))
+                        .unwrap_or_default()
+                )
+            })
+            .unwrap_or_else(|| "root revision".to_owned());
+        catalog = catalog.child(
+            h_flex()
+                .id(SharedString::from(format!("pack-row-{revision_id}")))
+                .gap_3()
+                .px_3()
+                .py_2()
+                .rounded_md()
+                .cursor_pointer()
+                .border_1()
+                .border_color(if is_selected {
+                    cx.theme().ring
+                } else {
+                    cx.theme().border
+                })
+                .when(is_selected, |row| row.bg(cx.theme().secondary))
+                .child(
+                    div()
+                        .text_xs()
+                        .font_weight(FontWeight::SEMIBOLD)
+                        .text_color(kind_color)
+                        .child(kind_label),
+                )
+                .child(
+                    v_flex()
+                        .gap_0p5()
+                        .child(
+                            div()
+                                .text_sm()
+                                .font_weight(FontWeight::MEDIUM)
+                                .child(format!(
+                                    "{} @ {} · {}…",
+                                    record.pack_id,
+                                    record.semantic_version,
+                                    &record.revision_id[..13]
+                                )),
+                        )
+                        .child(
+                            div()
+                                .text_xs()
+                                .text_color(cx.theme().muted_foreground)
+                                .child(parentage),
+                        ),
+                )
+                .when(record.composition.is_some(), |row| {
+                    row.child(
+                        div()
+                            .text_xs()
+                            .text_color(cx.theme().info)
+                            .child("composed"),
+                    )
+                })
+                .when(record.promoted_from.is_some(), |row| {
+                    row.child(
+                        div()
+                            .text_xs()
+                            .text_color(cx.theme().muted_foreground)
+                            .child(format!(
+                                "promoted from {}…",
+                                &record.promoted_from.as_deref().unwrap_or("?")[..13]
+                            )),
+                    )
+                })
+                .on_click(cx.listener(move |this, _, _, _cx| {
+                    this.state.pack.selected = Some(revision_id.clone());
+                })),
+        );
+    }
+    section = section.child(catalog);
+
+    // Detail card for the selected record.
+    if let Some(record) = pack_state
+        .records
+        .iter()
+        .find(|record| Some(record.revision_id.as_str()) == selected_revision.as_deref())
+    {
+        section = section.child(render_pack_detail(record, cx));
+    }
+
+    section.into_any_element()
+}
+
+/// Renders the selected pack record's detail: mission, governance,
+/// dependencies, system state, assurance, and provenance — every value
+/// verbatim from the contract response.
+fn render_pack_detail(
+    record: &codex_core::PackRecordView,
+    cx: &mut Context<WorkspaceView>,
+) -> AnyElement {
+    let mut detail = v_flex()
+        .gap_3()
+        .p_4()
+        .rounded_md()
+        .border_1()
+        .border_color(cx.theme().border);
+
+    // Mission.
+    let mission = &record.mission;
+    let authorship = if mission.user_authored {
+        format!("user authority · {}", mission.author_subject)
+    } else {
+        format!("agent proposal · {}", mission.author_subject)
+    };
+    let mut mission_view = v_flex()
+        .gap_1()
+        .child(
+            div()
+                .text_sm()
+                .font_weight(FontWeight::SEMIBOLD)
+                .child("Mission"),
+        )
+        .child(div().text_sm().child(mission.statement.clone()))
+        .child(
+            div()
+                .text_xs()
+                .text_color(cx.theme().muted_foreground)
+                .child(authorship),
+        );
+    if !mission.objectives.is_empty() {
+        mission_view = mission_view.child(
+            div()
+                .text_xs()
+                .text_color(cx.theme().muted_foreground)
+                .child(format!("objectives: {}", mission.objectives.join(" · "))),
+        );
+    }
+    if !mission.context_notes.is_empty() {
+        mission_view = mission_view.child(
+            div()
+                .text_xs()
+                .text_color(cx.theme().muted_foreground)
+                .child(format!("context: {}", mission.context_notes.join(" · "))),
+        );
+    }
+    if !mission.hard_constraints.is_empty() {
+        mission_view = mission_view.child(div().text_xs().text_color(cx.theme().danger).child(
+            format!("hard constraints: {}", mission.hard_constraints.join(" · ")),
+        ));
+    }
+    detail = detail.child(mission_view);
+
+    // Governance.
+    detail = detail.child(
+        v_flex()
+            .gap_1()
+            .child(
+                div()
+                    .text_sm()
+                    .font_weight(FontWeight::SEMIBOLD)
+                    .child("Governance"),
+            )
+            .child(
+                div()
+                    .text_xs()
+                    .text_color(cx.theme().muted_foreground)
+                    .child(format!(
+                        "constitution: {} · policies: {}",
+                        record.governance.constitution_rules.join(", "),
+                        if record.governance.policy_scopes.is_empty() {
+                            "none".to_owned()
+                        } else {
+                            record.governance.policy_scopes.join(", ")
+                        }
+                    )),
+            ),
+    );
+
+    // Dependencies (immutable pins).
+    if !record.dependencies.is_empty() {
+        let mut deps = v_flex().gap_1().child(
+            div()
+                .text_sm()
+                .font_weight(FontWeight::SEMIBOLD)
+                .child("Dependencies (immutable pins)"),
+        );
+        for dependency in &record.dependencies {
+            deps = deps.child(
+                div()
+                    .text_xs()
+                    .font_family(cx.theme().mono_font_family.clone())
+                    .text_color(cx.theme().muted_foreground)
+                    .child(format!(
+                        "{} → {} {}…",
+                        dependency.key,
+                        dependency.resolved_kind,
+                        &dependency.resolved_identity[..13.min(dependency.resolved_identity.len())]
+                    )),
+            );
+        }
+        detail = detail.child(deps);
+    }
+
+    // System state.
+    let state = &record.system_state;
+    let mut state_view = v_flex().gap_1().child(
+        div()
+            .text_sm()
+            .font_weight(FontWeight::SEMIBOLD)
+            .child("System state"),
+    );
+    for (workflow_version, role) in &state.workflow_versions {
+        state_view = state_view.child(
+            div()
+                .text_xs()
+                .font_family(cx.theme().mono_font_family.clone())
+                .text_color(cx.theme().muted_foreground)
+                .child(format!(
+                    "workflow {}…{}",
+                    &workflow_version[..13.min(workflow_version.len())],
+                    role.as_ref()
+                        .map(|role| format!(" · {role}"))
+                        .unwrap_or_default()
+                )),
+        );
+    }
+    for (capability, constraint) in &state.capabilities {
+        state_view = state_view.child(
+            div()
+                .text_xs()
+                .font_family(cx.theme().mono_font_family.clone())
+                .text_color(cx.theme().muted_foreground)
+                .child(format!(
+                    "capability {capability}{}",
+                    constraint
+                        .as_ref()
+                        .map(|constraint| format!(" · {constraint}"))
+                        .unwrap_or_default()
+                )),
+        );
+    }
+    if !state.evaluations.is_empty() || !state.evidence.is_empty() {
+        state_view = state_view.child(
+            div()
+                .text_xs()
+                .text_color(cx.theme().muted_foreground)
+                .child(format!(
+                    "{} evaluation refs · {} evidence refs",
+                    state.evaluations.len(),
+                    state.evidence.len()
+                )),
+        );
+    }
+    if let Some(checkpoint) = &state.rollback_checkpoint {
+        state_view = state_view.child(
+            div()
+                .text_xs()
+                .text_color(cx.theme().warning)
+                .child(format!("rollback point: {checkpoint}")),
+        );
+    }
+    detail = detail.child(state_view);
+
+    // Assurance (policy-scoped dimensions).
+    let assurance = record.assurance.required();
+    let mut assurance_view = v_flex().gap_1().child(
+        div()
+            .text_sm()
+            .font_weight(FontWeight::SEMIBOLD)
+            .child("Assurance"),
+    );
+    if assurance.is_empty() {
+        assurance_view = assurance_view.child(
+            div()
+                .text_xs()
+                .text_color(cx.theme().muted_foreground)
+                .child("no dimensions required"),
+        );
+    } else {
+        for (name, value) in assurance {
+            assurance_view = assurance_view.child(
+                div()
+                    .text_xs()
+                    .text_color(cx.theme().muted_foreground)
+                    .child(format!("{name}: {value}")),
+            );
+        }
+    }
+    detail = detail.child(assurance_view);
+
+    // Provenance (+ composition lineage).
+    let mut provenance = v_flex()
+        .gap_1()
+        .child(
+            div()
+                .text_sm()
+                .font_weight(FontWeight::SEMIBOLD)
+                .child("Provenance"),
+        )
+        .child(
+            div()
+                .text_xs()
+                .text_color(cx.theme().muted_foreground)
+                .child(format!(
+                    "producer: {} ({})",
+                    record.provenance.producer_subject, record.provenance.producer_kind
+                )),
+        );
+    if let Some(composition) = &record.composition {
+        provenance = provenance
+            .child(div().text_xs().text_color(cx.theme().info).child(format!(
+                "composed {} from base {} + overlay {}",
+                composition.relation, composition.base_revision, composition.overlay_revision
+            )))
+            .child(
+                div()
+                    .text_xs()
+                    .text_color(cx.theme().muted_foreground)
+                    .child(format!("activation merge: {}", composition.strategy)),
+            );
+        for (target, scope) in &composition.activations {
+            provenance = provenance.child(
+                div()
+                    .text_xs()
+                    .text_color(cx.theme().muted_foreground)
+                    .child(format!("activates {target} {scope}")),
+            );
+        }
+    }
+    detail = detail.child(provenance);
+
+    detail.into_any_element()
 }
 
 fn render_error_banner(message: &str, cx: &mut Context<WorkspaceView>) -> AnyElement {

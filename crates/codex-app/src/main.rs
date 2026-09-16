@@ -15,6 +15,7 @@ use codex_platform::{LinuxDesktopEntryError, install_linux_desktop_entry};
 use codex_protocol::ClientInfo;
 
 mod backend;
+mod pack_contracts;
 mod ui;
 
 fn main() -> ExitCode {

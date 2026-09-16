@@ -4744,6 +4744,7 @@ pub struct AppState {
     pub marketplace: MarketplaceState,
     pub hooks: HooksState,
     pub workflow: WorkflowState,
+    pub pack: PackState,
     pub pull_requests: PullRequestInboxState,
     pub git: GitState,
     pub review_start: ReviewStartState,
@@ -4817,6 +4818,7 @@ impl Default for AppState {
             marketplace: MarketplaceState::default(),
             hooks: HooksState::default(),
             workflow: WorkflowState::default(),
+            pack: PackState::default(),
             pull_requests: PullRequestInboxState::default(),
             git: GitState::default(),
             review_start: ReviewStartState::default(),
@@ -35835,4 +35837,219 @@ mod tests {
             [Effect::WorkflowRequest(WorkflowRequest::InstanceList)]
         );
     }
+}
+
+// ---------------------------------------------------------------------------
+// Pack system-state views (PACK-UX-001)
+//
+// Plain domain models for the Pack-aware views inside the Workflow /
+// System Experience. Every value here is rendered verbatim from a pack
+// contract response: identifiers and digests are opaque strings, nothing
+// is recomputed client-side, and the GUI never becomes durable pack
+// authority (CODEX-PACK-ARCHITECTURE §15). Candidate and promoted records
+// are distinct types of the same catalog (`PackRecordKind`), because
+// lifecycle position is a fact the control plane stated, not something
+// the view infers from shape.
+// ---------------------------------------------------------------------------
+
+/// Which governed lifecycle position a catalog record holds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PackRecordKind {
+    /// A proposed system state awaiting a promotion decision.
+    Candidate,
+    /// An immutable promoted revision.
+    Promoted,
+}
+
+/// One pack record in the catalog: identity, mission, governance,
+/// dependencies, system state, assurance, provenance, and (for composed
+/// revisions) the two-parent composition record.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PackRecordView {
+    /// Lifecycle position, stated by the contract response.
+    pub kind: PackRecordKind,
+    /// Pack lineage id (opaque).
+    pub pack_id: String,
+    /// Semantic version of this revision.
+    pub semantic_version: String,
+    /// Content-addressed revision identity (opaque digest string).
+    pub revision_id: String,
+    /// Parent lineage edge (revision id + optional label), when the record
+    /// builds on a promoted revision.
+    pub parent_revision: Option<(String, Option<String>)>,
+    /// For promoted records: the candidate revision promoted into this
+    /// immutable revision.
+    pub promoted_from: Option<String>,
+    /// The mission this revision serves.
+    pub mission: PackMissionView,
+    /// Governance summary: constitution rule kinds + governing policy
+    /// scopes.
+    pub governance: PackGovernanceView,
+    /// Resolved dependency lock entries.
+    pub dependencies: Vec<PackDependencyEntryView>,
+    /// The proposed or promoted system state.
+    pub system_state: PackSystemStateView,
+    /// Policy-scoped assurance dimensions (absent dimension = no
+    /// requirement; there is no global deterministic mode).
+    pub assurance: PackAssuranceView,
+    /// Production provenance (descriptive only; never authority).
+    pub provenance: PackProvenanceView,
+    /// Two-parent composition provenance, when the record was produced by
+    /// composition (PACK-005).
+    pub composition: Option<PackCompositionView>,
+}
+
+/// The mission model rendered in the pack views.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PackMissionView {
+    /// Mission lineage id.
+    pub id: String,
+    /// The mission statement.
+    pub statement: String,
+    /// `true` when the mission content is user/organization authority;
+    /// `false` when it is an agent proposal (never silent authority).
+    pub user_authored: bool,
+    /// Who authored the mission (opaque principal).
+    pub author_subject: String,
+    /// Value objectives, most important first.
+    pub objectives: Vec<String>,
+    /// Operating-context notes (these power contextual activation).
+    pub context_notes: Vec<String>,
+    /// Non-negotiable hard constraints.
+    pub hard_constraints: Vec<String>,
+}
+
+/// Governance summary for a pack record.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PackGovernanceView {
+    /// Constitution rule kinds, in authored order (e.g. "auditRequirement").
+    pub constitution_rules: Vec<String>,
+    /// Platform invariants acknowledged as unweakenable.
+    pub protected_invariants: Vec<String>,
+    /// Governing policy scopes (e.g. "dependencyUpdates").
+    pub policy_scopes: Vec<String>,
+}
+
+/// One resolved dependency lock entry.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PackDependencyEntryView {
+    /// The declared dependency key (e.g. "workflow:billing").
+    pub key: String,
+    /// The resolved kind label: workflow version, capability, or pack
+    /// revision.
+    pub resolved_kind: String,
+    /// The immutable identity the dependency resolved to (opaque).
+    pub resolved_identity: String,
+    /// Content digest of the resolved artifact (opaque).
+    pub content_digest: String,
+}
+
+/// The system-state reference sets of a pack record.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PackSystemStateView {
+    /// Pinned immutable workflow versions with their descriptive roles.
+    pub workflow_versions: Vec<(String, Option<String>)>,
+    /// Required capabilities with optional descriptive constraints.
+    pub capabilities: Vec<(String, Option<String>)>,
+    /// Referenced governing/assurance policies (identity + validated
+    /// digest, both opaque).
+    pub policies: Vec<(String, String)>,
+    /// Opaque evaluation reference digests.
+    pub evaluations: Vec<String>,
+    /// Opaque evidence reference digests.
+    pub evidence: Vec<String>,
+    /// Recorded rollback point, when the revision supersedes a promoted
+    /// state.
+    pub rollback_checkpoint: Option<String>,
+}
+
+/// Policy-scoped assurance dimensions of a pack record.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct PackAssuranceView {
+    /// Determinism requirement, when declared.
+    pub determinism: Option<String>,
+    /// Replay requirement, when declared.
+    pub replay: Option<String>,
+    /// Approval requirement, when declared.
+    pub approval: Option<String>,
+    /// Evidence requirement, when declared.
+    pub evidence: Option<String>,
+    /// Model pin (model identity + digest), when declared.
+    pub model_pinning: Option<(String, String)>,
+    /// Dependency pin, when declared.
+    pub dependency_pinning: Option<(String, String)>,
+    /// Environment pin, when declared.
+    pub environment_pinning: Option<(String, String)>,
+}
+
+impl PackAssuranceView {
+    /// The dimensions that carry a requirement, as (name, detail) pairs
+    /// for rendering.
+    pub fn required(&self) -> Vec<(&'static str, String)> {
+        let mut required = Vec::new();
+        if let Some(value) = &self.determinism {
+            required.push(("determinism", value.clone()));
+        }
+        if let Some(value) = &self.replay {
+            required.push(("replay", value.clone()));
+        }
+        if let Some(value) = &self.approval {
+            required.push(("approval", value.clone()));
+        }
+        if let Some(value) = &self.evidence {
+            required.push(("evidence", value.clone()));
+        }
+        if let Some((model, digest)) = &self.model_pinning {
+            required.push(("model pinning", format!("{model} · {digest}")));
+        }
+        if let Some((dependency, digest)) = &self.dependency_pinning {
+            required.push(("dependency pinning", format!("{dependency} · {digest}")));
+        }
+        if let Some((environment, digest)) = &self.environment_pinning {
+            required.push(("environment pinning", format!("{environment} · {digest}")));
+        }
+        required
+    }
+}
+
+/// Production provenance (descriptive).
+#[derive(Debug, Clone, PartialEq)]
+pub struct PackProvenanceView {
+    /// Producer kind label (user / agent / control plane).
+    pub producer_kind: String,
+    /// Producer principal (opaque).
+    pub producer_subject: String,
+    /// Parent revision named by provenance, when present.
+    pub parent_revision: Option<String>,
+}
+
+/// Two-parent composition provenance (PACK-005), rendered as lineage.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PackCompositionView {
+    /// Base parent revision identity (opaque).
+    pub base_revision: String,
+    /// Overlay parent revision identity (opaque).
+    pub overlay_revision: String,
+    /// Relation label: specialization or orthogonal.
+    pub relation: String,
+    /// Activation merge strategy label.
+    pub strategy: String,
+    /// Contextual activation rules: target label + scope label.
+    pub activations: Vec<(String, String)>,
+}
+
+/// The pack catalog state inside the Workflow / System Experience.
+///
+/// Records are loaded through the pack contract seam (today: the embedded
+/// golden-catalog fixture standing in for the future app-server pack
+/// protocol; the view never fabricates pack data). Selection is by
+/// revision id; the catalog itself is read-only.
+#[derive(Debug, Clone, Default)]
+pub struct PackState {
+    /// The loaded pack records.
+    pub records: Vec<PackRecordView>,
+    /// The selected record's revision id, if any.
+    pub selected: Option<String>,
+    /// Load error surfaced to the operator (never swallowed).
+    pub error: Option<String>,
 }

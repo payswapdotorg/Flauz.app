@@ -1021,6 +1021,7 @@ dependencies = [
  "gpui-component-assets",
  "image",
  "markdown",
+ "serde",
  "serde_json",
  "url",
  "vt100",
