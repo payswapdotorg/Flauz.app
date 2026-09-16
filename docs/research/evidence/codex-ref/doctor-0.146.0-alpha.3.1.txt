@@ -1,0 +1,137 @@
+# Official CLI 0.146.0-alpha.3.1 doctor output [runtime-observed]
+# Command: CODEX_HOME=/tmp/qa-codex-home codex doctor (2026-09-16, isolated home, no auth)
+
+Codex Doctor v0.146.0-alpha.3.1 · linux-x86_64
+
+Notes
+   ✗ auth         no Codex credentials were found - Run codex login or provide an API key through a supported auth env var.
+   ⚠ updates      update configuration is locally consistent
+   ⚠ websocket    Responses WebSocket failed; HTTPS fallback may still work - Check proxy, VPN, firewall, DNS, custom CA, and WebSocket policy support.
+   ✗ terminal     TERM=dumb - colors and cursor control are disabled
+─────────────────────────────────────────────────────────────
+
+Environment
+  ✓ system       unavailable
+      os                       Debian 13.0.0 [64-bit]
+      OS language              unavailable
+      LC_CTYPE                 C.UTF-8
+      VISUAL                   not set
+      EDITOR                   not set
+  ✓ runtime      other
+      version                  0.146.0-alpha.3.1
+      install method           other
+      commit                   unknown
+      executable               ~/parity-lab/tools/codex…6_64-unknown-linux-musl
+  ✓ install      consistent
+      context                  other
+      managed by               npm: no · bun: no · pnpm: no · package root —
+  ✓ search       ripgrep 14.1.1 (system, `rg`)
+      search command           rg
+      search provider          system
+      search command readiness ripgrep 14.1.1
+  ✓ git          git version 2.47.3
+      selected git             /usr/bin/git
+      version                  git version 2.47.3
+      exec path                /usr/lib/git-core
+      repo detected            false
+      PATH entries (2)         /usr/bin/git
+                               /bin/git
+  ✗ terminal     TERM=dumb - colors and cursor control are disabled
+      terminal                 dumb
+    ▸ TERM                     dumb (expected TERM=xterm-256color or another real terminal type)
+      stdin is terminal        false
+      stdout is terminal       false
+      stderr is terminal       false
+      terminal size            80x24
+      color output             disabled (NO_COLOR)
+      NO_COLOR                 1
+      CLICOLOR                 0
+      CLICOLOR_FORCE           0
+      effective locale         C.UTF-8
+    → set TERM to a real value, for example xterm-256color
+  ✓ title        default · project ref-evidence
+      title source             default
+      title items              activity, project-name
+      activity item            true
+      project source           cwd
+      project value            ref-evidence
+  ✓ state        state paths and databases are inspectable
+      CODEX_HOME               /tmp/qa-codex-home (dir)
+      log dir                  /tmp/qa-codex-home/log (missing)
+      sqlite home              /tmp/qa-codex-home (dir)
+      state DB                 /tmp/qa-codex-home/state_5.sqlite (missing) · integrity skipped (missing)
+      log DB                   /tmp/qa-codex-home/logs_2.sqlite (missing) · integrity skipped (missing)
+      goals DB                 /tmp/qa-codex-home/goals_1.sqlite (missing) · integrity skipped (missing)
+      memories DB              /tmp/qa-codex-home/memories_1.sqlite (missing) · integrity skipped (missing)
+      active rollouts          0 files · 0 B (avg 0 B)
+      archived rollouts        0 files · 0 B (avg 0 B)
+      thread history DB        /tmp/qa-codex-home/thread_history_1.sqlite (missing)
+      thread history DB integrity skipped (missing)
+  ✓ threads      no rollout/state DB inventory to compare
+      default model provider   openai
+      rollout DB active files  0
+      rollout DB archived files 0
+      rollout DB scan errors   0
+      rollout DB malformed file names 0
+      rollout DB scan cap reached false
+      rollout DB rows          skipped (state DB missing)
+
+Configuration
+  ✓ config       loaded
+      model                    <default> · openai
+      cwd                      /tmp/ref-evidence
+      config.toml              /tmp/qa-codex-home/config.toml
+      MCP servers              0
+      feature flags            37 enabled · 0 overridden (full list with --all)
+  ✗ auth         no Codex credentials were found — Run codex login or provide an API key through a supported auth env var.
+      auth storage mode        File
+      auth file                /tmp/qa-codex-home/auth.json
+  ✓ mcp          no MCP servers configured
+  ✓ sandbox      restricted fs + restricted network · approval OnRequest
+      approval policy          OnRequest
+      filesystem sandbox       restricted
+      network sandbox          restricted
+      linux helper             ~/parity-lab/tools/codex…6_64-unknown-linux-musl
+      execve wrapper helper    none
+
+Updates
+  ⚠ updates      update configuration is locally consistent
+      startup update check     true
+      update action            manual or unknown
+      version cache            /tmp/qa-codex-home/version.json
+      version cache            missing
+      latest version probe     curl: (22) The requested URL returned error: 403
+
+Connectivity
+  ✓ network      no proxy env vars
+      proxy env vars           none
+  ⚠ websocket    Responses WebSocket failed; HTTPS fallback may still work — Check proxy, VPN, firewall, DNS, custom CA, and WebSocket policy support.
+      model provider           openai
+      provider name            OpenAI
+      wire API                 responses
+      supports websockets      true
+      proxy env vars           none
+      connect timeout          15000 ms
+      auth mode                none
+      endpoint                 wss://api.openai.com/v1/<redacted>
+      DNS                      2 IPv4, 2 IPv6, first IPv4
+      handshake transport error http 403 Forbidden: Some("{\"error\":{\"code\":\"unsupported_country_region_territory\",\"message\":\"Country, region, or territory not supported\",\"param\":null,\"type\":\"request_forbidden\"}}")
+  ✓ reachability active provider endpoints are reachable over HTTP
+      reachability mode        ChatGPT auth
+      ChatGPT base URL         https://chatgpt.com/backend-api/ reachable (HTTP 403)
+
+Background Server
+  ○ app-server   not running (ephemeral mode)
+      daemon state dir         /tmp/qa-codex-home/app-server-daemon
+      settings                 /tmp/qa-codex-home/app-s…er-daemon/settings.json (missing)
+      pid file                 /tmp/qa-codex-home/app-s…r-daemon/app-server.pid (missing)
+      update-loop pid file     /tmp/qa-codex-home/app-s…/app-server-updater.pid (missing)
+      control socket           /tmp/qa-codex-home/app-s…app-server-control.sock
+      status                   not running
+      mode                     ephemeral
+
+─────────────────────────────────────────────────────────────
+13 ok · 1 idle · 4 notes · 2 warn · 2 fail failed
+
+--summary compact output           --all expand truncated lists
+--json redacted report
