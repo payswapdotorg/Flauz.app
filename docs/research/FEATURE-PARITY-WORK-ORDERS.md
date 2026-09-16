@@ -104,7 +104,7 @@ keeps the same number (WO-P1-DRAFT-001 → WO-P1-001).
 ### WO-P1-001
 
 - **ID:** WO-P1-001 (confirmed from WO-P1-DRAFT-001)
-- **Title:** Terminal discoverability — no persistent affordance; silent no-op on the entry surface
+- **Title:** Terminal discoverability — status: **VERIFIED (pending merge)** [2026-09-16: implemented on branch parity/wo-p1-discoverability; unit tests added (affordance renders in default layout; entry-surface toggles surface guidance, never silent no-op); runtime evidence docs/research/evidence/wo-p1/ (VLM-read affordances in default layout; guard message + Dismiss surfaced on entry surface; frames differ); merge gated on CI (fmt/clippy/tests/release-build/Xvfb-smoke) on PR] — no persistent affordance; silent no-op on the entry surface
 - **Platform:** all (UI-shell concern; Linux-verifiable in lab, Windows row closes per rule 5)
 - **Reference behavior:** Official Codex exposes Terminal as a **persistent
   per-chat dock** (bottom or right) that a user can find and open without
@@ -166,7 +166,7 @@ keeps the same number (WO-P1-DRAFT-001 → WO-P1-001).
 ### WO-P1-002
 
 - **ID:** WO-P1-002 (confirmed from WO-P1-DRAFT-002)
-- **Title:** Browser discoverability — hidden in the inspector pane set; refused without an open chat
+- **Title:** Browser discoverability — status: **VERIFIED (pending merge)** [2026-09-16: implemented on branch parity/wo-p1-discoverability; unit tests added (affordance renders in default layout; entry-surface toggles surface guidance, never silent no-op); runtime evidence docs/research/evidence/wo-p1/ (VLM-read affordances in default layout; guard message + Dismiss surfaced on entry surface; frames differ); merge gated on CI (fmt/clippy/tests/release-build/Xvfb-smoke) on PR] — hidden in the inspector pane set; refused without an open chat
 - **Platform:** all (UI-shell concern; Linux-verifiable in lab)
 - **Reference behavior:** Official Codex exposes the in-app Browser as a
   normally discoverable surface: a native browser panel with bounded tabs,
@@ -565,6 +565,8 @@ Per §7.5 rule 4 and work-order rule 6, the following reconciled gaps carry
   its IDs do not collide (`GUI-###` vs `WO-…`).
 
 ## 7. Change log
+
+- 2026-09-16: WO-P1-001 and WO-P1-002 set to VERIFIED (pending merge) — implemented on parity/wo-p1-discoverability (sidebar footer affordances + honest entry-surface guards + regression tests + runtime evidence under docs/research/evidence/wo-p1/).
 
 | Date | Change |
 | --- | --- |

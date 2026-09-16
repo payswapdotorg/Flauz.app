@@ -280,6 +280,39 @@ fn task_workspace_active(route: MainRoute, selected_task_id: Option<&str>) -> bo
     route == MainRoute::Tasks && selected_task_id.is_some()
 }
 
+/// Terminal and browser surfaces (dock, inspector panes) only exist on the
+/// Tasks route, but they are reachable there even before a chat is opened:
+/// the entry surface answers with guidance instead of a silent no-op
+/// (WO-P1-001 / WO-P1-002).
+fn terminal_browser_affordances_available(route: MainRoute) -> bool {
+    route == MainRoute::Tasks
+}
+
+/// Model of a persistent sidebar affordance (WO-P1-001 / WO-P1-002). The
+/// footer renders one row per `Some(affordance)`, so a `Some` result for the
+/// default `AppState` means the affordance renders in the default layout.
+struct SidebarSurfaceAffordance {
+    id: &'static str,
+    label: &'static str,
+    tooltip: &'static str,
+}
+
+fn sidebar_terminal_affordance(state: &AppState) -> Option<SidebarSurfaceAffordance> {
+    terminal_browser_affordances_available(state.route).then_some(SidebarSurfaceAffordance {
+        id: "nav-terminal",
+        label: "Terminal",
+        tooltip: "Toggle the terminal panel (Ctrl+`)",
+    })
+}
+
+fn sidebar_browser_affordance(state: &AppState) -> Option<SidebarSurfaceAffordance> {
+    terminal_browser_affordances_available(state.route).then_some(SidebarSurfaceAffordance {
+        id: "nav-browser",
+        label: "Browser",
+        tooltip: "Toggle the browser panel (Ctrl+Shift+B)",
+    })
+}
+
 fn sidebar_task_list_visible(route: MainRoute) -> bool {
     route != MainRoute::Settings
 }
@@ -1591,6 +1624,7 @@ gpui::actions!(
         FindInThreadShortcut,
         OpenReviewShortcut,
         ToggleTerminalShortcut,
+        OpenBrowserTabShortcut,
         OpenSettingsShortcut,
         ShowKeyboardShortcutsShortcut,
         ToggleFullscreenShortcut,
@@ -9862,8 +9896,14 @@ impl WorkspaceView {
                     && self.state.git.repository_root.is_some()
             }
             "toggleBottomPanel" => bottom_terminal_panel_toggle_available(&self.state),
-            "toggleSidePanel" | "toggleTerminal" | "openBrowserTab" | "toggleBrowserPanel" => {
+            "toggleSidePanel" => {
                 task_workspace_active(self.state.route, self.state.selected_task_id.as_deref())
+            }
+            // Terminal and browser toggles stay available on the Tasks route
+            // even without an open chat: the reducer surfaces guidance
+            // instead of a silent no-op (WO-P1-001 / WO-P1-002).
+            "toggleTerminal" | "openBrowserTab" | "toggleBrowserPanel" => {
+                terminal_browser_affordances_available(self.state.route)
             }
             "focusBrowserAddressBar" => {
                 self.state.route == MainRoute::Tasks
@@ -10007,11 +10047,7 @@ impl WorkspaceView {
             "toggleMaximizeSidePanel" => {
                 self.dispatch(Action::ToggleMaximizeSidePanel, cx);
             }
-            "toggleTerminal" => {
-                if task_workspace_active(self.state.route, self.state.selected_task_id.as_deref()) {
-                    self.dispatch(Action::ToggleTerminalDock, cx);
-                }
-            }
+            "toggleTerminal" => self.dispatch(Action::ToggleTerminalDock, cx),
             "openBrowserTab" => self.dispatch(Action::OpenBrowserTab, cx),
             "toggleBrowserPanel" => self.dispatch(Action::ToggleBrowserPanel, cx),
             "openFolder" => self.prompt_for_workspace(cx),
@@ -12819,6 +12855,7 @@ impl WorkspaceView {
         shortcuts: Arc<HashMap<&'static str, String>>,
         task_workspace_active: bool,
         bottom_panel_available: bool,
+        terminal_browser_available: bool,
         has_multiple_tasks: bool,
         find_available: bool,
         can_navigate_back: bool,
@@ -12849,10 +12886,21 @@ impl WorkspaceView {
         menu = menu.item(
             Self::shortcut_popup_menu_item("Open Terminal", "toggleTerminal", &shortcuts)
                 .action(Box::new(ToggleTerminalShortcut))
-                .disabled(!task_workspace_active)
+                .disabled(!terminal_browser_available)
                 .on_click(move |_, _, cx| {
                     let _ = terminal_view.update(cx, |this, cx| {
                         this.dispatch(Action::ToggleTerminalDock, cx);
+                    });
+                }),
+        );
+        let browser_view = view.clone();
+        menu = menu.item(
+            Self::shortcut_popup_menu_item("Open Browser Tab", "openBrowserTab", &shortcuts)
+                .action(Box::new(OpenBrowserTabShortcut))
+                .disabled(!terminal_browser_available)
+                .on_click(move |_, _, cx| {
+                    let _ = browser_view.update(cx, |this, cx| {
+                        this.dispatch(Action::OpenBrowserTab, cx);
                     });
                 }),
         );
@@ -13072,6 +13120,7 @@ impl WorkspaceView {
         let task_workspace_active =
             task_workspace_active(self.state.route, self.state.selected_task_id.as_deref());
         let bottom_panel_available = bottom_terminal_panel_toggle_available(&self.state);
+        let terminal_browser_available = terminal_browser_affordances_available(self.state.route);
         let find_available = task_workspace_active;
         let has_multiple_tasks = self.state.tasks.len() > 1;
         let can_navigate_back = self.can_navigate_history(false);
@@ -13157,6 +13206,7 @@ impl WorkspaceView {
                                     view_shortcuts.clone(),
                                     task_workspace_active,
                                     bottom_panel_available,
+                                    terminal_browser_available,
                                     has_multiple_tasks,
                                     find_available,
                                     can_navigate_back,
@@ -13810,6 +13860,58 @@ impl WorkspaceView {
             .gap_1()
             .border_t_1()
             .border_color(cx.theme().sidebar_border)
+            .when_some(sidebar_terminal_affordance(&self.state), |footer, item| {
+                footer.child(
+                    h_flex()
+                        .id(item.id)
+                        .h(px(34.0))
+                        .px_2()
+                        .gap_2()
+                        .items_center()
+                        .rounded_md()
+                        .when(pointer_cursors_enabled(cx), |element| {
+                            element.cursor_pointer()
+                        })
+                        .when(self.state.terminal_dock_open, |row| {
+                            row.bg(cx.theme().sidebar_accent)
+                        })
+                        .when(!self.state.terminal_dock_open, |row| {
+                            row.hover(|style| style.bg(cx.theme().list_hover))
+                        })
+                        .tooltip(move |window, cx| Tooltip::new(item.tooltip).build(window, cx))
+                        .child(Icon::new(IconName::SquareTerminal).xsmall())
+                        .child(div().text_sm().child(item.label))
+                        .on_click(cx.listener(|this, _, _, cx| {
+                            this.dispatch(Action::ToggleTerminalDock, cx);
+                        })),
+                )
+            })
+            .when_some(sidebar_browser_affordance(&self.state), |footer, item| {
+                footer.child(
+                    h_flex()
+                        .id(item.id)
+                        .h(px(34.0))
+                        .px_2()
+                        .gap_2()
+                        .items_center()
+                        .rounded_md()
+                        .when(pointer_cursors_enabled(cx), |element| {
+                            element.cursor_pointer()
+                        })
+                        .when(self.state.inspector == InspectorPane::Browser, |row| {
+                            row.bg(cx.theme().sidebar_accent)
+                        })
+                        .when(self.state.inspector != InspectorPane::Browser, |row| {
+                            row.hover(|style| style.bg(cx.theme().list_hover))
+                        })
+                        .tooltip(move |window, cx| Tooltip::new(item.tooltip).build(window, cx))
+                        .child(Icon::new(IconName::Globe).xsmall())
+                        .child(div().text_sm().child(item.label))
+                        .on_click(cx.listener(|this, _, _, cx| {
+                            this.dispatch(Action::ToggleBrowserPanel, cx);
+                        })),
+                )
+            })
             .child(
                 h_flex()
                     .id("nav-settings")
@@ -46027,28 +46129,30 @@ mod tests {
         right_panels_hide_for_width_transition, right_panels_restore_for_width_class,
         sanitize_assistant_markdown, selected_approval_request, selected_model_upgrade_notice,
         selected_task_copy_value, settings_section_matches, settings_section_refreshes_account,
-        shell_width_class, sidebar_layout_width, sidebar_task_list_visible, split_diff_rows,
+        shell_width_class, sidebar_browser_affordance, sidebar_layout_width,
+        sidebar_task_list_visible, sidebar_terminal_affordance, split_diff_rows,
         startup_recovery_card, status_context_total_label, status_rate_limit_label,
         status_rate_limit_reset_metadata_at, task_slot_id, task_workspace_active,
-        terminal_tab_label, thread_find_right_offset_for_shell, timeline_activity_content,
+        terminal_browser_affordances_available, terminal_tab_label,
+        thread_find_right_offset_for_shell, timeline_activity_content,
         turn_diff_update_is_accepted, usage_limit_reset_summary_copy,
         usage_settings_requires_sign_in, validate_plugin_logo_dimensions, worktree_fork_queue_full,
         worktree_use_disabled,
     };
     use codex_core::{
         AccountAuthOperation, AccountDailyUsageBucket, AccountKind, AccountProfile, AccountState,
-        AppCard, AppState, AppearancePalette, AppearanceVariant, ApprovalContext, ApprovalKind,
-        ApprovalRequest, ComposerAttachment, ComposerAttachmentKind, ComputerApplicationState,
-        ConnectionStatus, GitDiffScope, GitFileKind, GitFileState, GitPullRequestState,
-        GitWorktreeState, InstalledAppRuntime, IntegratedTerminalShell,
-        KEYBOARD_SHORTCUT_COMMAND_IDS, LoadStatus, MAX_PENDING_WORKTREE_FORKS, MainRoute,
-        McpAuthStatus, ModelOption, ModelUpgradeNotice, PendingWorktreeFork,
-        PendingWorktreeForkPhase, PluginCard, ProcessManagerState, PullRequestCiStatus,
-        PullRequestDetail, PullRequestIdentity, PullRequestMutationKind, PullRequestState,
-        PullRequestSummary, ReasoningEffortOption, ReducedMotionPreference,
+        Action, AppCard, AppState, AppearancePalette, AppearanceVariant, ApprovalContext,
+        ApprovalKind, ApprovalRequest, ComposerAttachment, ComposerAttachmentKind,
+        ComputerApplicationState, ConnectionStatus, GitDiffScope, GitFileKind, GitFileState,
+        GitPullRequestState, GitWorktreeState, InspectorPane, InstalledAppRuntime,
+        IntegratedTerminalShell, KEYBOARD_SHORTCUT_COMMAND_IDS, LoadStatus,
+        MAX_PENDING_WORKTREE_FORKS, MainRoute, McpAuthStatus, ModelOption, ModelUpgradeNotice,
+        PendingWorktreeFork, PendingWorktreeForkPhase, PluginCard, ProcessManagerState,
+        PullRequestCiStatus, PullRequestDetail, PullRequestIdentity, PullRequestMutationKind,
+        PullRequestState, PullRequestSummary, ReasoningEffortOption, ReducedMotionPreference,
         RemoteControlRuntimeStatus, ServiceTierOption, SkillCard, SkillScope, TaskRunStatus,
         TaskSummary, TerminalDockLocation, TerminalTabState, TimelineItem, TimelineKind,
-        TurnDiffState,
+        TurnDiffState, reduce,
     };
 
     fn task(id: &str, cwd: &str) -> TaskSummary {
@@ -48316,6 +48420,66 @@ mod tests {
         state.terminal.tabs.push(terminal_tab);
         state.terminal.location = TerminalDockLocation::Right;
         assert!(!bottom_terminal_panel_toggle_available(&state));
+    }
+
+    #[test]
+    fn terminal_and_browser_affordances_render_in_default_layout() {
+        // The default window state (Tasks route, no chat open yet) is the
+        // entry surface; both persistent affordances must render there
+        // (WO-P1-001 / WO-P1-002).
+        let default_state = AppState::default();
+        assert_eq!(default_state.route, MainRoute::Tasks);
+        let terminal = match sidebar_terminal_affordance(&default_state) {
+            Some(affordance) => affordance,
+            None => panic!("terminal affordance renders in the default layout"),
+        };
+        assert_eq!(terminal.id, "nav-terminal");
+        assert_eq!(terminal.label, "Terminal");
+        let browser = match sidebar_browser_affordance(&default_state) {
+            Some(affordance) => affordance,
+            None => panic!("browser affordance renders in the default layout"),
+        };
+        assert_eq!(browser.id, "nav-browser");
+        assert_eq!(browser.label, "Browser");
+
+        // Routes without terminal/browser surfaces render neither affordance.
+        for route in [
+            MainRoute::Repository,
+            MainRoute::PullRequests,
+            MainRoute::Marketplace,
+            MainRoute::Workflows,
+            MainRoute::Settings,
+        ] {
+            let state = AppState {
+                route,
+                ..AppState::default()
+            };
+            assert!(sidebar_terminal_affordance(&state).is_none());
+            assert!(sidebar_browser_affordance(&state).is_none());
+        }
+    }
+
+    #[test]
+    fn entry_surface_terminal_and_browser_toggles_surface_guidance() {
+        // WO-P1-001 / WO-P1-002 regression: on the entry surface the toggle
+        // commands stay available and the reducer answers with a visible
+        // status message — never a silent no-op.
+        let mut state = AppState::default();
+        assert!(terminal_browser_affordances_available(state.route));
+
+        assert!(reduce(&mut state, Action::ToggleTerminalDock).is_empty());
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Select a task before opening a terminal.")
+        );
+        assert!(!state.terminal_dock_open);
+
+        assert!(reduce(&mut state, Action::OpenBrowserTab).is_empty());
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Open a chat before opening the Browser.")
+        );
+        assert_eq!(state.inspector, InspectorPane::Hidden);
     }
 
     #[test]

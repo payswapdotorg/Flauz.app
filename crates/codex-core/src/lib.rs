@@ -9427,12 +9427,27 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             Vec::new()
         }
         Action::ToggleTerminalDock => {
-            state.terminal_dock_open = !state.terminal_dock_open;
+            if state.terminal_dock_open {
+                state.terminal_dock_open = false;
+                if state.terminal.location == TerminalDockLocation::Right {
+                    state.last_side_panel = InspectorPane::Terminal;
+                }
+                return Vec::new();
+            }
+            if state
+                .selected_task_id
+                .as_deref()
+                .and_then(|task_id| state.tasks.iter().find(|task| task.id == task_id))
+                .is_none()
+            {
+                // No open chat (entry surface): surface the guard instead of
+                // silently opening an empty dock (WO-P1-001 honest toggle).
+                state.status_message = Some("Select a task before opening a terminal.".to_owned());
+                return Vec::new();
+            }
+            state.terminal_dock_open = true;
             if state.terminal.location == TerminalDockLocation::Right {
                 state.last_side_panel = InspectorPane::Terminal;
-            }
-            if !state.terminal_dock_open {
-                return Vec::new();
             }
             let mut effects = Vec::new();
             if state.terminal.location == TerminalDockLocation::Right
@@ -27613,8 +27628,15 @@ mod tests {
             }]
         );
 
+        // No chat is open, so the dock toggle surfaces guidance instead of
+        // opening an empty dock (WO-P1-001), and never persists UI state.
         assert!(reduce(&mut state, Action::ToggleTerminalDock).is_empty());
-        assert!(state.terminal_dock_open);
+        assert!(!state.terminal_dock_open);
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Select a task before opening a terminal.")
+        );
+        state.terminal_dock_open = true;
         assert!(reduce(&mut state, Action::ToggleTerminalDock).is_empty());
         assert!(!state.terminal_dock_open);
     }
@@ -28534,6 +28556,72 @@ mod tests {
         assert!(reduce(&mut state, Action::ToggleReviewPanel).is_empty());
         assert!(state.terminal_dock_open);
         assert_eq!(state.terminal.tabs.len(), 1);
+        assert_eq!(state.inspector, InspectorPane::Hidden);
+    }
+
+    #[test]
+    fn terminal_dock_toggle_is_honest_on_the_entry_surface() {
+        let mut state = AppState::default();
+
+        // WO-P1-001 regression: no chat is open, so the toggle must surface
+        // guidance instead of silently opening an empty dock.
+        assert!(reduce(&mut state, Action::ToggleTerminalDock).is_empty());
+        assert!(!state.terminal_dock_open);
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Select a task before opening a terminal.")
+        );
+
+        // Opening a chat makes the same toggle open the dock and spawn a tab.
+        state.status_message = None;
+        state.tasks.push(task("t1"));
+        state.selected_task_id = Some("t1".to_owned());
+        assert_eq!(
+            reduce(&mut state, Action::ToggleTerminalDock),
+            [Effect::SpawnTerminal {
+                tab_id: 1,
+                cwd: PathBuf::from("C:\\repo"),
+                shell: None,
+            }]
+        );
+        assert!(state.terminal_dock_open);
+        assert!(state.status_message.is_none());
+    }
+
+    #[test]
+    fn browser_entry_surfaces_are_honest_without_an_open_chat() {
+        let mut state = AppState::default();
+
+        // WO-P1-002 regression: both browser entries must surface the guard
+        // message instead of silently no-op'ing on the entry surface.
+        assert!(reduce(&mut state, Action::OpenBrowserTab).is_empty());
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Open a chat before opening the Browser.")
+        );
+        assert_eq!(state.inspector, InspectorPane::Hidden);
+
+        state.status_message = None;
+        assert!(reduce(&mut state, Action::ToggleBrowserPanel).is_empty());
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Open a chat before opening the Browser.")
+        );
+        assert_eq!(state.inspector, InspectorPane::Hidden);
+
+        // With a chat open, the browser toggle selects the browser pane.
+        state.status_message = None;
+        state.tasks.push(task("chat-a"));
+        state.selected_task_id = Some("chat-a".to_owned());
+        let effects = reduce(&mut state, Action::ToggleBrowserPanel);
+        assert_eq!(state.inspector, InspectorPane::Browser);
+        assert_eq!(state.last_side_panel, InspectorPane::Browser);
+        assert!(effects.contains(&Effect::PersistUiState {
+            route: MainRoute::Tasks,
+            inspector: InspectorPane::Browser,
+        }));
+        // Toggling again hides the pane.
+        reduce(&mut state, Action::ToggleBrowserPanel);
         assert_eq!(state.inspector, InspectorPane::Hidden);
     }
 
