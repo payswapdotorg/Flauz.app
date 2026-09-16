@@ -1,6 +1,6 @@
 # Codex Universal GUI Integration Work Orders
 
-**Status:** IN EXECUTION — GUI-001 (PR #1), GUI-003 (PR #2), GUI-002 (PR #3), GUI-004 (PR #4), GUI-005 (PR #5), GUI-006 (PR #7) MERGED; release `v0.1.0-rc.13` published. Remaining: GUI-007 (final validation)
+**Status:** COMPLETE — GUI-001 (PR #1), GUI-003 (PR #2), GUI-002 (PR #3), GUI-004 (PR #4), GUI-005 (PR #5), GUI-006 (PR #6 + PR #7) and GUI-007 (PR #8) MERGED; release `v0.1.0-rc.13` published. Final status: `docs/codex-universal/reports/GUI-007-report.md`. Open item: PACK-UX-001, blocked upstream on PACK-001…004 in `payswapdotorg/codex`.
 **Repository:** `payswapdotorg/Flauz.app`
 **Authority:** `docs/codex-universal/GUI-INTEGRATION-ARCHITECTURE.md`
 **Universal source of truth:** `payswapdotorg/codex`
@@ -225,6 +225,8 @@ Acceptance:
 Fresh machine -> download -> install -> launch -> sign in/configure -> create workflow -> teach -> publish -> run -> restart succeeds without source checkout.
 
 ## GUI-007 — Parity + Product Validation
+
+**Status:** COMPLETE — see `docs/codex-universal/reports/GUI-007-report.md`
 
 **Depends on:** GUI-005, GUI-006
 
