@@ -21,9 +21,13 @@ GUI-002 Codex Desktop     GUI-003 Universal Workflow
                    v
           GUI-004 Unified UX
                    |
-                   v
-          GUI-005 Multi-Environment UX
-                   |
+          +--------+---------+
+          |                  |
+          v                  v
+ GUI-005 Multi-Environment   PACK-UX-001 Pack-aware
+          UX                Workflow/System Views
+          |                  |
+          +--------+---------+
                    v
           GUI-006 Distribution + Release
                    |
@@ -31,29 +35,33 @@ GUI-002 Codex Desktop     GUI-003 Universal Workflow
           GUI-007 Parity + Product Validation
 ```
 
+The Universal Pack contract foundation in `payswapdotorg/codex` is a parallel architectural track. It must not block GUI-002 or GUI-003.
+
 ## GUI-001 — Foundation + Boundary Lock
 
 **Depends on:** none
 
-Establish Flauz.app as the official GUI client repository for Codex Universal.
+Establish Flauz.app as the official GUI client repository for Codex Universal and lock both the Workflow and Pack client boundaries.
 
 Required:
 
 - inspect the current codexRS fork and identify all retained subsystems;
 - pin the codexRS compatibility baseline already used by the fork;
-- inspect the current Universal contracts in `payswapdotorg/codex`;
-- define the client/app-server boundary for Universal workflow operations;
+- inspect the current Universal Workflow and Pack contracts in `payswapdotorg/codex`;
+- define the client/app-server boundary for Universal workflow and Pack operations;
 - define transport/version/capability negotiation;
-- document ownership of runtime state, UI state, workflow state and credentials;
+- document ownership of runtime state, UI state, workflow state, Pack state and credentials;
 - add integration test scaffolding with isolated `CODEX_HOME`;
-- preserve codexRS safety/boundedness rules.
+- preserve codexRS safety/boundedness rules;
+- ensure Pack state is requested through typed Universal contracts and never becomes GUI-owned durable authority.
 
 Acceptance:
 
 - no duplicate runtime/engine is introduced;
 - the GUI can connect to the existing Codex runtime;
-- a typed Universal client boundary exists;
-- the Tech Lead can dispatch GUI-002 and GUI-003 independently.
+- typed Universal Workflow and Pack client boundaries exist;
+- Pack identity/revision and WorkflowVersion references have explicit provenance boundaries;
+- the Tech Lead can dispatch GUI-002, GUI-003 and the staged Pack contract work independently.
 
 ## GUI-002 — Codex Desktop Parity Closure
 
@@ -119,7 +127,7 @@ Acceptance:
 
 **Depends on:** GUI-002, GUI-003
 
-Make workflows a first-class peer to chats/projects instead of a separate tool.
+Make workflows a first-class peer to chats/projects instead of a separate tool while reserving room for Pack-aware system views.
 
 Required:
 
@@ -131,11 +139,12 @@ Required:
 - capability/resource/dependency panels;
 - workflow Git lifecycle;
 - fork/review/merge/release surfaces;
-- clear distinction between chat instructions and durable workflow semantics.
+- clear distinction between chat instructions and durable workflow semantics;
+- no third top-level product surface for Packs.
 
 Acceptance:
 
-A normal user can move from idea -> agent -> teaching -> workflow -> run -> evidence -> version without opening a terminal.
+A normal user can move from idea -> agent -> teaching -> workflow -> run -> evidence -> version without opening a terminal, and Pack state can be introduced later without restructuring the top-level navigation.
 
 ## GUI-005 — Multi-Environment UX
 
@@ -160,6 +169,32 @@ Acceptance:
 - the GUI shows the resulting evidence and binding history;
 - environment failures fail closed and are actionable.
 
+## PACK-UX-001 — Pack-aware Workflow/System Views
+
+**Depends on:** GUI-001 and the Codex Pack contracts `PACK-001` through `PACK-004` when available.
+
+Keep the desktop product as two primary surfaces while adding Pack information inside the Workflow/System Experience.
+
+Required first-stage views:
+
+- Pack identity and immutable revision;
+- Mission / Value / Context;
+- Pack Constitution / policy summary;
+- system-state summary;
+- referenced WorkflowVersions;
+- capability/dependency graph;
+- evaluation/evidence summary;
+- assurance/determinism policy;
+- candidate vs promoted state;
+- provenance and rollback checkpoint display when available.
+
+Acceptance:
+
+- Pack state is readable without exposing internal implementation details unnecessarily;
+- workflow semantics remain visibly distinct from Pack system state;
+- GUI never becomes Pack durable authority;
+- no Pack generator/evolution engine is required for this work order.
+
 ## GUI-006 — Distribution + Release
 
 **Depends on:** GUI-004
@@ -177,7 +212,8 @@ Required:
 - uninstall procedure;
 - bundled/runtime dependency accounting;
 - compatible Codex CLI/app-server version policy;
-- Universal workflow compatibility version.
+- Universal workflow compatibility version;
+- Pack compatibility version once Pack contracts are present.
 
 Acceptance:
 
@@ -187,7 +223,7 @@ Fresh machine -> download -> install -> launch -> sign in/configure -> create wo
 
 **Depends on:** GUI-005, GUI-006
 
-Validate two dimensions separately:
+Validate three dimensions separately:
 
 ### Parity
 
@@ -197,6 +233,10 @@ Codex Desktop reference behaviors selected as release-critical are reproduced th
 
 The GUI provides the workflow lifecycle and multi-environment product capabilities that distinguish Codex Universal from an ordinary coding-agent desktop client.
 
+### Pack readiness
+
+The GUI consumes Pack contracts without becoming a second authority, and Pack-aware views remain compatible with future generation/evolution features.
+
 Required evidence:
 
 - native UI tests;
@@ -205,6 +245,7 @@ Required evidence:
 - workflow teaching/execution validation;
 - restart/recovery validation;
 - cross-environment validation;
+- Pack contract/provenance validation where implemented;
 - security/secret scan of release evidence.
 
 Final status must explicitly separate:
@@ -213,6 +254,7 @@ Final status must explicitly separate:
 Desktop parity
 Universal workflow UX
 Universal execution UX
+Pack contract / UX readiness
 Distribution readiness
 Known limitations
 ```
