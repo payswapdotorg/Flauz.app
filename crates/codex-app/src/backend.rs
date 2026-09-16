@@ -85,7 +85,7 @@ use codex_core::{
     TimelineItem, TimelineKind, TimelineSource, UsageLimitWindow, UserInputAnswers,
     UserInputOption as CoreUserInputOption, UserInputQuestion as CoreUserInputQuestion,
     UserInputRequest, WorkflowApprovalDecision as CoreWorkflowApprovalDecision,
-    WorkflowCandidateState as CoreWorkflowCandidateState,
+    WorkflowBindingResolutionCard, WorkflowCandidateState as CoreWorkflowCandidateState,
     WorkflowCandidateStatus as CoreWorkflowCandidateStatus,
     WorkflowDemonstrationKind as CoreWorkflowDemonstrationKind, WorkflowEvidenceCard,
     WorkflowFindingCard, WorkflowImproveApprovedState, WorkflowImprovePublishedState,
@@ -17387,6 +17387,18 @@ fn workflow_published_version(
         commit_sha: bounded(response.commit_sha, MAX_WORKFLOW_ID_BYTES),
         definition_digest: bounded(response.definition_digest, MAX_WORKFLOW_DIGEST_BYTES),
         dependency_lock_digest: bounded(response.dependency_lock_digest, MAX_WORKFLOW_DIGEST_BYTES),
+        // The binding-resolution audit record is relayed verbatim from
+        // the control plane; the GUI never recomputes it.
+        binding_resolution: Some(WorkflowBindingResolutionCard {
+            approved_digest: bounded(
+                response.binding_resolution.approved_digest,
+                MAX_WORKFLOW_DIGEST_BYTES,
+            ),
+            executable_digest: bounded(
+                response.binding_resolution.executable_digest,
+                MAX_WORKFLOW_DIGEST_BYTES,
+            ),
+        }),
     }
 }
 
@@ -17633,6 +17645,44 @@ fn run_workflow_request(
                 Err(error) => failure(format!("Could not read the workflow instance: {error}")),
             }
         }
+        CoreWorkflowRequest::InstanceResume { instance_id } => {
+            match app_server.workflow_instance_resume(
+                codex_protocol::WorkflowInstanceResumeParams { instance_id },
+            ) {
+                Ok(response) => {
+                    let detail = workflow_instance_detail_from_get(
+                        codex_protocol::WorkflowInstanceGetResponse {
+                            instance: response.instance,
+                            evidence: Vec::new(),
+                        },
+                    );
+                    emit(events, Action::WorkflowInstanceResumed(detail));
+                }
+                Err(error) => failure(format!("Could not resume the workflow instance: {error}")),
+            }
+        }
+        CoreWorkflowRequest::InstanceCancel {
+            instance_id,
+            reason,
+        } => {
+            match app_server.workflow_instance_cancel(
+                codex_protocol::WorkflowInstanceCancelParams {
+                    instance_id,
+                    reason,
+                },
+            ) {
+                Ok(response) => {
+                    let detail = workflow_instance_detail_from_get(
+                        codex_protocol::WorkflowInstanceGetResponse {
+                            instance: response.instance,
+                            evidence: Vec::new(),
+                        },
+                    );
+                    emit(events, Action::WorkflowInstanceCancelled(detail));
+                }
+                Err(error) => failure(format!("Could not cancel the workflow instance: {error}")),
+            }
+        }
         CoreWorkflowRequest::Fork {
             version_id,
             fork_repository,
@@ -17664,6 +17714,9 @@ fn run_workflow_request(
                         response.dependency_lock_digest,
                         MAX_WORKFLOW_DIGEST_BYTES,
                     ),
+                    // The fork response does not carry a binding-resolution
+                    // audit record; the field stays honestly absent.
+                    binding_resolution: None,
                 };
                 emit(events, Action::WorkflowForked { version, lineage });
             }

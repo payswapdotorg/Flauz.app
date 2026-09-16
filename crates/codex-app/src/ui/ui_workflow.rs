@@ -1076,6 +1076,21 @@ fn render_versions_pane(
                                             }
                                         )),
                                 ),
+                        )
+                        .when_some(
+                            version.binding_resolution.as_ref(),
+                            |rows, resolution| {
+                                rows.child(
+                                    div()
+                                        .text_xs()
+                                        .text_color(cx.theme().muted_foreground)
+                                        .child(format!(
+                                            "binding resolution approved {} → executable {}",
+                                            resolution.approved_digest,
+                                            resolution.executable_digest
+                                        )),
+                                )
+                            },
                         ),
                 )
                 .child(
@@ -1776,6 +1791,77 @@ fn render_instances_pane(state: &WorkflowState, cx: &mut Context<WorkspaceView>)
                                         }
                                     })),
                                 )
+                                .child(
+                                    Button::new(SharedString::from(format!(
+                                        "workflow-resume-{}",
+                                        instance.instance_id
+                                    )))
+                                    .label(
+                                        if state.instance_resume_pending.as_deref()
+                                            == Some(instance.instance_id.as_str())
+                                        {
+                                            "Resuming…"
+                                        } else {
+                                            "Resume"
+                                        },
+                                    )
+                                    .small()
+                                    .ghost()
+                                    .disabled(
+                                        state.instance_resume_pending.is_some()
+                                            || instance.status != WorkflowInstanceStatus::Paused,
+                                    )
+                                    .on_click(cx.listener({
+                                        let instance_id = instance.instance_id.clone();
+                                        move |this, _, _, cx| {
+                                            this.dispatch(
+                                                Action::WorkflowInstanceResume {
+                                                    instance_id: instance_id.clone(),
+                                                },
+                                                cx,
+                                            );
+                                        }
+                                    })),
+                                )
+                                .child(
+                                    Button::new(SharedString::from(format!(
+                                        "workflow-cancel-{}",
+                                        instance.instance_id
+                                    )))
+                                    .label(
+                                        if state.instance_cancel_pending.as_deref()
+                                            == Some(instance.instance_id.as_str())
+                                        {
+                                            "Cancelling…"
+                                        } else {
+                                            "Cancel"
+                                        },
+                                    )
+                                    .small()
+                                    .ghost()
+                                    .disabled(
+                                        state.instance_cancel_pending.is_some()
+                                            || !matches!(
+                                                instance.status,
+                                                WorkflowInstanceStatus::Pending
+                                                    | WorkflowInstanceStatus::Running
+                                                    | WorkflowInstanceStatus::Paused
+                                            ),
+                                    )
+                                    .on_click(cx.listener({
+                                        let instance_id = instance.instance_id.clone();
+                                        move |this, _, _, cx| {
+                                            this.dispatch(
+                                                Action::WorkflowInstanceCancel {
+                                                    instance_id: instance_id.clone(),
+                                                    reason: "Cancelled from the Flauz.app                                                              workflows surface"
+                                                        .to_owned(),
+                                                },
+                                                cx,
+                                            );
+                                        }
+                                    })),
+                                )
                         }))
                 }),
         )
@@ -1827,13 +1913,32 @@ fn render_instances_pane(state: &WorkflowState, cx: &mut Context<WorkspaceView>)
                     )
                     .when(!detail.path.is_empty(), |block| {
                         block.child(
-                            div()
-                                .text_xs()
-                                .font_family(cx.theme().mono_font_family.clone())
-                                .text_color(cx.theme().muted_foreground)
-                                .child(detail.path.join(" → ")),
+                            v_flex()
+                                .gap_1()
+                                .child(
+                                    div()
+                                        .text_xs()
+                                        .font_weight(FontWeight::MEDIUM)
+                                        .child("Execution timeline"),
+                                )
+                                .children(detail.path.iter().map(|node| {
+                                    div()
+                                        .text_xs()
+                                        .font_family(cx.theme().mono_font_family.clone())
+                                        .text_color(cx.theme().muted_foreground)
+                                        .child(format!("• {node}"))
+                                })),
                         )
                     })
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(cx.theme().muted_foreground)
+                            .child(format!(
+                                "environments in evidence: {}",
+                                workflow_environment_summary(&detail.evidence),
+                            )),
+                    )
                     .when(detail.evidence.is_empty(), |block| {
                         block.child(
                             div()
@@ -1843,6 +1948,71 @@ fn render_instances_pane(state: &WorkflowState, cx: &mut Context<WorkspaceView>)
                         )
                     })
                     .when(!detail.evidence.is_empty(), |block| {
+                        let mut rows: Vec<AnyElement> = Vec::new();
+                        let mut previous_environment: Option<&str> = None;
+                        for (index, reference) in detail.evidence.iter().enumerate() {
+                            let environment =
+                                codex_core::workflow_evidence_environment(&reference.kind);
+                            // A boundary crossing is only claimed between two
+                            // environments the control plane actually labeled;
+                            // unrecognized kinds never produce one.
+                            if let (Some(previous), Some(current)) =
+                                (previous_environment, environment)
+                                && previous != current
+                            {
+                                rows.push(
+                                    div()
+                                        .text_xs()
+                                        .text_color(cx.theme().muted_foreground)
+                                        .child(format!(
+                                            "── environment change: {previous} → {current} ──"
+                                        ))
+                                        .into_any_element(),
+                                );
+                            }
+                            previous_environment = environment;
+                            rows.push(
+                                h_flex()
+                                    .gap_2()
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(cx.theme().muted_foreground)
+                                            .child(format!("#{}", index + 1)),
+                                    )
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .font_weight(FontWeight::MEDIUM)
+                                            .child(
+                                                environment
+                                                    .unwrap_or("Unrecognized kind")
+                                                    .to_owned(),
+                                            ),
+                                    )
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(cx.theme().muted_foreground)
+                                            .child(format!("kind {}", reference.kind)),
+                                    )
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .font_family(cx.theme().mono_font_family.clone())
+                                            .text_color(cx.theme().muted_foreground)
+                                            .child(reference.locator.clone()),
+                                    )
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .font_family(cx.theme().mono_font_family.clone())
+                                            .text_color(cx.theme().muted_foreground)
+                                            .child(reference.digest.clone()),
+                                    )
+                                    .into_any_element(),
+                            );
+                        }
                         block.child(
                             v_flex()
                                 .gap_1()
@@ -1850,32 +2020,9 @@ fn render_instances_pane(state: &WorkflowState, cx: &mut Context<WorkspaceView>)
                                     div()
                                         .text_xs()
                                         .font_weight(FontWeight::MEDIUM)
-                                        .child("Evidence references"),
+                                        .child("Environment timeline"),
                                 )
-                                .children(detail.evidence.iter().map(|reference| {
-                                    h_flex()
-                                        .gap_2()
-                                        .child(
-                                            div()
-                                                .text_xs()
-                                                .text_color(cx.theme().muted_foreground)
-                                                .child(reference.kind.clone()),
-                                        )
-                                        .child(
-                                            div()
-                                                .text_xs()
-                                                .font_family(cx.theme().mono_font_family.clone())
-                                                .text_color(cx.theme().muted_foreground)
-                                                .child(reference.locator.clone()),
-                                        )
-                                        .child(
-                                            div()
-                                                .text_xs()
-                                                .font_family(cx.theme().mono_font_family.clone())
-                                                .text_color(cx.theme().muted_foreground)
-                                                .child(reference.digest.clone()),
-                                        )
-                                })),
+                                .children(rows),
                         )
                     }),
             )
@@ -1969,4 +2116,22 @@ fn group_instances_by_version(
         }
     }
     groups
+}
+
+/// Renders the distinct environment classes present in an instance's
+/// evidence, or an honest placeholder when none are recorded.
+fn workflow_environment_summary(evidence: &[codex_core::WorkflowEvidenceCard]) -> String {
+    let mut environments: Vec<&str> = Vec::new();
+    for reference in evidence {
+        if let Some(environment) = codex_core::workflow_evidence_environment(&reference.kind)
+            && !environments.contains(&environment)
+        {
+            environments.push(environment);
+        }
+    }
+    if environments.is_empty() {
+        "none recorded on this run".to_owned()
+    } else {
+        environments.join(", ")
+    }
 }

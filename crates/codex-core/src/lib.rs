@@ -2818,6 +2818,19 @@ pub struct WorkflowPublishedVersion {
     pub commit_sha: String,
     pub definition_digest: String,
     pub dependency_lock_digest: String,
+    /// Binding-resolution audit record captured verbatim from the
+    /// publication response; absent when the control plane did not
+    /// report one (fork and improvement releases).
+    pub binding_resolution: Option<WorkflowBindingResolutionCard>,
+}
+
+/// Audit record of binding resolution during publication, remembered
+/// verbatim by the GUI; the executable digest is what the control
+/// plane sealed, never recomputed client-side.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowBindingResolutionCard {
+    pub approved_digest: String,
+    pub executable_digest: String,
 }
 
 /// One durable workflow instance as listed by the control plane.
@@ -2944,6 +2957,13 @@ pub enum WorkflowRequest {
     InstanceGet {
         instance_id: String,
     },
+    InstanceResume {
+        instance_id: String,
+    },
+    InstanceCancel {
+        instance_id: String,
+        reason: String,
+    },
     Fork {
         version_id: String,
         fork_repository: String,
@@ -2986,6 +3006,8 @@ pub struct WorkflowState {
     pub run_pending: Option<String>,
     pub instance_detail: Option<WorkflowInstanceDetail>,
     pub instance_get_pending: Option<String>,
+    pub instance_resume_pending: Option<String>,
+    pub instance_cancel_pending: Option<String>,
     pub fork_pending: Option<String>,
     pub fork_lineage: Option<WorkflowForkLineageCard>,
     pub improve: Option<WorkflowImproveState>,
@@ -3009,6 +3031,8 @@ impl Default for WorkflowState {
             run_pending: None,
             instance_detail: None,
             instance_get_pending: None,
+            instance_resume_pending: None,
+            instance_cancel_pending: None,
             fork_pending: None,
             fork_lineage: None,
             improve: None,
@@ -6245,6 +6269,15 @@ pub enum Action {
         instance_id: String,
     },
     WorkflowInstanceLoaded(WorkflowInstanceDetail),
+    WorkflowInstanceResume {
+        instance_id: String,
+    },
+    WorkflowInstanceResumed(WorkflowInstanceDetail),
+    WorkflowInstanceCancel {
+        instance_id: String,
+        reason: String,
+    },
+    WorkflowInstanceCancelled(WorkflowInstanceDetail),
     WorkflowForkVersion {
         version_id: String,
         fork_repository: String,
@@ -19312,6 +19345,57 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             state.workflow.instance_detail = Some(detail);
             Vec::new()
         }
+        Action::WorkflowInstanceResume { instance_id } => {
+            if state.workflow.instance_resume_pending.is_some() {
+                return Vec::new();
+            }
+            let instance_id = instance_id.trim().to_owned();
+            if instance_id.is_empty() {
+                return Vec::new();
+            }
+            state.workflow.instance_resume_pending = Some(instance_id.clone());
+            vec![Effect::WorkflowRequest(WorkflowRequest::InstanceResume {
+                instance_id,
+            })]
+        }
+        Action::WorkflowInstanceResumed(detail) => {
+            state.workflow.instance_resume_pending = None;
+            workflow_refresh_instance(state, detail);
+            Vec::new()
+        }
+        Action::WorkflowInstanceCancel {
+            instance_id,
+            reason,
+        } => {
+            if state.workflow.instance_cancel_pending.is_some() {
+                return Vec::new();
+            }
+            let instance_id = instance_id.trim().to_owned();
+            let reason = reason.trim().to_owned();
+            if instance_id.is_empty() {
+                return Vec::new();
+            }
+            if reason.is_empty() {
+                state.workflow.error =
+                    Some("A cancel reason is required so the record stays actionable.".to_owned());
+                return Vec::new();
+            }
+            state.workflow.instance_cancel_pending = Some(instance_id.clone());
+            vec![Effect::WorkflowRequest(WorkflowRequest::InstanceCancel {
+                instance_id,
+                reason,
+            })]
+        }
+        Action::WorkflowInstanceCancelled(detail) => {
+            state.workflow.instance_cancel_pending = None;
+            workflow_refresh_instance(state, detail);
+            let mut effects = Vec::new();
+            if state.workflow.instances_status != LoadStatus::Loading {
+                state.workflow.instances_status = LoadStatus::Loading;
+                effects.push(Effect::WorkflowRequest(WorkflowRequest::InstanceList));
+            }
+            effects
+        }
         Action::WorkflowForkVersion {
             version_id,
             fork_repository,
@@ -19518,6 +19602,7 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
                 commit_sha: String::new(),
                 definition_digest: String::new(),
                 dependency_lock_digest: String::new(),
+                binding_resolution: None,
             };
             improve.published = Some(published);
             let mut effects = Vec::new();
@@ -19588,6 +19673,8 @@ fn workflow_request_failed(state: &mut AppState, request: &WorkflowRequest, mess
         WorkflowRequest::InstanceRun { .. } => state.workflow.run_pending = None,
         WorkflowRequest::InstanceList => state.workflow.instances_status = LoadStatus::Failed,
         WorkflowRequest::InstanceGet { .. } => state.workflow.instance_get_pending = None,
+        WorkflowRequest::InstanceResume { .. } => state.workflow.instance_resume_pending = None,
+        WorkflowRequest::InstanceCancel { .. } => state.workflow.instance_cancel_pending = None,
         WorkflowRequest::Fork { .. } => state.workflow.fork_pending = None,
         WorkflowRequest::ImprovePropose { .. } => state.workflow.improve_propose_pending = None,
         WorkflowRequest::ImproveValidate { .. } => {
@@ -19607,6 +19694,56 @@ fn workflow_request_failed(state: &mut AppState, request: &WorkflowRequest, mess
         }
     }
     state.workflow.error = Some(bounded_string(message, MAX_WORKFLOW_ERROR_BYTES));
+}
+
+/// Refreshes the durable instance record in both the bounded list and
+/// the open detail view, keeping control-plane ordering.
+fn workflow_refresh_instance(state: &mut AppState, detail: WorkflowInstanceDetail) {
+    let record = &detail.instance;
+    if let Some(existing) = state
+        .workflow
+        .instances
+        .iter_mut()
+        .find(|instance| instance.instance_id == record.instance_id)
+    {
+        *existing = record.clone();
+    } else {
+        state.workflow.instances.insert(0, record.clone());
+        state.workflow.instances.truncate(MAX_WORKFLOW_INSTANCES);
+    }
+    // Resume/cancel responses carry the record but not the evidence
+    // list; preserve previously loaded evidence instead of dropping it.
+    let mut detail = detail;
+    if detail.evidence.is_empty()
+        && let Some(existing) = state.workflow.instance_detail.as_ref()
+        && existing.instance.instance_id == detail.instance.instance_id
+    {
+        detail.evidence = existing.evidence.clone();
+    }
+    state.workflow.instance_detail = Some(detail);
+}
+
+/// Maps a control-plane evidence kind onto the Universal environment
+/// classes the GUI labels explicitly. Unknown kinds return `None` and
+/// are rendered verbatim — the GUI never guesses an environment.
+pub fn workflow_evidence_environment(kind: &str) -> Option<&'static str> {
+    let normalized = kind.trim().to_ascii_lowercase();
+    match normalized.as_str() {
+        "browser" | "browser-action" | "browser-observation" | "browser-evidence" => {
+            Some("Browser")
+        }
+        "computer"
+        | "computer-action"
+        | "computer-observation"
+        | "computer-evidence"
+        | "desktop" => Some("Computer"),
+        "terminal" | "shell" | "terminal-output" => Some("Terminal"),
+        "api" | "tool" | "mcp" | "api-call" | "tool-call" | "mcp-call" => Some("API / tool / MCP"),
+        "human" | "human-gate" | "human-decision" | "approval" => Some("Human gate"),
+        "binding" | "binding-decision" => Some("Binding"),
+        "trace" => Some("Trace"),
+        _ => None,
+    }
 }
 
 /// Inserts or refreshes a published version in the bounded published
@@ -20530,17 +20667,17 @@ mod tests {
         StartedImport, TaskRunStatus, TaskSearchResult, TaskSummary, TerminalDockLocation,
         ThreadGoal, ThreadGoalState, ThreadGoalStatus, TimelineItem, TimelineKind,
         UsageLimitWindow, UserInputAnswer, UserInputAnswers, UserInputOption, UserInputQuestion,
-        UserInputRequest, WorkflowApprovalDecision, WorkflowCandidateState,
-        WorkflowCandidateStatus, WorkflowDemonstrationKind, WorkflowEvidenceSummaryCard,
-        WorkflowFindingCard, WorkflowForkLineageCard, WorkflowImproveApprovedState,
-        WorkflowImprovePublishedState, WorkflowImproveValidatedState,
+        UserInputRequest, WorkflowApprovalDecision, WorkflowBindingResolutionCard,
+        WorkflowCandidateState, WorkflowCandidateStatus, WorkflowDemonstrationKind,
+        WorkflowEvidenceSummaryCard, WorkflowFindingCard, WorkflowForkLineageCard,
+        WorkflowImproveApprovedState, WorkflowImprovePublishedState, WorkflowImproveValidatedState,
         WorkflowImprovementCandidateCard, WorkflowImprovementLineageCard, WorkflowInstanceCard,
         WorkflowInstanceDetail, WorkflowInstanceStatus, WorkflowPublishedVersion, WorkflowRequest,
         WorkflowStepCard, WorkflowStepOrigin, WorkflowTeachMode, WorkflowTeachSessionState,
         WorkflowTeachSessionStatus, WorkflowValidationCard, WorkflowValidationSeverity,
         WorkflowValidationStageCard, appearance_code_theme_supports_variant,
         clear_git_for_context_change, computer_app_id_matches, permission_mode_options, reduce,
-        stable_reference, validate_mcp_form_content,
+        stable_reference, validate_mcp_form_content, workflow_evidence_environment,
     };
 
     fn task(id: &str) -> TaskSummary {
@@ -23468,6 +23605,148 @@ mod tests {
     }
 
     #[test]
+    fn workflow_instance_resume_and_cancel_are_single_flight_and_refresh_state() {
+        let mut state = AppState::default();
+        let record = WorkflowInstanceCard {
+            instance_id: "wi-1".to_owned(),
+            workflow: "release-notes".to_owned(),
+            version_id: "sha256:v1".to_owned(),
+            status: WorkflowInstanceStatus::Paused,
+            steps_taken: 1,
+        };
+        state.workflow.instances.push(record.clone());
+
+        // Resume requires a non-empty id and is single-flight.
+        let effects = reduce(
+            &mut state,
+            Action::WorkflowInstanceResume {
+                instance_id: " wi-1 ".to_owned(),
+            },
+        );
+        assert_eq!(
+            effects,
+            vec![Effect::WorkflowRequest(WorkflowRequest::InstanceResume {
+                instance_id: "wi-1".to_owned(),
+            })]
+        );
+        let duplicate = reduce(
+            &mut state,
+            Action::WorkflowInstanceResume {
+                instance_id: "wi-1".to_owned(),
+            },
+        );
+        assert!(duplicate.is_empty());
+
+        reduce(
+            &mut state,
+            Action::WorkflowInstanceResumed(WorkflowInstanceDetail {
+                instance: WorkflowInstanceCard {
+                    status: WorkflowInstanceStatus::Running,
+                    ..record.clone()
+                },
+                terminal_kind: None,
+                terminal_reason: None,
+                path: Vec::new(),
+                evidence: Vec::new(),
+            }),
+        );
+        assert!(state.workflow.instance_resume_pending.is_none());
+        assert_eq!(
+            state.workflow.instances[0].status,
+            WorkflowInstanceStatus::Running
+        );
+
+        // Cancel requires a reason; the control plane refreshes the
+        // record and the durable list reloads.
+        let no_reason = reduce(
+            &mut state,
+            Action::WorkflowInstanceCancel {
+                instance_id: "wi-1".to_owned(),
+                reason: "   ".to_owned(),
+            },
+        );
+        assert!(no_reason.is_empty());
+
+        let effects = reduce(
+            &mut state,
+            Action::WorkflowInstanceCancel {
+                instance_id: "wi-1".to_owned(),
+                reason: "operator takeover".to_owned(),
+            },
+        );
+        assert_eq!(
+            effects,
+            vec![Effect::WorkflowRequest(WorkflowRequest::InstanceCancel {
+                instance_id: "wi-1".to_owned(),
+                reason: "operator takeover".to_owned(),
+            })]
+        );
+
+        let effects = reduce(
+            &mut state,
+            Action::WorkflowInstanceCancelled(WorkflowInstanceDetail {
+                instance: WorkflowInstanceCard {
+                    status: WorkflowInstanceStatus::Cancelled,
+                    ..record
+                },
+                terminal_kind: None,
+                terminal_reason: None,
+                path: Vec::new(),
+                evidence: Vec::new(),
+            }),
+        );
+        assert_eq!(
+            effects,
+            vec![Effect::WorkflowRequest(WorkflowRequest::InstanceList)]
+        );
+        assert_eq!(
+            state.workflow.instances[0].status,
+            WorkflowInstanceStatus::Cancelled
+        );
+
+        // A resume failure clears the pending flag and surfaces the
+        // control-plane error.
+        state.workflow.instance_resume_pending = Some("wi-1".to_owned());
+        reduce(
+            &mut state,
+            Action::WorkflowRequestFailed {
+                request: WorkflowRequest::InstanceResume {
+                    instance_id: "wi-1".to_owned(),
+                },
+                message: "unknown workflow instance `wi-1`".to_owned(),
+            },
+        );
+        assert!(state.workflow.instance_resume_pending.is_none());
+        assert!(state.workflow.error.is_some());
+    }
+
+    #[test]
+    fn workflow_evidence_environment_classifies_known_kinds_only() {
+        assert_eq!(
+            workflow_evidence_environment("browser-action"),
+            Some("Browser")
+        );
+        assert_eq!(
+            workflow_evidence_environment("Computer-Observation"),
+            Some("Computer")
+        );
+        assert_eq!(workflow_evidence_environment("shell"), Some("Terminal"));
+        assert_eq!(
+            workflow_evidence_environment("mcp-call"),
+            Some("API / tool / MCP")
+        );
+        assert_eq!(
+            workflow_evidence_environment("human-gate"),
+            Some("Human gate")
+        );
+        assert_eq!(workflow_evidence_environment("binding"), Some("Binding"));
+        assert_eq!(workflow_evidence_environment("trace"), Some("Trace"));
+        // Unknown kinds never guess an environment.
+        assert_eq!(workflow_evidence_environment("quantum"), None);
+        assert_eq!(workflow_evidence_environment(""), None);
+    }
+
+    #[test]
     fn workflow_fork_adds_the_derived_release_and_seals_lineage() {
         let mut state = AppState::default();
         let upstream = WorkflowPublishedVersion {
@@ -23478,6 +23757,7 @@ mod tests {
             commit_sha: "a".repeat(40),
             definition_digest: "sha256:def".to_owned(),
             dependency_lock_digest: "sha256:lock".to_owned(),
+            binding_resolution: None,
         };
         state.workflow.published.push(upstream.clone());
 
@@ -23521,6 +23801,7 @@ mod tests {
                     commit_sha: "a".repeat(40),
                     definition_digest: "sha256:def".to_owned(),
                     dependency_lock_digest: "sha256:lock".to_owned(),
+                    binding_resolution: None,
                 },
                 lineage: WorkflowForkLineageCard {
                     workflow: "release-notes".to_owned(),
@@ -23557,6 +23838,7 @@ mod tests {
             commit_sha: String::new(),
             definition_digest: String::new(),
             dependency_lock_digest: String::new(),
+            binding_resolution: None,
         };
         state.workflow.published.push(incumbent.clone());
 
@@ -35332,10 +35614,21 @@ mod tests {
                 commit_sha: "c".repeat(40),
                 definition_digest: "sha256:def".to_owned(),
                 dependency_lock_digest: "sha256:lock".to_owned(),
+                binding_resolution: Some(WorkflowBindingResolutionCard {
+                    approved_digest: "sha256:approved".to_owned(),
+                    executable_digest: "sha256:executable".to_owned(),
+                }),
             }),
         );
         assert_eq!(state.workflow.published.len(), 1);
         assert_eq!(state.workflow.published[0].workflow, "probe-flow");
+        assert_eq!(
+            state.workflow.published[0].binding_resolution,
+            Some(WorkflowBindingResolutionCard {
+                approved_digest: "sha256:approved".to_owned(),
+                executable_digest: "sha256:executable".to_owned(),
+            })
+        );
 
         // Running targets the published version; the settled instance from
         // the response lands in the durable list and the detail pane.
@@ -35447,6 +35740,7 @@ mod tests {
                     commit_sha: "c".repeat(40),
                     definition_digest: "sha256:def".to_owned(),
                     dependency_lock_digest: "sha256:lock".to_owned(),
+                    binding_resolution: None,
                 }),
             );
         }
@@ -35464,6 +35758,7 @@ mod tests {
                 commit_sha: "c".repeat(40),
                 definition_digest: "sha256:def".to_owned(),
                 dependency_lock_digest: "sha256:lock".to_owned(),
+                binding_resolution: None,
             }),
         );
         assert_eq!(
@@ -35486,6 +35781,7 @@ mod tests {
             commit_sha: "c".repeat(40),
             definition_digest: "sha256:def".to_owned(),
             dependency_lock_digest: "sha256:lock".to_owned(),
+            binding_resolution: None,
         }];
         state.workflow.instances_status = LoadStatus::Ready;
 
