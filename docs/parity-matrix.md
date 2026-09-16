@@ -292,3 +292,55 @@ vertical slice, with bounded request/response handling and focused tests.
 
 Each slice must stay native, use bounded data paths, preserve app-server
 ownership of existing Codex data, and pass the repository release gates.
+
+## Release-critical parity ledger (GUI-002)
+
+The GUI-002 selection of release-critical rows, per the work order's
+rule that explicitly unavailable proprietary behavior is not reproduced
+unless a public contract exists and the product acceptance criteria
+require it. Verdicts describe the release bar for the first Flauz.app
+release; `partial` statuses above stay authoritative for full-reference
+parity tracking.
+
+| Row | Release verdict | Remaining delta class |
+| --- | --- | --- |
+| App-server supervision | green | network-aware diagnostics; remaining experimental methods (enhancement) |
+| Projects and chats | green | multi-root sources, unread state, richer metadata (polish); manual ordering closed in GUI-002 |
+| Thread execution | green | compaction provenance, richer edit metadata (polish) |
+| Composer | green | cloud projects/voice (proprietary, unavailable); remaining slash commands (polish) |
+| Model, effort, and speed picker | green | none listed |
+| Permission profiles | green | granular/custom editor, sandbox detail, per-project resolution (enhancement) |
+| Streaming timeline | green | activity grouping, citation navigation, source aggregation (polish) |
+| Approvals and user input | green | connector-specific methods where public contracts expose them (bounded) |
+| Repository status | green | none beyond row text |
+| Diff review | green | none beyond row text |
+| Branches and worktrees | green | none beyond row text |
+| Pull requests | green | branch prefix, force push, draft/merge-method options (polish) |
+| Terminal | green | none beyond row text |
+| Process Manager | green | none beyond row text |
+| Computer Use | green (Windows), bounded (Linux) | Linux: X11/XWayland observation only; AT-SPI/Wayland parity is platform work |
+| In-app browser | green | none beyond row text |
+| Skills | green | recommended/install flows, creation surfaces (enhancement) |
+| Plugins marketplace | green | OAuth/no-auth callback completion awaits the official protocol (bounded) |
+| MCP and apps | green | App OAuth completion awaits the official protocol (bounded) |
+| Artifacts and files | green | PDF/Office renderers, AVIF/GIF, canvas actions (enhancement) |
+| Settings | green | remaining sections only with working host contracts (bounded) |
+| Account and usage | green | billing entry points (enhancement) |
+| Notifications and tray | green | tray groups, badges, sounds (enhancement) |
+| Remote control and SSH | green | SSH profiles/remote chats await public contracts (bounded) |
+| Import and migration | green | unsupported-project reporting awaits the public protocol (bounded) |
+| First run and updates | green | fuller welcome, dependency diagnostics, update prompt (enhancement) |
+| Keyboard and accessibility | green | remaining stable commands, complete focus order, screen-reader labels (enhancement) |
+| Scheduled tasks | bounded | cloud tasks backend (proprietary, unavailable) |
+| Sites | bounded | OpenAI cloud surface (proprietary, unavailable) |
+| Visualizations | bounded | OpenAI cloud surface (proprietary, unavailable) |
+| Appshots | bounded | proprietary capture flow (unavailable) |
+| Cloud environments | bounded | OpenAI cloud backend (proprietary, unavailable) |
+| Voice | bounded | proprietary realtime stack (unavailable) |
+| Pets and Codex Micro | bounded | proprietary companion surface (unavailable) |
+| Windows | deferred to GUI-006 | packaging, signing, integration |
+| Linux | deferred to GUI-006 | Wayland portals, packaging, tray, global shortcuts |
+
+Release-critical closure in GUI-002 itself: the Projects and chats row's
+manual project ordering gap is closed (persisted manual order within
+pinned groups, `Move up` / `Move down` project actions).

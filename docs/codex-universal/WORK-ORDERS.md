@@ -1,6 +1,6 @@
 # Codex Universal GUI Integration Work Orders
 
-**Status:** IN EXECUTION — GUI-001 COMPLETE (`docs/codex-universal/reports/GUI-001-report.md`, merged PR #1); GUI-003 COMPLETE (`docs/codex-universal/reports/GUI-003-report.md`, branch `gui-003/workflow-vertical-slice`)
+**Status:** IN EXECUTION — GUI-001 COMPLETE (merged PR #1); GUI-003 COMPLETE (merged PR #2); GUI-002 COMPLETE (`docs/codex-universal/reports/GUI-002-report.md`, branch `gui-002/parity-closure`)
 **Repository:** `payswapdotorg/Flauz.app`
 **Authority:** `docs/codex-universal/GUI-INTEGRATION-ARCHITECTURE.md`
 **Universal source of truth:** `payswapdotorg/codex`
@@ -65,6 +65,7 @@ Acceptance:
 
 ## GUI-002 — Codex Desktop Parity Closure
 
+**Status:** COMPLETE (release-critical selection) — see `docs/codex-universal/reports/GUI-002-report.md`
 **Depends on:** GUI-001
 
 Use the codexRS parity matrix as the behavioral baseline.

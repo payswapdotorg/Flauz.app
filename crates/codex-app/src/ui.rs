@@ -2664,6 +2664,8 @@ struct LocalProjectActionMenuTarget {
     name: String,
     pinned: bool,
     available: bool,
+    can_move_up: bool,
+    can_move_down: bool,
 }
 
 struct GitReviewSourceMenuState {
@@ -10956,11 +10958,18 @@ impl WorkspaceView {
         _window: &mut Window,
         _cx: &mut Context<PopupMenu>,
     ) -> PopupMenu {
+        let can_move_up = target.can_move_up;
+        let can_move_down = target.can_move_down;
+        let move_up_view = view.clone();
+        let move_up_path = target.path.clone();
+        let move_down_view = view.clone();
+        let move_down_path = target.path.clone();
         let LocalProjectActionMenuTarget {
             path,
             name,
             pinned,
             available,
+            ..
         } = target;
         let new_chat_view = view.clone();
         let new_chat_path = path.clone();
@@ -11016,6 +11025,26 @@ impl WorkspaceView {
                     this.dispatch(Action::ToggleLocalProjectPinned(path), cx);
                 });
             }),
+        )
+        .item(
+            PopupMenuItem::new("Move up")
+                .disabled(!can_move_up)
+                .on_click(move |_, _, cx| {
+                    let path = move_up_path.clone();
+                    let _ = move_up_view.update(cx, |this, cx| {
+                        this.dispatch(Action::MoveLocalProject { path, up: true }, cx);
+                    });
+                }),
+        )
+        .item(
+            PopupMenuItem::new("Move down")
+                .disabled(!can_move_down)
+                .on_click(move |_, _, cx| {
+                    let path = move_down_path.clone();
+                    let _ = move_down_view.update(cx, |this, cx| {
+                        this.dispatch(Action::MoveLocalProject { path, up: false }, cx);
+                    });
+                }),
         )
         .separator()
         .item(
@@ -13441,11 +13470,26 @@ impl WorkspaceView {
                 |task| task.cwd == project.path,
             );
         let key = local_project_element_key(&project.path);
+        let can_move_up = self
+            .state
+            .local_projects
+            .iter()
+            .take_while(|earlier| earlier.path != project.path)
+            .any(|earlier| earlier.pinned == project.pinned);
+        let can_move_down = self
+            .state
+            .local_projects
+            .iter()
+            .skip_while(|later| later.path != project.path)
+            .skip(1)
+            .any(|later| later.pinned == project.pinned);
         let target = LocalProjectActionMenuTarget {
             path: project.path.clone(),
             name: project.name.clone(),
             pinned: project.pinned,
             available,
+            can_move_up,
+            can_move_down,
         };
         let context_target = target.clone();
         let dropdown_target = target.clone();
