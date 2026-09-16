@@ -1,6 +1,6 @@
 # Codex Universal GUI Integration Work Orders
 
-**Status:** IN EXECUTION — GUI-001 (PR #1), GUI-003 (PR #2), GUI-002 (PR #3) MERGED; GUI-004 COMPLETE (`docs/codex-universal/reports/GUI-004-report.md`, branch `gui-004/unified-ux`)
+**Status:** IN EXECUTION — GUI-001 (PR #1), GUI-003 (PR #2), GUI-002 (PR #3), GUI-004 (PR #4) MERGED; GUI-005 COMPLETE (`docs/codex-universal/reports/GUI-005-report.md`, branch `gui-005/multi-environment-ux`)
 **Repository:** `payswapdotorg/Flauz.app`
 **Authority:** `docs/codex-universal/GUI-INTEGRATION-ARCHITECTURE.md`
 **Universal source of truth:** `payswapdotorg/codex`
@@ -151,6 +151,7 @@ A normal user can move from idea -> agent -> teaching -> workflow -> run -> evid
 
 ## GUI-005 — Multi-Environment UX
 
+**Status:** COMPLETE — see `docs/codex-universal/reports/GUI-005-report.md`
 **Depends on:** GUI-004
 
 Expose the Universal execution plane without inventing modality-specific semantics.
