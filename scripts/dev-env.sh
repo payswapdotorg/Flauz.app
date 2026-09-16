@@ -12,3 +12,4 @@ export LD_LIBRARY_PATH="/home/z/sysroot/prefix/usr/lib/x86_64-linux-gnu:/home/z/
 export BINDGEN_EXTRA_CLANG_ARGS="-I/home/z/sysroot/prefix/usr/lib/llvm-19/lib/clang/19/include"
 export CPATH="/home/z/sysroot/prefix/usr/include:/home/z/sysroot/prefix/usr/include/pipewire-0.3:/home/z/sysroot/prefix/usr/include/spa-0.2"
 export CARGO_INCREMENTAL=0
+export CARGO_TARGET_DIR=/home/z/flauz/target

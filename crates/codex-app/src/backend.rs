@@ -1359,6 +1359,7 @@ const MAX_TASK_SEARCH_SNIPPET_BYTES: usize = 16 * 1024;
 const GOAL_CONTINUATION_DELAY: Duration = Duration::from_millis(250);
 const MAX_PENDING_GOAL_CONTINUATIONS: usize = 256;
 const PINNED_TASK_IDS_PREFERENCE: &str = "pinned_task_ids_v1";
+const PROJECT_ORDER_PREFERENCE: &str = "project_order_v1";
 const SEEN_MODEL_UPGRADE_LIST_PREFERENCE: &str = "seen-model-upgrade-list";
 const APPEARANCE_THEME_PREFERENCE: &str = "appearance_theme";
 const APPEARANCE_PREFERENCES_V1: &str = "appearance_preferences_v1";
@@ -2613,6 +2614,17 @@ fn open_storage(events: &dyn ActionEmitter) -> Option<Store> {
                 },
             );
             emit(events, Action::LocalProjectsLoaded(local_projects));
+            let project_order = store
+                .preference(PROJECT_ORDER_PREFERENCE)
+                .ok()
+                .flatten()
+                .and_then(|value| serde_json::from_str::<Vec<String>>(&value).ok())
+                .unwrap_or_default()
+                .into_iter()
+                .map(PathBuf::from)
+                .filter(|path: &PathBuf| path.is_absolute())
+                .collect::<Vec<_>>();
+            emit(events, Action::ProjectOrderLoaded(project_order));
             if let Some(preferences) = appearance_preferences
                 .as_deref()
                 .and_then(parse_appearance_preferences)
@@ -4367,6 +4379,23 @@ fn run_effect(
                 let encoded = serde_json::to_string(task_ids)
                     .map_err(|error| codex_storage::StoreError::Io(std::io::Error::other(error)))?;
                 store.set_preference(PINNED_TASK_IDS_PREFERENCE, &encoded, unix_timestamp())
+            });
+            if let Err(error) = result {
+                storage.take();
+                emit(events, Action::StorageFailed(error.to_string()));
+            }
+            return;
+        }
+        Effect::PersistProjectOrder { order } => {
+            let result = storage.as_mut().map_or(Ok(()), |store| {
+                let encoded = serde_json::to_string(
+                    &order
+                        .iter()
+                        .map(|path| path.to_string_lossy().into_owned())
+                        .collect::<Vec<_>>(),
+                )
+                .map_err(|error| codex_storage::StoreError::Io(std::io::Error::other(error)))?;
+                store.set_preference(PROJECT_ORDER_PREFERENCE, &encoded, unix_timestamp())
             });
             if let Err(error) = result {
                 storage.take();
@@ -8708,6 +8737,7 @@ fn run_effect(
         | Effect::PersistIntegratedTerminalShell(_)
         | Effect::PersistGitIncludeUnstaged(_)
         | Effect::PersistPinnedTasks { .. }
+        | Effect::PersistProjectOrder { .. }
         | Effect::PersistSeenModelUpgradeIds { .. }
         | Effect::RememberWorkspace { .. }
         | Effect::RenameLocalProject { .. }

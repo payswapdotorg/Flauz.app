@@ -4508,6 +4508,7 @@ pub struct AppState {
     pub pinned_task_ids: Vec<String>,
     pub seen_model_upgrade_ids: Vec<String>,
     pub local_projects: Vec<LocalProjectSummary>,
+    pub local_project_order: Vec<PathBuf>,
     pub selected_task_id: Option<String>,
     pub task_selection_generation: u64,
     pub new_chat_cwd: Option<PathBuf>,
@@ -4580,6 +4581,7 @@ impl Default for AppState {
             pinned_task_ids: Vec::new(),
             seen_model_upgrade_ids: Vec::new(),
             local_projects: Vec::new(),
+            local_project_order: Vec::new(),
             selected_task_id: None,
             task_selection_generation: 0,
             new_chat_cwd: None,
@@ -4660,6 +4662,11 @@ pub enum Action {
         recent_workspace: Option<PathBuf>,
     },
     LocalProjectsLoaded(Vec<LocalProjectSummary>),
+    ProjectOrderLoaded(Vec<PathBuf>),
+    MoveLocalProject {
+        path: PathBuf,
+        up: bool,
+    },
     StorageFailed(String),
     RuntimeResolved {
         codex_binary: PathBuf,
@@ -6770,6 +6777,9 @@ pub enum Effect {
     PersistPinnedTasks {
         task_ids: Vec<String>,
     },
+    PersistProjectOrder {
+        order: Vec<PathBuf>,
+    },
     PersistSeenModelUpgradeIds {
         model_ids: Vec<String>,
     },
@@ -7068,7 +7078,10 @@ fn default_local_project_name(path: &Path) -> String {
         .unwrap_or_else(|| "Project".to_owned())
 }
 
-fn normalize_local_projects(projects: Vec<LocalProjectSummary>) -> Vec<LocalProjectSummary> {
+fn normalize_local_projects(
+    projects: Vec<LocalProjectSummary>,
+    order: &[PathBuf],
+) -> Vec<LocalProjectSummary> {
     let mut seen = HashSet::new();
     let mut projects = projects
         .into_iter()
@@ -7088,8 +7101,39 @@ fn normalize_local_projects(projects: Vec<LocalProjectSummary>) -> Vec<LocalProj
             .then_with(|| right.last_opened_at.cmp(&left.last_opened_at))
             .then_with(|| left.path.cmp(&right.path))
     });
+    apply_local_project_order(&mut projects, order);
     projects.truncate(MAX_LOCAL_PROJECTS);
     projects
+}
+
+/// Applies the persisted manual project order. Pinned projects keep
+/// floating above unpinned ones; the manual order positions apply inside
+/// each group, and projects missing from the order keep their recency
+/// placement after ordered ones.
+fn apply_local_project_order(projects: &mut [LocalProjectSummary], order: &[PathBuf]) {
+    if order.is_empty() {
+        return;
+    }
+    let position =
+        |path: &Path| -> Option<usize> { order.iter().position(|ordered| ordered == path) };
+    projects.sort_by_key(|project| {
+        let listed = position(&project.path);
+        (
+            !project.pinned,
+            listed.is_none(),
+            listed.unwrap_or(usize::MAX),
+        )
+    });
+}
+
+fn normalize_local_project_order(order: Vec<PathBuf>) -> Vec<PathBuf> {
+    let mut seen = HashSet::new();
+    let mut order = order
+        .into_iter()
+        .filter(|path| path.is_absolute() && seen.insert(path.clone()))
+        .collect::<Vec<_>>();
+    order.truncate(MAX_LOCAL_PROJECTS);
+    order
 }
 
 fn remember_local_project(state: &mut AppState, path: &PathBuf) {
@@ -7117,7 +7161,10 @@ fn remember_local_project(state: &mut AppState, path: &PathBuf) {
             last_opened_at,
         });
     }
-    state.local_projects = normalize_local_projects(std::mem::take(&mut state.local_projects));
+    state.local_projects = normalize_local_projects(
+        std::mem::take(&mut state.local_projects),
+        &state.local_project_order,
+    );
 }
 
 fn normalize_computer_app_id(app_id: String) -> String {
@@ -8612,8 +8659,47 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             }
         }
         Action::LocalProjectsLoaded(projects) => {
-            state.local_projects = normalize_local_projects(projects);
+            state.local_projects = normalize_local_projects(projects, &state.local_project_order);
             Vec::new()
+        }
+        Action::ProjectOrderLoaded(order) => {
+            state.local_project_order = normalize_local_project_order(order);
+            state.local_projects = normalize_local_projects(
+                std::mem::take(&mut state.local_projects),
+                &state.local_project_order,
+            );
+            Vec::new()
+        }
+        Action::MoveLocalProject { path, up } => {
+            let projects = state.local_projects.clone();
+            let Some(index) = projects.iter().position(|project| project.path == path) else {
+                return Vec::new();
+            };
+            let neighbor = if up {
+                index.checked_sub(1)
+            } else {
+                index.checked_add(1)
+            };
+            let Some(neighbor) = neighbor.and_then(|neighbor| projects.get(neighbor)) else {
+                return Vec::new();
+            };
+            if neighbor.pinned != projects[index].pinned {
+                // Manual ordering stays inside the pinned/unpinned group;
+                // pin toggles remain the way to cross groups.
+                return Vec::new();
+            }
+            let neighbor_index = if up { index - 1 } else { index + 1 };
+            let mut order = projects
+                .iter()
+                .map(|project| project.path.clone())
+                .collect::<Vec<_>>();
+            order.swap(index, neighbor_index);
+            state.local_project_order = normalize_local_project_order(order.clone());
+            state.local_projects = normalize_local_projects(
+                std::mem::take(&mut state.local_projects),
+                &state.local_project_order,
+            );
+            vec![Effect::PersistProjectOrder { order }]
         }
         Action::StorageFailed(message) => {
             state.storage.ready = false;
@@ -9429,8 +9515,10 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             }
             project.name = name.clone();
             project.last_opened_at = last_opened_at;
-            state.local_projects =
-                normalize_local_projects(std::mem::take(&mut state.local_projects));
+            state.local_projects = normalize_local_projects(
+                std::mem::take(&mut state.local_projects),
+                &state.local_project_order,
+            );
             state.status_message = Some("Project renamed".to_owned());
             vec![Effect::RenameLocalProject { path, name }]
         }
@@ -9449,8 +9537,10 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             } else {
                 "Project unpinned".to_owned()
             });
-            state.local_projects =
-                normalize_local_projects(std::mem::take(&mut state.local_projects));
+            state.local_projects = normalize_local_projects(
+                std::mem::take(&mut state.local_projects),
+                &state.local_project_order,
+            );
             vec![Effect::SetLocalProjectPinned { path, pinned }]
         }
         Action::RemoveLocalProject(path) => {
@@ -22901,6 +22991,130 @@ mod tests {
             .is_empty()
         );
         assert_eq!(state.new_chat_cwd, prior_workspace);
+    }
+
+    #[test]
+    fn manual_project_order_applies_within_pinned_groups_and_persists() {
+        let first = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\first")
+        } else {
+            PathBuf::from("/projects/first")
+        };
+        let second = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\second")
+        } else {
+            PathBuf::from("/projects/second")
+        };
+        let third = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\third")
+        } else {
+            PathBuf::from("/projects/third")
+        };
+        let mut state = AppState::default();
+        reduce(
+            &mut state,
+            Action::LocalProjectsLoaded(vec![
+                LocalProjectSummary {
+                    path: first.clone(),
+                    name: String::new(),
+                    pinned: true,
+                    last_opened_at: 1,
+                },
+                LocalProjectSummary {
+                    path: second.clone(),
+                    name: String::new(),
+                    pinned: true,
+                    last_opened_at: 2,
+                },
+                LocalProjectSummary {
+                    path: third.clone(),
+                    name: String::new(),
+                    pinned: false,
+                    last_opened_at: 3,
+                },
+            ]),
+        );
+        // Recency order: second (2) before first (1) in the pinned group.
+        assert_eq!(
+            state
+                .local_projects
+                .iter()
+                .map(|project| project.path.clone())
+                .collect::<Vec<_>>(),
+            vec![second.clone(), first.clone(), third.clone()]
+        );
+
+        // Load a manual order that flips the pinned group; the unpinned
+        // project keeps floating below the pinned group.
+        reduce(
+            &mut state,
+            Action::ProjectOrderLoaded(vec![third.clone(), first.clone(), second.clone()]),
+        );
+        assert_eq!(
+            state
+                .local_projects
+                .iter()
+                .map(|project| project.path.clone())
+                .collect::<Vec<_>>(),
+            vec![first.clone(), second.clone(), third.clone()]
+        );
+
+        // Moving the unpinned project up must stop at the group boundary.
+        assert!(
+            reduce(
+                &mut state,
+                Action::MoveLocalProject {
+                    path: third.clone(),
+                    up: true
+                }
+            )
+            .is_empty()
+        );
+
+        // A second unpinned project can be reordered and the new order
+        // persists.
+        let fourth = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\fourth")
+        } else {
+            PathBuf::from("/projects/fourth")
+        };
+        let mut loaded = state.local_projects.clone();
+        loaded.push(LocalProjectSummary {
+            path: fourth.clone(),
+            name: String::new(),
+            pinned: false,
+            last_opened_at: 4,
+        });
+        reduce(&mut state, Action::LocalProjectsLoaded(loaded));
+        assert_eq!(
+            state
+                .local_projects
+                .iter()
+                .map(|project| project.path.clone())
+                .collect::<Vec<_>>(),
+            vec![first.clone(), second.clone(), third.clone(), fourth.clone()]
+        );
+        let effects = reduce(
+            &mut state,
+            Action::MoveLocalProject {
+                path: fourth.clone(),
+                up: true,
+            },
+        );
+        assert_eq!(
+            effects,
+            [Effect::PersistProjectOrder {
+                order: vec![first.clone(), second.clone(), fourth.clone(), third.clone(),],
+            }]
+        );
+        assert_eq!(
+            state
+                .local_projects
+                .iter()
+                .map(|project| project.path.clone())
+                .collect::<Vec<_>>(),
+            vec![first, second, fourth, third]
+        );
     }
 
     #[test]
