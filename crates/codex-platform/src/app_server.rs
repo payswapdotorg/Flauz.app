@@ -57,8 +57,19 @@ use codex_protocol::{
     ThreadStartParams, ThreadStartResponse, ThreadTurnsListParams, ThreadTurnsListResponse,
     ThreadUnarchiveParams, ThreadUnarchiveResponse, ThreadUnsubscribeParams,
     ThreadUnsubscribeResponse, TurnInterruptParams, TurnStartParams, TurnStartResponse,
-    TurnSteerParams, decode_incoming, decode_result, encode_error_response, encode_json_line,
-    encode_success_response, encode_unsupported_request, read_bounded_frame,
+    TurnSteerParams, WorkflowApproveParams, WorkflowApproveResponse, WorkflowCompileParams,
+    WorkflowCompileResponse, WorkflowForkParams, WorkflowForkResponse,
+    WorkflowImproveApproveParams, WorkflowImproveApproveResponse, WorkflowImproveProposeParams,
+    WorkflowImproveProposeResponse, WorkflowImprovePublishParams, WorkflowImprovePublishResponse,
+    WorkflowImproveValidateParams, WorkflowImproveValidateResponse, WorkflowInstanceCancelParams,
+    WorkflowInstanceCancelResponse, WorkflowInstanceGetParams, WorkflowInstanceGetResponse,
+    WorkflowInstanceListParams, WorkflowInstanceListResponse, WorkflowInstanceResumeParams,
+    WorkflowInstanceResumeResponse, WorkflowInstanceRunParams, WorkflowInstanceRunResponse,
+    WorkflowPublishParams, WorkflowPublishResponse, WorkflowReviewParams, WorkflowReviewResponse,
+    WorkflowTeachDemonstrateParams, WorkflowTeachInstructParams, WorkflowTeachReconcileParams,
+    WorkflowTeachReconcileResponse, WorkflowTeachRecordResponse, WorkflowTeachStartParams,
+    WorkflowTeachStartResponse, decode_incoming, decode_result, encode_error_response,
+    encode_json_line, encode_success_response, encode_unsupported_request, read_bounded_frame,
 };
 use crossbeam_channel::{
     Receiver as CrossbeamReceiver, SendTimeoutError, Sender as CrossbeamSender, TrySendError,
@@ -1684,6 +1695,190 @@ impl AppServerConnection {
                 current.checked_add(1)
             })
             .map_err(|_| AppServerError::RequestIdExhausted)
+    }
+
+    /// Opens a Universal workflow teaching session
+    /// (`workflow/teach/start`).
+    ///
+    /// Experimental API: the connection must have initialized with
+    /// `experimentalApi: true` for the supervised app-server to serve the
+    /// workflow family. Session ids are control-plane allocated and opaque.
+    pub fn workflow_teach_start(
+        &self,
+        params: WorkflowTeachStartParams,
+    ) -> Result<WorkflowTeachStartResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/teach/start", params)
+    }
+
+    /// Records one instruction statement into an open teaching session
+    /// (`workflow/teach/instruct`).
+    pub fn workflow_teach_instruct(
+        &self,
+        params: WorkflowTeachInstructParams,
+    ) -> Result<WorkflowTeachRecordResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/teach/instruct", params)
+    }
+
+    /// Records one demonstration event into an open teaching session
+    /// (`workflow/teach/demonstrate`).
+    pub fn workflow_teach_demonstrate(
+        &self,
+        params: WorkflowTeachDemonstrateParams,
+    ) -> Result<WorkflowTeachRecordResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/teach/demonstrate", params)
+    }
+
+    /// Closes a teaching session and freezes its trajectory for
+    /// compilation (`workflow/teach/reconcile`).
+    pub fn workflow_teach_reconcile(
+        &self,
+        params: WorkflowTeachReconcileParams,
+    ) -> Result<WorkflowTeachReconcileResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/teach/reconcile", params)
+    }
+
+    /// Compiles a closed teaching session into a reviewable candidate
+    /// (`workflow/compile`).
+    pub fn workflow_compile(
+        &self,
+        params: WorkflowCompileParams,
+    ) -> Result<WorkflowCompileResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/compile", params)
+    }
+
+    /// Reads the full review presentation of a compiled candidate
+    /// (`workflow/review`).
+    pub fn workflow_review(
+        &self,
+        params: WorkflowReviewParams,
+    ) -> Result<WorkflowReviewResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/review", params)
+    }
+
+    /// Records an approval decision on a candidate
+    /// (`workflow/approve`).
+    pub fn workflow_approve(
+        &self,
+        params: WorkflowApproveParams,
+    ) -> Result<WorkflowApproveResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/approve", params)
+    }
+
+    /// Publishes an approved candidate as an immutable workflow version
+    /// (`workflow/publish`).
+    pub fn workflow_publish(
+        &self,
+        params: WorkflowPublishParams,
+    ) -> Result<WorkflowPublishResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/publish", params)
+    }
+
+    /// Forks a published version into a new immutable release carrying
+    /// its lineage (`workflow/fork`).
+    pub fn workflow_fork(
+        &self,
+        params: WorkflowForkParams,
+    ) -> Result<WorkflowForkResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/fork", params)
+    }
+
+    /// Proposes improvement candidates from recorded execution evidence
+    /// (`workflow/improve/propose`).
+    pub fn workflow_improve_propose(
+        &self,
+        params: WorkflowImproveProposeParams,
+    ) -> Result<WorkflowImproveProposeResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/improve/propose", params)
+    }
+
+    /// Validates an improvement candidate through the governed pipeline
+    /// (`workflow/improve/validate`).
+    pub fn workflow_improve_validate(
+        &self,
+        params: WorkflowImproveValidateParams,
+    ) -> Result<WorkflowImproveValidateResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/improve/validate", params)
+    }
+
+    /// Records the explicit approval decision on an improvement
+    /// candidate (`workflow/improve/approve`).
+    pub fn workflow_improve_approve(
+        &self,
+        params: WorkflowImproveApproveParams,
+    ) -> Result<WorkflowImproveApproveResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/improve/approve", params)
+    }
+
+    /// Publishes an approved improvement as the governed successor
+    /// version (`workflow/improve/publish`).
+    pub fn workflow_improve_publish(
+        &self,
+        params: WorkflowImprovePublishParams,
+    ) -> Result<WorkflowImprovePublishResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/improve/publish", params)
+    }
+
+    /// Runs a published workflow version as a durable instance
+    /// (`workflow/instance/run`).
+    pub fn workflow_instance_run(
+        &self,
+        params: WorkflowInstanceRunParams,
+    ) -> Result<WorkflowInstanceRunResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/instance/run", params)
+    }
+
+    /// Lists every durable workflow instance
+    /// (`workflow/instance/list`).
+    pub fn workflow_instance_list(&self) -> Result<WorkflowInstanceListResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request(
+            "workflow/instance/list",
+            WorkflowInstanceListParams::default(),
+        )
+    }
+
+    /// Reads one durable instance with its evidence references
+    /// (`workflow/instance/get`).
+    pub fn workflow_instance_get(
+        &self,
+        params: WorkflowInstanceGetParams,
+    ) -> Result<WorkflowInstanceGetResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/instance/get", params)
+    }
+
+    /// Resumes a paused durable instance
+    /// (`workflow/instance/resume`).
+    pub fn workflow_instance_resume(
+        &self,
+        params: WorkflowInstanceResumeParams,
+    ) -> Result<WorkflowInstanceResumeResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/instance/resume", params)
+    }
+
+    /// Cancels a durable instance with an operator-visible reason
+    /// (`workflow/instance/cancel`).
+    pub fn workflow_instance_cancel(
+        &self,
+        params: WorkflowInstanceCancelParams,
+    ) -> Result<WorkflowInstanceCancelResponse, AppServerError> {
+        self.require_initialized()?;
+        self.request("workflow/instance/cancel", params)
     }
 
     fn require_initialized(&self) -> Result<(), AppServerError> {

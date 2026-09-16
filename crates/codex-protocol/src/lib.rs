@@ -11,6 +11,9 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+mod workflow;
+pub use workflow::*;
+
 pub const DEFAULT_MAX_FRAME_BYTES: usize = 16 * 1024 * 1024;
 pub const DEFAULT_MESSAGE_CHANNEL_CAPACITY: usize = 1;
 pub const DEFAULT_COMMAND_CHANNEL_CAPACITY: usize = 32;
