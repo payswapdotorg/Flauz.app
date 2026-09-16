@@ -1,6 +1,6 @@
 # Codex Universal GUI Integration Work Orders
 
-**Status:** IN EXECUTION — GUI-001 COMPLETE (merged PR #1); GUI-003 COMPLETE (merged PR #2); GUI-002 COMPLETE (`docs/codex-universal/reports/GUI-002-report.md`, branch `gui-002/parity-closure`)
+**Status:** IN EXECUTION — GUI-001 (PR #1), GUI-003 (PR #2), GUI-002 (PR #3) MERGED; GUI-004 COMPLETE (`docs/codex-universal/reports/GUI-004-report.md`, branch `gui-004/unified-ux`)
 **Repository:** `payswapdotorg/Flauz.app`
 **Authority:** `docs/codex-universal/GUI-INTEGRATION-ARCHITECTURE.md`
 **Universal source of truth:** `payswapdotorg/codex`
@@ -127,6 +127,7 @@ Acceptance:
 
 ## GUI-004 — Unified Agent + Workflow UX
 
+**Status:** COMPLETE — see `docs/codex-universal/reports/GUI-004-report.md`
 **Depends on:** GUI-002, GUI-003
 
 Make workflows a first-class peer to chats/projects instead of a separate tool while reserving room for Pack-aware system views.

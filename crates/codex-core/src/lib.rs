@@ -90,6 +90,12 @@ pub const MAX_WORKFLOW_PUBLISHED_VERSIONS: usize = 50;
 pub const MAX_WORKFLOW_INSTANCES: usize = 200;
 pub const MAX_WORKFLOW_EVIDENCE_REFERENCES: usize = 64;
 pub const MAX_WORKFLOW_PATH_NODES: usize = 256;
+pub const MAX_WORKFLOW_CAPABILITY_HINTS: usize = 64;
+pub const MAX_WORKFLOW_BINDING_PROPOSALS: usize = 64;
+pub const MAX_WORKFLOW_TRIGGER_INTENTS: usize = 32;
+pub const MAX_WORKFLOW_IMPROVE_CANDIDATES: usize = 16;
+pub const MAX_WORKFLOW_VALIDATION_STAGES: usize = 8;
+pub const MAX_WORKFLOW_RUN_PROVENANCE: usize = 32;
 pub const MAX_GIT_PULL_REQUEST_TITLE_CHARS: usize = 120;
 pub const MAX_GIT_PULL_REQUEST_BODY_CHARS: usize = 30_000;
 pub const MAX_PULL_REQUEST_SEARCH_CHARS: usize = 256;
@@ -2675,6 +2681,97 @@ pub struct WorkflowStepCard {
     pub evidence_count: u64,
 }
 
+/// One lexical capability hint derived from a step's intent by the
+/// teaching compiler; hints are advisory, binding is the execution
+/// plane's decision.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowCapabilityHintCard {
+    pub node_id: String,
+    pub hint: String,
+    pub rationale: String,
+}
+
+/// One unresolved binding proposal from the compiler; binding decisions
+/// belong to the execution plane, the GUI only renders them.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowBindingProposalCard {
+    pub node_id: String,
+    pub kind: String,
+    pub reference: String,
+    pub rationale: String,
+    pub requires_approval: bool,
+}
+
+/// One unresolved trigger intent surfaced for control-plane review.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowTriggerIntentCard {
+    pub class_hint: String,
+    pub description: String,
+}
+
+/// One stage outcome of a governed improvement validation pipeline.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowValidationStageCard {
+    pub stage: String,
+    pub passed: bool,
+}
+
+/// The content-addressed identity of one recorded run an improvement
+/// candidate cites.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowRunProvenanceCard {
+    pub version_id: String,
+    pub fingerprint: String,
+    pub status: WorkflowInstanceStatus,
+}
+
+/// Execution evidence summary attached to an improvement candidate.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct WorkflowEvidenceSummaryCard {
+    pub references: Vec<WorkflowEvidenceCard>,
+    pub runs: Vec<WorkflowRunProvenanceCard>,
+}
+
+/// One proposed improvement candidate derived from recorded execution
+/// evidence; every field comes from the control plane.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowImprovementCandidateCard {
+    pub candidate_id: String,
+    pub workflow: String,
+    pub incumbent_version_id: String,
+    pub change_kind: String,
+    pub rationale: String,
+    pub evidence: WorkflowEvidenceSummaryCard,
+}
+
+/// The engine-sealed lineage record of a fork release.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowForkLineageCard {
+    pub workflow: String,
+    pub version_id: String,
+    pub semantic_version: String,
+    pub repository: String,
+    pub definition_digest: String,
+    pub dependency_lock_digest: String,
+    pub commit_sha: String,
+}
+
+/// The governed lineage of a published improvement: predecessor to
+/// successor with the full decision trail.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowImprovementLineageCard {
+    pub workflow: String,
+    pub predecessor_version_id: String,
+    pub predecessor_semantic_version: String,
+    pub successor_version_id: String,
+    pub successor_semantic_version: String,
+    pub candidate_id: String,
+    pub validation_digest: String,
+    pub validation_stages: Vec<WorkflowValidationStageCard>,
+    pub approver: String,
+    pub release_tag: String,
+}
+
 /// The open teaching session, rendered from control-plane responses.
 /// Teaching sessions are ephemeral app-server state (they do not survive a
 /// runtime restart); the GUI never persists this as authority.
@@ -2704,6 +2801,10 @@ pub struct WorkflowCandidateState {
     pub simulation_outcome: Option<String>,
     pub simulation_node: Option<String>,
     pub simulation_steps_taken: u64,
+    pub description: Option<String>,
+    pub capability_hints: Vec<WorkflowCapabilityHintCard>,
+    pub binding_proposals: Vec<WorkflowBindingProposalCard>,
+    pub trigger_intents: Vec<WorkflowTriggerIntentCard>,
 }
 
 /// A published immutable workflow version (durable across runtime
@@ -2746,6 +2847,55 @@ pub struct WorkflowInstanceDetail {
     pub terminal_reason: Option<String>,
     pub path: Vec<String>,
     pub evidence: Vec<WorkflowEvidenceCard>,
+}
+
+/// The validated state of a selected improvement candidate.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowImproveValidatedState {
+    pub candidate_id: String,
+    pub workflow: String,
+    pub successor_version: String,
+    pub passed: bool,
+    pub stages: Vec<WorkflowValidationStageCard>,
+}
+
+/// The recorded approval decision on an improvement candidate.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowImproveApprovedState {
+    pub candidate_id: String,
+    pub approved: bool,
+    pub approver: String,
+    pub validation_digest: String,
+    pub note: Option<String>,
+    pub reason: Option<String>,
+}
+
+/// A published improvement: the governed successor version plus its
+/// sealed lineage and cited evidence.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowImprovePublishedState {
+    pub version_id: String,
+    pub semantic_version: String,
+    pub release_tag: String,
+    pub lineage: WorkflowImprovementLineageCard,
+    pub evidence: WorkflowEvidenceSummaryCard,
+}
+
+/// The governed improvement session for one published version. Candidates
+/// and validation state are ephemeral app-server state; the durable
+/// artifact is the published successor version.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct WorkflowImproveState {
+    pub incumbent_version_id: String,
+    pub incumbent_semantic_version: String,
+    pub candidates: Vec<WorkflowImprovementCandidateCard>,
+    pub selected_candidate_id: Option<String>,
+    pub validate_pending: Option<String>,
+    pub validated: Option<WorkflowImproveValidatedState>,
+    pub approve_pending: Option<String>,
+    pub approved: Option<WorkflowImproveApprovedState>,
+    pub publish_pending: Option<String>,
+    pub published: Option<WorkflowImprovePublishedState>,
 }
 
 /// One in-flight Universal workflow control-plane request. Carries only
@@ -2794,6 +2944,28 @@ pub enum WorkflowRequest {
     InstanceGet {
         instance_id: String,
     },
+    Fork {
+        version_id: String,
+        fork_repository: String,
+    },
+    ImprovePropose {
+        version_id: String,
+    },
+    ImproveValidate {
+        candidate_id: String,
+        successor_version: String,
+    },
+    ImproveApprove {
+        candidate_id: String,
+        approver: String,
+        decision: WorkflowApprovalDecision,
+        note: Option<String>,
+        reason: Option<String>,
+    },
+    ImprovePublish {
+        candidate_id: String,
+        release_tag: String,
+    },
 }
 
 /// Universal Workflow surface state (GUI-003). All semantic values
@@ -2814,6 +2986,10 @@ pub struct WorkflowState {
     pub run_pending: Option<String>,
     pub instance_detail: Option<WorkflowInstanceDetail>,
     pub instance_get_pending: Option<String>,
+    pub fork_pending: Option<String>,
+    pub fork_lineage: Option<WorkflowForkLineageCard>,
+    pub improve: Option<WorkflowImproveState>,
+    pub improve_propose_pending: Option<String>,
     pub error: Option<String>,
 }
 
@@ -2833,6 +3009,10 @@ impl Default for WorkflowState {
             run_pending: None,
             instance_detail: None,
             instance_get_pending: None,
+            fork_pending: None,
+            fork_lineage: None,
+            improve: None,
+            improve_propose_pending: None,
             error: None,
         }
     }
@@ -2844,7 +3024,12 @@ impl WorkflowState {
     /// restart the control plane no longer knows them, so the honest
     /// recovery is to surface that and restart teaching.
     pub fn clear_ephemeral(&mut self, reason: &str) {
-        if self.teach.is_some() || self.candidate.is_some() {
+        let had_improve = self.improve.is_some();
+        if had_improve {
+            self.improve = None;
+            self.improve_propose_pending = None;
+        }
+        if self.teach.is_some() || self.candidate.is_some() || had_improve {
             self.teach = None;
             self.candidate = None;
             self.teach_pending = false;
@@ -6060,6 +6245,41 @@ pub enum Action {
         instance_id: String,
     },
     WorkflowInstanceLoaded(WorkflowInstanceDetail),
+    WorkflowForkVersion {
+        version_id: String,
+        fork_repository: String,
+    },
+    WorkflowForked {
+        version: WorkflowPublishedVersion,
+        lineage: WorkflowForkLineageCard,
+    },
+    WorkflowImproveStart {
+        version_id: String,
+    },
+    WorkflowImproveProposed {
+        incumbent_version_id: String,
+        incumbent_semantic_version: String,
+        candidates: Vec<WorkflowImprovementCandidateCard>,
+    },
+    WorkflowImproveSelectCandidate {
+        candidate_id: String,
+    },
+    WorkflowImproveValidate {
+        successor_version: String,
+    },
+    WorkflowImproveValidated(WorkflowImproveValidatedState),
+    WorkflowImproveApprove {
+        approver: String,
+        decision: WorkflowApprovalDecision,
+        note: String,
+        reason: String,
+    },
+    WorkflowImproveApproved(WorkflowImproveApprovedState),
+    WorkflowImprovePublish {
+        release_tag: String,
+    },
+    WorkflowImprovePublished(WorkflowImprovePublishedState),
+    WorkflowImproveDismiss,
     WorkflowRequestFailed {
         request: WorkflowRequest,
         message: String,
@@ -19092,6 +19312,227 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             state.workflow.instance_detail = Some(detail);
             Vec::new()
         }
+        Action::WorkflowForkVersion {
+            version_id,
+            fork_repository,
+        } => {
+            if state.workflow.fork_pending.is_some() {
+                return Vec::new();
+            }
+            let version_id = version_id.trim().to_owned();
+            let fork_repository = fork_repository.trim().to_owned();
+            if version_id.is_empty() || fork_repository.is_empty() {
+                state.workflow.error = Some(
+                    "Fork needs a published version and a new repository identity.".to_owned(),
+                );
+                return Vec::new();
+            }
+            state.workflow.fork_pending = Some(version_id.clone());
+            vec![Effect::WorkflowRequest(WorkflowRequest::Fork {
+                version_id,
+                fork_repository,
+            })]
+        }
+        Action::WorkflowForked { version, lineage } => {
+            state.workflow.fork_pending = None;
+            state.workflow.fork_lineage = Some(lineage);
+            workflow_remember_published(state, version);
+            Vec::new()
+        }
+        Action::WorkflowImproveStart { version_id } => {
+            if state.workflow.improve_propose_pending.is_some() {
+                return Vec::new();
+            }
+            let version_id = version_id.trim().to_owned();
+            if version_id.is_empty() {
+                return Vec::new();
+            }
+            state.workflow.improve_propose_pending = Some(version_id.clone());
+            state.workflow.improve = None;
+            vec![Effect::WorkflowRequest(WorkflowRequest::ImprovePropose {
+                version_id,
+            })]
+        }
+        Action::WorkflowImproveProposed {
+            incumbent_version_id,
+            incumbent_semantic_version,
+            mut candidates,
+        } => {
+            candidates.truncate(MAX_WORKFLOW_IMPROVE_CANDIDATES);
+            state.workflow.improve_propose_pending = None;
+            state.workflow.improve = Some(WorkflowImproveState {
+                incumbent_version_id,
+                incumbent_semantic_version,
+                selected_candidate_id: candidates
+                    .first()
+                    .map(|candidate| candidate.candidate_id.clone()),
+                candidates,
+                validate_pending: None,
+                validated: None,
+                approve_pending: None,
+                approved: None,
+                publish_pending: None,
+                published: None,
+            });
+            Vec::new()
+        }
+        Action::WorkflowImproveSelectCandidate { candidate_id } => {
+            let Some(improve) = state.workflow.improve.as_mut() else {
+                return Vec::new();
+            };
+            if improve
+                .candidates
+                .iter()
+                .any(|candidate| candidate.candidate_id == candidate_id)
+            {
+                improve.selected_candidate_id = Some(candidate_id);
+                improve.validated = None;
+                improve.approved = None;
+                improve.published = None;
+            }
+            Vec::new()
+        }
+        Action::WorkflowImproveValidate { successor_version } => {
+            let Some(improve) = state.workflow.improve.as_mut() else {
+                return Vec::new();
+            };
+            if improve.validate_pending.is_some() {
+                return Vec::new();
+            }
+            let Some(candidate_id) = improve.selected_candidate_id.clone() else {
+                return Vec::new();
+            };
+            let successor_version = successor_version.trim().to_owned();
+            if successor_version.is_empty() {
+                state.workflow.error =
+                    Some("A successor semantic version is required to validate.".to_owned());
+                return Vec::new();
+            }
+            improve.validate_pending = Some(candidate_id.clone());
+            vec![Effect::WorkflowRequest(WorkflowRequest::ImproveValidate {
+                candidate_id,
+                successor_version,
+            })]
+        }
+        Action::WorkflowImproveValidated(validated) => {
+            let Some(improve) = state.workflow.improve.as_mut() else {
+                return Vec::new();
+            };
+            improve.validate_pending = None;
+            improve.validated = Some(validated);
+            improve.approved = None;
+            Vec::new()
+        }
+        Action::WorkflowImproveApprove {
+            approver,
+            decision,
+            note,
+            reason,
+        } => {
+            let Some(improve) = state.workflow.improve.as_mut() else {
+                return Vec::new();
+            };
+            if improve.approve_pending.is_some() {
+                return Vec::new();
+            }
+            let Some(validated) = improve.validated.as_ref() else {
+                state.workflow.error =
+                    Some("An improvement candidate must be validated before approval.".to_owned());
+                return Vec::new();
+            };
+            let approver = approver.trim().to_owned();
+            if approver.is_empty() {
+                state.workflow.error = Some("An approver identity is required.".to_owned());
+                return Vec::new();
+            }
+            if decision == WorkflowApprovalDecision::Rejected && reason.trim().is_empty() {
+                state.workflow.error =
+                    Some("A rejection reason is required when rejecting a candidate.".to_owned());
+                return Vec::new();
+            }
+            let candidate_id = validated.candidate_id.clone();
+            improve.approve_pending = Some(candidate_id.clone());
+            vec![Effect::WorkflowRequest(WorkflowRequest::ImproveApprove {
+                candidate_id,
+                approver,
+                decision,
+                note: if note.trim().is_empty() {
+                    None
+                } else {
+                    Some(bounded_string(note, MAX_WORKFLOW_FIELD_BYTES))
+                },
+                reason: if reason.trim().is_empty() {
+                    None
+                } else {
+                    Some(bounded_string(reason, MAX_WORKFLOW_ERROR_BYTES))
+                },
+            })]
+        }
+        Action::WorkflowImproveApproved(approved) => {
+            let Some(improve) = state.workflow.improve.as_mut() else {
+                return Vec::new();
+            };
+            improve.approve_pending = None;
+            improve.approved = Some(approved);
+            Vec::new()
+        }
+        Action::WorkflowImprovePublish { release_tag } => {
+            let Some(improve) = state.workflow.improve.as_mut() else {
+                return Vec::new();
+            };
+            if improve.publish_pending.is_some() {
+                return Vec::new();
+            }
+            let Some(approved) = improve.approved.as_ref() else {
+                state.workflow.error = Some(
+                    "An improvement candidate must be approved before publication.".to_owned(),
+                );
+                return Vec::new();
+            };
+            if !approved.approved {
+                state.workflow.error = Some("A rejected candidate cannot be published.".to_owned());
+                return Vec::new();
+            }
+            let release_tag = release_tag.trim().to_owned();
+            if release_tag.is_empty() {
+                state.workflow.error = Some("A release tag is required to publish.".to_owned());
+                return Vec::new();
+            }
+            let candidate_id = approved.candidate_id.clone();
+            improve.publish_pending = Some(candidate_id.clone());
+            vec![Effect::WorkflowRequest(WorkflowRequest::ImprovePublish {
+                candidate_id,
+                release_tag,
+            })]
+        }
+        Action::WorkflowImprovePublished(published) => {
+            let Some(improve) = state.workflow.improve.as_mut() else {
+                return Vec::new();
+            };
+            improve.publish_pending = None;
+            let version = WorkflowPublishedVersion {
+                workflow: published.lineage.workflow.clone(),
+                version_id: published.version_id.clone(),
+                semantic_version: published.semantic_version.clone(),
+                repository: String::new(),
+                commit_sha: String::new(),
+                definition_digest: String::new(),
+                dependency_lock_digest: String::new(),
+            };
+            improve.published = Some(published);
+            let mut effects = Vec::new();
+            if state.workflow.instances_status != LoadStatus::Loading {
+                state.workflow.instances_status = LoadStatus::Loading;
+                effects.push(Effect::WorkflowRequest(WorkflowRequest::InstanceList));
+            }
+            workflow_remember_published(state, version);
+            effects
+        }
+        Action::WorkflowImproveDismiss => {
+            state.workflow.improve = None;
+            state.workflow.improve_propose_pending = None;
+            Vec::new()
+        }
         Action::WorkflowRequestFailed { request, message } => {
             workflow_request_failed(state, &request, message);
             Vec::new()
@@ -19147,8 +19588,38 @@ fn workflow_request_failed(state: &mut AppState, request: &WorkflowRequest, mess
         WorkflowRequest::InstanceRun { .. } => state.workflow.run_pending = None,
         WorkflowRequest::InstanceList => state.workflow.instances_status = LoadStatus::Failed,
         WorkflowRequest::InstanceGet { .. } => state.workflow.instance_get_pending = None,
+        WorkflowRequest::Fork { .. } => state.workflow.fork_pending = None,
+        WorkflowRequest::ImprovePropose { .. } => state.workflow.improve_propose_pending = None,
+        WorkflowRequest::ImproveValidate { .. } => {
+            if let Some(improve) = state.workflow.improve.as_mut() {
+                improve.validate_pending = None;
+            }
+        }
+        WorkflowRequest::ImproveApprove { .. } => {
+            if let Some(improve) = state.workflow.improve.as_mut() {
+                improve.approve_pending = None;
+            }
+        }
+        WorkflowRequest::ImprovePublish { .. } => {
+            if let Some(improve) = state.workflow.improve.as_mut() {
+                improve.publish_pending = None;
+            }
+        }
     }
     state.workflow.error = Some(bounded_string(message, MAX_WORKFLOW_ERROR_BYTES));
+}
+
+/// Inserts or refreshes a published version in the bounded published
+/// list, newest first, deduplicated by version identity.
+fn workflow_remember_published(state: &mut AppState, version: WorkflowPublishedVersion) {
+    state.workflow.published.retain(|existing| {
+        !(existing.version_id == version.version_id && existing.workflow == version.workflow)
+    });
+    state.workflow.published.insert(0, version);
+    state
+        .workflow
+        .published
+        .truncate(MAX_WORKFLOW_PUBLISHED_VERSIONS);
 }
 
 fn bounded_string(mut value: String, limit: usize) -> String {
@@ -20060,11 +20531,14 @@ mod tests {
         ThreadGoal, ThreadGoalState, ThreadGoalStatus, TimelineItem, TimelineKind,
         UsageLimitWindow, UserInputAnswer, UserInputAnswers, UserInputOption, UserInputQuestion,
         UserInputRequest, WorkflowApprovalDecision, WorkflowCandidateState,
-        WorkflowCandidateStatus, WorkflowDemonstrationKind, WorkflowFindingCard,
-        WorkflowInstanceCard, WorkflowInstanceDetail, WorkflowInstanceStatus,
-        WorkflowPublishedVersion, WorkflowRequest, WorkflowStepCard, WorkflowStepOrigin,
-        WorkflowTeachMode, WorkflowTeachSessionState, WorkflowTeachSessionStatus,
-        WorkflowValidationCard, WorkflowValidationSeverity, appearance_code_theme_supports_variant,
+        WorkflowCandidateStatus, WorkflowDemonstrationKind, WorkflowEvidenceSummaryCard,
+        WorkflowFindingCard, WorkflowForkLineageCard, WorkflowImproveApprovedState,
+        WorkflowImprovePublishedState, WorkflowImproveValidatedState,
+        WorkflowImprovementCandidateCard, WorkflowImprovementLineageCard, WorkflowInstanceCard,
+        WorkflowInstanceDetail, WorkflowInstanceStatus, WorkflowPublishedVersion, WorkflowRequest,
+        WorkflowStepCard, WorkflowStepOrigin, WorkflowTeachMode, WorkflowTeachSessionState,
+        WorkflowTeachSessionStatus, WorkflowValidationCard, WorkflowValidationSeverity,
+        WorkflowValidationStageCard, appearance_code_theme_supports_variant,
         clear_git_for_context_change, computer_app_id_matches, permission_mode_options, reduce,
         stable_reference, validate_mcp_form_content,
     };
@@ -22991,6 +23465,282 @@ mod tests {
             .is_empty()
         );
         assert_eq!(state.new_chat_cwd, prior_workspace);
+    }
+
+    #[test]
+    fn workflow_fork_adds_the_derived_release_and_seals_lineage() {
+        let mut state = AppState::default();
+        let upstream = WorkflowPublishedVersion {
+            workflow: "release-notes".to_owned(),
+            version_id: "sha256:upstream".to_owned(),
+            semantic_version: "1.0.0".to_owned(),
+            repository: "github.com/example/upstream".to_owned(),
+            commit_sha: "a".repeat(40),
+            definition_digest: "sha256:def".to_owned(),
+            dependency_lock_digest: "sha256:lock".to_owned(),
+        };
+        state.workflow.published.push(upstream.clone());
+
+        let effects = reduce(
+            &mut state,
+            Action::WorkflowForkVersion {
+                version_id: upstream.version_id.clone(),
+                fork_repository: "github.com/example/fork".to_owned(),
+            },
+        );
+        assert_eq!(
+            effects,
+            vec![Effect::WorkflowRequest(WorkflowRequest::Fork {
+                version_id: upstream.version_id.clone(),
+                fork_repository: "github.com/example/fork".to_owned(),
+            })]
+        );
+        assert_eq!(
+            state.workflow.fork_pending.as_deref(),
+            Some("sha256:upstream")
+        );
+
+        // Empty repository identity is rejected without an effect.
+        let empty = reduce(
+            &mut state,
+            Action::WorkflowForkVersion {
+                version_id: upstream.version_id.clone(),
+                fork_repository: "  ".to_owned(),
+            },
+        );
+        assert!(empty.is_empty());
+
+        reduce(
+            &mut state,
+            Action::WorkflowForked {
+                version: WorkflowPublishedVersion {
+                    workflow: "release-notes".to_owned(),
+                    version_id: "sha256:fork".to_owned(),
+                    semantic_version: "1.0.0".to_owned(),
+                    repository: "github.com/example/fork".to_owned(),
+                    commit_sha: "a".repeat(40),
+                    definition_digest: "sha256:def".to_owned(),
+                    dependency_lock_digest: "sha256:lock".to_owned(),
+                },
+                lineage: WorkflowForkLineageCard {
+                    workflow: "release-notes".to_owned(),
+                    version_id: "sha256:upstream".to_owned(),
+                    semantic_version: "1.0.0".to_owned(),
+                    repository: "github.com/example/upstream".to_owned(),
+                    definition_digest: "sha256:def".to_owned(),
+                    dependency_lock_digest: "sha256:lock".to_owned(),
+                    commit_sha: "a".repeat(40),
+                },
+            },
+        );
+        assert!(state.workflow.fork_pending.is_none());
+        assert_eq!(state.workflow.published.len(), 2);
+        assert_eq!(state.workflow.published[0].version_id, "sha256:fork");
+        assert_eq!(
+            state
+                .workflow
+                .fork_lineage
+                .as_ref()
+                .map(|l| l.version_id.clone()),
+            Some("sha256:upstream".to_owned())
+        );
+    }
+
+    #[test]
+    fn workflow_improve_lifecycle_enforces_control_plane_gates() {
+        let mut state = AppState::default();
+        let incumbent = WorkflowPublishedVersion {
+            workflow: "release-notes".to_owned(),
+            version_id: "sha256:incumbent".to_owned(),
+            semantic_version: "1.0.0".to_owned(),
+            repository: String::new(),
+            commit_sha: String::new(),
+            definition_digest: String::new(),
+            dependency_lock_digest: String::new(),
+        };
+        state.workflow.published.push(incumbent.clone());
+
+        // Propose derives candidates from recorded execution evidence.
+        let effects = reduce(
+            &mut state,
+            Action::WorkflowImproveStart {
+                version_id: incumbent.version_id.clone(),
+            },
+        );
+        assert_eq!(
+            effects,
+            vec![Effect::WorkflowRequest(WorkflowRequest::ImprovePropose {
+                version_id: "sha256:incumbent".to_owned(),
+            })]
+        );
+
+        reduce(
+            &mut state,
+            Action::WorkflowImproveProposed {
+                incumbent_version_id: "sha256:incumbent".to_owned(),
+                incumbent_semantic_version: "1.0.0".to_owned(),
+                candidates: vec![WorkflowImprovementCandidateCard {
+                    candidate_id: "ic-1".to_owned(),
+                    workflow: "release-notes".to_owned(),
+                    incumbent_version_id: "sha256:incumbent".to_owned(),
+                    change_kind: "definition delta".to_owned(),
+                    rationale: "tighten the summary step".to_owned(),
+                    evidence: WorkflowEvidenceSummaryCard::default(),
+                }],
+            },
+        );
+        assert!(state.workflow.improve_propose_pending.is_none());
+        let improve = state.workflow.improve.as_ref().cloned().unwrap_or_default();
+        assert_eq!(improve.selected_candidate_id.as_deref(), Some("ic-1"));
+
+        // Approve before validate is refused.
+        let early = reduce(
+            &mut state,
+            Action::WorkflowImproveApprove {
+                approver: "reviewer".to_owned(),
+                decision: WorkflowApprovalDecision::Approved,
+                note: String::new(),
+                reason: String::new(),
+            },
+        );
+        assert!(early.is_empty());
+
+        // Validate then approve then publish through the governed gates.
+        let effects = reduce(
+            &mut state,
+            Action::WorkflowImproveValidate {
+                successor_version: "1.1.0".to_owned(),
+            },
+        );
+        assert_eq!(
+            effects,
+            vec![Effect::WorkflowRequest(WorkflowRequest::ImproveValidate {
+                candidate_id: "ic-1".to_owned(),
+                successor_version: "1.1.0".to_owned(),
+            })]
+        );
+
+        // Publish before approval is refused.
+        let early_publish = reduce(
+            &mut state,
+            Action::WorkflowImprovePublish {
+                release_tag: "v1.1.0".to_owned(),
+            },
+        );
+        assert!(early_publish.is_empty());
+
+        reduce(
+            &mut state,
+            Action::WorkflowImproveValidated(WorkflowImproveValidatedState {
+                candidate_id: "ic-1".to_owned(),
+                workflow: "release-notes".to_owned(),
+                successor_version: "1.1.0".to_owned(),
+                passed: true,
+                stages: vec![WorkflowValidationStageCard {
+                    stage: "replay".to_owned(),
+                    passed: true,
+                }],
+            }),
+        );
+
+        // Approve requires an approver identity.
+        let no_approver = reduce(
+            &mut state,
+            Action::WorkflowImproveApprove {
+                approver: " ".to_owned(),
+                decision: WorkflowApprovalDecision::Approved,
+                note: String::new(),
+                reason: String::new(),
+            },
+        );
+        assert!(no_approver.is_empty());
+
+        reduce(
+            &mut state,
+            Action::WorkflowImproveApproved(WorkflowImproveApprovedState {
+                candidate_id: "ic-1".to_owned(),
+                approved: true,
+                approver: "reviewer".to_owned(),
+                validation_digest: "sha256:report".to_owned(),
+                note: None,
+                reason: None,
+            }),
+        );
+
+        let effects = reduce(
+            &mut state,
+            Action::WorkflowImprovePublish {
+                release_tag: "v1.1.0".to_owned(),
+            },
+        );
+        assert_eq!(
+            effects,
+            vec![Effect::WorkflowRequest(WorkflowRequest::ImprovePublish {
+                candidate_id: "ic-1".to_owned(),
+                release_tag: "v1.1.0".to_owned(),
+            })]
+        );
+
+        // A rejected candidate cannot be published.
+        let mut rejected_state = state.clone();
+        if let Some(improve) = rejected_state.workflow.improve.as_mut() {
+            improve.approved = Some(WorkflowImproveApprovedState {
+                candidate_id: "ic-1".to_owned(),
+                approved: false,
+                approver: "reviewer".to_owned(),
+                validation_digest: "sha256:report".to_owned(),
+                note: None,
+                reason: Some("not yet".to_owned()),
+            });
+        }
+        let rejected_publish = reduce(
+            &mut rejected_state,
+            Action::WorkflowImprovePublish {
+                release_tag: "v1.1.0".to_owned(),
+            },
+        );
+        assert!(rejected_publish.is_empty());
+
+        // Publishing records the successor and refreshes durable state.
+        let effects = reduce(
+            &mut state,
+            Action::WorkflowImprovePublished(WorkflowImprovePublishedState {
+                version_id: "sha256:successor".to_owned(),
+                semantic_version: "1.1.0".to_owned(),
+                release_tag: "v1.1.0".to_owned(),
+                lineage: WorkflowImprovementLineageCard {
+                    workflow: "release-notes".to_owned(),
+                    predecessor_version_id: "sha256:incumbent".to_owned(),
+                    predecessor_semantic_version: "1.0.0".to_owned(),
+                    successor_version_id: "sha256:successor".to_owned(),
+                    successor_semantic_version: "1.1.0".to_owned(),
+                    candidate_id: "ic-1".to_owned(),
+                    validation_digest: "sha256:report".to_owned(),
+                    validation_stages: Vec::new(),
+                    approver: "reviewer".to_owned(),
+                    release_tag: "v1.1.0".to_owned(),
+                },
+                evidence: WorkflowEvidenceSummaryCard::default(),
+            }),
+        );
+        assert_eq!(
+            effects,
+            vec![Effect::WorkflowRequest(WorkflowRequest::InstanceList)]
+        );
+        assert_eq!(state.workflow.published[0].version_id, "sha256:successor");
+        assert!(
+            state
+                .workflow
+                .improve
+                .as_ref()
+                .is_some_and(|i| i.published.is_some())
+        );
+
+        // Disconnect clears the ephemeral improve session but keeps the
+        // durable published versions.
+        state.workflow.clear_ephemeral("connection lost");
+        assert!(state.workflow.improve.is_none());
+        assert_eq!(state.workflow.published.len(), 2);
     }
 
     #[test]
@@ -34261,6 +35011,10 @@ mod tests {
             simulation_outcome: Some("indeterminate".to_owned()),
             simulation_node: Some("step-002".to_owned()),
             simulation_steps_taken: 2,
+            description: None,
+            capability_hints: Vec::new(),
+            binding_proposals: Vec::new(),
+            trigger_intents: Vec::new(),
         }
     }
 

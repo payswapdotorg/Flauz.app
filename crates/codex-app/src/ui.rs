@@ -5064,6 +5064,10 @@ struct WorkspaceView {
     workflow_commit_sha: Entity<InputState>,
     workflow_repository: Entity<InputState>,
     workflow_semver: Entity<InputState>,
+    workflow_fork_repository: Entity<InputState>,
+    workflow_improve_semver: Entity<InputState>,
+    workflow_improve_approver: Entity<InputState>,
+    workflow_improve_release_tag: Entity<InputState>,
     workflow_mode: WorkflowTeachMode,
     workflow_demonstration_kind: WorkflowDemonstrationKind,
     mcp_name: Entity<InputState>,
@@ -5412,6 +5416,17 @@ impl WorkspaceView {
         let workflow_semver = cx.new(|cx| {
             InputState::new(window, cx).placeholder("Semantic version (optional, e.g. 1.0.0)")
         });
+        let workflow_fork_repository = cx.new(|cx| {
+            InputState::new(window, cx)
+                .placeholder("Fork repository identity (e.g. github.com/you/flow)")
+        });
+        let workflow_improve_semver = cx.new(|cx| {
+            InputState::new(window, cx).placeholder("Successor semantic version (e.g. 1.1.0)")
+        });
+        let workflow_improve_approver =
+            cx.new(|cx| InputState::new(window, cx).placeholder("Approver identity"));
+        let workflow_improve_release_tag =
+            cx.new(|cx| InputState::new(window, cx).placeholder("Release tag (e.g. v1.1.0)"));
         let worktree_branch = cx.new(|cx| InputState::new(window, cx).placeholder("Branch name"));
         let worktree_path = cx.new(|cx| {
             InputState::new(window, cx).placeholder("Worktree path (blank = sibling folder)")
@@ -6215,6 +6230,10 @@ impl WorkspaceView {
             workflow_commit_sha,
             workflow_repository,
             workflow_semver,
+            workflow_fork_repository,
+            workflow_improve_semver,
+            workflow_improve_approver,
+            workflow_improve_release_tag,
             workflow_mode: WorkflowTeachMode::Instruct,
             workflow_demonstration_kind: WorkflowDemonstrationKind::Action,
             mcp_name,
