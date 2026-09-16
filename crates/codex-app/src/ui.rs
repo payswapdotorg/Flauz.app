@@ -298,7 +298,7 @@ struct SidebarSurfaceAffordance {
 }
 
 fn sidebar_terminal_affordance(state: &AppState) -> Option<SidebarSurfaceAffordance> {
-    terminal_browser_affordances_available(state.route).then(|| SidebarSurfaceAffordance {
+    terminal_browser_affordances_available(state.route).then_some(SidebarSurfaceAffordance {
         id: "nav-terminal",
         label: "Terminal",
         tooltip: "Toggle the terminal panel (Ctrl+`)",
@@ -306,7 +306,7 @@ fn sidebar_terminal_affordance(state: &AppState) -> Option<SidebarSurfaceAfforda
 }
 
 fn sidebar_browser_affordance(state: &AppState) -> Option<SidebarSurfaceAffordance> {
-    terminal_browser_affordances_available(state.route).then(|| SidebarSurfaceAffordance {
+    terminal_browser_affordances_available(state.route).then_some(SidebarSurfaceAffordance {
         id: "nav-browser",
         label: "Browser",
         tooltip: "Toggle the browser panel (Ctrl+Shift+B)",
@@ -48429,12 +48429,16 @@ mod tests {
         // (WO-P1-001 / WO-P1-002).
         let default_state = AppState::default();
         assert_eq!(default_state.route, MainRoute::Tasks);
-        let terminal = sidebar_terminal_affordance(&default_state)
-            .expect("terminal affordance renders in the default layout");
+        let terminal = match sidebar_terminal_affordance(&default_state) {
+            Some(affordance) => affordance,
+            None => panic!("terminal affordance renders in the default layout"),
+        };
         assert_eq!(terminal.id, "nav-terminal");
         assert_eq!(terminal.label, "Terminal");
-        let browser = sidebar_browser_affordance(&default_state)
-            .expect("browser affordance renders in the default layout");
+        let browser = match sidebar_browser_affordance(&default_state) {
+            Some(affordance) => affordance,
+            None => panic!("browser affordance renders in the default layout"),
+        };
         assert_eq!(browser.id, "nav-browser");
         assert_eq!(browser.label, "Browser");
 
