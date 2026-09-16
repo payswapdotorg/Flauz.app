@@ -78,6 +78,18 @@ pub const MAX_GIT_SHA_BYTES: usize = 128;
 pub const MAX_GIT_INSTRUCTIONS_BYTES: usize = 16 * 1024;
 pub const MAX_WORKTREE_ROOT_BYTES: usize = 16 * 1024;
 pub const MAX_GIT_COMMIT_MESSAGE_CHARS: usize = 4_000;
+pub const MAX_WORKFLOW_NAME_BYTES: usize = 512;
+pub const MAX_WORKFLOW_TEXT_BYTES: usize = 8 * 1024;
+pub const MAX_WORKFLOW_ID_BYTES: usize = 512;
+pub const MAX_WORKFLOW_DIGEST_BYTES: usize = 512;
+pub const MAX_WORKFLOW_ERROR_BYTES: usize = 4 * 1024;
+pub const MAX_WORKFLOW_FIELD_BYTES: usize = 4 * 1024;
+pub const MAX_WORKFLOW_STEPS: usize = 200;
+pub const MAX_WORKFLOW_FINDINGS: usize = 64;
+pub const MAX_WORKFLOW_PUBLISHED_VERSIONS: usize = 50;
+pub const MAX_WORKFLOW_INSTANCES: usize = 200;
+pub const MAX_WORKFLOW_EVIDENCE_REFERENCES: usize = 64;
+pub const MAX_WORKFLOW_PATH_NODES: usize = 256;
 pub const MAX_GIT_PULL_REQUEST_TITLE_CHARS: usize = 120;
 pub const MAX_GIT_PULL_REQUEST_BODY_CHARS: usize = 30_000;
 pub const MAX_PULL_REQUEST_SEARCH_CHARS: usize = 256;
@@ -233,6 +245,7 @@ pub enum MainRoute {
     Repository,
     PullRequests,
     Marketplace,
+    Workflows,
     Settings,
 }
 
@@ -2566,6 +2579,284 @@ pub struct MarketplaceState {
     pub mcp_resource_read: McpResourceReadState,
 }
 
+/// How a Universal workflow is being taught. Mirrors the control-plane
+/// `workflow/teach/start` mode; the reducer never invents a value — the
+/// session's mode comes from control-plane responses.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WorkflowTeachMode {
+    Demonstrate,
+    Instruct,
+    Hybrid,
+}
+
+/// Whether a teaching session still accepts records (from the control
+/// plane, never derived locally).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WorkflowTeachSessionStatus {
+    Open,
+    Closed,
+}
+
+/// The kind of one demonstration event.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WorkflowDemonstrationKind {
+    Observation,
+    Action,
+    Result,
+    Recovery,
+}
+
+/// Lifecycle state of a compiled workflow candidate (control-plane
+/// authoritative).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WorkflowCandidateStatus {
+    Compiled,
+    Validated,
+    Approved,
+    PublicationReady,
+}
+
+/// The approval decision conveyed on a candidate.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WorkflowApprovalDecision {
+    Approved,
+    Rejected,
+}
+
+/// Severity of one validation finding.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WorkflowValidationSeverity {
+    Error,
+    Warning,
+}
+
+/// Where a compiled step came from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WorkflowStepOrigin {
+    Observed,
+    Instructed,
+}
+
+/// Lifecycle status of a durable workflow instance.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WorkflowInstanceStatus {
+    Pending,
+    Running,
+    Paused,
+    Succeeded,
+    Failed,
+    Cancelled,
+}
+
+/// One validation finding of a compiled candidate, as reported by the
+/// control plane.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowFindingCard {
+    pub severity: WorkflowValidationSeverity,
+    pub code: String,
+    pub message: String,
+}
+
+/// Validation summary of the last compile/review pass.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct WorkflowValidationCard {
+    pub clean: bool,
+    pub error_count: u64,
+    pub warning_count: u64,
+    pub findings: Vec<WorkflowFindingCard>,
+}
+
+/// One compiled step of a candidate as presented for review.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowStepCard {
+    pub node_id: String,
+    pub origin: WorkflowStepOrigin,
+    pub description: Option<String>,
+    pub evidence_count: u64,
+}
+
+/// The open teaching session, rendered from control-plane responses.
+/// Teaching sessions are ephemeral app-server state (they do not survive a
+/// runtime restart); the GUI never persists this as authority.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowTeachSessionState {
+    pub session_id: String,
+    pub name: String,
+    pub mode: WorkflowTeachMode,
+    pub status: WorkflowTeachSessionStatus,
+    pub record_count: u64,
+    pub last_sequence: u64,
+    pub instruction_records: Option<u64>,
+    pub demonstration_records: Option<u64>,
+}
+
+/// The latest compiled candidate under review. Candidates are ephemeral
+/// app-server state like teaching sessions.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowCandidateState {
+    pub candidate_id: String,
+    pub status: WorkflowCandidateStatus,
+    pub origin: WorkflowTeachMode,
+    pub epoch: u64,
+    pub step_count: u64,
+    pub steps: Vec<WorkflowStepCard>,
+    pub validation: WorkflowValidationCard,
+    pub simulation_outcome: Option<String>,
+    pub simulation_node: Option<String>,
+    pub simulation_steps_taken: u64,
+}
+
+/// A published immutable workflow version (durable across runtime
+/// restarts; provenance fields are opaque control-plane strings).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowPublishedVersion {
+    pub workflow: String,
+    pub version_id: String,
+    pub semantic_version: String,
+    pub repository: String,
+    pub commit_sha: String,
+    pub definition_digest: String,
+    pub dependency_lock_digest: String,
+}
+
+/// One durable workflow instance as listed by the control plane.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowInstanceCard {
+    pub instance_id: String,
+    pub workflow: String,
+    pub version_id: String,
+    pub status: WorkflowInstanceStatus,
+    pub steps_taken: u64,
+}
+
+/// One evidence reference recorded on a workflow instance; locators are
+/// opaque and never dereferenced by the GUI.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowEvidenceCard {
+    pub kind: String,
+    pub locator: String,
+    pub digest: String,
+}
+
+/// An inspected durable instance with its recorded evidence.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowInstanceDetail {
+    pub instance: WorkflowInstanceCard,
+    pub terminal_kind: Option<String>,
+    pub terminal_reason: Option<String>,
+    pub path: Vec<String>,
+    pub evidence: Vec<WorkflowEvidenceCard>,
+}
+
+/// One in-flight Universal workflow control-plane request. Carries only
+/// control-plane allocated ids and user input; the backend executes it
+/// through the typed `workflow/*` app-server boundary.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum WorkflowRequest {
+    TeachStart {
+        mode: WorkflowTeachMode,
+        name: String,
+    },
+    TeachInstruct {
+        session_id: String,
+        text: String,
+    },
+    TeachDemonstrate {
+        session_id: String,
+        kind: WorkflowDemonstrationKind,
+        text: String,
+    },
+    TeachReconcile {
+        session_id: String,
+    },
+    Compile {
+        session_id: String,
+    },
+    Review {
+        candidate_id: String,
+    },
+    Approve {
+        candidate_id: String,
+        approver: String,
+        reference: String,
+        decision: WorkflowApprovalDecision,
+    },
+    Publish {
+        candidate_id: String,
+        commit_sha: String,
+        repository: Option<String>,
+        semantic_version: Option<String>,
+    },
+    InstanceRun {
+        version_id: String,
+    },
+    InstanceList,
+    InstanceGet {
+        instance_id: String,
+    },
+}
+
+/// Universal Workflow surface state (GUI-003). All semantic values
+/// (statuses, ids, counts, digests) come from control-plane responses;
+/// the GUI never recomputes them.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkflowState {
+    pub teach: Option<WorkflowTeachSessionState>,
+    pub teach_pending: bool,
+    pub candidate: Option<WorkflowCandidateState>,
+    pub compile_pending: bool,
+    pub review_pending: bool,
+    pub approve_pending: bool,
+    pub publish_pending: bool,
+    pub published: Vec<WorkflowPublishedVersion>,
+    pub instances: Vec<WorkflowInstanceCard>,
+    pub instances_status: LoadStatus,
+    pub run_pending: Option<String>,
+    pub instance_detail: Option<WorkflowInstanceDetail>,
+    pub instance_get_pending: Option<String>,
+    pub error: Option<String>,
+}
+
+impl Default for WorkflowState {
+    fn default() -> Self {
+        Self {
+            teach: None,
+            teach_pending: false,
+            candidate: None,
+            compile_pending: false,
+            review_pending: false,
+            approve_pending: false,
+            publish_pending: false,
+            published: Vec::new(),
+            instances: Vec::new(),
+            instances_status: LoadStatus::Idle,
+            run_pending: None,
+            instance_detail: None,
+            instance_get_pending: None,
+            error: None,
+        }
+    }
+}
+
+impl WorkflowState {
+    /// Clears the ephemeral teaching surface. Teaching sessions and
+    /// compiled candidates live in the app-server process; after a runtime
+    /// restart the control plane no longer knows them, so the honest
+    /// recovery is to surface that and restart teaching.
+    pub fn clear_ephemeral(&mut self, reason: &str) {
+        if self.teach.is_some() || self.candidate.is_some() {
+            self.teach = None;
+            self.candidate = None;
+            self.teach_pending = false;
+            self.compile_pending = false;
+            self.review_pending = false;
+            self.approve_pending = false;
+            self.publish_pending = false;
+            self.error = Some(bounded_string(reason.to_owned(), MAX_WORKFLOW_ERROR_BYTES));
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct GitState {
     pub refresh_generation: u64,
@@ -4242,6 +4533,7 @@ pub struct AppState {
     pub browser_permissions: BrowserPermissionsState,
     pub marketplace: MarketplaceState,
     pub hooks: HooksState,
+    pub workflow: WorkflowState,
     pub pull_requests: PullRequestInboxState,
     pub git: GitState,
     pub review_start: ReviewStartState,
@@ -4313,6 +4605,7 @@ impl Default for AppState {
             browser_permissions: BrowserPermissionsState::default(),
             marketplace: MarketplaceState::default(),
             hooks: HooksState::default(),
+            workflow: WorkflowState::default(),
             pull_requests: PullRequestInboxState::default(),
             git: GitState::default(),
             review_start: ReviewStartState::default(),
@@ -5705,6 +5998,66 @@ pub enum Action {
         tab_id: u64,
         code: u32,
     },
+    WorkflowTeachStart {
+        mode: WorkflowTeachMode,
+        name: String,
+    },
+    WorkflowTeachStarted(WorkflowTeachSessionState),
+    WorkflowTeachInstruct(String),
+    WorkflowTeachDemonstrate {
+        kind: WorkflowDemonstrationKind,
+        text: String,
+    },
+    WorkflowTeachRecorded {
+        session_id: String,
+        mode: WorkflowTeachMode,
+        status: WorkflowTeachSessionStatus,
+        sequence: u64,
+        record_count: u64,
+    },
+    WorkflowTeachReconcile,
+    WorkflowTeachReconciled {
+        session_id: String,
+        mode: WorkflowTeachMode,
+        status: WorkflowTeachSessionStatus,
+        demonstration_records: u64,
+        instruction_records: u64,
+    },
+    WorkflowCompile,
+    WorkflowCompiled(WorkflowCandidateState),
+    WorkflowReview,
+    WorkflowReviewed(WorkflowCandidateState),
+    WorkflowApprove {
+        approver: String,
+        reference: String,
+        decision: WorkflowApprovalDecision,
+    },
+    WorkflowApproved {
+        candidate_id: String,
+        status: WorkflowCandidateStatus,
+        epoch: u64,
+    },
+    WorkflowPublish {
+        commit_sha: String,
+        repository: String,
+        semantic_version: String,
+    },
+    WorkflowPublished(WorkflowPublishedVersion),
+    WorkflowInstanceRun {
+        version_id: String,
+    },
+    WorkflowInstanceRunCompleted(WorkflowInstanceDetail),
+    WorkflowRefreshInstances,
+    WorkflowInstancesLoaded(Vec<WorkflowInstanceCard>),
+    WorkflowInstanceGet {
+        instance_id: String,
+    },
+    WorkflowInstanceLoaded(WorkflowInstanceDetail),
+    WorkflowRequestFailed {
+        request: WorkflowRequest,
+        message: String,
+    },
+    WorkflowDismissError,
     SetStatus(String),
     ClearStatus,
 }
@@ -6434,6 +6787,7 @@ pub enum Effect {
     RemoveLocalProject {
         path: PathBuf,
     },
+    WorkflowRequest(WorkflowRequest),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -7467,6 +7821,19 @@ fn begin_pull_request_mutation(state: &mut AppState, mutation: PullRequestMutati
     }]
 }
 
+fn load_workflows_route_effect(state: &mut AppState) -> Option<Effect> {
+    if state.route != MainRoute::Workflows {
+        return None;
+    }
+    match state.workflow.instances_status {
+        LoadStatus::Idle | LoadStatus::Failed => {
+            state.workflow.instances_status = LoadStatus::Loading;
+            Some(Effect::WorkflowRequest(WorkflowRequest::InstanceList))
+        }
+        LoadStatus::Loading | LoadStatus::Ready => None,
+    }
+}
+
 fn load_pull_requests_route_effect(state: &mut AppState) -> Option<Effect> {
     if state.route != MainRoute::PullRequests
         || matches!(
@@ -8039,6 +8406,16 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             if let Some(effect) = load_pull_requests_route_effect(state) {
                 effects.push(effect);
             }
+            // Rehydrate durable Universal workflow state after a (re)connect.
+            // Teaching sessions and candidates are ephemeral and were already
+            // cleared on disconnect; the durable instance list is the
+            // idempotent read the boundary prescribes.
+            if state.route == MainRoute::Workflows
+                || state.workflow.instances_status != LoadStatus::Idle
+            {
+                state.workflow.instances_status = LoadStatus::Loading;
+                effects.push(Effect::WorkflowRequest(WorkflowRequest::InstanceList));
+            }
             effects
         }
         Action::ConnectionLost => {
@@ -8096,6 +8473,22 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             state.marketplace.pending_marketplace_remove = None;
             state.marketplace.marketplace_upgrade_pending = false;
             state.marketplace.pending_marketplace_upgrade_name = None;
+            // Teaching sessions and compiled candidates live in the
+            // app-server process: a disconnect ends them. Published versions
+            // and durable instances survive and are rehydrated on reconnect.
+            state.workflow.clear_ephemeral(
+                "The Codex runtime connection was lost; the teaching session and\ncandidate were closed. Restart teaching to continue — published versions\nand durable instances are unaffected.",
+            );
+            state.workflow.teach_pending = false;
+            state.workflow.compile_pending = false;
+            state.workflow.review_pending = false;
+            state.workflow.approve_pending = false;
+            state.workflow.publish_pending = false;
+            state.workflow.run_pending = None;
+            state.workflow.instance_get_pending = None;
+            if state.workflow.instances_status == LoadStatus::Loading {
+                state.workflow.instances_status = LoadStatus::Failed;
+            }
             clear_remote_control_runtime(&mut state.remote_control);
             let generation = state.fuzzy_file_search.generation;
             state.fuzzy_file_search = FuzzyFileSearchState {
@@ -8245,6 +8638,9 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
                 inspector: state.inspector,
             }];
             if let Some(effect) = load_marketplace_route_effect(state) {
+                effects.push(effect);
+            }
+            if let Some(effect) = load_workflows_route_effect(state) {
                 effects.push(effect);
             }
             if let Some(effect) = load_pull_requests_route_effect(state) {
@@ -18220,6 +18616,400 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             }
             Vec::new()
         }
+        Action::WorkflowTeachStart { mode, name } => {
+            if state.workflow.teach_pending {
+                return Vec::new();
+            }
+            let name = name.trim().to_owned();
+            if name.is_empty() {
+                state.workflow.error =
+                    Some("Enter a workflow name before starting teaching.".to_owned());
+                return Vec::new();
+            }
+            if state
+                .workflow
+                .teach
+                .as_ref()
+                .is_some_and(|session| session.status == WorkflowTeachSessionStatus::Open)
+            {
+                state.workflow.error = Some(
+                    "A teaching session is already open. Reconcile it before starting a new one."
+                        .to_owned(),
+                );
+                return Vec::new();
+            }
+            state.workflow.error = None;
+            state.workflow.teach_pending = true;
+            vec![Effect::WorkflowRequest(WorkflowRequest::TeachStart {
+                mode,
+                name: bounded_string(name, MAX_WORKFLOW_NAME_BYTES),
+            })]
+        }
+        Action::WorkflowTeachStarted(session) => {
+            state.workflow.teach_pending = false;
+            state.workflow.teach = Some(session);
+            Vec::new()
+        }
+        Action::WorkflowTeachInstruct(text) => {
+            if state.workflow.teach_pending {
+                return Vec::new();
+            }
+            let Some(session) = state.workflow.teach.as_ref() else {
+                state.workflow.error =
+                    Some("Start a teaching session before recording instructions.".to_owned());
+                return Vec::new();
+            };
+            if session.status != WorkflowTeachSessionStatus::Open {
+                state.workflow.error = Some(
+                    "The teaching session is closed; compile it or start a new one.".to_owned(),
+                );
+                return Vec::new();
+            }
+            let text = text.trim().to_owned();
+            if text.is_empty() {
+                state.workflow.error = Some("Enter an instruction statement to record.".to_owned());
+                return Vec::new();
+            }
+            state.workflow.error = None;
+            state.workflow.teach_pending = true;
+            vec![Effect::WorkflowRequest(WorkflowRequest::TeachInstruct {
+                session_id: session.session_id.clone(),
+                text: bounded_string(text, MAX_WORKFLOW_TEXT_BYTES),
+            })]
+        }
+        Action::WorkflowTeachDemonstrate { kind, text } => {
+            if state.workflow.teach_pending {
+                return Vec::new();
+            }
+            let Some(session) = state.workflow.teach.as_ref() else {
+                state.workflow.error = Some(
+                    "Start a teaching session before recording demonstration events.".to_owned(),
+                );
+                return Vec::new();
+            };
+            if session.status != WorkflowTeachSessionStatus::Open {
+                state.workflow.error = Some(
+                    "The teaching session is closed; compile it or start a new one.".to_owned(),
+                );
+                return Vec::new();
+            }
+            let text = text.trim().to_owned();
+            if text.is_empty() {
+                state.workflow.error =
+                    Some("Describe the demonstration event to record.".to_owned());
+                return Vec::new();
+            }
+            state.workflow.error = None;
+            state.workflow.teach_pending = true;
+            vec![Effect::WorkflowRequest(WorkflowRequest::TeachDemonstrate {
+                session_id: session.session_id.clone(),
+                kind,
+                text: bounded_string(text, MAX_WORKFLOW_TEXT_BYTES),
+            })]
+        }
+        Action::WorkflowTeachRecorded {
+            session_id,
+            mode,
+            status,
+            sequence,
+            record_count,
+        } => {
+            state.workflow.teach_pending = false;
+            // Record responses carry the trajectory counters but not the
+            // workflow name or the reconciliation split; merge into the
+            // stored session so provenance stays response-derived.
+            match state
+                .workflow
+                .teach
+                .as_mut()
+                .filter(|existing| existing.session_id == session_id)
+            {
+                Some(existing) => {
+                    existing.mode = mode;
+                    existing.status = status;
+                    existing.last_sequence = sequence;
+                    existing.record_count = record_count;
+                }
+                None => {
+                    state.workflow.teach = Some(WorkflowTeachSessionState {
+                        session_id,
+                        name: String::new(),
+                        mode,
+                        status,
+                        record_count,
+                        last_sequence: sequence,
+                        instruction_records: None,
+                        demonstration_records: None,
+                    });
+                }
+            }
+            Vec::new()
+        }
+        Action::WorkflowTeachReconcile => {
+            if state.workflow.teach_pending {
+                return Vec::new();
+            }
+            let Some(session) = state.workflow.teach.as_ref() else {
+                state.workflow.error =
+                    Some("Start a teaching session before reconciling.".to_owned());
+                return Vec::new();
+            };
+            if session.status != WorkflowTeachSessionStatus::Open {
+                state.workflow.error = Some("The teaching session is already closed.".to_owned());
+                return Vec::new();
+            }
+            state.workflow.error = None;
+            state.workflow.teach_pending = true;
+            vec![Effect::WorkflowRequest(WorkflowRequest::TeachReconcile {
+                session_id: session.session_id.clone(),
+            })]
+        }
+        Action::WorkflowTeachReconciled {
+            session_id,
+            mode,
+            status,
+            demonstration_records,
+            instruction_records,
+        } => {
+            state.workflow.teach_pending = false;
+            // Reconcile responses carry the frozen trajectory split but not
+            // the workflow name; merge into the stored session.
+            match state
+                .workflow
+                .teach
+                .as_mut()
+                .filter(|existing| existing.session_id == session_id)
+            {
+                Some(existing) => {
+                    existing.mode = mode;
+                    existing.status = status;
+                    existing.instruction_records = Some(instruction_records);
+                    existing.demonstration_records = Some(demonstration_records);
+                }
+                None => {
+                    state.workflow.teach = Some(WorkflowTeachSessionState {
+                        session_id,
+                        name: String::new(),
+                        mode,
+                        status,
+                        record_count: demonstration_records.saturating_add(instruction_records),
+                        last_sequence: 0,
+                        instruction_records: Some(instruction_records),
+                        demonstration_records: Some(demonstration_records),
+                    });
+                }
+            }
+            Vec::new()
+        }
+        Action::WorkflowCompile => {
+            if state.workflow.compile_pending {
+                return Vec::new();
+            }
+            let Some(session) = state.workflow.teach.as_ref() else {
+                state.workflow.error =
+                    Some("Start and reconcile a teaching session before compiling.".to_owned());
+                return Vec::new();
+            };
+            if session.status != WorkflowTeachSessionStatus::Closed {
+                state.workflow.error =
+                    Some("Reconcile (close) the teaching session before compiling.".to_owned());
+                return Vec::new();
+            }
+            state.workflow.error = None;
+            state.workflow.compile_pending = true;
+            vec![Effect::WorkflowRequest(WorkflowRequest::Compile {
+                session_id: session.session_id.clone(),
+            })]
+        }
+        Action::WorkflowCompiled(candidate) => {
+            state.workflow.compile_pending = false;
+            state.workflow.candidate = Some(candidate);
+            Vec::new()
+        }
+        Action::WorkflowReview => {
+            if state.workflow.review_pending {
+                return Vec::new();
+            }
+            let Some(candidate) = state.workflow.candidate.as_ref() else {
+                state.workflow.error =
+                    Some("Compile a teaching session before reviewing steps.".to_owned());
+                return Vec::new();
+            };
+            state.workflow.error = None;
+            state.workflow.review_pending = true;
+            vec![Effect::WorkflowRequest(WorkflowRequest::Review {
+                candidate_id: candidate.candidate_id.clone(),
+            })]
+        }
+        Action::WorkflowReviewed(candidate) => {
+            state.workflow.review_pending = false;
+            state.workflow.candidate = Some(candidate);
+            Vec::new()
+        }
+        Action::WorkflowApprove {
+            approver,
+            reference,
+            decision,
+        } => {
+            if state.workflow.approve_pending {
+                return Vec::new();
+            }
+            let Some(candidate) = state.workflow.candidate.as_ref() else {
+                state.workflow.error =
+                    Some("Compile a candidate before recording an approval.".to_owned());
+                return Vec::new();
+            };
+            let approver = approver.trim().to_owned();
+            let reference = reference.trim().to_owned();
+            if approver.is_empty() || reference.is_empty() {
+                state.workflow.error = Some(
+                    "Enter an approver and a review reference to record the decision.".to_owned(),
+                );
+                return Vec::new();
+            }
+            state.workflow.error = None;
+            state.workflow.approve_pending = true;
+            vec![Effect::WorkflowRequest(WorkflowRequest::Approve {
+                candidate_id: candidate.candidate_id.clone(),
+                approver: bounded_string(approver, MAX_WORKFLOW_NAME_BYTES),
+                reference: bounded_string(reference, MAX_WORKFLOW_FIELD_BYTES),
+                decision,
+            })]
+        }
+        Action::WorkflowApproved {
+            candidate_id,
+            status,
+            epoch,
+        } => {
+            state.workflow.approve_pending = false;
+            if let Some(candidate) = state
+                .workflow
+                .candidate
+                .as_mut()
+                .filter(|candidate| candidate.candidate_id == candidate_id)
+            {
+                candidate.status = status;
+                candidate.epoch = epoch;
+            }
+            Vec::new()
+        }
+        Action::WorkflowPublish {
+            commit_sha,
+            repository,
+            semantic_version,
+        } => {
+            if state.workflow.publish_pending {
+                return Vec::new();
+            }
+            let Some(candidate) = state.workflow.candidate.as_ref() else {
+                state.workflow.error =
+                    Some("Compile and approve a candidate before publishing.".to_owned());
+                return Vec::new();
+            };
+            let commit_sha = commit_sha.trim().to_owned();
+            if commit_sha.is_empty() {
+                state.workflow.error =
+                    Some("Enter the commit SHA the published version is anchored at.".to_owned());
+                return Vec::new();
+            }
+            let repository = repository.trim().to_owned();
+            let semantic_version = semantic_version.trim().to_owned();
+            state.workflow.error = None;
+            state.workflow.publish_pending = true;
+            vec![Effect::WorkflowRequest(WorkflowRequest::Publish {
+                candidate_id: candidate.candidate_id.clone(),
+                commit_sha: bounded_string(commit_sha, MAX_WORKFLOW_ID_BYTES),
+                repository: (!repository.is_empty())
+                    .then(|| bounded_string(repository, MAX_WORKFLOW_FIELD_BYTES)),
+                semantic_version: (!semantic_version.is_empty())
+                    .then(|| bounded_string(semantic_version, MAX_WORKFLOW_NAME_BYTES)),
+            })]
+        }
+        Action::WorkflowPublished(version) => {
+            state.workflow.publish_pending = false;
+            // Published versions are immutable and control-plane
+            // authoritative; keep the most recent first, bounded, without
+            // duplicates.
+            state
+                .workflow
+                .published
+                .retain(|existing| existing.version_id != version.version_id);
+            state.workflow.published.insert(0, version);
+            state
+                .workflow
+                .published
+                .truncate(MAX_WORKFLOW_PUBLISHED_VERSIONS);
+            Vec::new()
+        }
+        Action::WorkflowInstanceRun { version_id } => {
+            if state.workflow.run_pending.is_some() {
+                return Vec::new();
+            }
+            let version_id = version_id.trim().to_owned();
+            if version_id.is_empty() {
+                state.workflow.error =
+                    Some("Publish a workflow version before running it.".to_owned());
+                return Vec::new();
+            }
+            state.workflow.error = None;
+            state.workflow.run_pending = Some(version_id.clone());
+            vec![Effect::WorkflowRequest(WorkflowRequest::InstanceRun {
+                version_id,
+            })]
+        }
+        Action::WorkflowInstanceRunCompleted(detail) => {
+            state.workflow.run_pending = None;
+            // The run response carries the settled instance record; merge it
+            // into the cached durable list without inventing entries.
+            state
+                .workflow
+                .instances
+                .retain(|existing| existing.instance_id != detail.instance.instance_id);
+            state.workflow.instances.insert(0, detail.instance.clone());
+            state.workflow.instances.truncate(MAX_WORKFLOW_INSTANCES);
+            state.workflow.instances_status = LoadStatus::Ready;
+            state.workflow.instance_detail = Some(detail);
+            Vec::new()
+        }
+        Action::WorkflowRefreshInstances => {
+            if state.workflow.instances_status == LoadStatus::Loading {
+                return Vec::new();
+            }
+            state.workflow.instances_status = LoadStatus::Loading;
+            vec![Effect::WorkflowRequest(WorkflowRequest::InstanceList)]
+        }
+        Action::WorkflowInstancesLoaded(mut instances) => {
+            instances.truncate(MAX_WORKFLOW_INSTANCES);
+            state.workflow.instances = instances;
+            state.workflow.instances_status = LoadStatus::Ready;
+            Vec::new()
+        }
+        Action::WorkflowInstanceGet { instance_id } => {
+            if state.workflow.instance_get_pending.is_some() {
+                return Vec::new();
+            }
+            let instance_id = instance_id.trim().to_owned();
+            if instance_id.is_empty() {
+                return Vec::new();
+            }
+            state.workflow.instance_get_pending = Some(instance_id.clone());
+            vec![Effect::WorkflowRequest(WorkflowRequest::InstanceGet {
+                instance_id,
+            })]
+        }
+        Action::WorkflowInstanceLoaded(detail) => {
+            state.workflow.instance_get_pending = None;
+            state.workflow.instance_detail = Some(detail);
+            Vec::new()
+        }
+        Action::WorkflowRequestFailed { request, message } => {
+            workflow_request_failed(state, &request, message);
+            Vec::new()
+        }
+        Action::WorkflowDismissError => {
+            state.workflow.error = None;
+            Vec::new()
+        }
         Action::SetStatus(message) => {
             state.status_message = Some(bounded_string(message, 16 * 1024));
             Vec::new()
@@ -18248,6 +19038,27 @@ fn append_bounded(target: &mut String, delta: &str, limit: usize) {
         boundary
     };
     target.push_str(&delta[..end]);
+}
+
+/// Applies one failed workflow request: clears exactly the pending flag
+/// that request set and surfaces the control-plane/transport error
+/// verbatim (bounded). The GUI never retries non-idempotent requests on
+/// its own.
+fn workflow_request_failed(state: &mut AppState, request: &WorkflowRequest, message: String) {
+    match request {
+        WorkflowRequest::TeachStart { .. }
+        | WorkflowRequest::TeachInstruct { .. }
+        | WorkflowRequest::TeachDemonstrate { .. }
+        | WorkflowRequest::TeachReconcile { .. } => state.workflow.teach_pending = false,
+        WorkflowRequest::Compile { .. } => state.workflow.compile_pending = false,
+        WorkflowRequest::Review { .. } => state.workflow.review_pending = false,
+        WorkflowRequest::Approve { .. } => state.workflow.approve_pending = false,
+        WorkflowRequest::Publish { .. } => state.workflow.publish_pending = false,
+        WorkflowRequest::InstanceRun { .. } => state.workflow.run_pending = None,
+        WorkflowRequest::InstanceList => state.workflow.instances_status = LoadStatus::Failed,
+        WorkflowRequest::InstanceGet { .. } => state.workflow.instance_get_pending = None,
+    }
+    state.workflow.error = Some(bounded_string(message, MAX_WORKFLOW_ERROR_BYTES));
 }
 
 fn bounded_string(mut value: String, limit: usize) -> String {
@@ -19138,11 +19949,11 @@ mod tests {
         MAX_COMPOSER_BYTES, MAX_GIT_BRANCH_BYTES, MAX_GIT_DIFF_BYTES, MAX_GIT_INSTRUCTIONS_BYTES,
         MAX_GIT_SHA_BYTES, MAX_PINNED_TASK_ID_BYTES, MAX_PLUGIN_DETAIL_ITEMS,
         MAX_REVIEW_START_ERROR_BYTES, MAX_TIMELINE_ITEMS, MAX_TURN_DIFF_BYTES, MAX_VISIBLE_THREADS,
-        MainRoute, MarketplaceManageTab, MarketplaceSectionFilter, MarketplaceSourceCard,
-        MarketplaceTab, MarketplaceUpgradeFailure, McpAuthStatus, McpBrowserOriginElicitation,
-        McpBrowserResourceElicitation, McpElicitation, McpElicitationContent,
-        McpElicitationDecision, McpElicitationValue, McpFormElicitation, McpFormField,
-        McpFormFieldKind, McpFormImagePickerItem, McpFormOption, McpFormStringFormat,
+        MAX_WORKFLOW_INSTANCES, MAX_WORKFLOW_PUBLISHED_VERSIONS, MainRoute, MarketplaceManageTab,
+        MarketplaceSectionFilter, MarketplaceSourceCard, MarketplaceTab, MarketplaceUpgradeFailure,
+        McpAuthStatus, McpBrowserOriginElicitation, McpBrowserResourceElicitation, McpElicitation,
+        McpElicitationContent, McpElicitationDecision, McpElicitationValue, McpFormElicitation,
+        McpFormField, McpFormFieldKind, McpFormImagePickerItem, McpFormOption, McpFormStringFormat,
         McpResourceCard, McpResourceContentCard, McpServerCard, McpServerDraft,
         McpServerStartupFailureReason, McpServerStartupState, McpTransportKind, McpUrlElicitation,
         ModelOption, OutputArtifact, OutputArtifactKind, PendingWorktreeForkPhase,
@@ -19158,9 +19969,14 @@ mod tests {
         StartedImport, TaskRunStatus, TaskSearchResult, TaskSummary, TerminalDockLocation,
         ThreadGoal, ThreadGoalState, ThreadGoalStatus, TimelineItem, TimelineKind,
         UsageLimitWindow, UserInputAnswer, UserInputAnswers, UserInputOption, UserInputQuestion,
-        UserInputRequest, appearance_code_theme_supports_variant, clear_git_for_context_change,
-        computer_app_id_matches, permission_mode_options, reduce, stable_reference,
-        validate_mcp_form_content,
+        UserInputRequest, WorkflowApprovalDecision, WorkflowCandidateState,
+        WorkflowCandidateStatus, WorkflowDemonstrationKind, WorkflowFindingCard,
+        WorkflowInstanceCard, WorkflowInstanceDetail, WorkflowInstanceStatus,
+        WorkflowPublishedVersion, WorkflowRequest, WorkflowStepCard, WorkflowStepOrigin,
+        WorkflowTeachMode, WorkflowTeachSessionState, WorkflowTeachSessionStatus,
+        WorkflowValidationCard, WorkflowValidationSeverity, appearance_code_theme_supports_variant,
+        clear_git_for_context_change, computer_app_id_matches, permission_mode_options, reduce,
+        stable_reference, validate_mcp_form_content,
     };
 
     fn task(id: &str) -> TaskSummary {
@@ -33188,5 +34004,571 @@ mod tests {
         assert!(state.remote_control.pending_cursor.is_none());
         assert!(state.remote_control.next_cursor.is_none());
         assert_eq!(state.remote_control.devices.len(), 1);
+    }
+
+    fn open_teach_session() -> WorkflowTeachSessionState {
+        WorkflowTeachSessionState {
+            session_id: "ws-1".to_owned(),
+            name: "probe-flow".to_owned(),
+            mode: WorkflowTeachMode::Hybrid,
+            status: WorkflowTeachSessionStatus::Open,
+            record_count: 0,
+            last_sequence: 0,
+            instruction_records: None,
+            demonstration_records: None,
+        }
+    }
+
+    fn compiled_candidate() -> WorkflowCandidateState {
+        WorkflowCandidateState {
+            candidate_id: "wc-1".to_owned(),
+            status: WorkflowCandidateStatus::Compiled,
+            origin: WorkflowTeachMode::Hybrid,
+            epoch: 3,
+            step_count: 2,
+            steps: Vec::new(),
+            validation: WorkflowValidationCard {
+                clean: false,
+                error_count: 1,
+                warning_count: 1,
+                findings: vec![
+                    WorkflowFindingCard {
+                        severity: WorkflowValidationSeverity::Error,
+                        code: "WF-STRUCTURE".to_owned(),
+                        message: "step has no continuation".to_owned(),
+                    },
+                    WorkflowFindingCard {
+                        severity: WorkflowValidationSeverity::Warning,
+                        code: "WF-HINT".to_owned(),
+                        message: "capability hint unresolved".to_owned(),
+                    },
+                ],
+            },
+            simulation_outcome: Some("indeterminate".to_owned()),
+            simulation_node: Some("step-002".to_owned()),
+            simulation_steps_taken: 2,
+        }
+    }
+
+    #[test]
+    fn workflow_teaching_lifecycle_walks_the_control_plane_state_machine() {
+        let mut state = AppState::default();
+
+        // Teaching cannot start without a name.
+        assert!(
+            reduce(
+                &mut state,
+                Action::WorkflowTeachStart {
+                    mode: WorkflowTeachMode::Demonstrate,
+                    name: "   ".to_owned(),
+                }
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.workflow.error.as_deref(),
+            Some("Enter a workflow name before starting teaching.")
+        );
+        assert!(!state.workflow.teach_pending);
+
+        // A valid start emits exactly one bounded control-plane request.
+        assert_eq!(
+            reduce(
+                &mut state,
+                Action::WorkflowTeachStart {
+                    mode: WorkflowTeachMode::Demonstrate,
+                    name: "probe-flow".to_owned(),
+                }
+            ),
+            [Effect::WorkflowRequest(WorkflowRequest::TeachStart {
+                mode: WorkflowTeachMode::Demonstrate,
+                name: "probe-flow".to_owned(),
+            })]
+        );
+        assert!(state.workflow.teach_pending);
+
+        // The control-plane response (session id, mode, status) is stored
+        // verbatim; the GUI invents nothing.
+        reduce(
+            &mut state,
+            Action::WorkflowTeachStarted(open_teach_session()),
+        );
+        assert!(!state.workflow.teach_pending);
+        let session = state
+            .workflow
+            .teach
+            .as_ref()
+            .unwrap_or_else(|| panic!("teaching session must be stored"));
+        assert_eq!(session.session_id, "ws-1");
+        assert_eq!(session.status, WorkflowTeachSessionStatus::Open);
+        assert_eq!(state.workflow.error, None);
+
+        // Recording an instruction routes to the stored session.
+        assert_eq!(
+            reduce(
+                &mut state,
+                Action::WorkflowTeachInstruct("Open the release notes.".to_owned())
+            ),
+            [Effect::WorkflowRequest(WorkflowRequest::TeachInstruct {
+                session_id: "ws-1".to_owned(),
+                text: "Open the release notes.".to_owned(),
+            })]
+        );
+        reduce(
+            &mut state,
+            Action::WorkflowTeachRecorded {
+                session_id: "ws-1".to_owned(),
+                mode: WorkflowTeachMode::Hybrid,
+                status: WorkflowTeachSessionStatus::Open,
+                sequence: 0,
+                record_count: 1,
+            },
+        );
+        let session = state
+            .workflow
+            .teach
+            .as_ref()
+            .unwrap_or_else(|| panic!("teaching session must survive a record"));
+        assert_eq!(session.record_count, 1);
+        assert_eq!(session.last_sequence, 0);
+        assert_eq!(session.name, "probe-flow", "name survives a record merge");
+
+        // Demonstration events route the same way and keep the live count.
+        assert_eq!(
+            reduce(
+                &mut state,
+                Action::WorkflowTeachDemonstrate {
+                    kind: WorkflowDemonstrationKind::Action,
+                    text: "Clicked the newest release heading.".to_owned(),
+                }
+            ),
+            [Effect::WorkflowRequest(WorkflowRequest::TeachDemonstrate {
+                session_id: "ws-1".to_owned(),
+                kind: WorkflowDemonstrationKind::Action,
+                text: "Clicked the newest release heading.".to_owned(),
+            })]
+        );
+        reduce(
+            &mut state,
+            Action::WorkflowTeachRecorded {
+                session_id: "ws-1".to_owned(),
+                mode: WorkflowTeachMode::Hybrid,
+                status: WorkflowTeachSessionStatus::Open,
+                sequence: 1,
+                record_count: 2,
+            },
+        );
+        assert_eq!(
+            state
+                .workflow
+                .teach
+                .as_ref()
+                .map(|session| session.record_count),
+            Some(2)
+        );
+
+        // Reconcile closes the session and freezes the trajectory split.
+        assert_eq!(
+            reduce(&mut state, Action::WorkflowTeachReconcile),
+            [Effect::WorkflowRequest(WorkflowRequest::TeachReconcile {
+                session_id: "ws-1".to_owned(),
+            })]
+        );
+        reduce(
+            &mut state,
+            Action::WorkflowTeachReconciled {
+                session_id: "ws-1".to_owned(),
+                mode: WorkflowTeachMode::Hybrid,
+                status: WorkflowTeachSessionStatus::Closed,
+                demonstration_records: 1,
+                instruction_records: 1,
+            },
+        );
+        let session = state
+            .workflow
+            .teach
+            .as_ref()
+            .unwrap_or_else(|| panic!("reconciled session must be stored"));
+        assert_eq!(session.status, WorkflowTeachSessionStatus::Closed);
+        assert_eq!(session.instruction_records, Some(1));
+        assert_eq!(session.demonstration_records, Some(1));
+    }
+
+    #[test]
+    fn workflow_compile_review_approve_publish_and_run_follow_control_plane_gates() {
+        let mut state = AppState::default();
+
+        // Compiling requires a reconciled (closed) session.
+        assert!(reduce(&mut state, Action::WorkflowCompile).is_empty());
+        assert_eq!(
+            state.workflow.error.as_deref(),
+            Some("Start and reconcile a teaching session before compiling.")
+        );
+
+        state.workflow.teach = Some(WorkflowTeachSessionState {
+            status: WorkflowTeachSessionStatus::Open,
+            ..open_teach_session()
+        });
+        assert!(reduce(&mut state, Action::WorkflowCompile).is_empty());
+        assert_eq!(
+            state.workflow.error.as_deref(),
+            Some("Reconcile (close) the teaching session before compiling.")
+        );
+
+        state.workflow.teach = Some(WorkflowTeachSessionState {
+            status: WorkflowTeachSessionStatus::Closed,
+            ..open_teach_session()
+        });
+        assert_eq!(
+            reduce(&mut state, Action::WorkflowCompile),
+            [Effect::WorkflowRequest(WorkflowRequest::Compile {
+                session_id: "ws-1".to_owned(),
+            })]
+        );
+
+        // The compiled candidate keeps the control-plane validation
+        // summary verbatim.
+        reduce(&mut state, Action::WorkflowCompiled(compiled_candidate()));
+        let candidate = state
+            .workflow
+            .candidate
+            .as_ref()
+            .unwrap_or_else(|| panic!("compiled candidate must be stored"));
+        assert_eq!(candidate.candidate_id, "wc-1");
+        assert_eq!(candidate.validation.error_count, 1);
+        assert_eq!(candidate.validation.warning_count, 1);
+        assert_eq!(candidate.validation.findings.len(), 2);
+
+        // Review fills the step presentation.
+        assert_eq!(
+            reduce(&mut state, Action::WorkflowReview),
+            [Effect::WorkflowRequest(WorkflowRequest::Review {
+                candidate_id: "wc-1".to_owned(),
+            })]
+        );
+        let reviewed = WorkflowCandidateState {
+            steps: vec![
+                WorkflowStepCard {
+                    node_id: "step-001".to_owned(),
+                    origin: WorkflowStepOrigin::Instructed,
+                    description: Some("Open the release notes.".to_owned()),
+                    evidence_count: 1,
+                },
+                WorkflowStepCard {
+                    node_id: "step-002".to_owned(),
+                    origin: WorkflowStepOrigin::Observed,
+                    description: None,
+                    evidence_count: 0,
+                },
+            ],
+            ..compiled_candidate()
+        };
+        reduce(&mut state, Action::WorkflowReviewed(reviewed));
+        assert_eq!(
+            state
+                .workflow
+                .candidate
+                .as_ref()
+                .map(|candidate| candidate.steps.len()),
+            Some(2)
+        );
+
+        // Approve requires both decision fields.
+        assert!(
+            reduce(
+                &mut state,
+                Action::WorkflowApprove {
+                    approver: "  ".to_owned(),
+                    reference: "gui-003".to_owned(),
+                    decision: WorkflowApprovalDecision::Approved,
+                }
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.workflow.error.as_deref(),
+            Some("Enter an approver and a review reference to record the decision.")
+        );
+        assert_eq!(
+            reduce(
+                &mut state,
+                Action::WorkflowApprove {
+                    approver: "reviewer".to_owned(),
+                    reference: "gui-003".to_owned(),
+                    decision: WorkflowApprovalDecision::Approved,
+                }
+            ),
+            [Effect::WorkflowRequest(WorkflowRequest::Approve {
+                candidate_id: "wc-1".to_owned(),
+                approver: "reviewer".to_owned(),
+                reference: "gui-003".to_owned(),
+                decision: WorkflowApprovalDecision::Approved,
+            })]
+        );
+        reduce(
+            &mut state,
+            Action::WorkflowApproved {
+                candidate_id: "wc-1".to_owned(),
+                status: WorkflowCandidateStatus::Approved,
+                epoch: 4,
+            },
+        );
+        let candidate = state
+            .workflow
+            .candidate
+            .as_ref()
+            .unwrap_or_else(|| panic!("candidate must survive approval"));
+        assert_eq!(candidate.status, WorkflowCandidateStatus::Approved);
+        assert_eq!(candidate.epoch, 4);
+
+        // Publish requires the commit anchor; optional fields pass through
+        // only when provided.
+        assert!(
+            reduce(
+                &mut state,
+                Action::WorkflowPublish {
+                    commit_sha: String::new(),
+                    repository: String::new(),
+                    semantic_version: String::new(),
+                }
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.workflow.error.as_deref(),
+            Some("Enter the commit SHA the published version is anchored at.")
+        );
+        assert_eq!(
+            reduce(
+                &mut state,
+                Action::WorkflowPublish {
+                    commit_sha: "c".repeat(40),
+                    repository: String::new(),
+                    semantic_version: String::new(),
+                }
+            ),
+            [Effect::WorkflowRequest(WorkflowRequest::Publish {
+                candidate_id: "wc-1".to_owned(),
+                commit_sha: "c".repeat(40),
+                repository: None,
+                semantic_version: None,
+            })]
+        );
+        reduce(
+            &mut state,
+            Action::WorkflowPublished(WorkflowPublishedVersion {
+                workflow: "probe-flow".to_owned(),
+                version_id: "sha256:version-1".to_owned(),
+                semantic_version: "1.0.0".to_owned(),
+                repository: "https://example.invalid/probe-flow".to_owned(),
+                commit_sha: "c".repeat(40),
+                definition_digest: "sha256:def".to_owned(),
+                dependency_lock_digest: "sha256:lock".to_owned(),
+            }),
+        );
+        assert_eq!(state.workflow.published.len(), 1);
+        assert_eq!(state.workflow.published[0].workflow, "probe-flow");
+
+        // Running targets the published version; the settled instance from
+        // the response lands in the durable list and the detail pane.
+        assert_eq!(
+            reduce(
+                &mut state,
+                Action::WorkflowInstanceRun {
+                    version_id: "sha256:version-1".to_owned(),
+                }
+            ),
+            [Effect::WorkflowRequest(WorkflowRequest::InstanceRun {
+                version_id: "sha256:version-1".to_owned(),
+            })]
+        );
+        let run_detail = WorkflowInstanceDetail {
+            instance: WorkflowInstanceCard {
+                instance_id: "wi-1".to_owned(),
+                workflow: "probe-flow".to_owned(),
+                version_id: "sha256:version-1".to_owned(),
+                status: WorkflowInstanceStatus::Succeeded,
+                steps_taken: 2,
+            },
+            terminal_kind: Some("completed".to_owned()),
+            terminal_reason: None,
+            path: vec!["step-001".to_owned(), "step-002".to_owned()],
+            evidence: Vec::new(),
+        };
+        reduce(&mut state, Action::WorkflowInstanceRunCompleted(run_detail));
+        assert_eq!(state.workflow.run_pending, None);
+        assert_eq!(state.workflow.instances.len(), 1);
+        assert_eq!(state.workflow.instances_status, LoadStatus::Ready);
+        assert!(state.workflow.instance_detail.is_some());
+    }
+
+    #[test]
+    fn workflow_request_failures_surface_control_plane_errors_and_clear_pending() {
+        let mut state = AppState::default();
+        state.workflow.teach = Some(open_teach_session());
+        state.workflow.teach_pending = true;
+
+        // The unknown-session error path from the real control plane
+        // (GUI-001 boundary test) surfaces verbatim.
+        let failed_request = WorkflowRequest::TeachReconcile {
+            session_id: "ws-does-not-exist".to_owned(),
+        };
+        reduce(
+            &mut state,
+            Action::WorkflowRequestFailed {
+                request: failed_request,
+                message: "unknown teaching session ws-does-not-exist".to_owned(),
+            },
+        );
+        assert!(!state.workflow.teach_pending);
+        assert_eq!(
+            state.workflow.error.as_deref(),
+            Some("unknown teaching session ws-does-not-exist")
+        );
+
+        // A failed durable list read flips only the list status.
+        state.workflow.error = None;
+        state.workflow.instances_status = LoadStatus::Loading;
+        reduce(
+            &mut state,
+            Action::WorkflowRequestFailed {
+                request: WorkflowRequest::InstanceList,
+                message: "transport closed".to_owned(),
+            },
+        );
+        assert_eq!(state.workflow.instances_status, LoadStatus::Failed);
+        assert_eq!(state.workflow.error.as_deref(), Some("transport closed"));
+
+        // Errors are dismissable.
+        reduce(&mut state, Action::WorkflowDismissError);
+        assert_eq!(state.workflow.error, None);
+    }
+
+    #[test]
+    fn workflow_lists_stay_bounded_and_deduplicated() {
+        let mut state = AppState::default();
+
+        let mut instances = (0..(MAX_WORKFLOW_INSTANCES + 40))
+            .map(|index| WorkflowInstanceCard {
+                instance_id: format!("wi-{index}"),
+                workflow: "probe-flow".to_owned(),
+                version_id: "sha256:version-1".to_owned(),
+                status: WorkflowInstanceStatus::Succeeded,
+                steps_taken: index as u64,
+            })
+            .collect::<Vec<_>>();
+        let overflow = instances.len();
+        reduce(
+            &mut state,
+            Action::WorkflowInstancesLoaded(std::mem::take(&mut instances)),
+        );
+        assert_eq!(state.workflow.instances.len(), MAX_WORKFLOW_INSTANCES);
+        assert_eq!(state.workflow.instances_status, LoadStatus::Ready);
+        assert!(overflow > MAX_WORKFLOW_INSTANCES);
+
+        // Re-publishing the same immutable version id replaces rather than
+        // duplicates; the list stays bounded.
+        for index in 0..(MAX_WORKFLOW_PUBLISHED_VERSIONS + 10) {
+            reduce(
+                &mut state,
+                Action::WorkflowPublished(WorkflowPublishedVersion {
+                    workflow: format!("flow-{index}"),
+                    version_id: format!("sha256:version-{index}"),
+                    semantic_version: "1.0.0".to_owned(),
+                    repository: String::new(),
+                    commit_sha: "c".repeat(40),
+                    definition_digest: "sha256:def".to_owned(),
+                    dependency_lock_digest: "sha256:lock".to_owned(),
+                }),
+            );
+        }
+        assert_eq!(
+            state.workflow.published.len(),
+            MAX_WORKFLOW_PUBLISHED_VERSIONS
+        );
+        reduce(
+            &mut state,
+            Action::WorkflowPublished(WorkflowPublishedVersion {
+                workflow: "flow-0".to_owned(),
+                version_id: "sha256:version-0".to_owned(),
+                semantic_version: "1.0.1".to_owned(),
+                repository: String::new(),
+                commit_sha: "c".repeat(40),
+                definition_digest: "sha256:def".to_owned(),
+                dependency_lock_digest: "sha256:lock".to_owned(),
+            }),
+        );
+        assert_eq!(
+            state.workflow.published.len(),
+            MAX_WORKFLOW_PUBLISHED_VERSIONS
+        );
+        assert_eq!(state.workflow.published[0].semantic_version, "1.0.1");
+    }
+
+    #[test]
+    fn workflow_disconnect_clears_ephemeral_state_and_rehydrates_durable_state() {
+        let mut state = AppState::default();
+        state.workflow.teach = Some(open_teach_session());
+        state.workflow.candidate = Some(compiled_candidate());
+        state.workflow.published = vec![WorkflowPublishedVersion {
+            workflow: "probe-flow".to_owned(),
+            version_id: "sha256:version-1".to_owned(),
+            semantic_version: "1.0.0".to_owned(),
+            repository: String::new(),
+            commit_sha: "c".repeat(40),
+            definition_digest: "sha256:def".to_owned(),
+            dependency_lock_digest: "sha256:lock".to_owned(),
+        }];
+        state.workflow.instances_status = LoadStatus::Ready;
+
+        reduce(&mut state, Action::ConnectionLost);
+
+        // Teaching sessions and candidates are ephemeral app-server state:
+        // a disconnect ends them, honestly surfaced.
+        assert_eq!(state.workflow.teach, None);
+        assert_eq!(state.workflow.candidate, None);
+        assert!(state.workflow.error.is_some());
+        // Durable state (published versions, the instance cache) stays.
+        assert_eq!(state.workflow.published.len(), 1);
+
+        // Reconnect rehydrates through the idempotent durable read.
+        state.workflow.error = None;
+        let effects = reduce(&mut state, Action::Connected);
+        assert!(effects.contains(&Effect::WorkflowRequest(WorkflowRequest::InstanceList)));
+        assert_eq!(state.workflow.instances_status, LoadStatus::Loading);
+    }
+
+    #[test]
+    fn workflows_route_loads_the_durable_instance_list() {
+        let mut state = AppState::default();
+        assert_eq!(
+            reduce(&mut state, Action::Navigate(MainRoute::Workflows)),
+            [
+                Effect::PersistUiState {
+                    route: MainRoute::Workflows,
+                    inspector: InspectorPane::Hidden,
+                },
+                Effect::WorkflowRequest(WorkflowRequest::InstanceList),
+            ]
+        );
+        assert_eq!(state.workflow.instances_status, LoadStatus::Loading);
+
+        // Once loaded (Ready), navigating away and back does not re-request.
+        reduce(&mut state, Action::WorkflowInstancesLoaded(Vec::new()));
+        reduce(&mut state, Action::Navigate(MainRoute::Tasks));
+        let effects = reduce(&mut state, Action::Navigate(MainRoute::Workflows));
+        assert_eq!(
+            effects,
+            [Effect::PersistUiState {
+                route: MainRoute::Workflows,
+                inspector: InspectorPane::Hidden,
+            }]
+        );
+
+        // An explicit refresh re-requests through the same bounded path.
+        assert_eq!(
+            reduce(&mut state, Action::WorkflowRefreshInstances),
+            [Effect::WorkflowRequest(WorkflowRequest::InstanceList)]
+        );
     }
 }

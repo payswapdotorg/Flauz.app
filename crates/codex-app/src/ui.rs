@@ -57,10 +57,10 @@ use codex_core::{
     STANDARD_SERVICE_TIER_ID, ServiceTierOption, SkillCard, SkillScope, TaskRunStatus,
     TaskSearchResult, TaskSummary, TerminalDockLocation, TerminalTabState, ThreadGoalStatus,
     TimelineCitation, TimelineItem, TimelineKind, UsageLimitWindow, UserInputAnswer,
-    UserInputAnswers, UserInputRequest, account_auth_refresh_blocked,
-    appearance_code_theme_supports_variant, composer_plugin_display_name,
-    composer_plugin_is_mentionable, is_appearance_code_theme_id, reduce,
-    selected_thread_runtime_ready, validate_mcp_form_content,
+    UserInputAnswers, UserInputRequest, WorkflowDemonstrationKind, WorkflowTeachMode,
+    account_auth_refresh_blocked, appearance_code_theme_supports_variant,
+    composer_plugin_display_name, composer_plugin_is_mentionable, is_appearance_code_theme_id,
+    reduce, selected_thread_runtime_ready, validate_mcp_form_content,
 };
 use codex_platform::{
     BackgroundCompletionNotifier, computer_use_platform_available, default_browser_download_dir,
@@ -103,6 +103,8 @@ use gpui_component::{
 use markdown::{ParseOptions, mdast::Node};
 
 use crate::backend::{Backend, QueuedAction};
+
+mod ui_workflow;
 
 const WINDOW_WIDTH: f32 = 1_278.0;
 const WINDOW_HEIGHT: f32 = 818.0;
@@ -3227,6 +3229,7 @@ enum PaletteCommand {
     OpenMcpSettings,
     OpenPersonalitySettings,
     OpenPlugins,
+    OpenWorkflows,
     OpenConnectionsSettings,
     OpenGeneralSettings,
     OpenAppearanceSettings,
@@ -3236,7 +3239,7 @@ enum PaletteCommand {
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 44] = [
+    const ALL: [Self; 45] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3280,6 +3283,7 @@ impl PaletteCommand {
         Self::OpenMcpSettings,
         Self::OpenPersonalitySettings,
         Self::OpenPlugins,
+        Self::OpenWorkflows,
         Self::OpenConnectionsSettings,
     ];
 
@@ -3323,6 +3327,7 @@ impl PaletteCommand {
             Self::OpenMcpSettings => "MCP",
             Self::OpenPersonalitySettings => "Personality",
             Self::OpenPlugins => "Open plugins",
+            Self::OpenWorkflows => "Open workflows",
             Self::OpenConnectionsSettings => "Connections",
             Self::OpenGeneralSettings => "General",
             Self::OpenAppearanceSettings => "Appearance",
@@ -3372,6 +3377,7 @@ impl PaletteCommand {
             Self::OpenMcpSettings => "Configure MCP servers",
             Self::OpenPersonalitySettings => "Adjust tone and response style",
             Self::OpenPlugins => "Browse the plugins marketplace",
+            Self::OpenWorkflows => "Teach, publish, and run Universal workflows",
             Self::OpenConnectionsSettings => "Manage remote connections and paired devices",
             Self::OpenGeneralSettings => "Open General settings",
             Self::OpenAppearanceSettings => "Open Appearance settings",
@@ -3482,6 +3488,7 @@ impl PaletteCommand {
             Self::OpenMcpSettings => IconName::Settings2,
             Self::OpenPersonalitySettings => IconName::Bot,
             Self::OpenPlugins => IconName::GalleryVerticalEnd,
+            Self::OpenWorkflows => IconName::Frame,
             Self::OpenConnectionsSettings => IconName::Globe,
             Self::OpenGeneralSettings => IconName::Settings,
             Self::OpenAppearanceSettings => IconName::Sun,
@@ -3525,6 +3532,7 @@ impl PaletteCommand {
             | Self::MergePullRequest
             | Self::OpenPullRequest => PaletteGroup::Workspace,
             Self::OpenSkills | Self::ForceReloadSkills => PaletteGroup::Skills,
+            Self::OpenWorkflows => PaletteGroup::Workspace,
             Self::OpenMcpSettings
             | Self::OpenPersonalitySettings
             | Self::OpenPlugins
@@ -3980,6 +3988,7 @@ impl CommandPaletteView {
                 workspace.open_settings_section(SettingsSection::Personalization, cx);
             }
             PaletteCommand::OpenPlugins => workspace.navigate(MainRoute::Marketplace, cx),
+            PaletteCommand::OpenWorkflows => workspace.navigate(MainRoute::Workflows, cx),
             PaletteCommand::OpenConnectionsSettings => {
                 workspace.open_settings_section(SettingsSection::Connections, cx);
             }
@@ -5045,6 +5054,16 @@ struct WorkspaceView {
     marketplace_source: Entity<InputState>,
     marketplace_ref: Entity<InputState>,
     marketplace_sparse_paths: Entity<InputState>,
+    workflow_name: Entity<InputState>,
+    workflow_instruction: Entity<InputState>,
+    workflow_demonstration: Entity<InputState>,
+    workflow_approver: Entity<InputState>,
+    workflow_reference: Entity<InputState>,
+    workflow_commit_sha: Entity<InputState>,
+    workflow_repository: Entity<InputState>,
+    workflow_semver: Entity<InputState>,
+    workflow_mode: WorkflowTeachMode,
+    workflow_demonstration_kind: WorkflowDemonstrationKind,
     mcp_name: Entity<InputState>,
     mcp_command: Entity<InputState>,
     mcp_args: Entity<InputState>,
@@ -5369,6 +5388,28 @@ impl WorkspaceView {
                 )
         });
         let branch_name = cx.new(|cx| InputState::new(window, cx).placeholder("new-branch"));
+        let workflow_name =
+            cx.new(|cx| InputState::new(window, cx).placeholder("release-notes-roundup"));
+        let workflow_instruction = cx.new(|cx| {
+            InputState::new(window, cx)
+                .placeholder("One instruction statement, e.g. Open the release notes.")
+        });
+        let workflow_demonstration = cx.new(|cx| {
+            InputState::new(window, cx)
+                .placeholder("What you just did, e.g. Clicked the newest release heading.")
+        });
+        let workflow_approver = cx.new(|cx| InputState::new(window, cx).placeholder("reviewer"));
+        let workflow_reference =
+            cx.new(|cx| InputState::new(window, cx).placeholder("review reference, e.g. gui-003"));
+        let workflow_commit_sha = cx.new(|cx| {
+            InputState::new(window, cx)
+                .placeholder("Full commit SHA (40 or 64 hex) anchoring the version")
+        });
+        let workflow_repository =
+            cx.new(|cx| InputState::new(window, cx).placeholder("Repository URL (optional)"));
+        let workflow_semver = cx.new(|cx| {
+            InputState::new(window, cx).placeholder("Semantic version (optional, e.g. 1.0.0)")
+        });
         let worktree_branch = cx.new(|cx| InputState::new(window, cx).placeholder("Branch name"));
         let worktree_path = cx.new(|cx| {
             InputState::new(window, cx).placeholder("Worktree path (blank = sibling folder)")
@@ -5487,6 +5528,36 @@ impl WorkspaceView {
             cx.subscribe(&commit_message, |this, _, event: &InputEvent, cx| {
                 if matches!(event, InputEvent::PressEnter { secondary: true }) {
                     this.submit_git_action(GitCommitNextStep::Commit, cx);
+                }
+            }),
+            cx.subscribe(&workflow_name, |_, _, event: &InputEvent, cx| {
+                if matches!(event, InputEvent::Change) {
+                    cx.notify();
+                }
+            }),
+            cx.subscribe(&workflow_instruction, |_, _, event: &InputEvent, cx| {
+                if matches!(event, InputEvent::Change) {
+                    cx.notify();
+                }
+            }),
+            cx.subscribe(&workflow_demonstration, |_, _, event: &InputEvent, cx| {
+                if matches!(event, InputEvent::Change) {
+                    cx.notify();
+                }
+            }),
+            cx.subscribe(&workflow_approver, |_, _, event: &InputEvent, cx| {
+                if matches!(event, InputEvent::Change) {
+                    cx.notify();
+                }
+            }),
+            cx.subscribe(&workflow_reference, |_, _, event: &InputEvent, cx| {
+                if matches!(event, InputEvent::Change) {
+                    cx.notify();
+                }
+            }),
+            cx.subscribe(&workflow_commit_sha, |_, _, event: &InputEvent, cx| {
+                if matches!(event, InputEvent::Change) {
+                    cx.notify();
                 }
             }),
             cx.subscribe(&pull_request_title, |this, _, event: &InputEvent, cx| {
@@ -6134,6 +6205,16 @@ impl WorkspaceView {
             marketplace_source,
             marketplace_ref,
             marketplace_sparse_paths,
+            workflow_name,
+            workflow_instruction,
+            workflow_demonstration,
+            workflow_approver,
+            workflow_reference,
+            workflow_commit_sha,
+            workflow_repository,
+            workflow_semver,
+            workflow_mode: WorkflowTeachMode::Instruct,
+            workflow_demonstration_kind: WorkflowDemonstrationKind::Action,
             mcp_name,
             mcp_command,
             mcp_args,
@@ -13311,6 +13392,21 @@ impl WorkspaceView {
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.navigate(MainRoute::Marketplace, cx);
                             })),
+                    )
+                    .child(
+                        Button::new("nav-workflows")
+                            .label("Workflows")
+                            .icon(IconName::Frame)
+                            .tooltip("Teach, publish, and run Universal workflows")
+                            .small()
+                            .ghost()
+                            .w_full()
+                            .h(px(34.0))
+                            .justify_start()
+                            .selected(route == MainRoute::Workflows)
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.navigate(MainRoute::Workflows, cx);
+                            })),
                     ),
             )
             .child(
@@ -13718,6 +13814,7 @@ impl WorkspaceView {
             MainRoute::Repository => self.render_repository(cx),
             MainRoute::PullRequests => self.render_pull_requests(window, cx),
             MainRoute::Marketplace => self.render_marketplace(cx),
+            MainRoute::Workflows => ui_workflow::render_workflows(self, cx),
             MainRoute::Settings => self.render_settings(cx),
         }
     }
