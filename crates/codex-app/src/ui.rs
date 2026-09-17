@@ -7650,14 +7650,8 @@ impl WorkspaceView {
         let skill_command =
             composer_skill_command_for_query(&trimmed, &self.state.marketplace.skills);
         let value = service_tier_command.or(skill_command).unwrap_or_else(|| {
-            composer_slash_command_for_prefix(
-                &trimmed,
-                self.state.selected_task_id.is_some(),
-                self.init_slash_command_available(),
-                self.has_local_workspace(),
-                self.state.personalization.memory_available,
-            )
-            .map_or(value, str::to_owned)
+            composer_slash_command_for_prefix(&trimmed, self.composer_slash_availability())
+                .map_or(value, str::to_owned)
         });
         if self.execute_composer_slash_command(value.trim(), window, cx) {
             return;
@@ -7680,6 +7674,19 @@ impl WorkspaceView {
     ) -> bool {
         if command == "/init" && !self.init_slash_command_available() {
             return false;
+        }
+        if command == "/approve" {
+            if selected_approval_request(&self.state).is_none() {
+                return false;
+            }
+            self.composer.update(cx, |input, cx| {
+                input.set_value("", window, cx);
+                input.focus(window, cx);
+            });
+            self.dispatch(Action::ComposerChanged(String::new()), cx);
+            self.resolve_active_approval(ApprovalDecision::Accept, cx);
+            self.sync_composer_placeholder(window, cx);
+            return true;
         }
         if command == "/chat" && self.has_local_workspace() {
             self.begin_projectless_chat(window, cx);
@@ -7715,6 +7722,24 @@ impl WorkspaceView {
                 self.select_composer_skill_slash(path, window, cx);
                 return true;
             }
+        }
+        if command == "/fast" {
+            let Some(fast_tier_id) = fast_service_tier_id(&self.state) else {
+                return false;
+            };
+            self.select_service_tier_slash(fast_tier_id, window, cx);
+            return true;
+        }
+        if command == "/worktree" {
+            if !(self.has_local_workspace() && self.state.selected_task_id.is_some()) {
+                return false;
+            }
+            if self.composer_fork_picker_open {
+                self.select_fork_slash_destination(true, window, cx);
+            } else {
+                self.open_worktree_slash_picker(window, cx);
+            }
+            return true;
         }
         if command == "/fork" {
             if self.composer_fork_picker_open {
@@ -7764,7 +7789,14 @@ impl WorkspaceView {
         }
         if !matches!(
             command,
-            "/feedback" | "/goal" | "/init" | "/memories" | "/model" | "/plan" | "/reasoning"
+            "/feedback"
+                | "/goal"
+                | "/init"
+                | "/memories"
+                | "/model"
+                | "/personality"
+                | "/plan"
+                | "/reasoning"
         ) {
             return false;
         }
@@ -7781,6 +7813,9 @@ impl WorkspaceView {
                 cx.notify();
             }
             "/model" => self.open_model_picker(window, cx),
+            "/personality" => {
+                self.open_settings_section(SettingsSection::Personalization, cx);
+            }
             "/plan" => self.toggle_composer_plan_mode(window, cx),
             "/reasoning" => self.open_reasoning_picker(window, cx),
             _ => unreachable!("recognized composer slash command"),
@@ -7802,6 +7837,18 @@ impl WorkspaceView {
                     .as_deref()
                     .filter(|cwd| cwd.is_absolute())
             })
+    }
+
+    fn composer_slash_availability(&self) -> ComposerSlashAvailability {
+        ComposerSlashAvailability {
+            selected_task: self.state.selected_task_id.is_some(),
+            init: self.init_slash_command_available(),
+            chat: self.has_local_workspace(),
+            memories: self.state.personalization.memory_available,
+            approve: selected_approval_request(&self.state).is_some(),
+            fast: fast_service_tier_id(&self.state).is_some(),
+            worktree: self.has_local_workspace() && self.state.selected_task_id.is_some(),
+        }
     }
 
     fn init_slash_command_available(&self) -> bool {
@@ -7948,15 +7995,28 @@ impl WorkspaceView {
     }
 
     fn open_fork_slash_picker(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.open_fork_destination_picker("/fork", window, cx);
+    }
+
+    fn open_worktree_slash_picker(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.open_fork_destination_picker("/worktree", window, cx);
+    }
+
+    fn open_fork_destination_picker(
+        &mut self,
+        command: &'static str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         self.composer_mcp_status_open = false;
         self.composer_project_picker_open = false;
         self.composer_status_open = false;
         self.composer_status_session_copied = false;
         self.composer.update(cx, |input, cx| {
-            input.set_value("/fork", window, cx);
+            input.set_value(command, window, cx);
             input.focus(window, cx);
         });
-        self.dispatch(Action::ComposerChanged("/fork".to_owned()), cx);
+        self.dispatch(Action::ComposerChanged(command.to_owned()), cx);
         self.composer_fork_picker_open = true;
         self.sync_composer_placeholder(window, cx);
     }
@@ -8184,38 +8244,19 @@ impl WorkspaceView {
         if !self.composer_settings_shortcuts_available() {
             return;
         }
-        let Some(next_service_tier) = self
-            .state
-            .composer_controls
-            .selected_model
-            .as_deref()
-            .and_then(|model_id| {
-                self.state
-                    .composer_controls
-                    .models
-                    .iter()
-                    .find(|model| model.id == model_id)
-            })
-            .and_then(|model| {
-                model
-                    .service_tiers
-                    .iter()
-                    .find(|tier| service_tier_label(&tier.id, &tier.name) == "Fast")
-            })
-            .map(|fast| {
-                if self
-                    .state
-                    .composer_controls
-                    .selected_service_tier
-                    .as_deref()
-                    == Some(fast.id.as_str())
-                {
-                    STANDARD_SERVICE_TIER_ID.to_owned()
-                } else {
-                    fast.id.clone()
-                }
-            })
-        else {
+        let Some(next_service_tier) = fast_service_tier_id(&self.state).map(|fast_tier_id| {
+            if self
+                .state
+                .composer_controls
+                .selected_service_tier
+                .as_deref()
+                == Some(fast_tier_id.as_str())
+            {
+                STANDARD_SERVICE_TIER_ID.to_owned()
+            } else {
+                fast_tier_id
+            }
+        }) else {
             return;
         };
         self.dispatch(Action::SelectServiceTier(next_service_tier.clone()), cx);
@@ -21843,7 +21884,11 @@ impl WorkspaceView {
             .into_any_element()
     }
 
-    fn render_fork_slash_picker(&mut self, cx: &mut Context<Self>) -> Vec<AnyElement> {
+    fn render_fork_slash_picker(
+        &mut self,
+        worktree_only: bool,
+        cx: &mut Context<Self>,
+    ) -> Vec<AnyElement> {
         let linked_worktree = self.selected_workspace_is_linked_worktree();
         let has_local_workspace = self.has_local_workspace();
         let current_workspace_description = if linked_worktree {
@@ -21853,6 +21898,17 @@ impl WorkspaceView {
         } else {
             "Create a new chat from the current chat"
         };
+        let new_worktree = self.render_fork_slash_destination(
+            "fork-new-worktree",
+            "Continue in new worktree",
+            "Create a copy of your local project to work in parallel",
+            IconName::FolderOpen,
+            true,
+            cx,
+        );
+        if worktree_only {
+            return vec![new_worktree];
+        }
         let current_chat = self.render_fork_slash_destination(
             "fork-current-workspace",
             "Continue in new chat",
@@ -21864,14 +21920,6 @@ impl WorkspaceView {
         if !has_local_workspace {
             return vec![current_chat];
         }
-        let new_worktree = self.render_fork_slash_destination(
-            "fork-new-worktree",
-            "Continue in new worktree",
-            "Create a copy of your local project to work in parallel",
-            IconName::FolderOpen,
-            true,
-            cx,
-        );
         if linked_worktree {
             vec![current_chat, new_worktree]
         } else {
@@ -23068,6 +23116,7 @@ impl WorkspaceView {
             .is_some();
         let interrupt_pending = active_timeline.is_some_and(|timeline| timeline.interrupt_pending);
         let has_selected_task = self.state.selected_task_id.is_some();
+        let slash_availability = self.composer_slash_availability();
         let memory_defaults = ChatMemoryPreferences {
             generate_memories: self.state.personalization.generate_memories,
             use_memories: self.state.personalization.use_memories,
@@ -23170,9 +23219,18 @@ impl WorkspaceView {
                 .last()
                 .is_some_and(u8::is_ascii_whitespace);
         let show_status_command = !composer_text.is_empty() && "/status".starts_with(composer_text);
+        let show_approve_command = slash_availability.approve
+            && !composer_text.is_empty()
+            && "/approve".starts_with(composer_text);
+        let show_personality_command =
+            !composer_text.is_empty() && "/personality".starts_with(composer_text);
+        let show_worktree_command = slash_availability.worktree
+            && !composer_text.is_empty()
+            && "/worktree".starts_with(composer_text);
         let show_mcp_status = self.composer_mcp_status_open && composer_text == "/mcp";
         let show_project_picker = self.composer_project_picker_open && composer_text == "/project";
-        let show_fork_picker = self.composer_fork_picker_open && composer_text == "/fork";
+        let show_fork_picker = self.composer_fork_picker_open
+            && (composer_text == "/fork" || composer_text == "/worktree");
         let review_error =
             self.state.selected_task_id.as_deref().and_then(|task_id| {
                 self.state.review_start.error.as_ref().and_then(|error| {
@@ -23193,7 +23251,8 @@ impl WorkspaceView {
             && self.composer_review_available()
             && !composer_text.is_empty()
             && "/review".starts_with(composer_text);
-        let show_slash_commands = show_chat_command
+        let show_slash_commands = show_approve_command
+            || show_chat_command
             || show_compact_command
             || show_feedback_command
             || show_fork_command
@@ -23203,6 +23262,7 @@ impl WorkspaceView {
             || show_memories_command
             || show_model_command
             || show_new_command
+            || show_personality_command
             || show_plan_command
             || show_project_command
             || show_reasoning_command
@@ -23211,7 +23271,8 @@ impl WorkspaceView {
             || show_shell_command
             || !service_tier_commands.is_empty()
             || show_status_command
-            || !skill_commands.is_empty();
+            || !skill_commands.is_empty()
+            || show_worktree_command;
         let has_thread_goal = self
             .state
             .selected_task_id
@@ -23280,7 +23341,17 @@ impl WorkspaceView {
             })
             .collect::<Vec<_>>();
         let mut slash_commands =
-            Vec::with_capacity(16 + service_tier_commands.len() + skill_commands.len());
+            Vec::with_capacity(19 + service_tier_commands.len() + skill_commands.len());
+        if show_approve_command {
+            slash_commands.push(self.render_composer_slash_command(
+                "approve-slash-command",
+                "/approve",
+                "Approve",
+                "Approve the active request".to_owned(),
+                IconName::Check,
+                cx,
+            ));
+        }
         if show_chat_command {
             slash_commands.push(self.render_composer_slash_command(
                 "chat-slash-command",
@@ -23313,7 +23384,7 @@ impl WorkspaceView {
         }
         if show_fork_command {
             if show_fork_picker {
-                slash_commands.extend(self.render_fork_slash_picker(cx));
+                slash_commands.extend(self.render_fork_slash_picker(false, cx));
             } else {
                 let description = if self.selected_workspace_is_linked_worktree() {
                     "Create a new chat in the same worktree or a new worktree"
@@ -23436,6 +23507,16 @@ impl WorkspaceView {
                 cx,
             ));
         }
+        if show_personality_command {
+            slash_commands.push(self.render_composer_slash_command(
+                "personality-slash-command",
+                "/personality",
+                "Personalization",
+                "Adjust tone, response style, and personality".to_owned(),
+                IconName::Bot,
+                cx,
+            ));
+        }
         if show_plan_command {
             slash_commands.push(
                 self.render_composer_slash_command(
@@ -23504,6 +23585,20 @@ impl WorkspaceView {
                 IconName::Info,
                 cx,
             ));
+        }
+        if show_worktree_command {
+            if show_fork_picker {
+                slash_commands.extend(self.render_fork_slash_picker(true, cx));
+            } else {
+                slash_commands.push(self.render_composer_slash_submenu_command(
+                    "worktree-slash-command",
+                    "/worktree",
+                    "Continue in new worktree",
+                    "Create a copy of your local project to work in parallel",
+                    IconName::FolderOpen,
+                    cx,
+                ));
+            }
         }
         slash_commands.extend(
             skill_commands
@@ -44620,19 +44715,50 @@ fn timeline_style(kind: TimelineKind, cx: &App) -> (&'static str, gpui::Hsla, gp
     }
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct ComposerSlashAvailability {
+    selected_task: bool,
+    init: bool,
+    chat: bool,
+    memories: bool,
+    approve: bool,
+    fast: bool,
+    worktree: bool,
+}
+
+fn fast_service_tier_id(state: &AppState) -> Option<String> {
+    state
+        .composer_controls
+        .selected_model
+        .as_deref()
+        .and_then(|model_id| {
+            state
+                .composer_controls
+                .models
+                .iter()
+                .find(|model| model.id == model_id)
+        })
+        .and_then(|model| {
+            model
+                .service_tiers
+                .iter()
+                .find(|tier| service_tier_label(&tier.id, &tier.name) == "Fast")
+        })
+        .map(|tier| tier.id.clone())
+}
+
 fn composer_slash_command_for_prefix(
     prefix: &str,
-    has_selected_task: bool,
-    init_available: bool,
-    chat_available: bool,
-    memories_available: bool,
+    availability: ComposerSlashAvailability,
 ) -> Option<&'static str> {
     if prefix.is_empty() {
         return None;
     }
-    const COMMANDS: [&str; 16] = [
+    const COMMANDS: [&str; 20] = [
+        "/approve",
         "/chat",
         "/compact",
+        "/fast",
         "/feedback",
         "/fork",
         "/goal",
@@ -44641,27 +44767,26 @@ fn composer_slash_command_for_prefix(
         "/memories",
         "/model",
         "/new",
+        "/personality",
         "/plan",
         "/project",
         "/reasoning",
         "/review",
         "/shell",
         "/status",
+        "/worktree",
     ];
     let mut matches = COMMANDS
         .into_iter()
-        .filter(|command| {
-            if *command == "/chat" {
-                chat_available
-            } else if *command == "/memories" {
-                memories_available
-            } else if matches!(*command, "/mcp" | "/project" | "/status") {
-                true
-            } else if *command == "/init" {
-                init_available
-            } else {
-                has_selected_task
-            }
+        .filter(|command| match *command {
+            "/chat" => availability.chat,
+            "/memories" => availability.memories,
+            "/mcp" | "/personality" | "/project" | "/status" => true,
+            "/init" => availability.init,
+            "/approve" => availability.approve,
+            "/fast" => availability.fast,
+            "/worktree" => availability.worktree,
+            _ => availability.selected_task,
         })
         .filter(|command| command.starts_with(prefix));
     let first = matches.next()?;
@@ -46541,29 +46666,30 @@ mod tests {
     use super::{
         ACTIVE_KEYBOARD_SHORTCUTS, APPEARANCE_THEME_SHARE_PREFIX, ArchivedChatDeleteScope,
         ArchivedChatKindFilter, ArchivedChatProjectFilter, ArchivedChatSortKey, AssistantFinding,
-        BedrockWorkspaceNotice, CONVERSATION_MARKDOWN_TRUNCATED_NOTICE, DiffLineKind,
-        DiffReviewRow, INIT_AGENTS_PROMPT, KeyboardShortcutGroup, MAX_CONVERSATION_MARKDOWN_BYTES,
-        MAX_NAVIGATION_HISTORY_ENTRIES, MAX_THREAD_FIND_HISTORY_PAGES, MAX_THREAD_FIND_MATCHES,
-        MODEL_AVAILABILITY_NUX_SOL_COPY, NavigationHistory, NavigationLocation, PaletteCommand,
-        PaletteGroup, ReasoningEffortStep, SettingsSection, ShellWidthClass, TaskCopyKind,
-        ThreadFindSurface, accelerators_conflict, account_daily_usage_rows, account_device_code,
-        account_refresh_disabled, adjacent_task_id, app_chatgpt_url, app_mention_prompt,
-        appearance_color, appearance_color_value, appearance_theme_share_string,
-        archived_chat_groups, archived_chat_projects, archived_delete_confirmation_copy,
-        background_chat_running_count, background_chat_window_title,
-        background_completion_notification_transition, background_terminal_summary,
-        bedrock_workspace_notice, bottom_terminal_panel_toggle_available,
-        bounded_keyboard_shortcut_search_query, bounded_settings_search_query,
-        bounded_thread_find_query, browser_display_url, browser_navigation_url,
-        browser_surface_coordinates, build_plugin_catalog_sections, case_insensitive_match_ranges,
-        command_task_slot, composer_app_commands, composer_at_skill_commands,
-        composer_desktop_app_commands, composer_file_query, composer_file_search_max_height,
-        composer_model_picker_items, composer_model_placeholder, composer_model_retry_visible,
-        composer_plugin_commands, composer_service_tier_command_for_query,
-        composer_service_tier_commands, composer_skill_command_for_query, composer_skill_commands,
+        BedrockWorkspaceNotice, CONVERSATION_MARKDOWN_TRUNCATED_NOTICE, ComposerSlashAvailability,
+        DiffLineKind, DiffReviewRow, INIT_AGENTS_PROMPT, KeyboardShortcutGroup,
+        MAX_CONVERSATION_MARKDOWN_BYTES, MAX_NAVIGATION_HISTORY_ENTRIES,
+        MAX_THREAD_FIND_HISTORY_PAGES, MAX_THREAD_FIND_MATCHES, MODEL_AVAILABILITY_NUX_SOL_COPY,
+        NavigationHistory, NavigationLocation, PaletteCommand, PaletteGroup, ReasoningEffortStep,
+        SettingsSection, ShellWidthClass, TaskCopyKind, ThreadFindSurface, accelerators_conflict,
+        account_daily_usage_rows, account_device_code, account_refresh_disabled, adjacent_task_id,
+        app_chatgpt_url, app_mention_prompt, appearance_color, appearance_color_value,
+        appearance_theme_share_string, archived_chat_groups, archived_chat_projects,
+        archived_delete_confirmation_copy, background_chat_running_count,
+        background_chat_window_title, background_completion_notification_transition,
+        background_terminal_summary, bedrock_workspace_notice,
+        bottom_terminal_panel_toggle_available, bounded_keyboard_shortcut_search_query,
+        bounded_settings_search_query, bounded_thread_find_query, browser_display_url,
+        browser_navigation_url, browser_surface_coordinates, build_plugin_catalog_sections,
+        case_insensitive_match_ranges, command_task_slot, composer_app_commands,
+        composer_at_skill_commands, composer_desktop_app_commands, composer_file_query,
+        composer_file_search_max_height, composer_model_picker_items, composer_model_placeholder,
+        composer_model_retry_visible, composer_plugin_commands,
+        composer_service_tier_command_for_query, composer_service_tier_commands,
+        composer_skill_command_for_query, composer_skill_commands,
         composer_slash_command_for_prefix, connection_send_failure, decode_mcp_form_image_data_url,
         default_branch_name, diff_file_review_rows, diff_file_sections,
-        extract_assistant_file_citations, extract_code_comment_findings,
+        extract_assistant_file_citations, extract_code_comment_findings, fast_service_tier_id,
         fetch_plugin_logo_blocking, find_keyboard_shortcut_available, find_timeline_matches,
         first_run_account_load_error, first_run_sign_in_visible, format_decimal_grouped,
         format_token_activity_days, format_token_activity_duration, initial_app_state,
@@ -46622,6 +46748,21 @@ mod tests {
             parent_task_id: None,
             forked_from_id: None,
             status: TaskRunStatus::Idle,
+        }
+    }
+
+    fn slash_availability(
+        selected_task: bool,
+        init: bool,
+        chat: bool,
+        memories: bool,
+    ) -> ComposerSlashAvailability {
+        ComposerSlashAvailability {
+            selected_task,
+            init,
+            chat,
+            memories,
+            ..ComposerSlashAvailability::default()
         }
     }
 
@@ -47342,153 +47483,274 @@ mod tests {
     #[test]
     fn slash_command_prefixes_follow_the_visible_menu_order() {
         assert_eq!(
-            composer_slash_command_for_prefix("/", true, true, true, true),
+            composer_slash_command_for_prefix("/", slash_availability(true, true, true, true)),
             Some("/chat")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/c", true, true, true, true),
+            composer_slash_command_for_prefix("/c", slash_availability(true, true, true, true)),
             None
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/ch", true, true, true, true),
+            composer_slash_command_for_prefix("/ch", slash_availability(true, true, true, true)),
             Some("/chat")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/co", true, true, true, true),
+            composer_slash_command_for_prefix("/co", slash_availability(true, true, true, true)),
             Some("/compact")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/f", true, true, true, true),
+            composer_slash_command_for_prefix("/f", slash_availability(true, true, true, true)),
             None
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/fe", true, true, true, true),
+            composer_slash_command_for_prefix("/fe", slash_availability(true, true, true, true)),
             Some("/feedback")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/fo", true, true, true, true),
+            composer_slash_command_for_prefix("/fo", slash_availability(true, true, true, true)),
             Some("/fork")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/g", true, true, true, true),
+            composer_slash_command_for_prefix("/g", slash_availability(true, true, true, true)),
             Some("/goal")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/i", true, true, true, true),
+            composer_slash_command_for_prefix("/i", slash_availability(true, true, true, true)),
             Some("/init")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/m", true, true, true, true),
+            composer_slash_command_for_prefix("/m", slash_availability(true, true, true, true)),
             None
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/mc", true, true, true, true),
+            composer_slash_command_for_prefix("/mc", slash_availability(true, true, true, true)),
             Some("/mcp")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/me", true, true, true, true),
+            composer_slash_command_for_prefix("/me", slash_availability(true, true, true, true)),
             Some("/memories")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/mo", true, true, true, true),
+            composer_slash_command_for_prefix("/mo", slash_availability(true, true, true, true)),
             Some("/model")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/n", true, true, true, true),
+            composer_slash_command_for_prefix("/n", slash_availability(true, true, true, true)),
             Some("/new")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/p", true, true, true, true),
+            composer_slash_command_for_prefix("/p", slash_availability(true, true, true, true)),
             None
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/pl", true, true, true, true),
+            composer_slash_command_for_prefix("/pl", slash_availability(true, true, true, true)),
             Some("/plan")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/pr", true, true, true, true),
+            composer_slash_command_for_prefix("/pr", slash_availability(true, true, true, true)),
             Some("/project")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/r", true, true, true, true),
+            composer_slash_command_for_prefix("/r", slash_availability(true, true, true, true)),
             None
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/rea", true, true, true, true),
+            composer_slash_command_for_prefix("/rea", slash_availability(true, true, true, true)),
             Some("/reasoning")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/rev", true, true, true, true),
+            composer_slash_command_for_prefix("/rev", slash_availability(true, true, true, true)),
             Some("/review")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/s", true, true, true, true),
+            composer_slash_command_for_prefix("/s", slash_availability(true, true, true, true)),
             None
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/sh", true, true, true, true),
+            composer_slash_command_for_prefix("/sh", slash_availability(true, true, true, true)),
             Some("/shell")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/st", true, true, true, true),
+            composer_slash_command_for_prefix("/st", slash_availability(true, true, true, true)),
             Some("/status")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/x", true, true, true, true),
+            composer_slash_command_for_prefix("/x", slash_availability(true, true, true, true)),
             None
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/i", true, false, true, true),
+            composer_slash_command_for_prefix("/i", slash_availability(true, false, true, true)),
             None
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/sh", false, true, true, true),
+            composer_slash_command_for_prefix("/sh", slash_availability(false, true, true, true)),
             None
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/", false, true, false, true),
+            composer_slash_command_for_prefix("/", slash_availability(false, true, false, true)),
             Some("/init")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/i", false, true, false, true),
+            composer_slash_command_for_prefix("/i", slash_availability(false, true, false, true)),
             Some("/init")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/mc", false, true, false, true),
+            composer_slash_command_for_prefix("/mc", slash_availability(false, true, false, true)),
             Some("/mcp")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/s", false, true, false, true),
+            composer_slash_command_for_prefix("/s", slash_availability(false, true, false, true)),
             Some("/status")
         );
+        // "/p" stays ambiguous between /personality (ungated) and /project
+        // once a chat is no longer selected; "/pr" still resolves /project.
         assert_eq!(
-            composer_slash_command_for_prefix("/p", false, true, false, true),
+            composer_slash_command_for_prefix("/p", slash_availability(false, true, false, true)),
+            None
+        );
+        assert_eq!(
+            composer_slash_command_for_prefix("/pr", slash_availability(false, true, false, true)),
             Some("/project")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/n", false, true, false, true),
+            composer_slash_command_for_prefix("/n", slash_availability(false, true, false, true)),
             None
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/", false, false, false, false),
+            composer_slash_command_for_prefix("/", slash_availability(false, false, false, false)),
             Some("/mcp")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/n", false, false, false, false),
+            composer_slash_command_for_prefix("/n", slash_availability(false, false, false, false)),
             None
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/me", false, false, false, false),
+            composer_slash_command_for_prefix(
+                "/me",
+                slash_availability(false, false, false, false)
+            ),
             None
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/ch", false, true, true, true),
+            composer_slash_command_for_prefix("/ch", slash_availability(false, true, true, true)),
             Some("/chat")
         );
         assert_eq!(
-            composer_slash_command_for_prefix("/ch", false, true, false, true),
+            composer_slash_command_for_prefix("/ch", slash_availability(false, true, false, true)),
             None
         );
+    }
+
+    #[test]
+    fn parity_slash_commands_resolve_with_their_guards() {
+        // /approve resolves only while a request is pending on the selected chat.
+        assert_eq!(
+            composer_slash_command_for_prefix("/a", slash_availability(true, true, true, true)),
+            None
+        );
+        let approve_ready = ComposerSlashAvailability {
+            approve: true,
+            ..slash_availability(true, true, true, true)
+        };
+        assert_eq!(
+            composer_slash_command_for_prefix("/a", approve_ready),
+            Some("/approve")
+        );
+        assert_eq!(
+            composer_slash_command_for_prefix("/approve", approve_ready),
+            Some("/approve")
+        );
+        assert_eq!(
+            composer_slash_command_for_prefix("/", approve_ready),
+            Some("/approve")
+        );
+        // /fast resolves only against a catalog-provided Fast service tier.
+        assert_eq!(
+            composer_slash_command_for_prefix("/fa", slash_availability(true, true, true, true)),
+            None
+        );
+        let fast_ready = ComposerSlashAvailability {
+            fast: true,
+            ..slash_availability(true, true, true, true)
+        };
+        assert_eq!(
+            composer_slash_command_for_prefix("/fa", fast_ready),
+            Some("/fast")
+        );
+        assert_eq!(
+            composer_slash_command_for_prefix("/fast", fast_ready),
+            Some("/fast")
+        );
+        // "/f" stays ambiguous across /fast, /feedback, and /fork.
+        assert_eq!(composer_slash_command_for_prefix("/f", fast_ready), None);
+        // /personality is unguarded like /mcp, /project, and /status.
+        assert_eq!(
+            composer_slash_command_for_prefix("/pe", ComposerSlashAvailability::default()),
+            Some("/personality")
+        );
+        // /worktree needs the selected chat plus a local workspace.
+        assert_eq!(
+            composer_slash_command_for_prefix("/w", slash_availability(true, true, true, true)),
+            None
+        );
+        let worktree_ready = ComposerSlashAvailability {
+            worktree: true,
+            ..slash_availability(true, true, true, true)
+        };
+        assert_eq!(
+            composer_slash_command_for_prefix("/w", worktree_ready),
+            Some("/worktree")
+        );
+        assert_eq!(
+            composer_slash_command_for_prefix("/worktree", worktree_ready),
+            Some("/worktree")
+        );
+    }
+
+    #[test]
+    fn fast_slash_command_follows_the_selected_model_catalog() {
+        let tier = |id: &str, name: &str| ServiceTierOption {
+            id: id.to_owned(),
+            name: name.to_owned(),
+            description: String::new(),
+        };
+        let model = |id: &str, tiers: Vec<ServiceTierOption>| ModelOption {
+            id: id.to_owned(),
+            display_name: id.to_owned(),
+            description: String::new(),
+            upgrade_notice: None,
+            availability_nux: None,
+            is_default: false,
+            default_effort: "medium".to_owned(),
+            supported_efforts: Vec::new(),
+            service_tiers: tiers,
+            default_service_tier: None,
+        };
+        let mut state = AppState::default();
+        // No models loaded: no Fast tier to alias.
+        assert_eq!(fast_service_tier_id(&state), None);
+        // Model present but none selected.
+        state.composer_controls.models =
+            vec![model("gpt-main", vec![tier("standard", "standard")])];
+        assert_eq!(fast_service_tier_id(&state), None);
+        // Selected model without a Fast-labeled tier.
+        state.composer_controls.selected_model = Some("gpt-main".to_owned());
+        assert_eq!(fast_service_tier_id(&state), None);
+        // Selected model without any tiers at all.
+        state.composer_controls.models = vec![model("gpt-main", Vec::new())];
+        assert_eq!(fast_service_tier_id(&state), None);
+        // A different model carries the Fast tier: still None for the selection.
+        state.composer_controls.models = vec![
+            model("gpt-main", Vec::new()),
+            model(
+                "gpt-fast",
+                vec![tier("priority", "priority"), tier("ultrafast", "ultrafast")],
+            ),
+        ];
+        assert_eq!(fast_service_tier_id(&state), None);
+        // Selecting the Fast-capable model resolves its tier id.
+        state.composer_controls.selected_model = Some("gpt-fast".to_owned());
+        assert_eq!(fast_service_tier_id(&state), Some("priority".to_owned()));
     }
 
     #[test]
