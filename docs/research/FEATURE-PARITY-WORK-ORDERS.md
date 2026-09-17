@@ -1,7 +1,7 @@
 # Feature Parity Work Orders
 
-> **Status: ACTIVE — implementation wave 1 landed: WO-P1-001 + WO-P1-002
-> CLOSED on main (merge `d15333e`, 2026-09-17).** Operator directive
+> **Status: ACTIVE — WO-LAB-001 executed (PR #14, `c805796`); WO-P1-003
+> implemented on PR #15 (CI round 2; closure on merge).** Operator directive
 > (2026-09-17): execute WO-LAB-001 (official Linux preview app in
 > LINUX_GUI_LAB) and reconcile current-26.825 behavior BEFORE WO-P1-003
 > implementation; then WO-P1-003 (multi-folder local projects), then the
@@ -223,7 +223,7 @@ keeps the same number (WO-P1-DRAFT-001 → WO-P1-001).
 ### WO-P1-003
 
 - **ID:** WO-P1-003 (new — created by C2 from the audit)
-- **Title:** Multi-folder local projects — in-baseline official capability wholly absent
+- **Title:** Multi-folder local projects — in-baseline official capability wholly absent — status: **IMPLEMENTED (PR #15; CI round 2 in flight; closure on merge)** [implemented on parity/wo-p1-003-multi-folder (1d2abca; clippy follow-up 2ea5970): LocalProjectSummary.folders model (cap 16, primary never a member, legacy single-path loads primary-only), Add/Remove/SetPrimary actions with honest guards, primary swap re-keys the registry row (identity + manual order preserved; old primary parks at the front of related), related folders join fuzzy file search + file open/reveal after the primary while cwd/Git/AGENTS.md/skills/config.toml stay primary-only, storage schema v4 (workspace_folders, cascade, v3-to-v4 migration), Edit project surface (project action menu + per-row affordance entries; Primary badge, Make-primary/Remove, Add folder with honest cap tooltip, Done; surface follows a successful swap); 601 workspace tests green locally incl. 195-test codex-app harness; runtime GUI evidence docs/research/evidence/wo-p1-003/ (VLM-read: multi-folder project listed + primary-cwd indicator; palette file search hits the RELATED folder; Edit surface; Make-primary swap with surface-follow + identity preserved; cwd follows new primary; swapped state persists across close/reopen); runtime finding: Ctrl+P bound to OpenFileSearch but unregistered anywhere (silent no-op) — palette Search files is the working entry (P3-row candidate, reported to operator)]
 - **Platform:** all (data-model + UI; Linux-verifiable in lab)
 - **Reference behavior:** Official Codex supports **multi-folder local
   projects since 26.715 — in the historical baseline** (26.715 < 26.721):
@@ -574,10 +574,12 @@ Per §7.5 rule 4 and work-order rule 6, the following reconciled gaps carry
 - 2026-09-16: WO-P1-001 and WO-P1-002 set to VERIFIED (pending merge) — implemented on parity/wo-p1-discoverability (sidebar footer affordances + honest entry-surface guards + regression tests + runtime evidence under docs/research/evidence/wo-p1/).
 - 2026-09-17: **WO-P1-001 + WO-P1-002 CLOSED** — merged to main via PR #13 (merge commit d15333e718a7649238f33a183af27c885dbaa8aa; implementation 08d060c, clippy fix aa2d89d); CI green on both matrices (windows-latest, ubuntu-24.04); runtime GUI evidence archived under docs/research/evidence/wo-p1/; parity report §5.3/§5.4 rows + §8.2 P1 list + J1/J2 updated to reference the merge commit. Operator review 2026-09-17 accepted the implementation wave and directed: WO-LAB-001 (official Linux preview app runtime comparison + current-26.825 reconciliation) executes BEFORE WO-P1-003 implementation.
 - 2026-09-17: **WO-LAB-001 CLOSED (executed)** — official Linux preview app (26.908.70816) runs in LINUX_GUI_LAB; unauthenticated runtime evidence archived (docs/research/evidence/codex-linux/); parity report Linux official cells upgraded with version-skew labels; §9 overrides 14-16; E2B lab-verdict note added (dated). Operator's next directive stands: WO-P1-003 (multi-folder local projects) is the next implementation.
+- 2026-09-17: **WO-P1-003 IMPLEMENTED (PR #15)** — multi-folder local projects on parity/wo-p1-003-multi-folder (1d2abca; clippy follow-up 2ea5970): model + honest-guard actions + primary-swap re-key + related-folder file search (primary-only cwd/Git/config discovery contract kept) + storage schema v4 + Edit project surface; 601 tests green locally; runtime GUI evidence docs/research/evidence/wo-p1-003/; new runtime finding: Ctrl+P binding is an unregistered silent no-op (palette Search files is the working entry) — P3-row candidate. Closure gates: source ✓, tests ✓ (CI round 2), GUI evidence ✓, LINUX_GUI_LAB scene ✓; CLOSED on merge with parity-row + §8.2 updates.
 
 | Date | Change |
 | --- | --- |
 | 2026-09-16 | Framework + rules + lifecycle + template + three seeded DRAFTs (Worker C1). |
 | 2026-09-17 | **WO-P1-001 + WO-P1-002 CLOSED on merge** (PR #13 → d15333e; CI green both matrices; GUI evidence docs/research/evidence/wo-p1/). Operator directive: WO-LAB-001 first, then WO-P1-003. |
 | 2026-09-17 | **WO-LAB-001 CLOSED (executed)**: official Linux preview app 26.908.70816 runtime-observed in the lab (unauthenticated slice; evidence codex-linux/); Linux official cells upgraded with version-skew labels; WO-P2-004 reference upgraded to runtime-observed. Next: WO-P1-003. |
+| 2026-09-17 | **WO-P1-003 IMPLEMENTED (PR #15, 1d2abca + 2ea5970)**: multi-folder model, Edit project surface, primary-swap re-key, related-folder file search, schema v4; 601 tests green locally; GUI evidence wo-p1-003/ (incl. new Ctrl+P silent-no-op finding). Closure on merge. |
 | 2026-09-16 | **C2 reconciliation:** WO-P1-DRAFT-001 → **WO-P1-001 CONFIRMED** (full runtime proof: entry-surface silent no-op, zero-tab dock, guard lib.rs:8163); WO-P1-DRAFT-002 → **WO-P1-002 CONFIRMED** (palette/shortcut-only, InspectorPane::Browser lib.rs:259-267, guard lib.rs:14521); WO-PLAT-DRAFT-001 → **WO-PLAT-001 CONFIRMED** (platform gap, documentation-only). New confirmed orders from the audit: **WO-P1-003** (multi-folder local projects), **WO-P2-004** (palette settings-page indexing), **WO-P2-005** (slash-command coverage delta), **WO-P2-006** (side chats), **WO-LAB-001** (official Linux app lab upgrade; new LAB class). §5 records the no-work-order scope decisions. Pending Tech Lead convergence. |
