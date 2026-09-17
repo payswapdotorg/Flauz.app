@@ -942,7 +942,7 @@ mod tests {
         assert_eq!(project.folders, vec![first.clone(), second.clone()]);
 
         // Replace-all: the previous list is fully replaced, in order.
-        store.set_workspace_folders(&workspace, &[second.clone()])?;
+        store.set_workspace_folders(&workspace, std::slice::from_ref(&second))?;
         let project = store.recent_workspaces(1, 0)?.items.remove(0);
         assert_eq!(project.folders, vec![second.clone()]);
 
@@ -973,7 +973,7 @@ mod tests {
         let related = base.join("related");
         let mut store = Store::open_in_memory()?;
         store.remember_workspace(&workspace, 1)?;
-        store.set_workspace_folders(&workspace, &[related.clone()])?;
+        store.set_workspace_folders(&workspace, std::slice::from_ref(&related))?;
         assert_eq!(
             store.recent_workspaces(1, 0)?.items[0].folders,
             vec![related.clone()]
@@ -998,9 +998,9 @@ mod tests {
             Path::new("/projects/primary")
         };
         let mut store = Store::open_in_memory()?;
-        store.remember_workspace(&base, 1)?;
+        store.remember_workspace(base, 1)?;
 
-        let error = match store.set_workspace_folders(&base, &[PathBuf::from("relative")]) {
+        let error = match store.set_workspace_folders(base, &[PathBuf::from("relative")]) {
             Err(error) => error,
             Ok(()) => panic!("a relative related folder was accepted"),
         };
@@ -1015,7 +1015,7 @@ mod tests {
         } else {
             PathBuf::from(format!("/{}", "x".repeat(MAX_WORKSPACE_PATH_BYTES)))
         };
-        let error = match store.set_workspace_folders(&base, &[oversized]) {
+        let error = match store.set_workspace_folders(base, &[oversized]) {
             Err(error) => error,
             Ok(()) => panic!("an oversized related folder was accepted"),
         };
