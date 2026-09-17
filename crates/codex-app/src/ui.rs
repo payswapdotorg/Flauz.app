@@ -5669,7 +5669,7 @@ impl WorkspaceView {
                             this.composer_project_picker_open = false;
                             this.composer_project_picker_restore = None;
                         }
-                        if value.trim() != "/fork" {
+                        if !composer_keeps_fork_picker(&value) {
                             this.composer_fork_picker_open = false;
                         }
                         if value.trim() != "/review" && !this.composer_review_submitting {
@@ -44797,6 +44797,15 @@ fn composer_slash_command_for_prefix(
     }
 }
 
+/// The fork-destination picker stays open exactly when the trimmed composer
+/// value is one of the commands that opens it: `/fork` or `/worktree`
+/// (WO-P2-005). Every other value closes the picker in the composer's change
+/// subscription.
+fn composer_keeps_fork_picker(value: &str) -> bool {
+    let trimmed = value.trim();
+    trimmed == "/fork" || trimmed == "/worktree"
+}
+
 fn project_trigger_matches(query: &str) -> bool {
     let query = query.trim().to_ascii_lowercase();
     query.is_empty()
@@ -46662,6 +46671,7 @@ mod tests {
     use std::collections::HashSet;
     use std::path::{Path, PathBuf};
 
+    use super::composer_keeps_fork_picker;
     use super::edit_project_surface;
     use super::{
         ACTIVE_KEYBOARD_SHORTCUTS, APPEARANCE_THEME_SHARE_PREFIX, ArchivedChatDeleteScope,
@@ -47705,6 +47715,25 @@ mod tests {
             composer_slash_command_for_prefix("/worktree", worktree_ready),
             Some("/worktree")
         );
+    }
+
+    #[test]
+    fn fork_picker_stays_open_for_both_fork_destination_commands() {
+        // Both commands that open the fork-destination picker keep it open.
+        assert!(composer_keeps_fork_picker("/fork"));
+        assert!(composer_keeps_fork_picker("/worktree"));
+        // The change subscription matches on the trimmed composer value.
+        assert!(composer_keeps_fork_picker("/worktree "));
+        assert!(composer_keeps_fork_picker(" /fork "));
+        // Prefixed, suffixed, spaced, empty, and unrelated values close it.
+        assert!(!composer_keeps_fork_picker("/forks"));
+        assert!(!composer_keeps_fork_picker("/worktrees2"));
+        assert!(!composer_keeps_fork_picker("/work tree"));
+        assert!(!composer_keeps_fork_picker(""));
+        assert!(!composer_keeps_fork_picker("/mcp"));
+        assert!(!composer_keeps_fork_picker("/project"));
+        assert!(!composer_keeps_fork_picker("/review"));
+        assert!(!composer_keeps_fork_picker("hello"));
     }
 
     #[test]
