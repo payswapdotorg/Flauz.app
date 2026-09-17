@@ -413,8 +413,8 @@ working entry surface, auth is honest, and degradation paths recover. The
 P1 discoverability gaps make existing features hard to find, not the app
 unusable.
 
-**P1 — major feature missing or effectively undiscoverable (3 confirmed; 2
-CLOSED 2026-09-17, 1 open):**
+**P1 — major feature missing or effectively undiscoverable (3 confirmed; all
+3 CLOSED 2026-09-17 — P1 list complete):**
 
 1. Terminal discoverability — **CLOSED (WO-P1-001, merged `d15333e` via PR
    #13, 2026-09-17)**: persistent sidebar affordance + honest entry-surface
