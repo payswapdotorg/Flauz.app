@@ -1,0 +1,78 @@
+VLM-read transcripts (glm-5v-turbo via z-ai vision, 2026-09-17) — Flauz
+`codexrs` scene D7/D7b frames (branch parity/wo-p2-004-palette-settings,
+commit 5d4b083). Each read is the model's description of the captured
+frame; the load-bearing rows are the palette query rows and the settings
+page headings/nav selections. The model misidentifies the app's name in
+some reads (a known quirk); the load-bearing text is the palette and
+settings surfaces, which match the implementation's own strings.
+
+================================================================
+READ 1 — 03-palette-import-resolves (full frame)
+================================================================
+Overlay dialog (command palette) over the entry surface: query "import";
+"Commands" group; "Import" / "Open import settings".
+[The ev/18 gap remediation — B2's identical query returned "No matches".]
+
+================================================================
+READ 2 — 02-palette-top-settings-group (full frame)
+================================================================
+Palette (empty query), groups + entries:
+"Suggested": New chat; Open folder.
+"Settings": General; Appearance; Keyboard shortcuts; Usage & billing;
+Computer use; Profile; Import; Browser; Configuration.
+[Visible fold ends at Configuration — Hooks and Git continue below it;
+see READ 8.]
+
+================================================================
+READ 3 — 04-import-settings-page
+================================================================
+Settings page "Import" — heading "Import"; left nav "Import" highlighted
+under the Personal group; page copy: bring setup, projects, and chats
+from other AI apps.
+
+================================================================
+READ 4 — 05/06 profile query + page
+================================================================
+05: palette query "profile" → "Profile" / "Open Profile settings".
+06: settings page "Profile" — heading "Profile"; nav "Profile" highlighted
+under Personal; sign-in options (ChatGPT, device code, API key,
+Amazon Bedrock).
+
+================================================================
+READ 5 — 07/08 browser query + page
+================================================================
+07: palette query "browser" → "Browser" / "Open Browser settings".
+08: settings page "Browser" — heading "Browser"; nav "Browser" highlighted
+under Integrations; approvals, download location/history, site
+permissions, developer mode.
+
+================================================================
+READ 6 — 09/10 configuration query + page
+================================================================
+09: palette query "configuration" → "Configuration" /
+"Open Configuration settings".
+10: settings page "Configuration" — heading "Configuration"; nav
+highlighted under Coding; approval policy ("On request") and sandbox
+("Read only") controls.
+
+================================================================
+READ 7 — 11/12 hooks query + page; 13/14 git query + page
+================================================================
+11: palette query "hooks" → "Hooks" / "Open Hooks settings".
+12: settings page "Hooks" — heading "Hooks"; nav highlighted under Coding;
+"No hooks found" / "Configured hooks will appear here" empty state.
+13: palette query "git" → "Git" / "Open Git settings" (plus the pre-existing
+"Disable Git-Based Review" entry, which also matches the query).
+14: settings page "Git" — heading "Git"; nav highlighted under Coding;
+Git-based review toggle, branch prefix, PR merge method, commit
+instructions.
+
+================================================================
+READ 8 — 15-palette-settings-group-scrolled (D7b, wheel-scrolled)
+================================================================
+Palette (empty query, list scrolled): "Hooks"; "Git"; "Thread": New
+standalone chat; "Navigation": Search chats, Back, Forward, Previous
+chat, Next chat; "Panels": Toggle sidebar; "Project": …
+[Completes the Settings group listing from READ 2: all 11 entries —
+General, Appearance, Keyboard shortcuts, Usage & billing, Computer use,
+Profile, Import, Browser, Configuration, Hooks, Git.]
