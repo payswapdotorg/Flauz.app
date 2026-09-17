@@ -20,6 +20,18 @@ MACOS_GUI_LAB:   unavailable
 LINUX_GUI_LAB:   available (LOCAL Debian 13 sandbox — proven end-to-end)
 ```
 
+> **Lab upgrade (2026-09-17, WO-LAB-001 — dated entry, not a silent bound
+> change):** LINUX_GUI_LAB now runs BOTH sides of the Linux pair. The
+> official Linux preview app (`chatgpt 26.908.70816`, `latest` `.deb`,
+> selective userspace at `/home/z/parity-lab/official-app/`) launches under
+> Xvfb + picom with an isolated profile and no credentials. Runtime evidence
+> (unauthenticated slice only) is archived under
+> `docs/research/evidence/codex-linux/`; affected official Linux cells in the
+> parity report carry the version-skew label
+> `[runtime-observed: linux-preview 26.908.70816]`. Platform bounds are
+> otherwise UNCHANGED: official account surfaces remain auth-walled;
+> WINDOWS_GUI_LAB and MACOS_GUI_LAB remain unavailable (evidence below).
+
 ### WINDOWS_GUI_LAB: unavailable — evidence
 
 1. E2B sandboxes are Linux microVMs; templates are Linux Docker images
