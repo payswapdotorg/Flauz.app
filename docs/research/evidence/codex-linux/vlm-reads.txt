@@ -1,0 +1,78 @@
+VLM-read transcripts (glm-5v-turbo via z-ai vision, 2026-09-17) — official Linux preview app frames.
+Each read is the model's description of the captured frame; the load-bearing rows were re-verified
+against multiple frames (see README.md for the curated conclusions).
+
+================================================================
+READ 1 — run 3 a1-03-focused (window 1090x760 crop): LOGIN SURFACE
+================================================================
+OpenAI logo; header "Sign in to ChatGPT"; primary dark button "Continue to sign in" (with OpenAI logo);
+secondary white bordered button "Sign in with an API key"; footer underlined link "Sign up";
+window controls: minimize (-) and close (x).
+
+================================================================
+READ 2 — run 3 a1-04-ctrl-k: COMMAND PALETTE (Ctrl+K) AT LOGIN
+================================================================
+Floating command palette, search placeholder "Search chats or run a command".
+Section "Quick actions": "New chat" (Ctrl+N); "Open folder" (Ctrl+O).
+Section "Settings": General; Import; Appearance; Voice; Pets; Git; Connections; Environments; Worktrees; Configuration.
+(No visible footer keyboard hints.)
+
+================================================================
+READ 3 — run 4 a2-05-palette-terminal: PALETTE QUERY "terminal"
+================================================================
+Palette open with query "terminal". Section "Panels": "Open terminal" (Ctrl+`) — selected/highlighted.
+Section "Chats": (no results). Background: auth-pending surface — "Continue signing in with your browser";
+button "Cancel sign-in"; link "Browser didn't open?" + "Copy sign-in link".
+
+================================================================
+READ 4 — run 4 a2-06-palette-import: PALETTE QUERY "import"
+================================================================
+Palette open with query "import". Section "Settings": "Import" (highlighted). Section "Chats": (none).
+Same auth-pending background.
+
+================================================================
+READ 5 — run 4 a2-08-alt2 / a2-10 / a2-12: LOGIN SURFACE STATE VARIANTS
+================================================================
+After auth interaction, the secondary button reads "Sign another way" (vs "Sign in with an API key"
+on the pristine first-run surface). Alt+2 did not visibly switch modes at the login surface.
+
+================================================================
+READ 6 — run 1 a1-01-entry: DB-ERROR DIALOG (selective extraction without app.asar.unpacked)
+================================================================
+Small window (530x265): "ChatGPT cannot access its local database."
+"The app cannot finish launching until its SQLite database is accessible."
+"Database path: /home/z/parity-lab/linux-A/home/.codex/sqlite/codex-dev.db"
+"Close other ChatGPT applications, then click Retry to check whether access has been restored.
+If the database cannot be opened, Back Up and Rebuild moves it aside so the app can create a fresh one."
+"Error: better-sqlite3 is only bundled with the Electron app"
+Buttons: "Retry" | "Back Up and Rebuild" | "Quit".
+(Elicited by the lab's missing-native-module state; documents the official DB-recovery surface + copy.)
+
+================================================================
+READ 7 — shortcuts overlay (a1-12 / a2-01 / a2-03 / a3-02 / a3-03): "Keyboard shortcuts" (Ctrl+/)
+================================================================
+Title "Keyboard shortcuts"; close x; cyan search field "Search shortcuts".
+Section "Chat":
+  New chat — Ctrl+N, Ctrl+Shift+O
+  Archive chat — Ctrl+Shift+A
+  New standalone chat — Ctrl+Alt+O
+  Toggle pin — Ctrl+Alt+P
+Section "Navigation":
+  Find — Ctrl+F
+  Back — Ctrl+[, Mouse Back
+  Forward — Ctrl+], Mouse Forward
+  Next recently viewed chat — Ctrl+Tab
+  Previous recently viewed chat — Ctrl+Shift+Tab
+  Switch to Work — Alt+2
+Section "General" (visible after wheel-scroll):
+  Close Tab — Ctrl+W, Ctrl+F4
+  Close — Ctrl+W, Ctrl+F4
+  Copy deeplink — Ctrl+Alt+L
+  Copy working directory — Ctrl+Shift+C
+  Force Reload Browser Page — Ctrl+Shift+R
+  Open command menu — Ctrl+K, Ctrl+Shift+P
+  Reload Browser Page — Ctrl+R
+  Rename chat — Ctrl+Alt+R
+  Search Files... — Ctrl+P
+  Show keyboard shortcuts — Ctrl+/
+  Toggle File Tree — Ctrl+Shift+E

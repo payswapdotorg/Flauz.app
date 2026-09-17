@@ -170,6 +170,41 @@ report keep them annotated as reference+1):
   language; browser tab width/scroll stability.
 - GPT-5.5 retirement (2026-10-14) → switch to GPT-5.6 Sol.
 
+### 4.1 Linux preview runtime observations (26.908.70816 — WO-LAB-001, 2026-09-17)
+
+The `latest` Linux `.deb` (`chatgpt 26.908.70816`, built 2026-09-14) was run
+in LINUX_GUI_LAB (selective userspace; Xvfb + picom; isolated profile; no
+credentials). This is runtime evidence of the **reference+1 line**, NOT of
+26.825.51511 — observations upgrade Linux official cells only, with the
+version-skew label `[runtime-observed: linux-preview 26.908.70816]`; the
+26.825 target and every 26.825-labeled claim are unchanged.
+
+- Login surface gates the entire shell: "Sign in to ChatGPT" / "Continue to
+  sign in" / "Sign in with an API key" / "Sign up"; no sidebar/composer/
+  terminal/browser surfaces pre-auth (evidence codex-linux/01).
+- Command palette at login: "Search chats or run a command"; Quick actions
+  (New chat Ctrl+N; Open folder Ctrl+O); dynamic **Settings** group with 10
+  pages (General, Import, Appearance, Voice, **Pets** — 26.908-only, Git,
+  Connections, Environments, Worktrees, Configuration); query "terminal" →
+  **Panels: Open terminal (Ctrl+`)**; "Chats" search group (codex-linux/02-04).
+- **Keyboard shortcuts overlay (Ctrl+/)**, searchable, 22 rows across
+  Chat/Navigation/General incl. bindings absent from Flauz (Search Files
+  Ctrl+P; Toggle File Tree Ctrl+Shift+E — runtime-confirming the docs-derived
+  binding; Copy deeplink Ctrl+Alt+L; Copy working directory Ctrl+Shift+C;
+  Rename chat Ctrl+Alt+R; Close Tab Ctrl+W; browser-page reloads Ctrl+R /
+  Ctrl+Shift+R; archive/pin/standalone-chat bindings; Back/Forward Ctrl+[ / ];
+  recent-chat cycling; Switch to Work Alt+2) (codex-linux/05-07).
+- Auth-pending surface: "Continue signing in with your browser" / "Cancel
+  sign-in" / "Browser didn't open?" / "Copy sign-in link".
+- Startup hard-depends on the bundled codex runtime (resources/codex,
+  app-server stdio); without it the app fatals with NO window — vs Flauz's
+  graceful degradation. DB at `$HOME/.codex/sqlite/codex-dev.db`
+  (better-sqlite3) with a "Back Up and Rebuild" recovery dialog.
+- Payload facts: terminal backend node-pty; @worklouder/device-kit-oai
+  (serialport + node-hid) shipped; cua_node (~166 MB) present although the
+  official Linux doc states Computer Use is NOT available in the Linux
+  preview (payload presence ≠ availability).
+
 ## 5. Parity implications (C2 reconciliation)
 
 Which deltas move Flauz work, and which do not:

@@ -275,7 +275,7 @@ keeps the same number (WO-P1-DRAFT-001 → WO-P1-001).
 ### WO-P2-004
 
 - **ID:** WO-P2-004 (new — created by C2 from the audit)
-- **Title:** Command palette does not index all settings pages
+- **Title:** Command palette does not index all settings pages — official reference now runtime-observed on Linux: the official palette's dynamic Settings group lists 10 pages at the login surface (General, Import, Appearance, Voice, Pets, Git, Connections, Environments, Worktrees, Configuration) `[runtime-observed: linux-preview 26.908.70816; evidence docs/research/evidence/codex-linux/03-04]`
 - **Platform:** all (UI-shell concern; Linux-verifiable in lab)
 - **Reference behavior:** Official command palette (Ctrl/Cmd+K,
   Ctrl/Cmd+Shift+P, Ctrl/Cmd+G) surfaces a dynamic `Settings` group so
@@ -470,7 +470,7 @@ keeps the same number (WO-P1-DRAFT-001 → WO-P1-001).
 ### WO-LAB-001
 
 - **ID:** WO-LAB-001 (new — lab-infrastructure class added by C2; no P-class)
-- **Title:** Run the official Linux desktop preview app in LINUX_GUI_LAB to upgrade Linux-A evidence to runtime-observed
+- **Title:** Run the official Linux desktop preview app in LINUX_GUI_LAB to upgrade Linux-A evidence to runtime-observed — status: **CLOSED (executed 2026-09-17)** [`chatgpt 26.908.70816` .deb selective userspace; launched under Xvfb :102 + picom with isolated HOME/XDG, no credentials; unauthenticated surfaces captured + VLM-verified under docs/research/evidence/codex-linux/ (login surface; palette with dynamic Settings group + Panels: Open terminal; searchable Keyboard shortcuts overlay, 22 rows; auth-pending surface; DB-recovery dialog); §5.3/§5.4/§5.9/§5.10 Linux official cells upgraded to runtime-observed with version-skew labels (26.908 = reference+1; 26.825 target unchanged); §9 overrides 14-16; E2B-PARITY-ENVIRONMENT.md lab-verdict note added (dated, not silent); acceptance criteria 1-4 satisfied — `[unverified]` items resolved: Linux Computer Use scope = docs-stated absent in preview (macOS/Windows only), Activity view + terminal/browser affordance shapes = auth-walled (official shell gates everything pre-sign-in)]
 - **Platform:** linux (lab infrastructure — affects the official-side evidence layer, not Flauz product code)
 - **Reference behavior:** An OFFICIAL Linux desktop app exists in preview
   since 2026-08-11: `.deb`/`.rpm`/install script; Ubuntu 24.04/26.04,
@@ -573,9 +573,11 @@ Per §7.5 rule 4 and work-order rule 6, the following reconciled gaps carry
 
 - 2026-09-16: WO-P1-001 and WO-P1-002 set to VERIFIED (pending merge) — implemented on parity/wo-p1-discoverability (sidebar footer affordances + honest entry-surface guards + regression tests + runtime evidence under docs/research/evidence/wo-p1/).
 - 2026-09-17: **WO-P1-001 + WO-P1-002 CLOSED** — merged to main via PR #13 (merge commit d15333e718a7649238f33a183af27c885dbaa8aa; implementation 08d060c, clippy fix aa2d89d); CI green on both matrices (windows-latest, ubuntu-24.04); runtime GUI evidence archived under docs/research/evidence/wo-p1/; parity report §5.3/§5.4 rows + §8.2 P1 list + J1/J2 updated to reference the merge commit. Operator review 2026-09-17 accepted the implementation wave and directed: WO-LAB-001 (official Linux preview app runtime comparison + current-26.825 reconciliation) executes BEFORE WO-P1-003 implementation.
+- 2026-09-17: **WO-LAB-001 CLOSED (executed)** — official Linux preview app (26.908.70816) runs in LINUX_GUI_LAB; unauthenticated runtime evidence archived (docs/research/evidence/codex-linux/); parity report Linux official cells upgraded with version-skew labels; §9 overrides 14-16; E2B lab-verdict note added (dated). Operator's next directive stands: WO-P1-003 (multi-folder local projects) is the next implementation.
 
 | Date | Change |
 | --- | --- |
 | 2026-09-16 | Framework + rules + lifecycle + template + three seeded DRAFTs (Worker C1). |
 | 2026-09-17 | **WO-P1-001 + WO-P1-002 CLOSED on merge** (PR #13 → d15333e; CI green both matrices; GUI evidence docs/research/evidence/wo-p1/). Operator directive: WO-LAB-001 first, then WO-P1-003. |
+| 2026-09-17 | **WO-LAB-001 CLOSED (executed)**: official Linux preview app 26.908.70816 runtime-observed in the lab (unauthenticated slice; evidence codex-linux/); Linux official cells upgraded with version-skew labels; WO-P2-004 reference upgraded to runtime-observed. Next: WO-P1-003. |
 | 2026-09-16 | **C2 reconciliation:** WO-P1-DRAFT-001 → **WO-P1-001 CONFIRMED** (full runtime proof: entry-surface silent no-op, zero-tab dock, guard lib.rs:8163); WO-P1-DRAFT-002 → **WO-P1-002 CONFIRMED** (palette/shortcut-only, InspectorPane::Browser lib.rs:259-267, guard lib.rs:14521); WO-PLAT-DRAFT-001 → **WO-PLAT-001 CONFIRMED** (platform gap, documentation-only). New confirmed orders from the audit: **WO-P1-003** (multi-folder local projects), **WO-P2-004** (palette settings-page indexing), **WO-P2-005** (slash-command coverage delta), **WO-P2-006** (side chats), **WO-LAB-001** (official Linux app lab upgrade; new LAB class). §5 records the no-work-order scope decisions. Pending Tech Lead convergence. |
