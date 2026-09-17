@@ -4465,7 +4465,7 @@ fn run_effect(
         Effect::SetLocalProjectFolders { path, folders } => {
             let result = storage
                 .as_mut()
-                .map_or(Ok(()), |store| store.set_workspace_folders(path, &folders));
+                .map_or(Ok(()), |store| store.set_workspace_folders(path, folders));
             if let Err(error) = result {
                 storage.take();
                 emit(events, Action::StorageFailed(error.to_string()));
@@ -4486,11 +4486,11 @@ fn run_effect(
             // Insert-first keeps the project recoverable if a later step
             // fails instead of losing the row entirely.
             let result = storage.as_mut().map_or(Ok(()), |store| {
-                store.remember_workspace(&primary, *last_opened_at)?;
-                store.rename_workspace(&primary, &name, *last_opened_at)?;
-                store.set_workspace_pinned(&primary, *pinned)?;
-                store.set_workspace_folders(&primary, folders)?;
-                store.remove_workspace(&previous)
+                store.remember_workspace(primary, *last_opened_at)?;
+                store.rename_workspace(primary, name, *last_opened_at)?;
+                store.set_workspace_pinned(primary, *pinned)?;
+                store.set_workspace_folders(primary, folders)?;
+                store.remove_workspace(previous)
             });
             if let Err(error) = result {
                 storage.take();

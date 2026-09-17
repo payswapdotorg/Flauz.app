@@ -24576,7 +24576,10 @@ mod tests {
                 folders: vec![related.clone()],
             }]
         );
-        assert_eq!(state.local_projects[0].folders, [related.clone()]);
+        assert_eq!(
+            state.local_projects[0].folders,
+            std::slice::from_ref(&related)
+        );
         assert_eq!(
             state.status_message.as_deref(),
             Some("Related folder added")
@@ -24639,7 +24642,10 @@ mod tests {
             state.status_message.as_deref(),
             Some("The selected project is unavailable.")
         );
-        assert_eq!(state.local_projects[0].folders, [related.clone()]);
+        assert_eq!(
+            state.local_projects[0].folders,
+            std::slice::from_ref(&related)
+        );
 
         // The related-folder cap surfaces guidance once reached.
         for index in 0..MAX_LOCAL_PROJECT_FOLDERS {
@@ -25014,7 +25020,10 @@ mod tests {
         );
         assert_eq!(state.local_projects.len(), 2);
         assert_eq!(state.local_projects[0].path, alpha);
-        assert_eq!(state.local_projects[0].folders, [shared.clone()]);
+        assert_eq!(
+            state.local_projects[0].folders,
+            std::slice::from_ref(&shared)
+        );
     }
 
     #[test]

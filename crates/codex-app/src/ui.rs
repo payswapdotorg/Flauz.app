@@ -48866,7 +48866,7 @@ mod tests {
         };
         assert_eq!(surface.name, "Alpha");
         assert_eq!(surface.primary, primary);
-        assert_eq!(surface.folders, [related.clone()]);
+        assert_eq!(surface.folders, std::slice::from_ref(&related));
         assert!(surface.add_folder_available);
 
         // Legacy single-path projects render primary-only.
