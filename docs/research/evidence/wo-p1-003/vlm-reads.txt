@@ -1,0 +1,39 @@
+VLM reads for WO-P1-003 evidence (glm-5v-turbo, 2026-09-17).
+Raw transcripts (lightly trimmed); zoomed modal crops are the authoritative
+reads for modal interiors (full-frame reads proved noisier).
+
+=== 01-sidebar-multi-folder-project.png (full frame) ===
+The sidebar's Projects section lists the project "Alpha" (highlighted,
+selected). Below the central "Sign in to get started" card, the path
+indicator reads: Local /home/z/parity-lab/linux-B-003/projects/alpha
+(the seeded PRIMARY folder drives the new-chat cwd).
+
+=== 02-file-search-hits-related-folder.png (full frame) ===
+A file-search overlay is open with query "BETA". Result:
+BETA-NOTES.md (context path: beta) — the file exists only in the RELATED
+folder …/projects/beta, so the hit proves related folders join file search.
+
+=== 03-edit-project-surface.png (full frame + zoomed modal crop) ===
+Modal open. Title: "Edit Alpha". Subtitle: "The primary folder drives new
+chats, Git, and project config. Related folders extend file search."
+Primary row: /home/z/parity-lab/linux-B-003/projects/alpha with a
+"Primary" badge. Related row: /home/z/parity-lab/linux-B-003/projects/beta
+with a star (Make primary) and a trash (Remove) button. "Add folder"
+button present. Blue "Done" button present.
+
+=== 04-primary-swapped-surface-follows.png (zoomed modal crop) ===
+Title: "Edit Alpha" (identity preserved). FIRST row (primary):
+/home/z/parity-lab/linux-B-003/projects/beta with the "Primary" badge.
+SECOND row (related): /home/z/parity-lab/linux-B-003/projects/alpha with
+star + trash buttons — the old primary parked as a related folder.
+No "No related folders yet" text. Add folder + Done present.
+
+=== 05-path-follows-new-primary.png (full frame) ===
+Modal closed. The grey tag under the central card reads exactly:
+Local /home/z/parity-lab/linux-B-003/projects/beta — the new-chat cwd
+followed the primary swap.
+
+=== 06-swapped-state-persists.png (zoomed modal crop) ===
+After close + reopen: title "Edit Alpha"; first row …/projects/beta with
+"Primary" badge; second row …/projects/alpha with star/trash — the
+swapped state persisted through storage (schema v4 round-trip).

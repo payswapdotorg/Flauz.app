@@ -2550,6 +2550,7 @@ fn open_storage(events: &dyn ActionEmitter) -> Option<Store> {
                 name: workspace.name.unwrap_or_default(),
                 pinned: workspace.pinned,
                 last_opened_at: workspace.last_opened_at,
+                folders: workspace.folders,
             })
             .collect::<Vec<_>>();
         Ok((
@@ -4455,6 +4456,42 @@ fn run_effect(
             let result = storage
                 .as_mut()
                 .map_or(Ok(()), |store| store.remove_workspace(path));
+            if let Err(error) = result {
+                storage.take();
+                emit(events, Action::StorageFailed(error.to_string()));
+            }
+            return;
+        }
+        Effect::SetLocalProjectFolders { path, folders } => {
+            let result = storage
+                .as_mut()
+                .map_or(Ok(()), |store| store.set_workspace_folders(path, folders));
+            if let Err(error) = result {
+                storage.take();
+                emit(events, Action::StorageFailed(error.to_string()));
+            }
+            return;
+        }
+        Effect::SetLocalProjectPrimary {
+            previous,
+            primary,
+            name,
+            pinned,
+            last_opened_at,
+            folders,
+        } => {
+            // Re-key the registry row (WO-P1-003): write the new primary
+            // with the preserved metadata and related-folder list first,
+            // then drop the old primary (cascading its related folders).
+            // Insert-first keeps the project recoverable if a later step
+            // fails instead of losing the row entirely.
+            let result = storage.as_mut().map_or(Ok(()), |store| {
+                store.remember_workspace(primary, *last_opened_at)?;
+                store.rename_workspace(primary, name, *last_opened_at)?;
+                store.set_workspace_pinned(primary, *pinned)?;
+                store.set_workspace_folders(primary, folders)?;
+                store.remove_workspace(previous)
+            });
             if let Err(error) = result {
                 storage.take();
                 emit(events, Action::StorageFailed(error.to_string()));
@@ -8745,6 +8782,8 @@ fn run_effect(
         | Effect::RenameLocalProject { .. }
         | Effect::SetLocalProjectPinned { .. }
         | Effect::RemoveLocalProject { .. }
+        | Effect::SetLocalProjectFolders { .. }
+        | Effect::SetLocalProjectPrimary { .. }
         | Effect::ScheduleGoalContinuation { .. }
         | Effect::ConfigureComputerUse { .. }
         | Effect::StartBrowser { .. }

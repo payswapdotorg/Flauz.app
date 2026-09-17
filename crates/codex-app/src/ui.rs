@@ -16,6 +16,7 @@ use base64::{
     engine::general_purpose::{STANDARD, STANDARD_NO_PAD},
 };
 use chrono::{Local, TimeZone};
+use codex_core::MAX_LOCAL_PROJECT_FOLDERS;
 use codex_core::{
     APPEARANCE_CODE_THEMES, AccountAuthOperation, AccountDailyUsageBucket, AccountKind,
     AccountState, AccountTokenActivitySummary, Action, AgentConfigScope, AgentConfigScopeKind,
@@ -310,6 +311,32 @@ fn sidebar_browser_affordance(state: &AppState) -> Option<SidebarSurfaceAffordan
         id: "nav-browser",
         label: "Browser",
         tooltip: "Toggle the browser panel (Ctrl+Shift+B)",
+    })
+}
+
+/// Model of the Edit project surface (WO-P1-003). The surface renders the
+/// project name, one row for the primary folder (marked Primary), one row
+/// per related folder with Make-primary and Remove affordances, an
+/// Add-folder affordance, and a Done action. `Some(surface)` for a project
+/// means the surface renders for it; `add_folder_available` is false once
+/// the related-folder cap is reached.
+struct EditProjectSurface {
+    name: String,
+    primary: PathBuf,
+    folders: Vec<PathBuf>,
+    add_folder_available: bool,
+}
+
+fn edit_project_surface(state: &AppState, path: &Path) -> Option<EditProjectSurface> {
+    let project = state
+        .local_projects
+        .iter()
+        .find(|project| project.path == path)?;
+    Some(EditProjectSurface {
+        name: project.name.clone(),
+        primary: project.path.clone(),
+        folders: project.folders.clone(),
+        add_folder_available: project.folders.len() < MAX_LOCAL_PROJECT_FOLDERS,
     })
 }
 
@@ -2256,6 +2283,9 @@ enum WorkspaceModal {
     RemoveLocalProject {
         path: PathBuf,
         name: String,
+    },
+    EditLocalProject {
+        path: PathBuf,
     },
 }
 
@@ -8701,6 +8731,133 @@ impl WorkspaceView {
         self.dispatch(Action::RemoveLocalProject(path), cx);
     }
 
+    fn begin_edit_local_project(&mut self, path: PathBuf, cx: &mut Context<Self>) {
+        // Only open the surface for a project that still exists; the
+        // project action menu is the entry point (WO-P1-003).
+        if edit_project_surface(&self.state, &path).is_none() {
+            self.dispatch(
+                Action::SetStatus("The selected project is unavailable.".to_owned()),
+                cx,
+            );
+            return;
+        }
+        self.workspace_modal = Some(WorkspaceModal::EditLocalProject { path });
+        cx.notify();
+    }
+
+    fn prompt_for_project_folder(&mut self, cx: &mut Context<Self>) {
+        let Some(WorkspaceModal::EditLocalProject { path }) = self.workspace_modal.clone() else {
+            return;
+        };
+        let receiver = cx.prompt_for_paths(PathPromptOptions {
+            files: false,
+            directories: true,
+            multiple: false,
+            prompt: Some("Select Related Folder".into()),
+        });
+        cx.spawn(async move |view, cx| {
+            let Ok(Ok(Some(paths))) = receiver.await else {
+                return;
+            };
+            let Some(folder) = paths.into_iter().next() else {
+                return;
+            };
+            let _ = cx.update(|cx| {
+                let Some(view) = view.upgrade() else {
+                    return;
+                };
+                view.update(cx, |this, cx| {
+                    this.dispatch(Action::AddLocalProjectFolder { path, folder }, cx);
+                });
+            });
+        })
+        .detach();
+    }
+
+    /// One related-folder row of the Edit project surface: the folder path
+    /// with Make-primary and Remove affordances (WO-P1-003). A successful
+    /// primary swap re-keys the project, so the surface follows the new
+    /// primary; a guarded swap leaves the surface on the old one.
+    fn render_edit_project_folder_row(
+        &self,
+        primary: &Path,
+        index: usize,
+        folder: &Path,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        let make_primary_path = primary.to_path_buf();
+        let make_primary_folder = folder.to_path_buf();
+        let remove_path = primary.to_path_buf();
+        let remove_folder = folder.to_path_buf();
+        h_flex()
+            .id(SharedString::from(format!(
+                "edit-project-folder-row-{index}"
+            )))
+            .h(px(34.0))
+            .px_2()
+            .gap_2()
+            .items_center()
+            .rounded_md()
+            .hover(|style| style.bg(cx.theme().list_hover))
+            .child(
+                Icon::new(IconName::FolderClosed)
+                    .xsmall()
+                    .text_color(cx.theme().muted_foreground),
+            )
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .text_sm()
+                    .truncate()
+                    .child(folder.display().to_string()),
+            )
+            .child(
+                Button::new(SharedString::from(format!("make-primary-{index}")))
+                    .icon(IconName::Star)
+                    .tooltip("Make primary folder")
+                    .xsmall()
+                    .ghost()
+                    .on_click(cx.listener(move |this, _, _, cx| {
+                        let new_primary = make_primary_folder.clone();
+                        this.dispatch(
+                            Action::SetLocalProjectPrimary {
+                                path: make_primary_path.clone(),
+                                new_primary: new_primary.clone(),
+                            },
+                            cx,
+                        );
+                        if this
+                            .state
+                            .local_projects
+                            .iter()
+                            .any(|project| project.path == new_primary)
+                        {
+                            this.workspace_modal =
+                                Some(WorkspaceModal::EditLocalProject { path: new_primary });
+                            cx.notify();
+                        }
+                    })),
+            )
+            .child(
+                Button::new(SharedString::from(format!("remove-folder-{index}")))
+                    .icon(IconName::Delete)
+                    .tooltip("Remove related folder")
+                    .xsmall()
+                    .ghost()
+                    .on_click(cx.listener(move |this, _, _, cx| {
+                        this.dispatch(
+                            Action::RemoveLocalProjectFolder {
+                                path: remove_path.clone(),
+                                folder: remove_folder.clone(),
+                            },
+                            cx,
+                        );
+                    })),
+            )
+            .into_any_element()
+    }
+
     fn cycle_remove_local_project_focus(
         &mut self,
         backwards: bool,
@@ -11028,6 +11185,8 @@ impl WorkspaceView {
         } = target;
         let new_chat_view = view.clone();
         let new_chat_path = path.clone();
+        let edit_view = view.clone();
+        let edit_path = path.clone();
         let rename_view = view.clone();
         let rename_path = path.clone();
         let rename_name = name.clone();
@@ -11045,6 +11204,16 @@ impl WorkspaceView {
                     let _ = new_chat_view.update(cx, |this, cx| {
                         this.dispatch(Action::SelectWorkspace(path), cx);
                         this.close_narrow_sidebar();
+                    });
+                }),
+        )
+        .item(
+            PopupMenuItem::new("Edit project")
+                .icon(IconName::Settings2)
+                .on_click(move |_, _, cx| {
+                    let path = edit_path.clone();
+                    let _ = edit_view.update(cx, |this, cx| {
+                        this.begin_edit_local_project(path, cx);
                     });
                 }),
         )
@@ -13566,6 +13735,13 @@ impl WorkspaceView {
         let dropdown_view = context_view.clone();
         let new_chat_path = project.path.clone();
         let select_path = project.path.clone();
+        let edit_path = project.path.clone();
+        // The Edit-project affordance stays active while its surface is
+        // open for this project (WO-P1-003).
+        let editing_this_project = matches!(
+            &self.workspace_modal,
+            Some(WorkspaceModal::EditLocalProject { path }) if *path == project.path
+        );
         let name = project.name;
         let pinned = project.pinned;
 
@@ -13656,6 +13832,17 @@ impl WorkspaceView {
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 this.dispatch(Action::SelectWorkspace(new_chat_path.clone()), cx);
                                 this.close_narrow_sidebar();
+                            })),
+                    )
+                    .child(
+                        Button::new(SharedString::from(format!("edit-project-{key:016x}")))
+                            .icon(IconName::Settings2)
+                            .tooltip("Edit project folders")
+                            .xsmall()
+                            .ghost()
+                            .selected(editing_this_project)
+                            .on_click(cx.listener(move |this, _, _, cx| {
+                                this.begin_edit_local_project(edit_path.clone(), cx);
                             })),
                     )
                     .child(
@@ -40543,6 +40730,7 @@ impl WorkspaceView {
                 | WorkspaceModal::ImportAppearanceTheme(_)
                 | WorkspaceModal::RenameLocalProject { .. }
                 | WorkspaceModal::RemoveLocalProject { .. }
+                | WorkspaceModal::EditLocalProject { .. }
                 | WorkspaceModal::EnableRemoteControl
                 | WorkspaceModal::DisableRemoteControl
                 | WorkspaceModal::RevokeRemoteDevice { .. }
@@ -40674,6 +40862,171 @@ impl WorkspaceView {
                                     .danger()
                                     .on_click(cx.listener(move |this, _, _, cx| {
                                         this.remove_local_project_from_modal(path.clone(), cx);
+                                    })),
+                            ),
+                    )
+                    .into_any_element()
+            }),
+            WorkspaceModal::EditLocalProject { path } => render_modal_branch(|| {
+                // The surface model doubles as the render contract tested in
+                // edit_project_surface_renders_for_primary_and_related_folders
+                // (WO-P1-003). A project that vanished while the surface
+                // was open answers honestly instead of rendering an empty
+                // editor.
+                let Some(surface) = edit_project_surface(&self.state, &path) else {
+                    return v_flex()
+                        .w(px(modal_surface_width(self.shell_viewport_width, 440.0)))
+                        .p_5()
+                        .gap_4()
+                        .rounded(px(16.0))
+                        .bg(cx.theme().popover)
+                        .shadow_xl()
+                        .occlude()
+                        .on_any_mouse_down(|_, _, cx| cx.stop_propagation())
+                        .child(
+                            div()
+                                .text_lg()
+                                .font_weight(gpui::FontWeight::SEMIBOLD)
+                                .child("Edit project"),
+                        )
+                        .child(
+                            div()
+                                .text_sm()
+                                .text_color(cx.theme().muted_foreground)
+                                .child("The selected project is unavailable."),
+                        )
+                        .child(
+                            h_flex().justify_end().gap_2().child(
+                                Button::new("done-edit-project-unavailable")
+                                    .label("Done")
+                                    .primary()
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.close_workspace_modal(cx);
+                                    })),
+                            ),
+                        )
+                        .into_any_element();
+                };
+                let EditProjectSurface {
+                    name,
+                    primary,
+                    folders,
+                    add_folder_available,
+                } = surface;
+                v_flex()
+                    .w(px(modal_surface_width(self.shell_viewport_width, 560.0)))
+                    .p_5()
+                    .gap_4()
+                    .rounded(px(16.0))
+                    .bg(cx.theme().popover)
+                    .shadow_xl()
+                    .occlude()
+                    .on_any_mouse_down(|_, _, cx| cx.stop_propagation())
+                    .child(
+                        div()
+                            .text_lg()
+                            .font_weight(gpui::FontWeight::SEMIBOLD)
+                            .child(format!("Edit {name}")),
+                    )
+                    .child(
+                        div()
+                            .text_sm()
+                            .text_color(cx.theme().muted_foreground)
+                            .child(
+                                "The primary folder drives new chats, Git, and project config. Related folders extend file search.",
+                            ),
+                    )
+                    .child(
+                        v_flex()
+                            .gap_1()
+                            .max_h(px(320.0))
+                            .overflow_y_scrollbar()
+                            .child(
+                                h_flex()
+                                    .id("edit-project-primary-row")
+                                    .h(px(34.0))
+                                    .px_2()
+                                    .gap_2()
+                                    .items_center()
+                                    .rounded_md()
+                                    .bg(cx.theme().secondary)
+                                    .child(
+                                        Icon::new(IconName::FolderClosed)
+                                            .xsmall()
+                                            .text_color(cx.theme().muted_foreground),
+                                    )
+                                    .child(
+                                        div()
+                                            .flex_1()
+                                            .min_w_0()
+                                            .text_sm()
+                                            .truncate()
+                                            .child(primary.display().to_string()),
+                                    )
+                                    .child(
+                                        div()
+                                            .flex_none()
+                                            .h(px(20.0))
+                                            .min_w(px(52.0))
+                                            .flex()
+                                            .items_center()
+                                            .justify_center()
+                                            .rounded_full()
+                                            .bg(cx.theme().accent.opacity(0.12))
+                                            .px_1()
+                                            .text_xs()
+                                            .font_weight(gpui::FontWeight::MEDIUM)
+                                            .text_color(cx.theme().accent)
+                                            .child("Primary"),
+                                    ),
+                            )
+                            .children(
+                                folders
+                                    .iter()
+                                    .enumerate()
+                                    .map(|(index, folder)| {
+                                        self.render_edit_project_folder_row(
+                                            &primary, index, folder, cx,
+                                        )
+                                    }),
+                            )
+                            .when(folders.is_empty(), |list| {
+                                list.child(
+                                    div()
+                                        .px_2()
+                                        .py_2()
+                                        .text_xs()
+                                        .text_color(cx.theme().muted_foreground)
+                                        .child("No related folders yet"),
+                                )
+                            }),
+                    )
+                    .child(
+                        Button::new("edit-project-add-folder")
+                            .label("Add folder")
+                            .icon(IconName::Plus)
+                            .small()
+                            .ghost()
+                            .disabled(!add_folder_available)
+                            .tooltip(if add_folder_available {
+                                "Add a related folder"
+                            } else {
+                                "Projects support at most 16 related folders."
+                            })
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.prompt_for_project_folder(cx);
+                            })),
+                    )
+                    .child(
+                        h_flex()
+                            .justify_end()
+                            .gap_2()
+                            .child(
+                                Button::new("done-edit-project")
+                                    .label("Done")
+                                    .primary()
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.close_workspace_modal(cx);
                                     })),
                             ),
                     )
@@ -46083,6 +46436,7 @@ mod tests {
     use std::collections::HashSet;
     use std::path::{Path, PathBuf};
 
+    use super::edit_project_surface;
     use super::{
         ACTIVE_KEYBOARD_SHORTCUTS, APPEARANCE_THEME_SHARE_PREFIX, ArchivedChatDeleteScope,
         ArchivedChatKindFilter, ArchivedChatProjectFilter, ArchivedChatSortKey, AssistantFinding,
@@ -46154,6 +46508,7 @@ mod tests {
         TaskSummary, TerminalDockLocation, TerminalTabState, TimelineItem, TimelineKind,
         TurnDiffState, reduce,
     };
+    use codex_core::{LocalProjectSummary, MAX_LOCAL_PROJECT_FOLDERS};
 
     fn task(id: &str, cwd: &str) -> TaskSummary {
         TaskSummary {
@@ -48480,6 +48835,150 @@ mod tests {
             Some("Open a chat before opening the Browser.")
         );
         assert_eq!(state.inspector, InspectorPane::Hidden);
+    }
+
+    #[test]
+    fn edit_project_surface_renders_for_primary_and_related_folders() {
+        // WO-P1-003: the Edit project surface renders the project name,
+        // the primary folder (marked Primary), every related folder, and
+        // an Add-folder affordance that stays honest at the cap.
+        let primary = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\alpha")
+        } else {
+            PathBuf::from("/projects/alpha")
+        };
+        let related = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\beta")
+        } else {
+            PathBuf::from("/projects/beta")
+        };
+        let mut state = AppState::default();
+        state.local_projects.push(LocalProjectSummary {
+            path: primary.clone(),
+            name: "Alpha".to_owned(),
+            pinned: false,
+            last_opened_at: 1,
+            folders: vec![related.clone()],
+        });
+        let surface = match edit_project_surface(&state, &primary) {
+            Some(surface) => surface,
+            None => panic!("the Edit project surface must render for a loaded project"),
+        };
+        assert_eq!(surface.name, "Alpha");
+        assert_eq!(surface.primary, primary);
+        assert_eq!(surface.folders, std::slice::from_ref(&related));
+        assert!(surface.add_folder_available);
+
+        // Legacy single-path projects render primary-only.
+        let mut legacy = AppState::default();
+        legacy.local_projects.push(LocalProjectSummary {
+            path: primary.clone(),
+            name: "Alpha".to_owned(),
+            pinned: false,
+            last_opened_at: 1,
+            folders: Vec::new(),
+        });
+        let surface = match edit_project_surface(&legacy, &primary) {
+            Some(surface) => surface,
+            None => panic!("the Edit project surface must render for legacy projects"),
+        };
+        assert!(surface.folders.is_empty());
+        assert!(surface.add_folder_available);
+
+        // Unknown or removed projects never render the surface.
+        assert!(edit_project_surface(&state, &related).is_none());
+
+        // At the related-folder cap the Add-folder affordance reports
+        // unavailability instead of silently no-op'ing.
+        let mut capped = AppState::default();
+        let folders = (0..MAX_LOCAL_PROJECT_FOLDERS)
+            .map(|index| {
+                if cfg!(windows) {
+                    PathBuf::from(format!(r"C:\projects\extra-{index:02}"))
+                } else {
+                    PathBuf::from(format!("/projects/extra-{index:02}"))
+                }
+            })
+            .collect::<Vec<_>>();
+        capped.local_projects.push(LocalProjectSummary {
+            path: primary.clone(),
+            name: "Alpha".to_owned(),
+            pinned: false,
+            last_opened_at: 1,
+            folders,
+        });
+        let surface = match edit_project_surface(&capped, &primary) {
+            Some(surface) => surface,
+            None => panic!("the Edit project surface must render at the cap"),
+        };
+        assert_eq!(surface.folders.len(), MAX_LOCAL_PROJECT_FOLDERS);
+        assert!(!surface.add_folder_available);
+    }
+
+    #[test]
+    fn edit_project_surface_actions_stay_honest_and_follow_primary_swaps() {
+        // WO-P1-003: duplicate adds answer with a visible status message
+        // (never a silent no-op), and a successful primary swap re-keys the
+        // project so the surface follows the new primary.
+        let primary = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\alpha")
+        } else {
+            PathBuf::from("/projects/alpha")
+        };
+        let related = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\beta")
+        } else {
+            PathBuf::from("/projects/beta")
+        };
+        let mut state = AppState::default();
+        state.local_projects.push(LocalProjectSummary {
+            path: primary.clone(),
+            name: "Alpha".to_owned(),
+            pinned: false,
+            last_opened_at: 1,
+            folders: vec![related.clone()],
+        });
+
+        assert!(
+            reduce(
+                &mut state,
+                Action::AddLocalProjectFolder {
+                    path: primary.clone(),
+                    folder: related.clone(),
+                },
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("This folder is already related to the project.")
+        );
+
+        // A successful primary swap re-keys the project; the surface
+        // follows the new primary and shows the old one parked at the
+        // front of the related folders.
+        assert!(
+            !reduce(
+                &mut state,
+                Action::SetLocalProjectPrimary {
+                    path: primary.clone(),
+                    new_primary: related.clone(),
+                },
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Primary folder changed")
+        );
+        let surface = match edit_project_surface(&state, &related) {
+            Some(surface) => surface,
+            None => panic!("the surface must follow the swapped primary"),
+        };
+        assert_eq!(surface.name, "Alpha");
+        assert_eq!(surface.primary, related);
+        assert_eq!(surface.folders, [primary]);
+        assert!(edit_project_surface(&state, &PathBuf::from("/projects/unknown")).is_none());
     }
 
     #[test]
