@@ -1,7 +1,12 @@
 # Feature Parity Work Orders
 
-> **Status: CONFIRMED WORK ORDERS (post C2 reconciliation) — pending Tech Lead
-> convergence, then the implementation wave.** The three C1-seeded DRAFTs were
+> **Status: ACTIVE — implementation wave 1 landed: WO-P1-001 + WO-P1-002
+> CLOSED on main (merge `d15333e`, 2026-09-17).** Operator directive
+> (2026-09-17): execute WO-LAB-001 (official Linux preview app in
+> LINUX_GUI_LAB) and reconcile current-26.825 behavior BEFORE WO-P1-003
+> implementation; then WO-P1-003 (multi-folder local projects), then the
+> remaining P1/P2 backlog; Windows/macOS GUI labs follow. The three
+> C1-seeded DRAFTs were
 > confirmed by Worker C2 against Worker A's `CODEX-REFERENCE-MATRIX.md`
 > (`c083c38`) and Worker B2's `FLAUZ-REFERENCE-MATRIX.md` (`a2343d3`); five
 > further work orders were created from gaps the A/B audit surfaced. Every
@@ -104,7 +109,7 @@ keeps the same number (WO-P1-DRAFT-001 → WO-P1-001).
 ### WO-P1-001
 
 - **ID:** WO-P1-001 (confirmed from WO-P1-DRAFT-001)
-- **Title:** Terminal discoverability — status: **VERIFIED (pending merge)** [2026-09-16: implemented on branch parity/wo-p1-discoverability; unit tests added (affordance renders in default layout; entry-surface toggles surface guidance, never silent no-op); runtime evidence docs/research/evidence/wo-p1/ (VLM-read affordances in default layout; guard message + Dismiss surfaced on entry surface; frames differ); merge gated on CI (fmt/clippy/tests/release-build/Xvfb-smoke) on PR] — no persistent affordance; silent no-op on the entry surface
+- **Title:** Terminal discoverability — status: **CLOSED (merged 2026-09-17)** [implemented on parity/wo-p1-discoverability (08d060c; clippy follow-up aa2d89d); merged to main via PR #13 — merge commit d15333e718a7649238f33a183af27c885dbaa8aa; CI green on windows-latest + ubuntu-24.04 (dependency policy, fmt, clippy -D warnings, full workspace tests, release build, Linux Xvfb startup smoke); unit tests in-tree (default-layout affordance rendering; entry-surface toggles surface guidance, never silent no-op); runtime GUI evidence docs/research/evidence/wo-p1/ (VLM-read affordances in default layout; guard + Dismiss surfaced on entry surface; frames differ); all five closure gates satisfied 2026-09-17]
 - **Platform:** all (UI-shell concern; Linux-verifiable in lab, Windows row closes per rule 5)
 - **Reference behavior:** Official Codex exposes Terminal as a **persistent
   per-chat dock** (bottom or right) that a user can find and open without
@@ -166,7 +171,7 @@ keeps the same number (WO-P1-DRAFT-001 → WO-P1-001).
 ### WO-P1-002
 
 - **ID:** WO-P1-002 (confirmed from WO-P1-DRAFT-002)
-- **Title:** Browser discoverability — status: **VERIFIED (pending merge)** [2026-09-16: implemented on branch parity/wo-p1-discoverability; unit tests added (affordance renders in default layout; entry-surface toggles surface guidance, never silent no-op); runtime evidence docs/research/evidence/wo-p1/ (VLM-read affordances in default layout; guard message + Dismiss surfaced on entry surface; frames differ); merge gated on CI (fmt/clippy/tests/release-build/Xvfb-smoke) on PR] — hidden in the inspector pane set; refused without an open chat
+- **Title:** Browser discoverability — status: **CLOSED (merged 2026-09-17)** [implemented on parity/wo-p1-discoverability (08d060c; clippy follow-up aa2d89d); merged to main via PR #13 — merge commit d15333e718a7649238f33a183af27c885dbaa8aa; CI green on windows-latest + ubuntu-24.04 (dependency policy, fmt, clippy -D warnings, full workspace tests, release build, Linux Xvfb startup smoke); unit tests in-tree (default-layout affordance rendering; entry-surface toggles surface guidance, never silent no-op); runtime GUI evidence docs/research/evidence/wo-p1/ (VLM-read affordances in default layout; guard + Dismiss surfaced on entry surface; frames differ); all five closure gates satisfied 2026-09-17]
 - **Platform:** all (UI-shell concern; Linux-verifiable in lab)
 - **Reference behavior:** Official Codex exposes the in-app Browser as a
   normally discoverable surface: a native browser panel with bounded tabs,
@@ -567,8 +572,10 @@ Per §7.5 rule 4 and work-order rule 6, the following reconciled gaps carry
 ## 7. Change log
 
 - 2026-09-16: WO-P1-001 and WO-P1-002 set to VERIFIED (pending merge) — implemented on parity/wo-p1-discoverability (sidebar footer affordances + honest entry-surface guards + regression tests + runtime evidence under docs/research/evidence/wo-p1/).
+- 2026-09-17: **WO-P1-001 + WO-P1-002 CLOSED** — merged to main via PR #13 (merge commit d15333e718a7649238f33a183af27c885dbaa8aa; implementation 08d060c, clippy fix aa2d89d); CI green on both matrices (windows-latest, ubuntu-24.04); runtime GUI evidence archived under docs/research/evidence/wo-p1/; parity report §5.3/§5.4 rows + §8.2 P1 list + J1/J2 updated to reference the merge commit. Operator review 2026-09-17 accepted the implementation wave and directed: WO-LAB-001 (official Linux preview app runtime comparison + current-26.825 reconciliation) executes BEFORE WO-P1-003 implementation.
 
 | Date | Change |
 | --- | --- |
 | 2026-09-16 | Framework + rules + lifecycle + template + three seeded DRAFTs (Worker C1). |
+| 2026-09-17 | **WO-P1-001 + WO-P1-002 CLOSED on merge** (PR #13 → d15333e; CI green both matrices; GUI evidence docs/research/evidence/wo-p1/). Operator directive: WO-LAB-001 first, then WO-P1-003. |
 | 2026-09-16 | **C2 reconciliation:** WO-P1-DRAFT-001 → **WO-P1-001 CONFIRMED** (full runtime proof: entry-surface silent no-op, zero-tab dock, guard lib.rs:8163); WO-P1-DRAFT-002 → **WO-P1-002 CONFIRMED** (palette/shortcut-only, InspectorPane::Browser lib.rs:259-267, guard lib.rs:14521); WO-PLAT-DRAFT-001 → **WO-PLAT-001 CONFIRMED** (platform gap, documentation-only). New confirmed orders from the audit: **WO-P1-003** (multi-folder local projects), **WO-P2-004** (palette settings-page indexing), **WO-P2-005** (slash-command coverage delta), **WO-P2-006** (side chats), **WO-LAB-001** (official Linux app lab upgrade; new LAB class). §5 records the no-work-order scope decisions. Pending Tech Lead convergence. |
