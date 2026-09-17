@@ -17,9 +17,10 @@ pub const MAX_PREFERENCE_VALUE_BYTES: usize = 64 * 1024;
 pub const MAX_WORKSPACE_PATH_BYTES: usize = 64 * 1024;
 pub const MAX_LOCAL_PROJECTS: usize = 64;
 pub const MAX_LOCAL_PROJECT_NAME_BYTES: usize = 256;
+pub const MAX_LOCAL_PROJECT_FOLDERS: usize = 16;
 pub const MAX_BROWSER_DOWNLOAD_RECORDS: usize = 200;
 
-const SCHEMA_VERSION: i64 = 3;
+const SCHEMA_VERSION: i64 = 4;
 const MAX_BROWSER_DOWNLOAD_ID_BYTES: usize = 256;
 const MAX_BROWSER_DOWNLOAD_CONTEXT_BYTES: usize = 256;
 const MAX_BROWSER_DOWNLOAD_FILENAME_BYTES: usize = 512;
@@ -53,6 +54,7 @@ pub enum StoreError {
     PreferenceValueTooLarge,
     WorkspacePathTooLarge,
     WorkspaceNameInvalid,
+    WorkspaceFolderInvalid,
     BrowserDownloadInvalid,
 }
 
@@ -74,6 +76,9 @@ impl fmt::Display for StoreError {
                 formatter.write_str("workspace path exceeds the 64 KiB storage limit")
             }
             Self::WorkspaceNameInvalid => formatter.write_str("workspace name is invalid"),
+            Self::WorkspaceFolderInvalid => {
+                formatter.write_str("workspace related folder is invalid")
+            }
             Self::BrowserDownloadInvalid => {
                 formatter.write_str("browser download record is invalid")
             }
@@ -92,6 +97,7 @@ impl Error for StoreError {
             | Self::PreferenceValueTooLarge
             | Self::WorkspacePathTooLarge
             | Self::WorkspaceNameInvalid
+            | Self::WorkspaceFolderInvalid
             | Self::BrowserDownloadInvalid => None,
         }
     }
@@ -115,6 +121,10 @@ pub struct RecentWorkspace {
     pub last_opened_at: i64,
     pub name: Option<String>,
     pub pinned: bool,
+    /// Related (secondary) folders of the workspace, in persisted order.
+    /// The workspace `path` itself is the primary folder; `folders` never
+    /// contains it. Legacy single-path workspaces load with an empty list.
+    pub folders: Vec<PathBuf>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -275,6 +285,65 @@ impl Store {
              )",
             [i64::try_from(MAX_LOCAL_PROJECTS).unwrap_or(i64::MAX)],
         )?;
+        // Evicted workspaces must not leave related-folder rows behind.
+        transaction.execute(
+            "DELETE FROM workspace_folders
+             WHERE workspace_path NOT IN (SELECT path FROM recent_workspaces)",
+            [],
+        )?;
+        transaction.commit()?;
+        Ok(())
+    }
+
+    /// Replaces the full related-folder list of a workspace. Folders are
+    /// stored in the given order; duplicates, folders equal to the primary
+    /// `workspace` path, and entries beyond `MAX_LOCAL_PROJECT_FOLDERS` are
+    /// normalized away so the persisted set always satisfies the
+    /// primary/secondary invariants.
+    pub fn set_workspace_folders(
+        &mut self,
+        workspace: &Path,
+        folders: &[PathBuf],
+    ) -> Result<(), StoreError> {
+        self.ensure_owner()?;
+        let encoded_workspace = encode_path(workspace);
+        if encoded_workspace.len() > MAX_WORKSPACE_PATH_BYTES {
+            return Err(StoreError::WorkspacePathTooLarge);
+        }
+        let mut seen = std::collections::HashSet::new();
+        let mut normalized = Vec::with_capacity(folders.len().min(MAX_LOCAL_PROJECT_FOLDERS));
+        for folder in folders {
+            if !folder.is_absolute() {
+                return Err(StoreError::WorkspaceFolderInvalid);
+            }
+            let encoded = encode_path(folder);
+            if encoded.len() > MAX_WORKSPACE_PATH_BYTES {
+                return Err(StoreError::WorkspaceFolderInvalid);
+            }
+            if encoded == encoded_workspace || !seen.insert(encoded.clone()) {
+                continue;
+            }
+            normalized.push(encoded);
+            if normalized.len() == MAX_LOCAL_PROJECT_FOLDERS {
+                break;
+            }
+        }
+        let transaction = self.connection.transaction()?;
+        transaction.execute(
+            "DELETE FROM workspace_folders WHERE workspace_path = ?1",
+            [&encoded_workspace],
+        )?;
+        for (position, encoded) in normalized.into_iter().enumerate() {
+            transaction.execute(
+                "INSERT INTO workspace_folders(workspace_path, folder_path, position)
+                 VALUES (?1, ?2, ?3)",
+                params![
+                    encoded_workspace,
+                    encoded,
+                    i64::try_from(position).unwrap_or(i64::MAX)
+                ],
+            )?;
+        }
         transaction.commit()?;
         Ok(())
     }
@@ -319,8 +388,15 @@ impl Store {
         if encoded.len() > MAX_WORKSPACE_PATH_BYTES {
             return Err(StoreError::WorkspacePathTooLarge);
         }
-        self.connection
-            .execute("DELETE FROM recent_workspaces WHERE path = ?1", [encoded])?;
+        let transaction = self.connection.transaction()?;
+        transaction.execute("DELETE FROM recent_workspaces WHERE path = ?1", [&encoded])?;
+        // Related folders belong to the workspace row; removing the
+        // workspace cascades to them.
+        transaction.execute(
+            "DELETE FROM workspace_folders WHERE workspace_path = ?1",
+            [&encoded],
+        )?;
+        transaction.commit()?;
         Ok(())
     }
 
@@ -349,15 +425,34 @@ impl Store {
         let mut items = Vec::with_capacity(limit);
         for row in rows {
             let (encoded, last_opened_at, name, pinned) = row?;
+            let folders = self.load_workspace_folders(&encoded)?;
             items.push(RecentWorkspace {
                 path: decode_path(encoded),
                 last_opened_at,
                 name,
                 pinned,
+                folders,
             });
         }
         let next_offset = (items.len() == limit).then(|| offset.saturating_add(items.len()));
         Ok(Page { items, next_offset })
+    }
+
+    fn load_workspace_folders(&self, encoded_workspace: &[u8]) -> Result<Vec<PathBuf>, StoreError> {
+        let mut statement = self.connection.prepare_cached(
+            "SELECT folder_path FROM workspace_folders
+             WHERE workspace_path = ?1
+             ORDER BY position ASC, folder_path ASC",
+        )?;
+        let rows = statement.query_map([encoded_workspace], |row| {
+            Ok(decode_path(row.get::<_, Vec<u8>>(0)?))
+        })?;
+        let mut folders = Vec::new();
+        for folder in rows {
+            folders.push(folder?);
+        }
+        folders.truncate(MAX_LOCAL_PROJECT_FOLDERS);
+        Ok(folders)
     }
 
     pub fn upsert_browser_download(
@@ -570,6 +665,24 @@ fn migrate(connection: &mut Connection) -> Result<(), StoreError> {
         )?;
         transaction.commit()?;
     }
+    // Fresh databases and legacy upgrades land on user_version 3 above, so
+    // re-read the version before applying the next sequential step.
+    let version = connection.query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0))?;
+    if version == 3 {
+        let transaction = connection.transaction()?;
+        transaction.execute_batch(
+            "CREATE TABLE workspace_folders (
+                workspace_path BLOB NOT NULL,
+                folder_path BLOB NOT NULL,
+                position INTEGER NOT NULL CHECK(position >= 0),
+                PRIMARY KEY (workspace_path, folder_path)
+             ) STRICT;
+             CREATE INDEX workspace_folders_position
+             ON workspace_folders(workspace_path, position ASC);
+             PRAGMA user_version = 4;",
+        )?;
+        transaction.commit()?;
+    }
     Ok(())
 }
 
@@ -676,15 +789,15 @@ pub fn bounded_history_page_size(requested: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use std::error::Error;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
 
     use rusqlite::{Connection, params};
 
     use super::{
         BrowserDownloadRecordStatus, DEFAULT_HISTORY_PAGE_SIZE, MAX_BROWSER_DOWNLOAD_RECORDS,
-        MAX_HISTORY_PAGE_SIZE, MAX_INLINE_EVENT_BYTES, MAX_LOCAL_PROJECTS,
-        MAX_PREFERENCE_VALUE_BYTES, Store, StoreError, StoredBrowserDownload,
-        bounded_history_page_size, validate_inline_event_size,
+        MAX_HISTORY_PAGE_SIZE, MAX_INLINE_EVENT_BYTES, MAX_LOCAL_PROJECT_FOLDERS,
+        MAX_LOCAL_PROJECTS, MAX_PREFERENCE_VALUE_BYTES, MAX_WORKSPACE_PATH_BYTES, Store,
+        StoreError, StoredBrowserDownload, bounded_history_page_size, validate_inline_event_size,
     };
 
     #[test]
@@ -801,6 +914,167 @@ mod tests {
                 .iter()
                 .all(|project| project.path != path)
         );
+        Ok(())
+    }
+
+    #[test]
+    fn workspace_folders_round_trip_in_order_and_replace_all() -> Result<(), Box<dyn Error>> {
+        let base = if cfg!(windows) {
+            Path::new(r"C:\projects")
+        } else {
+            Path::new("/projects")
+        };
+        let workspace = base.join("primary");
+        let first = base.join("docs");
+        let second = base.join("design");
+        let mut store = Store::open_in_memory()?;
+        store.remember_workspace(&workspace, 1)?;
+
+        // Legacy single-path workspaces load with no related folders.
+        assert_eq!(
+            store.recent_workspaces(1, 0)?.items[0].folders,
+            Vec::<PathBuf>::new()
+        );
+
+        store.set_workspace_folders(&workspace, &[first.clone(), second.clone(), first.clone()])?;
+        let project = store.recent_workspaces(1, 0)?.items.remove(0);
+        assert_eq!(project.path, workspace);
+        assert_eq!(project.folders, vec![first.clone(), second.clone()]);
+
+        // Replace-all: the previous list is fully replaced, in order.
+        store.set_workspace_folders(&workspace, &[second.clone()])?;
+        let project = store.recent_workspaces(1, 0)?.items.remove(0);
+        assert_eq!(project.folders, vec![second.clone()]);
+
+        // Normalization: the primary path and duplicates never persist,
+        // and the per-project cap truncates the tail.
+        let mut many = Vec::new();
+        for index in 0..=(MAX_LOCAL_PROJECT_FOLDERS + 2) {
+            many.push(base.join(format!("extra-{index:02}")));
+        }
+        many.insert(0, workspace.clone());
+        many.insert(0, base.join("extra-00"));
+        store.set_workspace_folders(&workspace, &many)?;
+        let project = store.recent_workspaces(1, 0)?.items.remove(0);
+        assert_eq!(project.folders.len(), MAX_LOCAL_PROJECT_FOLDERS);
+        assert_eq!(project.folders[0], base.join("extra-00"));
+        assert!(project.folders.iter().all(|folder| *folder != workspace));
+        Ok(())
+    }
+
+    #[test]
+    fn removing_a_workspace_cascades_its_related_folders() -> Result<(), Box<dyn Error>> {
+        let base = if cfg!(windows) {
+            Path::new(r"C:\projects")
+        } else {
+            Path::new("/projects")
+        };
+        let workspace = base.join("primary");
+        let related = base.join("related");
+        let mut store = Store::open_in_memory()?;
+        store.remember_workspace(&workspace, 1)?;
+        store.set_workspace_folders(&workspace, &[related.clone()])?;
+        assert_eq!(
+            store.recent_workspaces(1, 0)?.items[0].folders,
+            vec![related.clone()]
+        );
+
+        store.remove_workspace(&workspace)?;
+        assert!(store.recent_workspaces(10, 0)?.items.is_empty());
+
+        // Re-registering the same workspace must not resurrect stale rows.
+        store.remember_workspace(&workspace, 2)?;
+        let project = store.recent_workspaces(1, 0)?.items.remove(0);
+        assert_eq!(project.folders, Vec::<PathBuf>::new());
+        Ok(())
+    }
+
+    #[test]
+    fn workspace_folder_validation_rejects_relative_and_oversized_paths()
+    -> Result<(), Box<dyn Error>> {
+        let base = if cfg!(windows) {
+            Path::new(r"C:\projects\primary")
+        } else {
+            Path::new("/projects/primary")
+        };
+        let mut store = Store::open_in_memory()?;
+        store.remember_workspace(&base, 1)?;
+
+        let error = match store.set_workspace_folders(&base, &[PathBuf::from("relative")]) {
+            Err(error) => error,
+            Ok(()) => panic!("a relative related folder was accepted"),
+        };
+        assert!(matches!(error, StoreError::WorkspaceFolderInvalid));
+        assert_eq!(
+            store.recent_workspaces(1, 0)?.items[0].folders,
+            Vec::<PathBuf>::new()
+        );
+
+        let oversized = if cfg!(windows) {
+            PathBuf::from(format!("C\\{}", "x".repeat(MAX_WORKSPACE_PATH_BYTES)))
+        } else {
+            PathBuf::from(format!("/{}", "x".repeat(MAX_WORKSPACE_PATH_BYTES)))
+        };
+        let error = match store.set_workspace_folders(&base, &[oversized]) {
+            Err(error) => error,
+            Ok(()) => panic!("an oversized related folder was accepted"),
+        };
+        assert!(matches!(error, StoreError::WorkspaceFolderInvalid));
+        Ok(())
+    }
+
+    #[test]
+    fn version_three_storage_migrates_workspace_folders() -> Result<(), Box<dyn Error>> {
+        let connection = Connection::open_in_memory()?;
+        connection.execute_batch(
+            "CREATE TABLE ui_preferences (
+                key TEXT PRIMARY KEY NOT NULL,
+                value TEXT NOT NULL,
+                updated_at INTEGER NOT NULL
+             ) STRICT;
+             CREATE TABLE recent_workspaces (
+                path BLOB PRIMARY KEY NOT NULL,
+                last_opened_at INTEGER NOT NULL,
+                name TEXT,
+                pinned INTEGER NOT NULL DEFAULT 0 CHECK(pinned IN (0, 1))
+             ) STRICT;
+             CREATE TABLE browser_downloads (
+                id TEXT PRIMARY KEY NOT NULL,
+                context_id TEXT NOT NULL,
+                filename TEXT NOT NULL,
+                path BLOB NOT NULL,
+                received_bytes INTEGER NOT NULL CHECK(received_bytes >= 0),
+                started_at_ms INTEGER NOT NULL CHECK(started_at_ms >= 0),
+                status INTEGER NOT NULL CHECK(status IN (0, 1, 2)),
+                total_bytes INTEGER NOT NULL CHECK(total_bytes >= 0),
+                updated_at_ms INTEGER NOT NULL CHECK(updated_at_ms >= 0),
+                user_initiated INTEGER NOT NULL CHECK(user_initiated IN (0, 1))
+             ) STRICT;
+             CREATE INDEX browser_downloads_updated
+             ON browser_downloads(updated_at_ms DESC, id ASC);
+             PRAGMA user_version = 3;",
+        )?;
+        let mut store = Store::from_connection(connection)?;
+        let workspace = if cfg!(windows) {
+            Path::new(r"C:\legacy")
+        } else {
+            Path::new("/legacy")
+        };
+        let related = if cfg!(windows) {
+            Path::new(r"C:\legacy-related")
+        } else {
+            Path::new("/legacy-related")
+        };
+        store.remember_workspace(workspace, 1)?;
+        // The pre-migration registry row loads transparently as a
+        // primary-only (zero related folder) project.
+        assert_eq!(
+            store.recent_workspaces(1, 0)?.items[0].folders,
+            Vec::<PathBuf>::new()
+        );
+        store.set_workspace_folders(workspace, &[related.to_path_buf()])?;
+        let project = store.recent_workspaces(1, 0)?.items.remove(0);
+        assert_eq!(project.folders, vec![related.to_path_buf()]);
         Ok(())
     }
 

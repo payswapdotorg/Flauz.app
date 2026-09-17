@@ -114,6 +114,7 @@ pub const MAX_PINNED_TASKS: usize = 50;
 pub const MAX_PINNED_TASK_ID_BYTES: usize = 256;
 pub const MAX_LOCAL_PROJECTS: usize = 64;
 pub const MAX_LOCAL_PROJECT_NAME_BYTES: usize = 256;
+pub const MAX_LOCAL_PROJECT_FOLDERS: usize = 16;
 pub const MAX_PENDING_WORKTREE_FORK_ERROR_BYTES: usize = 16 * 1024;
 pub const MAX_PENDING_WORKTREE_FORKS: usize = 3;
 pub const MAX_GOAL_OBJECTIVE_BYTES: usize = 16 * 1024;
@@ -906,10 +907,19 @@ pub struct TaskSummary {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LocalProjectSummary {
+    /// Primary project folder. New-chat `cwd`, Git operations, and
+    /// AGENTS.md/skills/config.toml discovery all resolve against this
+    /// path (WO-P1-003).
     pub path: PathBuf,
     pub name: String,
     pub pinned: bool,
     pub last_opened_at: i64,
+    /// Related (secondary) folders in insertion order. File search and
+    /// file reading/editing cover these after the primary. The primary
+    /// `path` is never a member, folders are absolute and unique, and the
+    /// list is capped at `MAX_LOCAL_PROJECT_FOLDERS`. Legacy single-path
+    /// projects transparently carry an empty list.
+    pub folders: Vec<PathBuf>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -4975,6 +4985,23 @@ pub enum Action {
     ToggleLocalProjectPinned(PathBuf),
     RemoveLocalProject(PathBuf),
     OpenLocalProject(PathBuf),
+    /// Relates a secondary folder to a local project (WO-P1-003). `path`
+    /// is the project's primary folder; `folder` becomes a related folder.
+    AddLocalProjectFolder {
+        path: PathBuf,
+        folder: PathBuf,
+    },
+    /// Removes a related folder from a local project.
+    RemoveLocalProjectFolder {
+        path: PathBuf,
+        folder: PathBuf,
+    },
+    /// Promotes a related folder to the project's primary; the previous
+    /// primary becomes the first related folder.
+    SetLocalProjectPrimary {
+        path: PathBuf,
+        new_primary: PathBuf,
+    },
     UseGitWorktree(PathBuf),
     ForkSelectedTask,
     ForkSelectedTaskIntoWorktree,
@@ -7050,6 +7077,23 @@ pub enum Effect {
     RemoveLocalProject {
         path: PathBuf,
     },
+    /// Persists the full related-folder list of a local project.
+    SetLocalProjectFolders {
+        path: PathBuf,
+        folders: Vec<PathBuf>,
+    },
+    /// Persists a primary swap: the registry row is re-keyed from
+    /// `previous` to `primary` with the carried metadata, and `folders`
+    /// (with the old primary parked at the front) becomes the related
+    /// folder list of the new primary.
+    SetLocalProjectPrimary {
+        previous: PathBuf,
+        primary: PathBuf,
+        name: String,
+        pinned: bool,
+        last_opened_at: i64,
+        folders: Vec<PathBuf>,
+    },
     WorkflowRequest(WorkflowRequest),
 }
 
@@ -7344,6 +7388,10 @@ fn normalize_local_projects(
             }
             project.name = valid_local_project_name(&project.name)
                 .unwrap_or_else(|| default_local_project_name(&project.path));
+            project.folders = normalize_local_project_folders(
+                &project.path,
+                std::mem::take(&mut project.folders),
+            );
             Some(project)
         })
         .collect::<Vec<_>>();
@@ -7379,6 +7427,20 @@ fn apply_local_project_order(projects: &mut [LocalProjectSummary], order: &[Path
     });
 }
 
+/// Related folders keep their insertion order (the Edit project surface
+/// relies on it when a primary swap parks the old primary at the front);
+/// relative paths, duplicates, and entries equal to the primary are
+/// dropped, and the list is capped at `MAX_LOCAL_PROJECT_FOLDERS`.
+fn normalize_local_project_folders(primary: &Path, folders: Vec<PathBuf>) -> Vec<PathBuf> {
+    let mut seen = HashSet::new();
+    let mut folders = folders
+        .into_iter()
+        .filter(|folder| folder.is_absolute() && *folder != primary && seen.insert(folder.clone()))
+        .collect::<Vec<_>>();
+    folders.truncate(MAX_LOCAL_PROJECT_FOLDERS);
+    folders
+}
+
 fn normalize_local_project_order(order: Vec<PathBuf>) -> Vec<PathBuf> {
     let mut seen = HashSet::new();
     let mut order = order
@@ -7412,6 +7474,7 @@ fn remember_local_project(state: &mut AppState, path: &PathBuf) {
             name: default_local_project_name(path),
             pinned: false,
             last_opened_at,
+            folders: Vec::new(),
         });
     }
     state.local_projects = normalize_local_projects(
@@ -7514,6 +7577,11 @@ fn clear_git_for_context_change(state: &mut AppState) {
     };
 }
 
+/// Primary workspace roots only (WO-P1-003): the new-chat `cwd`, Git
+/// operations, AGENTS.md, skills, plugins, hooks, and
+/// `.codex/config.toml` discovery all resolve against project primary
+/// folders — never the related (secondary) folders, which join only
+/// `fuzzy_file_search_roots`.
 fn composer_workspace_roots(state: &AppState) -> Vec<PathBuf> {
     let mut roots = selected_task_cwds(state);
     if roots.is_empty()
@@ -7523,6 +7591,32 @@ fn composer_workspace_roots(state: &AppState) -> Vec<PathBuf> {
     }
     roots.retain(|root| root.is_absolute());
     roots.dedup();
+    roots.truncate(MAX_FUZZY_FILE_ROOTS);
+    roots
+}
+
+/// File search and file open/reveal resolution cover the primary workspace
+/// roots first, then the related (secondary) folders of any matching local
+/// project in their persisted order (WO-P1-003). Skills, plugins, hooks,
+/// Git, and config discovery keep using the primary-only
+/// `composer_workspace_roots`. The existing root bound stays in force.
+fn fuzzy_file_search_roots(state: &AppState) -> Vec<PathBuf> {
+    let mut roots = composer_workspace_roots(state);
+    let primary_roots = roots.clone();
+    for primary in primary_roots {
+        let Some(project) = state
+            .local_projects
+            .iter()
+            .find(|project| project.path == primary)
+        else {
+            continue;
+        };
+        for folder in &project.folders {
+            if !roots.contains(folder) {
+                roots.push(folder.clone());
+            }
+        }
+    }
     roots.truncate(MAX_FUZZY_FILE_ROOTS);
     roots
 }
@@ -7558,7 +7652,8 @@ fn change_fuzzy_file_search(state: &mut AppState, query: Option<String>) -> Vec<
     let query = query
         .map(|query| bounded_string(query.trim().to_owned(), MAX_FUZZY_FILE_QUERY_BYTES))
         .unwrap_or_default();
-    let roots = composer_workspace_roots(state);
+    // Related folders join the search roots after the primary (WO-P1-003).
+    let roots = fuzzy_file_search_roots(state);
     if query.is_empty() || roots.is_empty() {
         return clear_fuzzy_file_search(state);
     }
@@ -9307,7 +9402,10 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             {
                 return Vec::new();
             }
-            let Some(root) = composer_workspace_roots(state)
+            // Reveal resolves against the file-search roots so files from
+            // related (secondary) folders open in the file manager too
+            // (WO-P1-003).
+            let Some(root) = fuzzy_file_search_roots(state)
                 .into_iter()
                 .find(|root| path.starts_with(root))
             else {
@@ -9847,6 +9945,169 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
                     path,
                 }]
             }
+        }
+        Action::AddLocalProjectFolder { path, folder } => {
+            // Related folders extend a local project for file search and
+            // file reading/editing; guards surface guidance instead of
+            // silently no-op'ing (WO-P1-003).
+            let Some(project) = state
+                .local_projects
+                .iter_mut()
+                .find(|project| project.path == path)
+            else {
+                state.status_message = Some("The selected project is unavailable.".to_owned());
+                return Vec::new();
+            };
+            let guard = if !folder.is_absolute() {
+                Some("The selected folder is unavailable.".to_owned())
+            } else if folder == project.path {
+                Some("This folder is already the primary folder.".to_owned())
+            } else if project.folders.contains(&folder) {
+                Some("This folder is already related to the project.".to_owned())
+            } else if project.folders.len() >= MAX_LOCAL_PROJECT_FOLDERS {
+                Some(format!(
+                    "Projects support at most {MAX_LOCAL_PROJECT_FOLDERS} related folders."
+                ))
+            } else {
+                None
+            };
+            let folders = match guard {
+                Some(message) => {
+                    state.status_message = Some(message);
+                    return Vec::new();
+                }
+                None => {
+                    project.folders.push(folder);
+                    project.folders.clone()
+                }
+            };
+            state.local_projects = normalize_local_projects(
+                std::mem::take(&mut state.local_projects),
+                &state.local_project_order,
+            );
+            state.status_message = Some("Related folder added".to_owned());
+            vec![Effect::SetLocalProjectFolders { path, folders }]
+        }
+        Action::RemoveLocalProjectFolder { path, folder } => {
+            let Some(project) = state
+                .local_projects
+                .iter_mut()
+                .find(|project| project.path == path)
+            else {
+                state.status_message = Some("The selected project is unavailable.".to_owned());
+                return Vec::new();
+            };
+            let original_len = project.folders.len();
+            project.folders.retain(|existing| *existing != folder);
+            let folders = project.folders.clone();
+            if folders.len() == original_len {
+                state.status_message =
+                    Some("That folder is not related to this project.".to_owned());
+                return Vec::new();
+            }
+            state.local_projects = normalize_local_projects(
+                std::mem::take(&mut state.local_projects),
+                &state.local_project_order,
+            );
+            state.status_message = Some("Related folder removed".to_owned());
+            vec![Effect::SetLocalProjectFolders { path, folders }]
+        }
+        Action::SetLocalProjectPrimary { path, new_primary } => {
+            // A primary swap keeps the project's identity (name, pin,
+            // recency) while re-keying the registry on the new primary;
+            // the old primary parks at the front of the related folders
+            // (WO-P1-003).
+            // Primary folders are globally unique across projects: a swap
+            // onto another project's primary would silently drop one of
+            // the two during normalization, so it is guarded instead.
+            let collides_with_other_primary = state
+                .local_projects
+                .iter()
+                .any(|existing| existing.path != path && existing.path == new_primary);
+            let Some(project) = state
+                .local_projects
+                .iter_mut()
+                .find(|project| project.path == path)
+            else {
+                state.status_message = Some("The selected project is unavailable.".to_owned());
+                return Vec::new();
+            };
+            let guard = if new_primary == path {
+                Some("That folder is already the primary folder.".to_owned())
+            } else if !new_primary.is_absolute() || !project.folders.contains(&new_primary) {
+                Some("Choose one of the related folders as the new primary.".to_owned())
+            } else if collides_with_other_primary {
+                Some("That folder is the primary folder of another project.".to_owned())
+            } else {
+                None
+            };
+            let (name, pinned, last_opened_at, folders) = match guard {
+                Some(message) => {
+                    state.status_message = Some(message);
+                    return Vec::new();
+                }
+                None => {
+                    let mut folders = project.folders.clone();
+                    folders.retain(|folder| *folder != new_primary);
+                    folders.insert(0, path.clone());
+                    project.path = new_primary.clone();
+                    project.folders = folders.clone();
+                    (
+                        project.name.clone(),
+                        project.pinned,
+                        project.last_opened_at,
+                        folders,
+                    )
+                }
+            };
+            // The registry key changed: replace the old primary in the
+            // persisted manual order so the project keeps its position.
+            let order = state
+                .local_project_order
+                .iter()
+                .map(|ordered| {
+                    if *ordered == path {
+                        new_primary.clone()
+                    } else {
+                        ordered.clone()
+                    }
+                })
+                .collect::<Vec<_>>();
+            let order_changed = order != state.local_project_order;
+            state.local_project_order = normalize_local_project_order(order);
+            state.local_projects = normalize_local_projects(
+                std::mem::take(&mut state.local_projects),
+                &state.local_project_order,
+            );
+            // New chats compose against the new primary, and skills and
+            // config discovery follow the primary — never the related
+            // folders.
+            let mut effects = Vec::new();
+            if state.selected_task_id.is_none() && state.new_chat_cwd.as_ref() == Some(&path) {
+                effects.append(&mut clear_fuzzy_file_search(state));
+                state.new_chat_cwd = Some(new_primary.clone());
+                advance_new_chat_draft_generation(state);
+                state.marketplace.pending_skill_path = None;
+                state.marketplace.skills_status = Some(LoadStatus::Loading);
+                let cwds = composer_workspace_roots(state);
+                effects.push(refresh_skills_effect(state, cwds.clone(), false));
+                effects.push(refresh_composer_plugins_effect(state, cwds, false));
+            }
+            if order_changed {
+                effects.push(Effect::PersistProjectOrder {
+                    order: state.local_project_order.clone(),
+                });
+            }
+            state.status_message = Some("Primary folder changed".to_owned());
+            effects.push(Effect::SetLocalProjectPrimary {
+                previous: path,
+                primary: new_primary.clone(),
+                name,
+                pinned,
+                last_opened_at,
+                folders,
+            });
+            effects
         }
         Action::UseGitWorktree(path) => {
             let known_worktree = state
@@ -20660,11 +20921,12 @@ mod tests {
         KeyboardShortcutUpdateTarget, LoadStatus, LocalProjectSummary,
         MAX_ACCOUNT_DAILY_USAGE_BUCKETS, MAX_ACCOUNT_FIELD_BYTES, MAX_BROWSER_DOWNLOADS,
         MAX_COMPOSER_BYTES, MAX_GIT_BRANCH_BYTES, MAX_GIT_DIFF_BYTES, MAX_GIT_INSTRUCTIONS_BYTES,
-        MAX_GIT_SHA_BYTES, MAX_PINNED_TASK_ID_BYTES, MAX_PLUGIN_DETAIL_ITEMS,
-        MAX_REVIEW_START_ERROR_BYTES, MAX_TIMELINE_ITEMS, MAX_TURN_DIFF_BYTES, MAX_VISIBLE_THREADS,
-        MAX_WORKFLOW_INSTANCES, MAX_WORKFLOW_PUBLISHED_VERSIONS, MainRoute, MarketplaceManageTab,
-        MarketplaceSectionFilter, MarketplaceSourceCard, MarketplaceTab, MarketplaceUpgradeFailure,
-        McpAuthStatus, McpBrowserOriginElicitation, McpBrowserResourceElicitation, McpElicitation,
+        MAX_GIT_SHA_BYTES, MAX_LOCAL_PROJECT_FOLDERS, MAX_PINNED_TASK_ID_BYTES,
+        MAX_PLUGIN_DETAIL_ITEMS, MAX_REVIEW_START_ERROR_BYTES, MAX_TIMELINE_ITEMS,
+        MAX_TURN_DIFF_BYTES, MAX_VISIBLE_THREADS, MAX_WORKFLOW_INSTANCES,
+        MAX_WORKFLOW_PUBLISHED_VERSIONS, MainRoute, MarketplaceManageTab, MarketplaceSectionFilter,
+        MarketplaceSourceCard, MarketplaceTab, MarketplaceUpgradeFailure, McpAuthStatus,
+        McpBrowserOriginElicitation, McpBrowserResourceElicitation, McpElicitation,
         McpElicitationContent, McpElicitationDecision, McpElicitationValue, McpFormElicitation,
         McpFormField, McpFormFieldKind, McpFormImagePickerItem, McpFormOption, McpFormStringFormat,
         McpResourceCard, McpResourceContentCard, McpServerCard, McpServerDraft,
@@ -24066,18 +24328,21 @@ mod tests {
                     name: String::new(),
                     pinned: true,
                     last_opened_at: 1,
+                    folders: Vec::new(),
                 },
                 LocalProjectSummary {
                     path: second.clone(),
                     name: String::new(),
                     pinned: true,
                     last_opened_at: 2,
+                    folders: Vec::new(),
                 },
                 LocalProjectSummary {
                     path: third.clone(),
                     name: String::new(),
                     pinned: false,
                     last_opened_at: 3,
+                    folders: Vec::new(),
                 },
             ]),
         );
@@ -24131,6 +24396,7 @@ mod tests {
             name: String::new(),
             pinned: false,
             last_opened_at: 4,
+            folders: Vec::new(),
         });
         reduce(&mut state, Action::LocalProjectsLoaded(loaded));
         assert_eq!(
@@ -24185,18 +24451,21 @@ mod tests {
                     name: String::new(),
                     pinned: false,
                     last_opened_at: 1,
+                    folders: Vec::new(),
                 },
                 LocalProjectSummary {
                     path: second.clone(),
                     name: "Second".to_owned(),
                     pinned: true,
                     last_opened_at: 2,
+                    folders: Vec::new(),
                 },
                 LocalProjectSummary {
                     path: PathBuf::from("relative"),
                     name: "Ignored".to_owned(),
                     pinned: false,
                     last_opened_at: 3,
+                    folders: Vec::new(),
                 },
             ]),
         );
@@ -24266,6 +24535,539 @@ mod tests {
                 .local_projects
                 .iter()
                 .all(|project| project.path != first)
+        );
+    }
+
+    #[test]
+    fn local_project_related_folders_add_remove_and_guard_duplicates() {
+        let primary = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\alpha")
+        } else {
+            PathBuf::from("/projects/alpha")
+        };
+        let related = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\alpha-docs")
+        } else {
+            PathBuf::from("/projects/alpha-docs")
+        };
+        let mut state = AppState::default();
+        reduce(
+            &mut state,
+            Action::LocalProjectsLoaded(vec![LocalProjectSummary {
+                path: primary.clone(),
+                name: "Alpha".to_owned(),
+                pinned: false,
+                last_opened_at: 1,
+                folders: Vec::new(),
+            }]),
+        );
+
+        // Adding a related folder updates state and persists the list.
+        assert_eq!(
+            reduce(
+                &mut state,
+                Action::AddLocalProjectFolder {
+                    path: primary.clone(),
+                    folder: related.clone(),
+                },
+            ),
+            [Effect::SetLocalProjectFolders {
+                path: primary.clone(),
+                folders: vec![related.clone()],
+            }]
+        );
+        assert_eq!(state.local_projects[0].folders, [related.clone()]);
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Related folder added")
+        );
+
+        // Guards surface visible messages instead of silently no-op'ing.
+        assert!(
+            reduce(
+                &mut state,
+                Action::AddLocalProjectFolder {
+                    path: primary.clone(),
+                    folder: related.clone(),
+                },
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("This folder is already related to the project.")
+        );
+        assert!(
+            reduce(
+                &mut state,
+                Action::AddLocalProjectFolder {
+                    path: primary.clone(),
+                    folder: primary.clone(),
+                },
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("This folder is already the primary folder.")
+        );
+        assert!(
+            reduce(
+                &mut state,
+                Action::AddLocalProjectFolder {
+                    path: primary.clone(),
+                    folder: PathBuf::from("relative"),
+                },
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("The selected folder is unavailable.")
+        );
+        assert!(
+            reduce(
+                &mut state,
+                Action::AddLocalProjectFolder {
+                    path: PathBuf::from("/projects/unknown"),
+                    folder: related.clone(),
+                },
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("The selected project is unavailable.")
+        );
+        assert_eq!(state.local_projects[0].folders, [related.clone()]);
+
+        // The related-folder cap surfaces guidance once reached.
+        for index in 0..MAX_LOCAL_PROJECT_FOLDERS {
+            let folder = if cfg!(windows) {
+                PathBuf::from(format!(r"C:\projects\alpha-{index:02}"))
+            } else {
+                PathBuf::from(format!("/projects/alpha-{index:02}"))
+            };
+            reduce(
+                &mut state,
+                Action::AddLocalProjectFolder {
+                    path: primary.clone(),
+                    folder,
+                },
+            );
+        }
+        assert_eq!(
+            state.local_projects[0].folders.len(),
+            MAX_LOCAL_PROJECT_FOLDERS
+        );
+        let overflow = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\alpha-overflow")
+        } else {
+            PathBuf::from("/projects/alpha-overflow")
+        };
+        assert!(
+            reduce(
+                &mut state,
+                Action::AddLocalProjectFolder {
+                    path: primary.clone(),
+                    folder: overflow,
+                },
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Projects support at most 16 related folders.")
+        );
+
+        // Removing a related folder persists the shortened list; unknown
+        // members answer honestly.
+        let removed = state.local_projects[0].folders[0].clone();
+        let remaining = state.local_projects[0].folders[1..].to_vec();
+        assert_eq!(
+            reduce(
+                &mut state,
+                Action::RemoveLocalProjectFolder {
+                    path: primary.clone(),
+                    folder: removed,
+                },
+            ),
+            [Effect::SetLocalProjectFolders {
+                path: primary.clone(),
+                folders: remaining,
+            }]
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Related folder removed")
+        );
+        assert!(
+            reduce(
+                &mut state,
+                Action::RemoveLocalProjectFolder {
+                    path: primary.clone(),
+                    folder: related.clone(),
+                },
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("That folder is not related to this project.")
+        );
+    }
+
+    #[test]
+    fn local_project_folder_lists_normalize_on_load() {
+        let primary = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\alpha")
+        } else {
+            PathBuf::from("/projects/alpha")
+        };
+        let first = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\first")
+        } else {
+            PathBuf::from("/projects/first")
+        };
+        let second = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\second")
+        } else {
+            PathBuf::from("/projects/second")
+        };
+        let mut state = AppState::default();
+        reduce(
+            &mut state,
+            Action::LocalProjectsLoaded(vec![LocalProjectSummary {
+                path: primary.clone(),
+                name: "Alpha".to_owned(),
+                pinned: false,
+                last_opened_at: 1,
+                folders: vec![
+                    PathBuf::from("relative"),
+                    primary.clone(),
+                    first.clone(),
+                    first.clone(),
+                    second.clone(),
+                ],
+            }]),
+        );
+        // Relative paths, the primary itself, and duplicates are dropped;
+        // insertion order is preserved for the survivors.
+        assert_eq!(
+            state.local_projects[0].folders,
+            [first.clone(), second.clone()]
+        );
+
+        // Legacy single-path projects load as primary-only (zero related
+        // folders) and stay fully functional.
+        reduce(
+            &mut state,
+            Action::LocalProjectsLoaded(vec![LocalProjectSummary {
+                path: primary.clone(),
+                name: "Alpha".to_owned(),
+                pinned: false,
+                last_opened_at: 1,
+                folders: Vec::new(),
+            }]),
+        );
+        assert_eq!(state.local_projects[0].folders, Vec::<PathBuf>::new());
+
+        // Lists beyond the cap are truncated to the first
+        // MAX_LOCAL_PROJECT_FOLDERS entries.
+        let oversized = (0..(MAX_LOCAL_PROJECT_FOLDERS + 2))
+            .map(|index| {
+                if cfg!(windows) {
+                    PathBuf::from(format!(r"C:\projects\extra-{index:02}"))
+                } else {
+                    PathBuf::from(format!("/projects/extra-{index:02}"))
+                }
+            })
+            .collect::<Vec<_>>();
+        reduce(
+            &mut state,
+            Action::LocalProjectsLoaded(vec![LocalProjectSummary {
+                path: primary.clone(),
+                name: "Alpha".to_owned(),
+                pinned: false,
+                last_opened_at: 1,
+                folders: oversized,
+            }]),
+        );
+        assert_eq!(
+            state.local_projects[0].folders.len(),
+            MAX_LOCAL_PROJECT_FOLDERS
+        );
+        let expected_first = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\extra-00")
+        } else {
+            PathBuf::from("/projects/extra-00")
+        };
+        assert_eq!(state.local_projects[0].folders[0], expected_first);
+    }
+
+    #[test]
+    fn local_project_primary_swap_rekeys_the_project_and_keeps_identity() {
+        let primary = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\alpha")
+        } else {
+            PathBuf::from("/projects/alpha")
+        };
+        let related = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\beta")
+        } else {
+            PathBuf::from("/projects/beta")
+        };
+        let other = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\beta-other")
+        } else {
+            PathBuf::from("/projects/beta-other")
+        };
+        let third_project = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\gamma")
+        } else {
+            PathBuf::from("/projects/gamma")
+        };
+        let mut state = AppState::default();
+        reduce(
+            &mut state,
+            Action::LocalProjectsLoaded(vec![
+                LocalProjectSummary {
+                    path: primary.clone(),
+                    name: "Alpha".to_owned(),
+                    pinned: true,
+                    last_opened_at: 5,
+                    folders: vec![related.clone(), other.clone()],
+                },
+                LocalProjectSummary {
+                    path: third_project.clone(),
+                    name: "Gamma".to_owned(),
+                    pinned: false,
+                    last_opened_at: 1,
+                    folders: Vec::new(),
+                },
+            ]),
+        );
+        reduce(
+            &mut state,
+            Action::ProjectOrderLoaded(vec![primary.clone(), third_project.clone()]),
+        );
+        state.new_chat_cwd = Some(primary.clone());
+
+        let effects = reduce(
+            &mut state,
+            Action::SetLocalProjectPrimary {
+                path: primary.clone(),
+                new_primary: related.clone(),
+            },
+        );
+
+        // The registry row is re-keyed on the new primary with the
+        // identity metadata preserved; the old primary parks at the front
+        // of the related folders. The persisted manual order follows the
+        // new primary, and new chats plus skills refresh against the new
+        // primary alone.
+        assert_eq!(
+            effects,
+            vec![
+                Effect::RefreshSkills {
+                    generation: 1,
+                    cwds: vec![related.clone()],
+                    force_reload: false,
+                },
+                Effect::RefreshComposerPlugins {
+                    generation: 1,
+                    cwds: vec![related.clone()],
+                    force_refetch: false,
+                },
+                Effect::PersistProjectOrder {
+                    order: vec![related.clone(), third_project.clone()],
+                },
+                Effect::SetLocalProjectPrimary {
+                    previous: primary.clone(),
+                    primary: related.clone(),
+                    name: "Alpha".to_owned(),
+                    pinned: true,
+                    last_opened_at: 5,
+                    folders: vec![primary.clone(), other.clone()],
+                },
+            ]
+        );
+        let swapped = match state
+            .local_projects
+            .iter()
+            .find(|project| project.path == related)
+        {
+            Some(project) => project,
+            None => panic!("the swapped project must still exist"),
+        };
+        assert_eq!(swapped.name, "Alpha");
+        assert!(swapped.pinned);
+        assert_eq!(swapped.last_opened_at, 5);
+        assert_eq!(swapped.folders, [primary.clone(), other.clone()]);
+        assert_eq!(state.new_chat_cwd.as_deref(), Some(related.as_path()));
+        assert_eq!(
+            state.local_project_order,
+            [related.clone(), third_project.clone()]
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Primary folder changed")
+        );
+
+        // Guards answer honestly: only related folders can become primary.
+        // (The old primary parked in the related list is a legitimate swap
+        // target, so the guard is proven with a folder outside the
+        // project.)
+        assert!(
+            reduce(
+                &mut state,
+                Action::SetLocalProjectPrimary {
+                    path: related.clone(),
+                    new_primary: PathBuf::from("/projects/not-related"),
+                },
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Choose one of the related folders as the new primary.")
+        );
+        assert!(
+            reduce(
+                &mut state,
+                Action::SetLocalProjectPrimary {
+                    path: related.clone(),
+                    new_primary: related.clone(),
+                },
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("That folder is already the primary folder.")
+        );
+        assert!(
+            reduce(
+                &mut state,
+                Action::SetLocalProjectPrimary {
+                    path: PathBuf::from("/projects/unknown"),
+                    new_primary: related.clone(),
+                },
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("The selected project is unavailable.")
+        );
+    }
+
+    #[test]
+    fn local_project_primary_swap_rejects_another_projects_primary() {
+        let alpha = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\alpha")
+        } else {
+            PathBuf::from("/projects/alpha")
+        };
+        let shared = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\shared")
+        } else {
+            PathBuf::from("/projects/shared")
+        };
+        let mut state = AppState::default();
+        reduce(
+            &mut state,
+            Action::LocalProjectsLoaded(vec![
+                LocalProjectSummary {
+                    path: alpha.clone(),
+                    name: "Alpha".to_owned(),
+                    pinned: false,
+                    last_opened_at: 2,
+                    folders: vec![shared.clone()],
+                },
+                LocalProjectSummary {
+                    path: shared.clone(),
+                    name: "Shared".to_owned(),
+                    pinned: false,
+                    last_opened_at: 1,
+                    folders: Vec::new(),
+                },
+            ]),
+        );
+        // `shared` is related to Alpha but is also Shared's primary:
+        // promoting it would collide with the other registry key, so the
+        // swap is guarded instead of silently dropping a project during
+        // normalization.
+        assert!(
+            reduce(
+                &mut state,
+                Action::SetLocalProjectPrimary {
+                    path: alpha.clone(),
+                    new_primary: shared.clone(),
+                },
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("That folder is the primary folder of another project.")
+        );
+        assert_eq!(state.local_projects.len(), 2);
+        assert_eq!(state.local_projects[0].path, alpha);
+        assert_eq!(state.local_projects[0].folders, [shared.clone()]);
+    }
+
+    #[test]
+    fn related_folders_join_file_search_while_primary_drives_cwd_and_skills() {
+        let primary = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\alpha")
+        } else {
+            PathBuf::from("/projects/alpha")
+        };
+        let related = if cfg!(windows) {
+            PathBuf::from(r"C:\projects\beta")
+        } else {
+            PathBuf::from("/projects/beta")
+        };
+        let mut state = AppState::default();
+        reduce(
+            &mut state,
+            Action::LocalProjectsLoaded(vec![LocalProjectSummary {
+                path: primary.clone(),
+                name: "Alpha".to_owned(),
+                pinned: false,
+                last_opened_at: 1,
+                folders: vec![related.clone()],
+            }]),
+        );
+
+        // Selecting the project composes new chats against the primary and
+        // refreshes skills against primary-only roots: the related folder
+        // never joins AGENTS.md/skills/config discovery (WO-P1-003).
+        let effects = reduce(&mut state, Action::SelectWorkspace(primary.clone()));
+        assert_eq!(state.new_chat_cwd.as_deref(), Some(primary.as_path()));
+        assert!(effects.contains(&Effect::RefreshSkills {
+            generation: 1,
+            cwds: vec![primary.clone()],
+            force_reload: false,
+        }));
+
+        // File search covers the primary first, then the related folder.
+        assert_eq!(
+            reduce(
+                &mut state,
+                Action::ComposerFileSearchChanged(Some("readme".to_owned())),
+            ),
+            [Effect::SearchFuzzyFiles {
+                session_id: "codexrs-fuzzy-file-search-1".to_owned(),
+                roots: vec![primary.clone(), related.clone()],
+                query: "readme".to_owned(),
+                start_session: true,
+            }]
+        );
+        assert_eq!(
+            state.fuzzy_file_search.roots,
+            [primary.clone(), related.clone()]
         );
     }
 
