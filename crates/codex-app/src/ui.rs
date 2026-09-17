@@ -2480,6 +2480,32 @@ enum SettingsSection {
     ArchivedChats,
 }
 
+impl SettingsSection {
+    /// Sections the settings navigation renders by default (no search query,
+    /// independent of account or repository state). The command palette
+    /// indexes every section in this registry; contextual sections
+    /// (CodeReview, Worktrees, ArchivedChats) intentionally stay out of the
+    /// default palette index (WO-P2-004 known limitations).
+    #[cfg(test)]
+    const DEFAULT_NAV_SECTIONS: [Self; 15] = [
+        Self::General,
+        Self::Appearance,
+        Self::Personalization,
+        Self::KeyboardShortcuts,
+        Self::Profile,
+        Self::Usage,
+        Self::Import,
+        Self::Configuration,
+        Self::Git,
+        Self::Hooks,
+        Self::Plugins,
+        Self::McpServers,
+        Self::Browser,
+        Self::ComputerUse,
+        Self::Connections,
+    ];
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ArchivedChatKindFilter {
     All,
@@ -3302,10 +3328,16 @@ enum PaletteCommand {
     OpenKeyboardShortcutsSettings,
     OpenUsageSettings,
     OpenComputerUseSettings,
+    OpenProfileSettings,
+    OpenImportSettings,
+    OpenBrowserSettings,
+    OpenConfigurationSettings,
+    OpenHooksSettings,
+    OpenGitSettings,
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 45] = [
+    const ALL: [Self; 51] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3315,6 +3347,12 @@ impl PaletteCommand {
         Self::OpenKeyboardShortcutsSettings,
         Self::OpenUsageSettings,
         Self::OpenComputerUseSettings,
+        Self::OpenProfileSettings,
+        Self::OpenImportSettings,
+        Self::OpenBrowserSettings,
+        Self::OpenConfigurationSettings,
+        Self::OpenHooksSettings,
+        Self::OpenGitSettings,
         Self::ArchiveChat,
         Self::NewStandaloneChat,
         Self::ToggleChatPin,
@@ -3391,7 +3429,7 @@ impl PaletteCommand {
             Self::OpenSkills => "Go to skills",
             Self::ForceReloadSkills => "Force reload skills",
             Self::OpenMcpSettings => "MCP",
-            Self::OpenPersonalitySettings => "Personality",
+            Self::OpenPersonalitySettings => "Personalization",
             Self::OpenPlugins => "Open plugins",
             Self::OpenWorkflows => "Open workflows",
             Self::OpenConnectionsSettings => "Connections",
@@ -3400,6 +3438,12 @@ impl PaletteCommand {
             Self::OpenKeyboardShortcutsSettings => "Keyboard shortcuts",
             Self::OpenUsageSettings => "Usage & billing",
             Self::OpenComputerUseSettings => "Computer use",
+            Self::OpenProfileSettings => "Profile",
+            Self::OpenImportSettings => "Import",
+            Self::OpenBrowserSettings => "Browser",
+            Self::OpenConfigurationSettings => "Configuration",
+            Self::OpenHooksSettings => "Hooks",
+            Self::OpenGitSettings => "Git",
         }
     }
 
@@ -3441,7 +3485,7 @@ impl PaletteCommand {
             Self::OpenSkills => "Browse installed and recommended skills",
             Self::ForceReloadSkills => "Refresh the skill catalog for the current context",
             Self::OpenMcpSettings => "Configure MCP servers",
-            Self::OpenPersonalitySettings => "Adjust tone and response style",
+            Self::OpenPersonalitySettings => "Adjust tone, response style, and personality",
             Self::OpenPlugins => "Browse the plugins marketplace",
             Self::OpenWorkflows => "Teach, publish, and run Universal workflows",
             Self::OpenConnectionsSettings => "Manage remote connections and paired devices",
@@ -3450,6 +3494,12 @@ impl PaletteCommand {
             Self::OpenKeyboardShortcutsSettings => "Customize keyboard shortcuts",
             Self::OpenUsageSettings => "Open Usage & billing settings",
             Self::OpenComputerUseSettings => "Open Computer use settings",
+            Self::OpenProfileSettings => "Open Profile settings",
+            Self::OpenImportSettings => "Open Import settings",
+            Self::OpenBrowserSettings => "Open Browser settings",
+            Self::OpenConfigurationSettings => "Open Configuration settings",
+            Self::OpenHooksSettings => "Open Hooks settings",
+            Self::OpenGitSettings => "Open Git settings",
         }
     }
 
@@ -3561,6 +3611,12 @@ impl PaletteCommand {
             Self::OpenKeyboardShortcutsSettings => IconName::Asterisk,
             Self::OpenUsageSettings => IconName::ChartPie,
             Self::OpenComputerUseSettings => IconName::Inspector,
+            Self::OpenProfileSettings => IconName::User,
+            Self::OpenImportSettings => IconName::ArrowDown,
+            Self::OpenBrowserSettings => IconName::Globe,
+            Self::OpenConfigurationSettings => IconName::Settings2,
+            Self::OpenHooksSettings => IconName::Bell,
+            Self::OpenGitSettings => IconName::GitHub,
         }
     }
 
@@ -3571,7 +3627,13 @@ impl PaletteCommand {
             | Self::OpenAppearanceSettings
             | Self::OpenKeyboardShortcutsSettings
             | Self::OpenUsageSettings
-            | Self::OpenComputerUseSettings => PaletteGroup::Settings,
+            | Self::OpenComputerUseSettings
+            | Self::OpenProfileSettings
+            | Self::OpenImportSettings
+            | Self::OpenBrowserSettings
+            | Self::OpenConfigurationSettings
+            | Self::OpenHooksSettings
+            | Self::OpenGitSettings => PaletteGroup::Settings,
             Self::ArchiveChat | Self::NewStandaloneChat | Self::ToggleChatPin => {
                 PaletteGroup::Thread
             }
@@ -3606,6 +3668,27 @@ impl PaletteCommand {
             | Self::DisableGitReview
             | Self::EnableGitReview => PaletteGroup::Configure,
             Self::LogOut | Self::Feedback | Self::OpenProcessManager => PaletteGroup::App,
+        }
+    }
+
+    #[cfg(test)]
+    const fn settings_section(self) -> Option<SettingsSection> {
+        match self {
+            Self::OpenGeneralSettings => Some(SettingsSection::General),
+            Self::OpenAppearanceSettings => Some(SettingsSection::Appearance),
+            Self::OpenPersonalitySettings => Some(SettingsSection::Personalization),
+            Self::OpenKeyboardShortcutsSettings => Some(SettingsSection::KeyboardShortcuts),
+            Self::OpenProfileSettings => Some(SettingsSection::Profile),
+            Self::OpenUsageSettings => Some(SettingsSection::Usage),
+            Self::OpenImportSettings => Some(SettingsSection::Import),
+            Self::OpenConfigurationSettings => Some(SettingsSection::Configuration),
+            Self::OpenGitSettings => Some(SettingsSection::Git),
+            Self::OpenHooksSettings => Some(SettingsSection::Hooks),
+            Self::OpenMcpSettings => Some(SettingsSection::McpServers),
+            Self::OpenBrowserSettings => Some(SettingsSection::Browser),
+            Self::OpenComputerUseSettings => Some(SettingsSection::ComputerUse),
+            Self::OpenConnectionsSettings => Some(SettingsSection::Connections),
+            _ => None,
         }
     }
 
@@ -4072,6 +4155,24 @@ impl CommandPaletteView {
             }
             PaletteCommand::OpenComputerUseSettings => {
                 workspace.open_settings_section(SettingsSection::ComputerUse, cx);
+            }
+            PaletteCommand::OpenProfileSettings => {
+                workspace.open_settings_section(SettingsSection::Profile, cx);
+            }
+            PaletteCommand::OpenImportSettings => {
+                workspace.open_settings_section(SettingsSection::Import, cx);
+            }
+            PaletteCommand::OpenBrowserSettings => {
+                workspace.open_settings_section(SettingsSection::Browser, cx);
+            }
+            PaletteCommand::OpenConfigurationSettings => {
+                workspace.open_settings_section(SettingsSection::Configuration, cx);
+            }
+            PaletteCommand::OpenHooksSettings => {
+                workspace.open_settings_section(SettingsSection::Hooks, cx);
+            }
+            PaletteCommand::OpenGitSettings => {
+                workspace.open_settings_section(SettingsSection::Git, cx);
             }
             PaletteCommand::SearchChats | PaletteCommand::SearchFiles => {}
         });
@@ -47890,8 +47991,8 @@ mod tests {
             ),
             (
                 PaletteCommand::OpenPersonalitySettings,
-                "Personality",
-                "Adjust tone and response style",
+                "Personalization",
+                "Adjust tone, response style, and personality",
                 None,
                 PaletteGroup::Configure,
             ),
@@ -47934,6 +48035,48 @@ mod tests {
                 PaletteCommand::OpenComputerUseSettings,
                 "Computer use",
                 "Open Computer use settings",
+                None,
+                PaletteGroup::Settings,
+            ),
+            (
+                PaletteCommand::OpenProfileSettings,
+                "Profile",
+                "Open Profile settings",
+                None,
+                PaletteGroup::Settings,
+            ),
+            (
+                PaletteCommand::OpenImportSettings,
+                "Import",
+                "Open Import settings",
+                None,
+                PaletteGroup::Settings,
+            ),
+            (
+                PaletteCommand::OpenBrowserSettings,
+                "Browser",
+                "Open Browser settings",
+                None,
+                PaletteGroup::Settings,
+            ),
+            (
+                PaletteCommand::OpenConfigurationSettings,
+                "Configuration",
+                "Open Configuration settings",
+                None,
+                PaletteGroup::Settings,
+            ),
+            (
+                PaletteCommand::OpenHooksSettings,
+                "Hooks",
+                "Open Hooks settings",
+                None,
+                PaletteGroup::Settings,
+            ),
+            (
+                PaletteCommand::OpenGitSettings,
+                "Git",
+                "Open Git settings",
                 None,
                 PaletteGroup::Settings,
             ),
@@ -48002,6 +48145,66 @@ mod tests {
         }
         assert!(!is_previous_chat_bracket_key("[", false));
         assert!(!is_next_chat_bracket_key("]", false));
+    }
+
+    fn palette_command_opens_settings_section(
+        command: PaletteCommand,
+        section: SettingsSection,
+    ) -> bool {
+        // `OpenPlugins` opens the marketplace surface that the Plugins
+        // settings page manages (the WO-P2-004 accounting counts it as the
+        // Plugins entry); every other default-nav section opens directly
+        // through `settings_section()` dispatch.
+        command.settings_section() == Some(section)
+            || (section == SettingsSection::Plugins && command == PaletteCommand::OpenPlugins)
+    }
+
+    #[test]
+    fn palette_indexes_every_default_nav_settings_section() {
+        for section in SettingsSection::DEFAULT_NAV_SECTIONS {
+            let covered = PaletteCommand::ALL
+                .iter()
+                .any(|command| palette_command_opens_settings_section(*command, section));
+            assert!(
+                covered,
+                "settings section {section:?} has no command palette entry"
+            );
+        }
+    }
+
+    #[test]
+    fn palette_settings_queries_resolve_to_settings_sections() {
+        // WO-P2-004 runtime contract: querying the palette by a settings
+        // page's nav name must resolve to an entry that opens that page
+        // (the B2 runtime proof showed "import" -> "No matches" before).
+        let cases = [
+            ("general", SettingsSection::General),
+            ("appearance", SettingsSection::Appearance),
+            ("personalization", SettingsSection::Personalization),
+            ("keyboard shortcuts", SettingsSection::KeyboardShortcuts),
+            ("profile", SettingsSection::Profile),
+            ("usage", SettingsSection::Usage),
+            ("import", SettingsSection::Import),
+            ("configuration", SettingsSection::Configuration),
+            ("git", SettingsSection::Git),
+            ("hooks", SettingsSection::Hooks),
+            ("plugins", SettingsSection::Plugins),
+            ("mcp servers", SettingsSection::McpServers),
+            ("browser", SettingsSection::Browser),
+            ("computer use", SettingsSection::ComputerUse),
+            ("connections", SettingsSection::Connections),
+        ];
+        for (query, section) in cases {
+            let resolved = PaletteCommand::ALL.iter().any(|command| {
+                palette_command_opens_settings_section(*command, section)
+                    && (command.title().to_lowercase().contains(query)
+                        || command.description().to_lowercase().contains(query))
+            });
+            assert!(
+                resolved,
+                "command palette query {query:?} does not resolve to {section:?}"
+            );
+        }
     }
 
     #[test]
