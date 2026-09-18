@@ -1633,7 +1633,6 @@ gpui::actions!(
     [
         OpenCommandMenu,
         OpenChatSearch,
-        OpenFileSearch,
         OpenFolderShortcut,
         NewChatShortcut,
         OpenSideChatShortcut,
@@ -4633,7 +4632,6 @@ pub fn run() {
                 KeyBinding::new(&shortcut("shift-p"), OpenCommandMenu, None),
                 KeyBinding::new(&shortcut("k"), OpenCommandMenu, None),
                 KeyBinding::new(&shortcut("g"), OpenChatSearch, None),
-                KeyBinding::new(&shortcut("p"), OpenFileSearch, None),
                 KeyBinding::new(&shortcut("o"), OpenFolderShortcut, None),
                 KeyBinding::new(&shortcut("shift-o"), NewChatShortcut, None),
                 KeyBinding::new(&shortcut("n"), NewChatShortcut, None),
@@ -51049,5 +51047,45 @@ mod tests {
             ),
             None
         );
+    }
+
+    #[test]
+    fn ctrl_p_routes_to_the_search_files_command() {
+        // Ctrl+P is owned by exactly one registry command: searchFiles
+        // (WO-P2-007). The dead OpenFileSearch GPUI action — declared but
+        // never handled — was removed so the interceptor's accelerator match
+        // is the sole routing path, mirroring how Ctrl+K (openCommandMenu)
+        // and Ctrl+G (searchChats) already work.
+        let owners = ACTIVE_KEYBOARD_SHORTCUTS
+            .iter()
+            .filter(|item| {
+                item.shortcuts.iter().any(|binding| {
+                    normalized_accelerator(binding) == normalized_accelerator("CmdOrCtrl+P")
+                })
+            })
+            .map(|item| item.id)
+            .collect::<Vec<_>>();
+        assert_eq!(owners, ["searchFiles"]);
+        // The command is part of the persisted, customizable registry.
+        assert!(KEYBOARD_SHORTCUT_COMMAND_IDS.contains(&"searchFiles"));
+        // The palette command maps to the searchFiles command id that the
+        // interceptor dispatches to open_command_palette(PaletteMode::Files).
+        assert_eq!(
+            PaletteCommand::SearchFiles.shortcut_command_id(),
+            Some("searchFiles")
+        );
+        // The palette command advertises Ctrl+P as its default shortcut.
+        assert_eq!(
+            PaletteCommand::SearchFiles.shortcut(),
+            Some("Ctrl+P")
+        );
+        // The registry entry carries the expected metadata.
+        let search_files = ACTIVE_KEYBOARD_SHORTCUTS
+            .iter()
+            .find(|item| item.id == "searchFiles")
+            .expect("searchFiles must remain in the registry");
+        assert_eq!(search_files.title, "Search files");
+        assert_eq!(search_files.shortcuts, ["CmdOrCtrl+P"]);
+        assert_eq!(search_files.group, KeyboardShortcutGroup::General);
     }
 }
