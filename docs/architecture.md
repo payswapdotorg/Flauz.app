@@ -135,7 +135,7 @@ Detailed sequencing and work-order discipline are frozen in
 [docs/IMPLEMENTATION-ROADMAP.md](IMPLEMENTATION-ROADMAP.md), and
 [docs/WORK-ORDER-TEMPLATE.md](WORK-ORDER-TEMPLATE.md).
 
-# Git and worktrees
+## Git and worktrees
 
 All Git commands run off the UI thread and are serialized by the backend.
 Filesystem notifications are coalesced and restarted through a 300 ms debounce
