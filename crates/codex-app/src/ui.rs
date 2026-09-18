@@ -7297,7 +7297,11 @@ impl WorkspaceView {
         }
         // A restored or dismissed side draft keeps the side input in sync
         // with the reducer-owned side composer state.
-        let side_composer = self.state.side_chat.as_ref().map(|side| side.composer.clone());
+        let side_composer = self
+            .state
+            .side_chat
+            .as_ref()
+            .map(|side| side.composer.clone());
         if previous_side_composer != side_composer {
             self.sync_side_composer_input_in_window(cx);
         }
@@ -8273,7 +8277,12 @@ impl WorkspaceView {
 
     fn submit_side_chat(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.dispatch(Action::SubmitSideChatComposer, cx);
-        if self.state.side_chat.as_ref().is_none_or(|side| side.composer.is_empty()) {
+        if self
+            .state
+            .side_chat
+            .as_ref()
+            .is_none_or(|side| side.composer.is_empty())
+        {
             self.side_composer.update(cx, |input, cx| {
                 input.set_value("", window, cx);
             });
@@ -16953,7 +16962,8 @@ impl WorkspaceView {
         if self.timeline_list_task_id.as_deref() == Some(toggle_task_id.as_str()) {
             self.timeline_list.splice(index..index.saturating_add(1), 1);
         } else if self.side_timeline_list_task_id.as_deref() == Some(toggle_task_id.as_str()) {
-            self.side_timeline_list.splice(index..index.saturating_add(1), 1);
+            self.side_timeline_list
+                .splice(index..index.saturating_add(1), 1);
         }
         cx.notify();
     }
@@ -17859,15 +17869,11 @@ impl WorkspaceView {
                     .border_t_1()
                     .border_color(cx.theme().border)
                     .child(
-                        div()
-                            .id("side-composer-input")
-                            .flex_1()
-                            .min_w_0()
-                            .child(
-                                Input::new(&self.side_composer)
-                                    .appearance(false)
-                                    .bordered(false),
-                            ),
+                        div().id("side-composer-input").flex_1().min_w_0().child(
+                            Input::new(&self.side_composer)
+                                .appearance(false)
+                                .bordered(false),
+                        ),
                     )
                     .child(
                         Button::new("side-chat-send")

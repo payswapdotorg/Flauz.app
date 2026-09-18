@@ -7905,19 +7905,22 @@ fn submit_side_chat(state: &mut AppState) -> Vec<Effect> {
             model: state.composer_controls.selected_model.clone(),
             effort: state.composer_controls.selected_effort.clone(),
             service_tier: state.composer_controls.selected_service_tier.clone(),
-            permissions: permission_mode.as_ref().map(|mode| mode.permissions.clone()),
+            permissions: permission_mode
+                .as_ref()
+                .map(|mode| mode.permissions.clone()),
             approval_policy: permission_mode
                 .as_ref()
                 .and_then(|mode| mode.approval_policy.clone()),
-            approvals_reviewer: permission_mode.as_ref().and_then(|mode| mode.approvals_reviewer),
+            approvals_reviewer: permission_mode
+                .as_ref()
+                .and_then(|mode| mode.approvals_reviewer),
             attachments: Vec::new(),
             plan_mode: false,
             goal_objective: None,
         }];
     }
     if state.selected_task_id.is_none() {
-        state.status_message =
-            Some("Open a chat before starting a side conversation.".to_owned());
+        state.status_message = Some("Open a chat before starting a side conversation.".to_owned());
         return Vec::new();
     }
     // First side message: create the side thread through the shared
@@ -7938,11 +7941,15 @@ fn submit_side_chat(state: &mut AppState) -> Vec<Effect> {
         model: state.composer_controls.selected_model.clone(),
         effort: state.composer_controls.selected_effort.clone(),
         service_tier: state.composer_controls.selected_service_tier.clone(),
-        permissions: permission_mode.as_ref().map(|mode| mode.permissions.clone()),
+        permissions: permission_mode
+            .as_ref()
+            .map(|mode| mode.permissions.clone()),
         approval_policy: permission_mode
             .as_ref()
             .and_then(|mode| mode.approval_policy.clone()),
-        approvals_reviewer: permission_mode.as_ref().and_then(|mode| mode.approvals_reviewer),
+        approvals_reviewer: permission_mode
+            .as_ref()
+            .and_then(|mode| mode.approvals_reviewer),
         initial_message: text,
         attachments: Vec::new(),
         plan_mode: false,
@@ -9964,7 +9971,9 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             Vec::new()
         }
         Action::SetSideChatComposer(text) => {
-            if let Some(side) = state.side_chat.as_mut() && text.len() <= MAX_COMPOSER_BYTES {
+            if let Some(side) = state.side_chat.as_mut()
+                && text.len() <= MAX_COMPOSER_BYTES
+            {
                 side.composer = text;
             }
             Vec::new()
@@ -24081,7 +24090,10 @@ mod tests {
         );
 
         // The side draft lives beside the main composer.
-        reduce(&mut state, Action::SetSideChatComposer("side draft".to_owned()));
+        reduce(
+            &mut state,
+            Action::SetSideChatComposer("side draft".to_owned()),
+        );
         assert_eq!(state.composer, "main draft");
         assert_eq!(
             state.side_chat.as_ref().map(|side| side.composer.as_str()),
@@ -24130,16 +24142,21 @@ mod tests {
             .active_turn_id = Some("turn-1".to_owned());
         reduce(&mut state, Action::ComposerChanged("main draft".to_owned()));
         reduce(&mut state, Action::OpenSideChat);
-        reduce(&mut state, Action::SetSideChatComposer("quick aside".to_owned()));
+        reduce(
+            &mut state,
+            Action::SetSideChatComposer("quick aside".to_owned()),
+        );
 
         // The first side message reuses the projectless-chat machinery.
         let effects = reduce(&mut state, Action::SubmitSideChatComposer);
-        let [Effect::CreateTask {
-            cwd,
-            initial_message,
-            new_chat_draft_generation,
-            ..
-        }] = effects.as_slice()
+        let [
+            Effect::CreateTask {
+                cwd,
+                initial_message,
+                new_chat_draft_generation,
+                ..
+            },
+        ] = effects.as_slice()
         else {
             panic!("side chat submission must create a projectless thread");
         };
@@ -24213,10 +24230,12 @@ mod tests {
         reduce(&mut state, Action::OpenSideChat);
         reduce(&mut state, Action::SetSideChatComposer("first".to_owned()));
         let effects = reduce(&mut state, Action::SubmitSideChatComposer);
-        let [Effect::CreateTask {
-            new_chat_draft_generation,
-            ..
-        }] = effects.as_slice()
+        let [
+            Effect::CreateTask {
+                new_chat_draft_generation,
+                ..
+            },
+        ] = effects.as_slice()
         else {
             panic!("side chat submission must create a projectless thread");
         };
@@ -24234,7 +24253,10 @@ mod tests {
             .entry("side-1".to_owned())
             .or_default()
             .active_turn_id = Some("side-turn-1".to_owned());
-        reduce(&mut state, Action::SetSideChatComposer("steer this".to_owned()));
+        reduce(
+            &mut state,
+            Action::SetSideChatComposer("steer this".to_owned()),
+        );
         assert!(matches!(
             reduce(&mut state, Action::SubmitSideChatComposer).as_slice(),
             [Effect::SteerTurn {
@@ -24253,7 +24275,10 @@ mod tests {
             .entry("side-1".to_owned())
             .or_default()
             .active_turn_id = None;
-        reduce(&mut state, Action::SetSideChatComposer("next question".to_owned()));
+        reduce(
+            &mut state,
+            Action::SetSideChatComposer("next question".to_owned()),
+        );
         assert!(matches!(
             reduce(&mut state, Action::SubmitSideChatComposer).as_slice(),
             [Effect::StartTurn {
@@ -24272,12 +24297,17 @@ mod tests {
         reduce(&mut state, Action::TaskCreated(task("t1")));
         reduce(&mut state, Action::ComposerChanged("main draft".to_owned()));
         reduce(&mut state, Action::OpenSideChat);
-        reduce(&mut state, Action::SetSideChatComposer("quick aside".to_owned()));
+        reduce(
+            &mut state,
+            Action::SetSideChatComposer("quick aside".to_owned()),
+        );
         let effects = reduce(&mut state, Action::SubmitSideChatComposer);
-        let [Effect::CreateTask {
-            new_chat_draft_generation,
-            ..
-        }] = effects.as_slice()
+        let [
+            Effect::CreateTask {
+                new_chat_draft_generation,
+                ..
+            },
+        ] = effects.as_slice()
         else {
             panic!("side chat submission must create a projectless thread");
         };
