@@ -76,10 +76,7 @@ The reference is not redistributed or used as a runtime dependency.
 | Extensibility | Skills, plugins, MCP Apps, desktop-app mentions, and Marketplace add/remove/upgrade/install flows through app-server methods |
 | Settings and storage | Catalog-backed account/model/runtime settings plus a small single-writer codexRS database for UI preferences and local-project metadata |
 
-See the [parity matrix](docs/parity-matrix.md) for exact completed and partial
-contracts. The largest remaining gaps are full Linux Computer Use, scheduled
-tasks, signed installers and updates, complete keyboard/screen-reader coverage,
-per-hunk diff actions, and final visual parity.
+See the [parity matrix](docs/parity-matrix.md) for exact Codex completed and partial contracts. The larger approved Flauz architecture and implementation sequence lives in [the architecture constitution](docs/FLAUZ-SOURCE-OF-TRUTH.md) and [master roadmap](docs/IMPLEMENTATION-ROADMAP.md). The parity matrix is the current gap inventory.
 
 ## Native efficiency, without made-up benchmarks
 

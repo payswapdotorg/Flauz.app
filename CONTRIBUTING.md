@@ -5,8 +5,7 @@ tests, and focused features are all welcome.
 
 ## Before writing code
 
-1. Read [AGENTS.md](AGENTS.md) and the
-   [architecture contract](docs/architecture.md).
+1. Read [AGENTS.md](AGENTS.md), the [Flauz architecture constitution](docs/FLAUZ-SOURCE-OF-TRUTH.md), the [implementation roadmap](docs/IMPLEMENTATION-ROADMAP.md), the [work-order protocol](docs/WORK-ORDER-TEMPLATE.md), and the [architecture contract](docs/architecture.md).
 2. Search existing issues and pull requests.
 3. Open an issue or discussion before a large feature, protocol expansion,
    dependency, storage migration, or trust-boundary change.
@@ -66,13 +65,14 @@ impact, trust boundary, and why the existing workspace cannot satisfy it.
 
 A reviewable pull request:
 
-- has one clear purpose;
+- has one clear work-order purpose;
 - avoids unrelated cleanup and formatting churn;
 - calls out Windows and Linux impact;
 - includes screenshots for visible UI changes when practical;
 - documents new environment variables or user-facing behavior;
 - updates the changelog only when the change is release-notable;
-- leaves the required checks green.
+- leaves the required checks green;
+- reports the exact work-order ID, tests, evidence, and any contract deviations.
 
 By submitting a contribution, you agree that it is licensed under the
 [Apache License 2.0](LICENSE).

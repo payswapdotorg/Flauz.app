@@ -1,5 +1,9 @@
 # Project rules
 
+## Flauz source of truth
+
+Before implementation, read [Flauz Architecture & Implementation Constitution](docs/FLAUZ-SOURCE-OF-TRUTH.md), [Master Implementation Roadmap](docs/IMPLEMENTATION-ROADMAP.md), and [Work Order Template / Execution Protocol](docs/WORK-ORDER-TEMPLATE.md). These documents define the frozen product architecture and execution process. `docs/parity-matrix.md` is authoritative for Codex-specific parity only.
+
 - Build a native Rust replacement for Codex Desktop. Do not add Electron, Tauri,
   Wry, WebView, Node.js, or browser-runtime dependencies.
 - Treat stable `26.721.3996.0` as a behavioral reference, not a runtime
@@ -25,9 +29,9 @@
 - Apply KISS, YAGNI, and the Pareto principle. Make the smallest maintainable
   change that satisfies the explicit acceptance criteria and current evidence;
   prefer existing patterns and code paths.
-- Do not add speculative abstractions, dependencies, compatibility layers,
-  fallbacks, configuration, cleanup, documentation, or future-proofing outside
-  the assigned scope.
+- Do not add speculative implementation. Approved Flauz architecture seams may
+  be introduced only when the assigned work order explicitly requires them;
+  do not build future clients/providers/orchestration early without a work order.
 - Keep verification proportional. Add or update only the smallest focused tests
   needed to prove changed behavior or prevent a concrete observed regression.
   Do not add redundant unit/integration/E2E coverage, exhaustive edge-case
