@@ -1,0 +1,2 @@
+/home/z/parity-lab/workspaces/d8c4-run/repo                                          97f6b70 [master]
+/home/z/parity-lab/workspaces/d8c4-run/data/codexrs/worktrees/18d63946ceb41895/repo  97f6b70 (detached HEAD)

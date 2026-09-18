@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the provided screenshots, here is the detailed breakdown for each:\n\n**Screenshot 004**\n1.  **Composer text:** `/worktree`\n2.  **'Continue in new worktree' visible:** Yes\n3.  **Modal/Dialog content:**\n    *   **Toast Notification (bottom):** \"Codex couldn't complete the request. Try again, or check the account and connection settings.\" with a \"Dismiss\" button.\n\n**Screenshot 005**\n1.  **Composer text:** `/worktree`\n2.  **'Continue in new worktree' visible:** Yes\n3.  **Modal/Dialog content:**\n    *   **Toast Notification (bottom):** \"Codex couldn't complete the request. Try again, or check the account and connection settings.\" with a \"Dismiss\" button.\n\n**Screenshot 006**\n1.  **Composer text:** `/worktree`\n2.  **'Continue in new worktree' visible:** Yes\n3.  **Modal/Dialog content:**\n    *   **Toast Notification (bottom):** \"Codex couldn't complete the request. Try again, or check the account and connection settings.\" with a \"Dismiss\" button.\n\n**Screenshot 007**\n1.  **Composer text:** Empty (Placeholder text reads: \"Ask Codex to change, inspect, or explain...\")\n2.  **'Continue in new worktree' visible:** No\n3.  **Modal/Dialog content:**\n    *   **Inline Picker Menu (below composer):** Displays the option \"Work locally\".",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789680997,
+  "id": "20260918053627400ca00eba5b422c",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260918053627400ca00eba5b422c",
+  "usage": {
+    "completion_tokens": 326,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 8158,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 8484
+  }
+}

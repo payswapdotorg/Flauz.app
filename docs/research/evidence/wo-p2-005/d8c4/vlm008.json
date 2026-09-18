@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot of the **codexRS** application, here is the detailed description:\n\n**(1) Composer Text**\nThe main input field (composer) at the bottom of the interface contains the placeholder text:\n> **\"Ask Codex to change, inspect, or explain...\"**\n\nBelow the text area, there is a label that reads: **\"Work locally\"**.\n\n**(2) Modal/Dialog**\nThere are **no modals or dialogs** currently open or visible in the screenshot. The interface shows the standard main window layout without any pop-up overlays.\n\n**(3) Left Sidebar Projects Section Entries**\nUnder the **\"Projects\"** header (which has a `+` icon to add new projects), there are two project groups listed:\n\n*   **First Project Group (Icon: Blue folder):**\n    *   **Parent:** `repo` (with icons for add, filter/search, and more options)\n    *   **Child Entry:** `worktree fixture fix` (marked with a clock icon and the status tag **\"now\"**). This entry is highlighted in light blue, indicating it is selected.\n*   **Second Project Group (Icon: Grey folder):**\n    *   **Parent:** `repo`\n    *   **Child Entry:** `worktree fixture fix` (marked with a red circle icon and the status tag **\"now\"**).\n\n**(4) Worktree-Related UI**\nThere is significant worktree-related UI present in both the sidebar and the header:\n\n*   **Sidebar:** As noted above, the active selection under Projects is a worktree branch named **\"worktree fixture fix\"**.\n*   **Header Bar:** The title of the current view displays **\"worktree fixture fix\"**. Directly beneath it, the path is shown as `/home/z/parity-lab/workspa...`.\n*   **Action Buttons:** In the toolbar next to the title, there is a specific button labeled **\"Commit or push\"**, which is a direct action related to the git worktree state. Other relevant tabs visible include **\"Fork\"**, **\"Refresh Git\"**, and **\"Changes\"**.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789681011,
+  "id": "202609180536426712e80f72ca4f2e",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609180536426712e80f72ca4f2e",
+  "usage": {
+    "completion_tokens": 443,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2067,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2510
+  }
+}
