@@ -69,7 +69,73 @@ Protocol limits include:
 - bounded command, event, and decoded-message channels;
 - redacted diagnostics that never echo raw provider payloads.
 
-## Git and worktrees
+### Flauz platform evolution contract
+
+The current native implementation is the local desktop implementation of a
+larger provider-neutral platform. The following boundaries are frozen for future
+work.
+
+### Client adapters
+
+Linux, Windows, macOS, Web, and Mobile are client adapters over the same logical
+Workspace/Session model. A desktop client may control either its local
+environment or a remote Environment.
+
+### Environment and provider boundary
+
+An Environment is the execution context. A Provider supplies an Environment.
+Local PTY/Browser/Computer Use/Git facilities become the
+`LocalEnvironmentProvider` implementation; remote providers implement the same
+contracts.
+
+Initial provider families are interactive sandboxes, persistent hosts, desktop
+hosts, and batch/CI runners. E2B, Daytona, Azure, GitHub Actions, Codemagic,
+Vercel Sandbox, Cloudflare Sandbox, and future/custom providers are adapters.
+
+### Model and agent-runtime boundary
+
+A Model supplies intelligence. An AgentRuntime supplies the agent execution
+loop. The official Codex app-server is a first-class AgentRuntime; it is not the
+universal Flauz model registry.
+
+Flauz owns a provider-neutral Model/ModelProvider registry so Gemini, Anthropic,
+GitHub Copilot, OpenAI-compatible endpoints, Ollama, LM Studio, and future
+providers can be added without changing Workspace/Session/Skill semantics.
+
+### Capability and skill boundary
+
+Skills declare requirements. Capabilities are resolved from model/runtime,
+environment/provider, permissions, and workspace policy. Computer Use is a
+compound capability rather than a model-only boolean.
+
+A skill that cannot currently execute must expose an actionable capability-gap
+diagnosis and an unlock path when one exists.
+
+### Orchestration boundary
+
+One skill/task may be fulfilled by multiple models, multiple agent runtimes, and
+multiple environments concurrently. The orchestrator owns role assignment,
+dependencies, delegation, cancellation, verification, and provenance.
+
+### Collaboration boundary
+
+Workspace is the collaboration root for users, devices/clients, projects,
+sessions, agents, environments, documents, sheets, artifacts, presence, and
+policy. Shared code must distinguish isolated worktrees from intentional shared
+filesystem execution.
+
+### Provider account boundary
+
+Provider credentials belong to user-owned ProviderConnection objects and are
+never model-visible by default. Scheduling can prefer a user's unused free tier
+before paid or fallback capacity according to explicit user policy.
+
+Detailed sequencing and work-order discipline are frozen in
+[docs/FLAUZ-SOURCE-OF-TRUTH.md](FLAUZ-SOURCE-OF-TRUTH.md),
+[docs/IMPLEMENTATION-ROADMAP.md](IMPLEMENTATION-ROADMAP.md), and
+[docs/WORK-ORDER-TEMPLATE.md](WORK-ORDER-TEMPLATE.md).
+
+# Git and worktrees
 
 All Git commands run off the UI thread and are serialized by the backend.
 Filesystem notifications are coalesced and restarted through a 300 ms debounce
