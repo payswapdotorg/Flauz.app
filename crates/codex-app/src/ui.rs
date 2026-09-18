@@ -1636,6 +1636,7 @@ gpui::actions!(
         OpenFileSearch,
         OpenFolderShortcut,
         NewChatShortcut,
+        OpenSideChatShortcut,
         CloseWindowShortcut,
         QuitShortcut,
         ArchiveChatShortcut,
@@ -2789,6 +2790,13 @@ const ACTIVE_KEYBOARD_SHORTCUTS: &[KeyboardShortcutItem] = &[
         description: "Start a new chat outside of any project",
         group: KeyboardShortcutGroup::Thread,
         shortcuts: &["CmdOrCtrl+Alt+O"],
+    },
+    KeyboardShortcutItem {
+        id: "openSideChat",
+        title: "Open side chat",
+        description: "Start a temporary side conversation without leaving this chat",
+        group: KeyboardShortcutGroup::Thread,
+        shortcuts: &["CmdOrCtrl+Alt+S"],
     },
     KeyboardShortcutItem {
         id: "archiveThread",
@@ -4629,6 +4637,7 @@ pub fn run() {
                 KeyBinding::new(&shortcut("o"), OpenFolderShortcut, None),
                 KeyBinding::new(&shortcut("shift-o"), NewChatShortcut, None),
                 KeyBinding::new(&shortcut("n"), NewChatShortcut, None),
+                KeyBinding::new(&shortcut("alt-s"), OpenSideChatShortcut, None),
                 KeyBinding::new(&shortcut("w"), CloseWindowShortcut, None),
                 KeyBinding::new(&shortcut("q"), QuitShortcut, None),
                 KeyBinding::new(&shortcut("shift-a"), ArchiveChatShortcut, None),
@@ -5310,6 +5319,10 @@ struct WorkspaceView {
     timeline_list: ListState,
     timeline_list_task_id: Option<String>,
     timeline_list_items: Vec<(String, TimelineKind)>,
+    side_composer: Entity<InputState>,
+    side_timeline_list: ListState,
+    side_timeline_list_task_id: Option<String>,
+    side_timeline_list_items: Vec<(String, TimelineKind)>,
     expanded_timeline_item: Option<(String, String)>,
     thread_find_open: bool,
     thread_find_active_match: Option<ThreadFindActiveMatch>,
@@ -5374,6 +5387,11 @@ impl WorkspaceView {
             InputState::new(window, cx)
                 .auto_grow(3, 10)
                 .placeholder("Ask Codex to change, inspect, or explain…")
+        });
+        let side_composer = cx.new(|cx| {
+            InputState::new(window, cx)
+                .auto_grow(3, 10)
+                .placeholder("Ask a side question…")
         });
         let api_key_login =
             cx.new(|cx| InputState::new(window, cx).masked(true).placeholder("sk-…"));
@@ -5687,6 +5705,20 @@ impl WorkspaceView {
                     }
                     InputEvent::PressEnter { secondary: true } => {
                         this.submit(window, cx);
+                    }
+                    _ => {}
+                },
+            ),
+            cx.subscribe_in(
+                &side_composer,
+                window,
+                |this, input, event: &InputEvent, window, cx| match event {
+                    InputEvent::Change => {
+                        let value = input.read(cx).value().to_string();
+                        this.dispatch(Action::SetSideChatComposer(value), cx);
+                    }
+                    InputEvent::PressEnter { secondary: true } => {
+                        this.submit_side_chat(window, cx);
                     }
                     _ => {}
                 },
@@ -6476,6 +6508,10 @@ impl WorkspaceView {
             timeline_list: ListState::new(0, ListAlignment::Bottom, px(200.0)),
             timeline_list_task_id: None,
             timeline_list_items: Vec::new(),
+            side_composer,
+            side_timeline_list: ListState::new(0, ListAlignment::Bottom, px(200.0)),
+            side_timeline_list_task_id: None,
+            side_timeline_list_items: Vec::new(),
             expanded_timeline_item: None,
             thread_find_open: false,
             thread_find_active_match: None,
@@ -7025,6 +7061,24 @@ impl WorkspaceView {
         });
     }
 
+    fn sync_side_composer_input_in_window(&self, cx: &mut Context<Self>) {
+        let handle = self.window_handle;
+        let side_composer = self.side_composer.clone();
+        let value = self
+            .state
+            .side_chat
+            .as_ref()
+            .map(|side| side.composer.clone())
+            .unwrap_or_default();
+        let _ = cx.update_window(handle, move |_, window, cx| {
+            side_composer.update(cx, |input, cx| {
+                if input.value() != value.as_str() {
+                    input.set_value(value.clone(), window, cx);
+                }
+            });
+        });
+    }
+
     fn focus_browser_address(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         if let Some(value) = self.active_browser_url() {
             self.browser_address.update(cx, |input, cx| {
@@ -7229,12 +7283,27 @@ impl WorkspaceView {
         let previous_location = NavigationLocation::from_state(&self.state);
         let previous_selected_task_id = self.state.selected_task_id.clone();
         let previous_composer = self.state.composer.clone();
+        let previous_side_composer = self
+            .state
+            .side_chat
+            .as_ref()
+            .map(|side| side.composer.clone());
         let effects = reduce(&mut self.state, action);
         let selected_task_changed = previous_selected_task_id != self.state.selected_task_id;
         if selected_task_changed
             || (may_restore_composer && previous_composer != self.state.composer)
         {
             self.sync_composer_input_in_window(cx);
+        }
+        // A restored or dismissed side draft keeps the side input in sync
+        // with the reducer-owned side composer state.
+        let side_composer = self
+            .state
+            .side_chat
+            .as_ref()
+            .map(|side| side.composer.clone());
+        if previous_side_composer != side_composer {
+            self.sync_side_composer_input_in_window(cx);
         }
         if selected_task_changed {
             self.composer_file_search_selected = 0;
@@ -7692,6 +7761,18 @@ impl WorkspaceView {
             self.begin_projectless_chat(window, cx);
             return true;
         }
+        if command == "/side" {
+            if self.state.selected_task_id.is_none() {
+                return false;
+            }
+            self.composer.update(cx, |input, cx| {
+                input.set_value("", window, cx);
+            });
+            self.dispatch(Action::ComposerChanged(String::new()), cx);
+            self.open_side_chat(window, cx);
+            self.sync_composer_placeholder(window, cx);
+            return true;
+        }
         if let Some(tier_id) = command.strip_prefix("/service-tier:")
             && self
                 .state
@@ -7848,6 +7929,7 @@ impl WorkspaceView {
             approve: selected_approval_request(&self.state).is_some(),
             fast: fast_service_tier_id(&self.state).is_some(),
             worktree: self.has_local_workspace() && self.state.selected_task_id.is_some(),
+            side: self.state.selected_task_id.is_some(),
         }
     }
 
@@ -8178,6 +8260,33 @@ impl WorkspaceView {
         self.dispatch(Action::BeginProjectlessChat, cx);
         self.close_narrow_sidebar();
         self.sync_composer_placeholder(window, cx);
+    }
+
+    fn open_side_chat(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.dispatch(Action::OpenSideChat, cx);
+        if self.state.side_chat.is_some() {
+            self.side_composer.update(cx, |input, cx| {
+                input.focus(window, cx);
+            });
+        }
+    }
+
+    fn close_side_chat(&mut self, cx: &mut Context<Self>) {
+        self.dispatch(Action::CloseSideChat, cx);
+    }
+
+    fn submit_side_chat(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.dispatch(Action::SubmitSideChatComposer, cx);
+        if self
+            .state
+            .side_chat
+            .as_ref()
+            .is_none_or(|side| side.composer.is_empty())
+        {
+            self.side_composer.update(cx, |input, cx| {
+                input.set_value("", window, cx);
+            });
+        }
     }
 
     fn composer_shortcuts_available(&self) -> bool {
@@ -10289,6 +10398,7 @@ impl WorkspaceView {
         match command_id {
             "newTask" => self.begin_new_chat(window, cx),
             "newProjectlessTask" => self.begin_projectless_chat(window, cx),
+            "openSideChat" => self.open_side_chat(window, cx),
             "archiveThread" => self.archive_selected_chat(cx),
             "toggleThreadPin" => self.toggle_selected_chat_pin(cx),
             "copyConversationMarkdown" => self.copy_selected_conversation_as_markdown(cx),
@@ -16804,6 +16914,35 @@ impl WorkspaceView {
         self.timeline_list_items = items.to_vec();
     }
 
+    fn sync_side_timeline_list(&mut self, task_id: &str, items: &[(String, TimelineKind)]) {
+        if self.side_timeline_list_task_id.as_deref() != Some(task_id) {
+            self.side_timeline_list.reset(items.len());
+            self.side_timeline_list_task_id = Some(task_id.to_owned());
+            self.side_timeline_list_items = items.to_vec();
+            return;
+        }
+        if self.side_timeline_list_items == items {
+            return;
+        }
+
+        let shared_prefix = self
+            .side_timeline_list_items
+            .iter()
+            .zip(items)
+            .take_while(|(left, right)| left == right)
+            .count();
+        if shared_prefix == self.side_timeline_list_items.len() {
+            self.side_timeline_list
+                .splice(shared_prefix..shared_prefix, items.len() - shared_prefix);
+        } else if shared_prefix == items.len() {
+            self.side_timeline_list
+                .splice(shared_prefix..self.side_timeline_list_items.len(), 0);
+        } else {
+            self.side_timeline_list.reset(items.len());
+        }
+        self.side_timeline_list_items = items.to_vec();
+    }
+
     fn toggle_timeline_item(
         &mut self,
         task_id: String,
@@ -16812,12 +16951,20 @@ impl WorkspaceView {
         cx: &mut Context<Self>,
     ) {
         let item = (task_id, item_id);
+        let toggle_task_id = item.0.clone();
         if self.expanded_timeline_item.as_ref() == Some(&item) {
             self.expanded_timeline_item = None;
         } else {
             self.expanded_timeline_item = Some(item);
         }
-        self.timeline_list.splice(index..index.saturating_add(1), 1);
+        // Splice the list that renders this timeline: the main thread list
+        // or the side-conversation list (WO-P2-006).
+        if self.timeline_list_task_id.as_deref() == Some(toggle_task_id.as_str()) {
+            self.timeline_list.splice(index..index.saturating_add(1), 1);
+        } else if self.side_timeline_list_task_id.as_deref() == Some(toggle_task_id.as_str()) {
+            self.side_timeline_list
+                .splice(index..index.saturating_add(1), 1);
+        }
         cx.notify();
     }
 
@@ -17603,6 +17750,9 @@ impl WorkspaceView {
                             .child(self.render_goal(&task_id, cx))
                             .child(self.render_centered_composer(cx)),
                     )
+                    .when(self.state.side_chat.is_some(), |workspace| {
+                        workspace.child(self.render_side_chat(cx))
+                    })
                     .child(self.render_inspector(cx))
                     .when(
                         terminal_dock_open && terminal_location == TerminalDockLocation::Right,
@@ -17612,6 +17762,130 @@ impl WorkspaceView {
             .when(
                 terminal_dock_open && terminal_location == TerminalDockLocation::Bottom,
                 |workspace| workspace.child(self.render_terminal_dock(cx)),
+            )
+            .into_any_element()
+    }
+
+    fn render_side_chat(&mut self, cx: &mut Context<Self>) -> AnyElement {
+        let side_task_id = self
+            .state
+            .side_chat
+            .as_ref()
+            .and_then(|side| side.task_id.clone());
+        let side_composer_empty = self
+            .state
+            .side_chat
+            .as_ref()
+            .is_none_or(|side| side.composer.trim().is_empty());
+        let side_items = side_task_id
+            .as_ref()
+            .and_then(|task_id| self.state.timelines.get(task_id))
+            .map(|timeline| {
+                timeline
+                    .items()
+                    .iter()
+                    .map(|item| (item.id.clone(), item.kind))
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let timeline_surface = if let Some(task_id) = side_task_id {
+            self.sync_side_timeline_list(&task_id, &side_items);
+            list(
+                self.side_timeline_list.clone(),
+                cx.processor(move |this, index, window, cx| {
+                    this.render_timeline_item(&task_id, index, window, cx)
+                }),
+            )
+            .flex_1()
+            .min_h_0()
+            .bg(cx.theme().background)
+            .into_any_element()
+        } else {
+            v_flex()
+                .flex_1()
+                .min_h_0()
+                .items_center()
+                .justify_center()
+                .px_6()
+                .child(
+                    div()
+                        .text_sm()
+                        .text_color(cx.theme().muted_foreground)
+                        .child("Ask a side question without interrupting this chat."),
+                )
+                .into_any_element()
+        };
+
+        v_flex()
+            .flex_none()
+            .w(px(360.0))
+            .h_full()
+            .min_h_0()
+            .border_l_1()
+            .border_color(cx.theme().border)
+            .bg(cx.theme().sidebar)
+            .child(
+                h_flex()
+                    .h(px(44.0))
+                    .px_3()
+                    .gap_2()
+                    .items_center()
+                    .justify_between()
+                    .border_b_1()
+                    .border_color(cx.theme().border)
+                    .child(
+                        h_flex()
+                            .gap_2()
+                            .items_center()
+                            .child(
+                                Icon::new(IconName::PanelRight)
+                                    .small()
+                                    .text_color(cx.theme().muted_foreground),
+                            )
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .font_weight(gpui::FontWeight::SEMIBOLD)
+                                    .child("Side chat"),
+                            ),
+                    )
+                    .child(
+                        Button::new("side-chat-close")
+                            .icon(IconName::Close)
+                            .tooltip("Close side chat")
+                            .xsmall()
+                            .ghost()
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.close_side_chat(cx);
+                            })),
+                    ),
+            )
+            .child(timeline_surface)
+            .child(
+                h_flex()
+                    .p_2()
+                    .gap_2()
+                    .items_end()
+                    .border_t_1()
+                    .border_color(cx.theme().border)
+                    .child(
+                        div().id("side-composer-input").flex_1().min_w_0().child(
+                            Input::new(&self.side_composer)
+                                .appearance(false)
+                                .bordered(false),
+                        ),
+                    )
+                    .child(
+                        Button::new("side-chat-send")
+                            .icon(IconName::ArrowUp)
+                            .tooltip("Send side message")
+                            .small()
+                            .primary()
+                            .disabled(side_composer_empty)
+                            .on_click(cx.listener(|this, _, window, cx| {
+                                this.submit_side_chat(window, cx);
+                            })),
+                    ),
             )
             .into_any_element()
     }
@@ -17702,7 +17976,11 @@ impl WorkspaceView {
             && timeline
                 .message_edit
                 .as_ref()
-                .is_none_or(|edit| edit.turn_id == item.turn_id);
+                .is_none_or(|edit| edit.turn_id == item.turn_id)
+            // Message editing is only wired for the selected chat; the
+            // side-conversation timeline renders without edit controls
+            // (WO-P2-006).
+            && self.state.selected_task_id.as_deref() == Some(task_id);
         let completed_goal_duration = self.state.goals.get(task_id).and_then(|goal_state| {
             let completed_goal = goal_state.completed_goal.as_ref()?;
             let is_goal_turn =
@@ -23218,6 +23496,9 @@ impl WorkspaceView {
                 .as_bytes()
                 .last()
                 .is_some_and(u8::is_ascii_whitespace);
+        let show_side_command = slash_availability.side
+            && !composer_text.is_empty()
+            && "/side".starts_with(composer_text);
         let show_status_command = !composer_text.is_empty() && "/status".starts_with(composer_text);
         let show_approve_command = slash_availability.approve
             && !composer_text.is_empty()
@@ -23270,6 +23551,7 @@ impl WorkspaceView {
             || show_review_submenu
             || show_shell_command
             || !service_tier_commands.is_empty()
+            || show_side_command
             || show_status_command
             || !skill_commands.is_empty()
             || show_worktree_command;
@@ -23341,7 +23623,7 @@ impl WorkspaceView {
             })
             .collect::<Vec<_>>();
         let mut slash_commands =
-            Vec::with_capacity(19 + service_tier_commands.len() + skill_commands.len());
+            Vec::with_capacity(20 + service_tier_commands.len() + skill_commands.len());
         if show_approve_command {
             slash_commands.push(self.render_composer_slash_command(
                 "approve-slash-command",
@@ -23573,6 +23855,16 @@ impl WorkspaceView {
                 "Shell command",
                 "Run an explicit command with full system access".to_owned(),
                 IconName::SquareTerminal,
+                cx,
+            ));
+        }
+        if show_side_command {
+            slash_commands.push(self.render_composer_slash_command(
+                "side-slash-command",
+                "/side",
+                "Side chat",
+                "Start a temporary side conversation".to_owned(),
+                IconName::PanelRight,
                 cx,
             ));
         }
@@ -44724,6 +45016,7 @@ struct ComposerSlashAvailability {
     approve: bool,
     fast: bool,
     worktree: bool,
+    side: bool,
 }
 
 fn fast_service_tier_id(state: &AppState) -> Option<String> {
@@ -44754,7 +45047,7 @@ fn composer_slash_command_for_prefix(
     if prefix.is_empty() {
         return None;
     }
-    const COMMANDS: [&str; 20] = [
+    const COMMANDS: [&str; 21] = [
         "/approve",
         "/chat",
         "/compact",
@@ -44773,6 +45066,7 @@ fn composer_slash_command_for_prefix(
         "/reasoning",
         "/review",
         "/shell",
+        "/side",
         "/status",
         "/worktree",
     ];
@@ -44785,6 +45079,7 @@ fn composer_slash_command_for_prefix(
             "/init" => availability.init,
             "/approve" => availability.approve,
             "/fast" => availability.fast,
+            "/side" => availability.side,
             "/worktree" => availability.worktree,
             _ => availability.selected_task,
         })
@@ -47718,6 +48013,74 @@ mod tests {
     }
 
     #[test]
+    fn side_chat_binding_resolves_ctrl_alt_s_to_the_side_chat_action() {
+        // The accelerator is owned by exactly one registry command: the
+        // side-chat command (WO-P2-006).
+        let owners = ACTIVE_KEYBOARD_SHORTCUTS
+            .iter()
+            .filter(|item| {
+                item.shortcuts.iter().any(|binding| {
+                    normalized_accelerator(binding) == normalized_accelerator("CmdOrCtrl+Alt+S")
+                })
+            })
+            .map(|item| item.id)
+            .collect::<Vec<_>>();
+        assert_eq!(owners, ["openSideChat"]);
+        // The command is part of the persisted, customizable registry.
+        assert!(KEYBOARD_SHORTCUT_COMMAND_IDS.contains(&"openSideChat"));
+        // The action the binding dispatches opens a side conversation
+        // without touching the selected chat.
+        let mut state = AppState {
+            tasks: vec![task("thread-1", "C:\\repo")],
+            selected_task_id: Some("thread-1".to_owned()),
+            ..AppState::default()
+        };
+        assert!(reduce(&mut state, Action::OpenSideChat).is_empty());
+        assert!(state.side_chat.is_some());
+        assert_eq!(state.selected_task_id.as_deref(), Some("thread-1"));
+    }
+
+    #[test]
+    fn side_slash_command_resolves_with_its_guard() {
+        // /side needs a selected chat, exactly like the keyboard binding.
+        let side_ready = ComposerSlashAvailability {
+            side: true,
+            ..ComposerSlashAvailability::default()
+        };
+        assert_eq!(
+            composer_slash_command_for_prefix("/si", ComposerSlashAvailability::default()),
+            None
+        );
+        assert_eq!(
+            composer_slash_command_for_prefix("/si", side_ready),
+            Some("/side")
+        );
+        assert_eq!(
+            composer_slash_command_for_prefix("/side", side_ready),
+            Some("/side")
+        );
+        // "/s" stays ambiguous across /shell, /side, and /status once a
+        // chat is selected.
+        let side_with_task = ComposerSlashAvailability {
+            side: true,
+            ..slash_availability(true, true, true, true)
+        };
+        assert_eq!(
+            composer_slash_command_for_prefix("/s", side_with_task),
+            None
+        );
+        // Without a selected chat /side stays hidden but /status remains.
+        assert_eq!(
+            composer_slash_command_for_prefix("/si", slash_availability(false, true, true, true)),
+            None
+        );
+        assert_eq!(
+            composer_slash_command_for_prefix("/st", slash_availability(false, true, true, true)),
+            Some("/status")
+        );
+    }
+
+    #[test]
     fn fork_picker_stays_open_for_both_fork_destination_commands() {
         // Both commands that open the fork-destination picker keep it open.
         assert!(composer_keeps_fork_picker("/fork"));
@@ -48518,13 +48881,14 @@ mod tests {
         assert_eq!(
             stable_order
                 .iter()
-                .take(4)
+                .take(5)
                 .map(|item| item.id)
                 .collect::<Vec<_>>(),
             [
                 "newTask",
                 "archiveThread",
                 "newProjectlessTask",
+                "openSideChat",
                 "toggleThreadPin",
             ]
         );
@@ -48578,6 +48942,19 @@ mod tests {
         );
         assert_eq!(show_shortcuts.shortcuts, ["CmdOrCtrl+/"]);
         assert_eq!(show_shortcuts.group, KeyboardShortcutGroup::General);
+        let Some(open_side_chat) = ACTIVE_KEYBOARD_SHORTCUTS
+            .iter()
+            .find(|item| item.id == "openSideChat")
+        else {
+            panic!("openSideChat must remain editable");
+        };
+        assert_eq!(open_side_chat.title, "Open side chat");
+        assert_eq!(
+            open_side_chat.description,
+            "Start a temporary side conversation without leaving this chat"
+        );
+        assert_eq!(open_side_chat.shortcuts, ["CmdOrCtrl+Alt+S"]);
+        assert_eq!(open_side_chat.group, KeyboardShortcutGroup::Thread);
         let Some(open_model_picker) = ACTIVE_KEYBOARD_SHORTCUTS
             .iter()
             .find(|item| item.id == "composer.openModelPicker")

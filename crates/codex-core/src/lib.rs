@@ -129,14 +129,15 @@ pub const MAX_IMPORT_DETAIL_ITEMS: usize = 100;
 pub const MAX_IMPORT_FIELD_BYTES: usize = 8 * 1024;
 pub const MAX_IMPORT_SESSIONS: u32 = 50;
 pub const MAX_IMPORT_SESSION_AGE_DAYS: u32 = 30;
-pub const MAX_KEYBOARD_SHORTCUT_COMMANDS: usize = 70;
+pub const MAX_KEYBOARD_SHORTCUT_COMMANDS: usize = 71;
 pub const MAX_KEYBOARD_SHORTCUTS_PER_COMMAND: usize = 4;
 pub const MAX_KEYBOARD_SHORTCUT_ACCELERATOR_BYTES: usize = 128;
 pub const STANDARD_SERVICE_TIER_ID: &str = "default";
 
-pub const KEYBOARD_SHORTCUT_COMMAND_IDS: [&str; 71] = [
+pub const KEYBOARD_SHORTCUT_COMMAND_IDS: [&str; 72] = [
     "newTask",
     "newProjectlessTask",
+    "openSideChat",
     "archiveThread",
     "toggleThreadPin",
     "copyConversationMarkdown",
@@ -4705,6 +4706,27 @@ impl Default for ComposerControlsState {
     }
 }
 
+/// Temporary side conversation opened beside the main chat (WO-P2-006).
+///
+/// The side conversation reuses the ordinary thread machinery: its first
+/// submitted message creates a projectless thread exactly like
+/// [`Action::BeginProjectlessChat`] does, and the thread then lives in the
+/// shared `timelines` map like any other chat. Every side-chat action
+/// leaves the main chat untouched — selection, active turn, and composer
+/// state are never modified.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct SideChatState {
+    /// Draft text for the side conversation's composer.
+    pub composer: String,
+    /// Thread backing the side conversation once its first message has
+    /// created it.
+    pub task_id: Option<String>,
+    /// Generation guard for the pending `Effect::CreateTask` so the side
+    /// chat can claim exactly the thread it started (and never a thread
+    /// the main surface created).
+    pending_create_generation: Option<u64>,
+}
+
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub connection: ConnectionStatus,
@@ -4735,6 +4757,7 @@ pub struct AppState {
     pub composer_draft_generation: u64,
     pub timelines: HashMap<String, TimelineState>,
     pub goals: HashMap<String, ThreadGoalState>,
+    pub side_chat: Option<SideChatState>,
     pub composer: String,
     pub composer_attachments: Vec<ComposerAttachment>,
     pub composer_desktop_apps: Vec<ComputerApplicationState>,
@@ -4808,6 +4831,7 @@ impl Default for AppState {
             composer_draft_generation: 0,
             timelines: HashMap::new(),
             goals: HashMap::new(),
+            side_chat: None,
             composer: String::new(),
             composer_attachments: Vec::new(),
             composer_desktop_apps: Vec::new(),
@@ -4976,6 +5000,19 @@ pub enum Action {
     },
     BeginNewChat,
     BeginProjectlessChat,
+    /// Opens a temporary side conversation beside the selected chat
+    /// (WO-P2-006). Guarded on a selected chat; leaves every other piece
+    /// of state untouched.
+    OpenSideChat,
+    /// Dismisses the side conversation surface without affecting the main
+    /// chat. The backing thread (if any) stays in the chat list.
+    CloseSideChat,
+    /// Side-conversation composer draft change.
+    SetSideChatComposer(String),
+    /// Submits the side-conversation composer through the ordinary thread
+    /// machinery (projectless `CreateTask` for the first message,
+    /// `StartTurn`/`SteerTurn` afterwards).
+    SubmitSideChatComposer,
     SelectWorkspace(PathBuf),
     SelectComposerWorkspace(PathBuf),
     RenameLocalProject {
@@ -7809,6 +7846,119 @@ fn advance_new_chat_draft_generation(state: &mut AppState) {
     }
 }
 
+/// The currently selected permission mode, when it is an allowed option.
+fn allowed_permission_mode(state: &AppState) -> Option<PermissionModeOption> {
+    state
+        .composer_controls
+        .selected_permission_mode
+        .as_deref()
+        .and_then(|selected| {
+            state
+                .composer_controls
+                .permission_modes
+                .iter()
+                .find(|mode| mode.id == selected && mode.allowed)
+        })
+        .cloned()
+}
+
+/// Submits the side-conversation composer (WO-P2-006). The first message
+/// reuses the projectless-chat thread machinery (`Effect::CreateTask` with
+/// no cwd, exactly like `Action::BeginProjectlessChat` + submit); once the
+/// side conversation owns a thread, follow-ups reuse the ordinary
+/// `StartTurn`/`SteerTurn` machinery. No main-surface state (selection,
+/// active turn, composer draft) is read or written for mutation.
+fn submit_side_chat(state: &mut AppState) -> Vec<Effect> {
+    let (text, side_task_id) = match state.side_chat.as_ref() {
+        None => return Vec::new(),
+        Some(side) => {
+            let text = side.composer.trim().to_owned();
+            if text.is_empty() {
+                return Vec::new();
+            }
+            (text, side.task_id.clone())
+        }
+    };
+    if let Some(task_id) = side_task_id {
+        if let Some(side) = state.side_chat.as_mut() {
+            side.composer.clear();
+        }
+        let composer_draft_generation = state.composer_draft_generation;
+        if let Some(expected_turn_id) = state
+            .timelines
+            .get(&task_id)
+            .and_then(|timeline| timeline.active_turn_id.clone())
+        {
+            return vec![Effect::SteerTurn {
+                task_id,
+                composer_draft_generation,
+                expected_turn_id,
+                text,
+                attachments: Vec::new(),
+            }];
+        }
+        let permission_mode = allowed_permission_mode(state);
+        return vec![Effect::StartTurn {
+            task_id,
+            composer_draft_generation,
+            text,
+            model: state.composer_controls.selected_model.clone(),
+            effort: state.composer_controls.selected_effort.clone(),
+            service_tier: state.composer_controls.selected_service_tier.clone(),
+            permissions: permission_mode
+                .as_ref()
+                .map(|mode| mode.permissions.clone()),
+            approval_policy: permission_mode
+                .as_ref()
+                .and_then(|mode| mode.approval_policy.clone()),
+            approvals_reviewer: permission_mode
+                .as_ref()
+                .and_then(|mode| mode.approvals_reviewer),
+            attachments: Vec::new(),
+            plan_mode: false,
+            goal_objective: None,
+        }];
+    }
+    if state.selected_task_id.is_none() {
+        state.status_message = Some("Open a chat before starting a side conversation.".to_owned());
+        return Vec::new();
+    }
+    // First side message: create the side thread through the shared
+    // projectless-chat machinery. The generation guard lets
+    // `Action::NewChatTaskCreated` claim exactly this thread for the side
+    // conversation without selecting it, so the main chat keeps its
+    // selection, active turn, and composer state.
+    state.new_chat_draft_generation = state.new_chat_draft_generation.wrapping_add(1);
+    let new_chat_draft_generation = state.new_chat_draft_generation;
+    if let Some(side) = state.side_chat.as_mut() {
+        side.composer.clear();
+        side.pending_create_generation = Some(new_chat_draft_generation);
+    }
+    let permission_mode = allowed_permission_mode(state);
+    vec![Effect::CreateTask {
+        cwd: None,
+        composer_draft_generation: state.composer_draft_generation,
+        model: state.composer_controls.selected_model.clone(),
+        effort: state.composer_controls.selected_effort.clone(),
+        service_tier: state.composer_controls.selected_service_tier.clone(),
+        permissions: permission_mode
+            .as_ref()
+            .map(|mode| mode.permissions.clone()),
+        approval_policy: permission_mode
+            .as_ref()
+            .and_then(|mode| mode.approval_policy.clone()),
+        approvals_reviewer: permission_mode
+            .as_ref()
+            .and_then(|mode| mode.approvals_reviewer),
+        initial_message: text,
+        attachments: Vec::new(),
+        plan_mode: false,
+        goal_objective: None,
+        memory_preferences: None,
+        new_chat_draft_generation,
+    }]
+}
+
 fn advance_task_selection_generation(state: &mut AppState) {
     state.task_selection_generation = state.task_selection_generation.wrapping_add(1);
 }
@@ -9805,6 +9955,30 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             prepare_new_chat(state, cwd)
         }
         Action::BeginProjectlessChat => prepare_new_chat(state, None),
+        Action::OpenSideChat => {
+            if state.selected_task_id.is_none() {
+                state.status_message =
+                    Some("Open a chat before starting a side conversation.".to_owned());
+                return Vec::new();
+            }
+            if state.side_chat.is_none() {
+                state.side_chat = Some(SideChatState::default());
+            }
+            Vec::new()
+        }
+        Action::CloseSideChat => {
+            state.side_chat = None;
+            Vec::new()
+        }
+        Action::SetSideChatComposer(text) => {
+            if let Some(side) = state.side_chat.as_mut()
+                && text.len() <= MAX_COMPOSER_BYTES
+            {
+                side.composer = text;
+            }
+            Vec::new()
+        }
+        Action::SubmitSideChatComposer => submit_side_chat(state),
         Action::SelectWorkspace(path) => {
             if !path.is_absolute() {
                 state.status_message =
@@ -10601,6 +10775,21 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             task,
             new_chat_draft_generation,
         } => {
+            // A pending side-chat creation claims exactly the thread it
+            // started (WO-P2-006): the thread is recorded without being
+            // selected, so the main chat keeps its selection and turn.
+            if state.side_chat.as_ref().is_some_and(|side| {
+                side.task_id.is_none()
+                    && side.pending_create_generation == Some(new_chat_draft_generation)
+            }) {
+                let task_id = task.id.clone();
+                if let Some(side) = state.side_chat.as_mut() {
+                    side.task_id = Some(task_id);
+                    side.pending_create_generation = None;
+                }
+                record_task_without_selecting(state, task);
+                return Vec::new();
+            }
             if state.selected_task_id.is_none()
                 && state.new_chat_draft_generation == new_chat_draft_generation
             {
@@ -13299,6 +13488,32 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             message,
         } => {
             state.status_message = Some(bounded_string(message, 16 * 1024));
+            // A side-conversation submission restores its own draft first
+            // (WO-P2-006): either its pending thread creation (no task id
+            // yet, guarded by the generation the side chat sent) or a turn
+            // on the side chat's own thread. The main composer is never
+            // touched by a side-chat failure.
+            let mut side_restore = false;
+            if let Some(side) = state.side_chat.as_mut() {
+                let pending_create = task_id.is_none()
+                    && side.pending_create_generation == new_chat_draft_generation;
+                let owns_side_turn = task_id
+                    .as_deref()
+                    .is_some_and(|id| side.task_id.as_deref() == Some(id));
+                if pending_create || owns_side_turn {
+                    if pending_create {
+                        side.pending_create_generation = None;
+                    }
+                    side_restore = true;
+                }
+            }
+            if side_restore {
+                normalize_retryable_user_message(&mut prompt);
+                if let Some(side) = state.side_chat.as_mut() {
+                    side.composer = prompt.text;
+                }
+                return Vec::new();
+            }
             let owns_task = task_id
                 .as_deref()
                 .is_some_and(|task_id| state.selected_task_id.as_deref() == Some(task_id))
@@ -23837,6 +24052,286 @@ mod tests {
                 ..
             }] if initial_message == "work without a project"
         ));
+    }
+
+    #[test]
+    fn a_side_chat_opens_and_closes_without_touching_the_selected_chat() {
+        let mut state = AppState::default();
+        reduce(&mut state, Action::TaskCreated(task("t1")));
+        state
+            .timelines
+            .entry("t1".to_owned())
+            .or_default()
+            .active_turn_id = Some("turn-1".to_owned());
+        reduce(&mut state, Action::ComposerChanged("main draft".to_owned()));
+
+        // Opening a side chat is a pure addition: no effects, no main-chat
+        // state change.
+        assert!(reduce(&mut state, Action::OpenSideChat).is_empty());
+        assert_eq!(state.selected_task_id.as_deref(), Some("t1"));
+        assert_eq!(
+            state
+                .timelines
+                .get("t1")
+                .and_then(|timeline| timeline.active_turn_id.as_deref()),
+            Some("turn-1")
+        );
+        assert_eq!(state.composer, "main draft");
+        assert_eq!(
+            state.side_chat.as_ref().map(|side| side.composer.as_str()),
+            Some("")
+        );
+        assert_eq!(
+            state
+                .side_chat
+                .as_ref()
+                .and_then(|side| side.task_id.as_deref()),
+            None
+        );
+
+        // The side draft lives beside the main composer.
+        reduce(
+            &mut state,
+            Action::SetSideChatComposer("side draft".to_owned()),
+        );
+        assert_eq!(state.composer, "main draft");
+        assert_eq!(
+            state.side_chat.as_ref().map(|side| side.composer.as_str()),
+            Some("side draft")
+        );
+
+        // Re-opening keeps the existing side conversation (idempotent).
+        assert!(reduce(&mut state, Action::OpenSideChat).is_empty());
+        assert_eq!(
+            state.side_chat.as_ref().map(|side| side.composer.as_str()),
+            Some("side draft")
+        );
+
+        // Dismissing the side chat leaves the main chat untouched.
+        assert!(reduce(&mut state, Action::CloseSideChat).is_empty());
+        assert!(state.side_chat.is_none());
+        assert_eq!(state.selected_task_id.as_deref(), Some("t1"));
+        assert_eq!(
+            state
+                .timelines
+                .get("t1")
+                .and_then(|timeline| timeline.active_turn_id.as_deref()),
+            Some("turn-1")
+        );
+        assert_eq!(state.composer, "main draft");
+
+        // Without a selected chat the side chat surfaces guidance instead
+        // of a silent no-op (WO-P1-001/002 pattern).
+        reduce(&mut state, Action::BeginNewChat);
+        assert!(reduce(&mut state, Action::OpenSideChat).is_empty());
+        assert!(state.side_chat.is_none());
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Open a chat before starting a side conversation.")
+        );
+    }
+
+    #[test]
+    fn a_side_chat_first_message_creates_a_projectless_thread_without_selecting_it() {
+        let mut state = AppState::default();
+        reduce(&mut state, Action::TaskCreated(task("t1")));
+        state
+            .timelines
+            .entry("t1".to_owned())
+            .or_default()
+            .active_turn_id = Some("turn-1".to_owned());
+        reduce(&mut state, Action::ComposerChanged("main draft".to_owned()));
+        reduce(&mut state, Action::OpenSideChat);
+        reduce(
+            &mut state,
+            Action::SetSideChatComposer("quick aside".to_owned()),
+        );
+
+        // The first side message reuses the projectless-chat machinery.
+        let effects = reduce(&mut state, Action::SubmitSideChatComposer);
+        let [
+            Effect::CreateTask {
+                cwd,
+                initial_message,
+                new_chat_draft_generation,
+                ..
+            },
+        ] = effects.as_slice()
+        else {
+            panic!("side chat submission must create a projectless thread");
+        };
+        assert!(cwd.is_none());
+        assert_eq!(initial_message, "quick aside");
+        assert_eq!(
+            state.side_chat.as_ref().map(|side| side.composer.as_str()),
+            Some("")
+        );
+        // The main chat is untouched by the submission.
+        assert_eq!(state.selected_task_id.as_deref(), Some("t1"));
+        assert_eq!(
+            state
+                .timelines
+                .get("t1")
+                .and_then(|timeline| timeline.active_turn_id.as_deref()),
+            Some("turn-1")
+        );
+        assert_eq!(state.composer, "main draft");
+
+        // The created thread is claimed by the side conversation without
+        // being selected: the main chat keeps its selection and turn.
+        reduce(
+            &mut state,
+            Action::NewChatTaskCreated {
+                task: task("side-1"),
+                new_chat_draft_generation: *new_chat_draft_generation,
+            },
+        );
+        assert_eq!(
+            state
+                .side_chat
+                .as_ref()
+                .and_then(|side| side.task_id.as_deref()),
+            Some("side-1")
+        );
+        assert_eq!(state.selected_task_id.as_deref(), Some("t1"));
+        assert_eq!(
+            state
+                .timelines
+                .get("t1")
+                .and_then(|timeline| timeline.active_turn_id.as_deref()),
+            Some("turn-1")
+        );
+        assert!(state.tasks.iter().any(|task| task.id == "side-1"));
+        assert!(state.timelines.contains_key("side-1"));
+
+        // A stale creation that was not started by the side chat is never
+        // claimed by it.
+        reduce(
+            &mut state,
+            Action::NewChatTaskCreated {
+                task: task("other-1"),
+                new_chat_draft_generation: *new_chat_draft_generation,
+            },
+        );
+        assert_eq!(
+            state
+                .side_chat
+                .as_ref()
+                .and_then(|side| side.task_id.as_deref()),
+            Some("side-1")
+        );
+        assert_eq!(state.selected_task_id.as_deref(), Some("t1"));
+    }
+
+    #[test]
+    fn a_side_chat_continues_through_the_thread_turn_machinery() {
+        let mut state = AppState::default();
+        reduce(&mut state, Action::TaskCreated(task("t1")));
+        reduce(&mut state, Action::OpenSideChat);
+        reduce(&mut state, Action::SetSideChatComposer("first".to_owned()));
+        let effects = reduce(&mut state, Action::SubmitSideChatComposer);
+        let [
+            Effect::CreateTask {
+                new_chat_draft_generation,
+                ..
+            },
+        ] = effects.as_slice()
+        else {
+            panic!("side chat submission must create a projectless thread");
+        };
+        reduce(
+            &mut state,
+            Action::NewChatTaskCreated {
+                task: task("side-1"),
+                new_chat_draft_generation: *new_chat_draft_generation,
+            },
+        );
+
+        // While the side thread runs, a follow-up steers the active turn.
+        state
+            .timelines
+            .entry("side-1".to_owned())
+            .or_default()
+            .active_turn_id = Some("side-turn-1".to_owned());
+        reduce(
+            &mut state,
+            Action::SetSideChatComposer("steer this".to_owned()),
+        );
+        assert!(matches!(
+            reduce(&mut state, Action::SubmitSideChatComposer).as_slice(),
+            [Effect::SteerTurn {
+                task_id,
+                expected_turn_id,
+                text,
+                ..
+            }] if task_id == "side-1"
+                && expected_turn_id == "side-turn-1"
+                && text == "steer this"
+        ));
+
+        // Once idle, a follow-up starts an ordinary turn.
+        state
+            .timelines
+            .entry("side-1".to_owned())
+            .or_default()
+            .active_turn_id = None;
+        reduce(
+            &mut state,
+            Action::SetSideChatComposer("next question".to_owned()),
+        );
+        assert!(matches!(
+            reduce(&mut state, Action::SubmitSideChatComposer).as_slice(),
+            [Effect::StartTurn {
+                task_id,
+                text,
+                ..
+            }] if task_id == "side-1" && text == "next question"
+        ));
+        // The main chat still holds its selection throughout.
+        assert_eq!(state.selected_task_id.as_deref(), Some("t1"));
+    }
+
+    #[test]
+    fn a_failed_side_chat_submission_restores_only_the_side_draft() {
+        let mut state = AppState::default();
+        reduce(&mut state, Action::TaskCreated(task("t1")));
+        reduce(&mut state, Action::ComposerChanged("main draft".to_owned()));
+        reduce(&mut state, Action::OpenSideChat);
+        reduce(
+            &mut state,
+            Action::SetSideChatComposer("quick aside".to_owned()),
+        );
+        let effects = reduce(&mut state, Action::SubmitSideChatComposer);
+        let [
+            Effect::CreateTask {
+                new_chat_draft_generation,
+                ..
+            },
+        ] = effects.as_slice()
+        else {
+            panic!("side chat submission must create a projectless thread");
+        };
+
+        reduce(
+            &mut state,
+            Action::ComposerSubmissionFailed {
+                task_id: None,
+                new_chat_draft_generation: Some(*new_chat_draft_generation),
+                composer_draft_generation: None,
+                prompt: RetryableUserMessage {
+                    text: "quick aside".to_owned(),
+                    attachments: Vec::new(),
+                },
+                message: "failed to create task".to_owned(),
+            },
+        );
+        // The side draft is restored; the main composer is untouched.
+        assert_eq!(
+            state.side_chat.as_ref().map(|side| side.composer.as_str()),
+            Some("quick aside")
+        );
+        assert_eq!(state.composer, "main draft");
+        assert_eq!(state.selected_task_id.as_deref(), Some("t1"));
     }
 
     #[test]
