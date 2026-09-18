@@ -51075,10 +51075,7 @@ mod tests {
             Some("searchFiles")
         );
         // The palette command advertises Ctrl+P as its default shortcut.
-        assert_eq!(
-            PaletteCommand::SearchFiles.shortcut(),
-            Some("Ctrl+P")
-        );
+        assert_eq!(PaletteCommand::SearchFiles.shortcut(), Some("Ctrl+P"));
         // The registry entry carries the expected metadata.
         let search_files = ACTIVE_KEYBOARD_SHORTCUTS
             .iter()
