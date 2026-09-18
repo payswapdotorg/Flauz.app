@@ -1,5 +1,9 @@
 # Project rules
 
+## Flauz source of truth
+
+Before implementation, read [Flauz Architecture & Implementation Constitution](docs/FLAUZ-SOURCE-OF-TRUTH.md), [Master Implementation Roadmap](docs/IMPLEMENTATION-ROADMAP.md), and [Work Order Template / Execution Protocol](docs/WORK-ORDER-TEMPLATE.md). These documents define the frozen product architecture and execution process. `docs/parity-matrix.md` is authoritative for Codex-specific parity only.
+
 - Build a native Rust replacement for Codex Desktop. Do not add Electron, Tauri,
   Wry, WebView, Node.js, or browser-runtime dependencies.
 - Treat stable `26.721.3996.0` as a behavioral reference, not a runtime
