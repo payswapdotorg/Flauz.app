@@ -418,6 +418,23 @@ keeps the same number (WO-P1-DRAFT-001 → WO-P1-001).
   needed to compare side-chat semantics precisely; extension side-chat
   surfaces are out of scope.
 
+### WO-P2-007
+
+- **ID:** WO-P2-007 (created by the Tech Lead from §9 override 17 — the parity-quality audit directive)
+- **Title:** Ctrl+P file search is a silent no-op — bound action has no command routing
+- **Platform:** all (UI-shell concern; Linux-verifiable in lab)
+- **Reference behavior:** Official Codex opens file search on Ctrl/Cmd+P — the keyboard-shortcuts overlay advertises "Search Files... Ctrl+P" (runtime-observed: linux-preview 26.908, evidence codex-linux/05-07; istorical-record: A §10 + PM "Keyboard and accessibility").
+- **Current behavior (at base 3c9f113):** ui.rs:4636 binds Ctrl+P to the `OpenFileSearch` GPUI action (declared ui.rs:1636) but NO `on_action` handler exists anywhere — while the command-id interceptor registry already carries `searchFiles → CmdOrCtrl+P` with a live dispatch arm (ui.rs:10480). The dead action shadows the working registry route: registered-shortcut-but-no-action silent no-op (§9 override 17).
+- **Gap type:** Input-surface integrity defect (binding wiring, not a capability gap — palette "Search files" works).
+- **Required change:** Remove the dead `OpenFileSearch` action + binding so the interceptor registry is the sole routing path for Ctrl+P (mirroring Ctrl+K/Ctrl+G), plus a regression test asserting ownership. OUT of scope: everything else (the no-workspace Files-palette guard, other dead actions, overlay honesty).
+- **Files-crates:** `crates/codex-app/src/ui.rs` only.
+- **Dependencies:** §9 override 17; the WO-R-SWEEP input-surface sweep (F-A4 documents the no-workspace residual).
+- **Tests:** `ctrl_p_routes_to_the_search_files_command` — Ctrl+P owned by exactly ["searchFiles"] in ACTIVE_KEYBOARD_SHORTCUTS; id in KEYBOARD_SHORTCUT_COMMAND_IDS; PaletteCommand::SearchFiles.shortcut_command_id() == Some("searchFiles"); advertised shortcut Ctrl+P; registry metadata (title "Search files", CmdOrCtrl+P, General).
+- **GUI verification:** LINUX_GUI_LAB D10 baseline (defect proof: byte-identical frames on unfixed main) + D10b (fix proof, workspace-seeded via the StorageOpened recent-workspace restore path): Ctrl+P opens the "Search files" palette (57522B a9ad7e0c → 58675B 857b824c, VLM-read: placeholder "Search files", Files section, focused input); Escape closes byte-identical. Evidence docs/research/evidence/wo-p2-007/ (d10-baseline in parity-lab + d10b) — archived with the PR.
+- **Acceptance criteria:** (1) implementing commit merged; (2) focused test green locally + full battery on CI; (3) D10b GUI evidence; (4) no other behavior changed (diff: ui.rs +40/−2); (5) parity report Keyboard row + §9 override 17 updated (this closure).
+- **Known limitations:** With NO workspace open the Files palette early-returns by design (open_command_palette guard) — Ctrl+P remains silent on the bare entry surface (finding F-A4 of the WO-R-SWEEP sweep); parity treatment of the no-workspace state is follow-up material. Local clippy-driver has a known toolchain issue (E0463 under clippy only); the CI double matrix is the authoritative battery.
+- **Status:** CLOSED — implemented by Worker B (2948bf2, dispatched from inside the replay) + Lead rustfmt gate fix (5574c95); PR #20 merged as a3c0e01 (CI green both matrices); closure gates: source ✓, focused test ✓, GUI behavior ✓ (D10b), lab ✓, parity row ✓ (this commit).
+
 ### WO-PLAT-001
 
 - **ID:** WO-PLAT-001 (confirmed from WO-PLAT-DRAFT-001)
@@ -524,6 +541,20 @@ keeps the same number (WO-P1-DRAFT-001 → WO-P1-001).
   evidence upgrades apply to the Linux slice only — Windows/macOS cells
   stay `[historical-record]`/`[docs-derived]`.
 
+### WO-R-REF (Wave R reference research)
+
+- **ID:** WO-R-REF (Tech Lead wave-R order — reference research, no product code)
+- **Title:** P2 batch-2 reference research — Activity view, browsing history, palette residuals
+- **Status:** DELIVERED — Worker A branch research/p2-batch2-reference @ 693a1da (one docs-only commit on 3c9f113, 672 lines); Lead-verified at dispatch; merged via PR #22 → bf61964. Evidence: docs/research/evidence/p2-batch2-reference/README.md.
+- **Findings of record:** R1 Activity view = bell + Ctrl/Cmd+Alt+U over a needs-attention store + per-chat mark-unread Ctrl+Shift+U (view shape auth-walled [unverified]; Flauz has zero unread state). R2 Flauz already implements the Google fallback (browser_navigation_url, test-verified) — the real gap is the persistent browsing-history store + revisit matching + Settings management + reload/copy-URL keybindings (official uses context-scoped chords). R3 palette delta: absent commands enumerated; full 26.825 official palette inventory not enumerable from repo evidence (open question); 26.908 22-row overlay = reference+1 only. These scope WO-P2-008/009/010.
+
+### WO-R-SWEEP (Wave R input-surface integrity sweep)
+
+- **ID:** WO-R-SWEEP (Tech Lead wave-R order — adversarial verification sweep, no product code)
+- **Title:** Input-surface integrity sweep — every binding, command id, palette entry, slash command, settings row, advertised shortcut
+- **Status:** DELIVERED — Worker C branch research/input-surface-sweep @ 6c05afd (one docs-only commit on 3c9f113, 353 lines); merged via PR #21 → d659eb3. Evidence: docs/research/evidence/wo-p2-007/input-surface-sweep.md.
+- **Findings of record:** ZERO dead commands (72/72 interceptor arms; registry ↔ ACTIVE_KEYBOARD_SHORTCUTS set-equal). 8 silent-state no-ops with anchors: F-A1 archiveThread / F-A2 toggleThreadPin / F-A3 renameThread (silent with no selected chat), F-A4 searchFiles Ctrl+P (silent with no workspace — survives the WO-P2-007 fix), F-A5 thread1-9 empty slots (matches the official "safely do nothing" contract — by design), F-A6 git.commit palette row with pending PR, F-D1 typed /review while unavailable, F-D2 /compact runtime-not-ready. Structural: 24/25 globally bound GPUI actions declared-but-never-handled (bind_keys = menu-accelerator-label provider; removal does not generalize — menu labels depend on the actions); MAX_KEYBOARD_SHORTCUT_COMMANDS=71 vs 72 ids (fully-customized users lose the last override); Plugins settings section not palette-indexed (OpenPlugins routes to Marketplace). Work-order material for the parity-quality audit continuation.
+
 ## 5. Gaps recorded in the parity report WITHOUT work orders (audit decisions)
 
 Per §7.5 rule 4 and work-order rule 6, the following reconciled gaps carry
@@ -581,6 +612,8 @@ Per §7.5 rule 4 and work-order rule 6, the following reconciled gaps carry
 - 2026-09-17: **WO-LAB-001 CLOSED (executed)** — official Linux preview app (26.908.70816) runs in LINUX_GUI_LAB; unauthenticated runtime evidence archived (docs/research/evidence/codex-linux/); parity report Linux official cells upgraded with version-skew labels; §9 overrides 14-16; E2B lab-verdict note added (dated). Operator's next directive stands: WO-P1-003 (multi-folder local projects) is the next implementation.
 - 2026-09-17: **WO-P1-003 IMPLEMENTED (PR #15)** — multi-folder local projects on parity/wo-p1-003-multi-folder (1d2abca; clippy follow-up 2ea5970): model + honest-guard actions + primary-swap re-key + related-folder file search (primary-only cwd/Git/config discovery contract kept) + storage schema v4 + Edit project surface; 601 tests green locally; runtime GUI evidence docs/research/evidence/wo-p1-003/; new runtime finding: Ctrl+P binding is an unregistered silent no-op (palette Search files is the working entry) — P3-row candidate. Closure gates: source ✓, tests ✓ (CI round 2), GUI evidence ✓, LINUX_GUI_LAB scene ✓; CLOSED on merge with parity-row + §8.2 updates.
 - 2026-09-17: **WO-P1-003 CLOSED (merged)** — PR #15 merged to main as d06ae3b562a0af072278ad920910922b20d8e085 (implementation 1d2abca; clippy 2ea5970 + d280a4b; evidence+docs 11d58f8); CI green on both matrices at d280a4b; all five closure gates satisfied; parity report §5.1/§5.2/§8.2/J1/J4 + §9 override 17 updated; follow-on unblocked: multi-repository review (26.727) is now its own future order; open finding reported to operator: Ctrl+P binding is an unregistered silent no-op (palette Search files is the working entry).
+- 2026-09-18: **WO-P2-007 CLOSED on merge** (PR #20 → `a3c0e01`; CI green both matrices): the §9 override 17 Ctrl+P silent no-op fixed — dead `OpenFileSearch` action removed, `searchFiles` interceptor arm owns Ctrl+P (mirroring Ctrl+K/G), 5-assertion regression test; Worker B delivery 2948bf2 + Lead rustfmt 5574c95; LINUX_GUI_LAB D10 baseline (defect proof) + D10b (fix proof, workspace-seeded: Ctrl+P opens the "Search files" palette, VLM-read; Escape closes byte-identical); F-A4 no-workspace residual documented (follow-up parity question).
+- 2026-09-18: **WO-R-SWEEP + WO-R-REF DELIVERED** (PRs #21 `d659eb3` + #22 `bf61964`): Wave R research lands in the evidence tree — input-surface integrity sweep (zero dead commands; 8 silent-state no-ops; 24/25 dead bound actions; MAX=71 quirk; Plugins palette gap) + P2 batch-2 reference (Activity view / browsing history / palette residuals — the WO-P2-008/009/010 scoping basis).
 
 | Date | Change |
 | --- | --- |
@@ -597,3 +630,5 @@ Per §7.5 rule 4 and work-order rule 6, the following reconciled gaps carry
 | 2026-09-18 | **WO-P2-005 CLOSED on merge** (PR #17 → `e46ad4f3df`; CI green both matrices; evidence wo-p2-005/; §5.3 Composer row + §8.2 item 5 flipped). Seven of the eleven absent names stay open (deferred capabilities / unverified semantics — enumerated on the Composer row). |
 | 2026-09-18 | **WO-P2-006 IMPLEMENTED (PR #18: 764e4db + Lead rustfmt 73eb55c)**: side chats — Ctrl+Alt+S/Cmd+Alt+S binding (OpenSideChatShortcut in bind_keys + openSideChat interceptor registry command, Thread group; KEYBOARD_SHORTCUT_COMMAND_IDS 71→72) + guarded `/side` slash command (21 named commands, menu row); side submit creates the side thread without selecting it; main-chat selection + active turn untouched (state test); close returns to the main view; exactly the two prescribed files (ui.rs +381, codex-core lib.rs +469); core tests 221/221 green locally; GUI evidence wo-p2-006/ (D9/D9b VLM-read). Closure on merge. |
 | 2026-09-18 | **WO-P2-006 CLOSED on merge** (PR #18 → `5287c29f3f`; CI green both matrices; evidence wo-p2-006/; §5.3 Side chats row (missing → complete) + §8.1 counts (complete 7→8, missing 6→5) + §8.2 item 6 flipped). P2 with-work-orders list complete (3/3). |
+| 2026-09-18 | **WO-P2-007 IMPLEMENTED + CLOSED on merge** (PR #20 → `a3c0e01`; Worker B 2948bf2 + Lead rustfmt 5574c95; CI green both matrices): Ctrl+P silent no-op fixed — dead `OpenFileSearch` removed, `searchFiles` owns the key via the interceptor; regression test (ownership + registry + command-id + advertised shortcut + metadata); D10 baseline defect proof + D10b fix proof (workspace-seeded Ctrl+P opens the "Search files" palette, VLM-read; F-A4 no-workspace residual documented). The §9 override 17 finding is remediated. |
+| 2026-09-18 | **WO-R-SWEEP + WO-R-REF DELIVERED** (PR #21 → `d659eb3`, PR #22 → `bf61964`): input-surface integrity sweep (zero dead commands; F-A1..A6/F-D1/D2 silent states; 24/25 dead bound GPUI actions; MAX=71 quirk; Plugins palette gap) + P2 batch-2 reference research (WO-P2-008/009/010 scoping basis) merged into the evidence tree. |
