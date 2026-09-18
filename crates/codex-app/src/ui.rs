@@ -51076,13 +51076,19 @@ mod tests {
         );
         // The palette command advertises Ctrl+P as its default shortcut.
         assert_eq!(PaletteCommand::SearchFiles.shortcut(), Some("Ctrl+P"));
-        // The registry entry carries the expected metadata.
-        let search_files = ACTIVE_KEYBOARD_SHORTCUTS
-            .iter()
-            .find(|item| item.id == "searchFiles")
-            .expect("searchFiles must remain in the registry");
-        assert_eq!(search_files.title, "Search files");
-        assert_eq!(search_files.shortcuts, ["CmdOrCtrl+P"]);
-        assert_eq!(search_files.group, KeyboardShortcutGroup::General);
+        // The registry entry carries the expected metadata (existence and
+        // fields asserted in one comparison — expect/unwrap are denied by
+        // the workspace clippy gates under -D warnings).
+        assert_eq!(
+            ACTIVE_KEYBOARD_SHORTCUTS
+                .iter()
+                .find(|item| item.id == "searchFiles")
+                .map(|item| (item.title, item.shortcuts, item.group)),
+            Some((
+                "Search files",
+                &["CmdOrCtrl+P"][..],
+                KeyboardShortcutGroup::General
+            ))
+        );
     }
 }
