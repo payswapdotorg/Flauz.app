@@ -8,7 +8,7 @@ The product roadmap is now governed by [docs/FLAUZ-SOURCE-OF-TRUTH.md](docs/FLAU
 - [x] Windows and Linux desktop targets.
 - [x] Official Codex app-server supervision boundary.
 - [x] Native terminal, Browser, Computer Use, Git, Skills, plugins, MCP Apps, and Marketplace foundations.
-- [x] P1/P2 parity work completed to the current merged work-order set.
+- [x] P1/P2 parity work orders completed to the current merged work-order set.
 - [x] Linux parity lab and official Linux reference+1 lab.
 - [ ] Complete the remaining Codex parity backlog and release-candidate gates.
 
