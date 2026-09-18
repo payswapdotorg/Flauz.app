@@ -4,10 +4,13 @@ codexRS is a native Rust replacement for Codex Desktop. The release target is
 behavioral and UX parity without Electron, Tauri, Wry, WebView, Node.js, or a
 browser runtime.
 
-This matrix is the contributor-facing source of truth. A row is complete only
-when the visible behavior works through the official app-server or a native
-platform boundary, has focused regression coverage, and has been compared with
-the reference UI at the same state and viewport.
+This matrix is the **Codex Desktop parity source of truth only**. The broader
+Flauz product and architecture source of truth is `docs/FLAUZ-SOURCE-OF-TRUTH.md`;
+execution order is `docs/IMPLEMENTATION-ROADMAP.md`; worker scope is governed by
+`docs/WORK-ORDER-TEMPLATE.md`. A parity row is complete only when the visible
+behavior works through the official app-server or a native platform boundary,
+has focused regression coverage, and has been compared with the reference UI at
+the same state and viewport.
 
 ## Reference baseline
 
