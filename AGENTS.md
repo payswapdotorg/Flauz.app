@@ -29,9 +29,9 @@ Before implementation, read [Flauz Architecture & Implementation Constitution](d
 - Apply KISS, YAGNI, and the Pareto principle. Make the smallest maintainable
   change that satisfies the explicit acceptance criteria and current evidence;
   prefer existing patterns and code paths.
-- Do not add speculative abstractions, dependencies, compatibility layers,
-  fallbacks, configuration, cleanup, documentation, or future-proofing outside
-  the assigned scope.
+- Do not add speculative implementation. Approved Flauz architecture seams may
+  be introduced only when the assigned work order explicitly requires them;
+  do not build future clients/providers/orchestration early without a work order.
 - Keep verification proportional. Add or update only the smallest focused tests
   needed to prove changed behavior or prevent a concrete observed regression.
   Do not add redundant unit/integration/E2E coverage, exhaustive edge-case
