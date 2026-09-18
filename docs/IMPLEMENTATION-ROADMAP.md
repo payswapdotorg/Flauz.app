@@ -1,0 +1,273 @@
+# Flauz Master Implementation Roadmap
+
+**Status:** FROZEN PLAN — 2026-09-18  
+**Execution:** Tech Lead + up to 3 concurrent workers
+
+The frozen architecture is in
+[FLAUZ-SOURCE-OF-TRUTH.md](FLAUZ-SOURCE-OF-TRUTH.md). Codex-specific parity is
+in [parity-matrix.md](parity-matrix.md).
+
+## Graph
+
+```
+F0 Governance
+  ↓
+F1 Codex parity
+  ↓
+F2 Canonical contracts
+  ├──────────────┬──────────────┐
+  ↓              ↓              ↓
+F3 Environments F4 Models      F5 Capabilities
+  └──────────────┼──────────────┘
+                 ↓
+             F6 Orchestration
+                 ↓
+       ┌─────────┼─────────┐
+       ↓         ↓         ↓
+     F7 BYOP    F8 Labs   F9 Collaboration
+       └─────────┼─────────┘
+                 ↓
+         F10 macOS client
+                 ↓
+          F11 Web client
+                 ↓
+        F12 Mobile client
+                 ↓
+          F13 Production
+```
+
+## F0 — Governance
+
+- ✅ source-of-truth constitution
+- ✅ master roadmap
+- ✅ work-order protocol
+- ✅ Tech Lead handoff
+- ✅ current native architecture contract
+- ✅ Codex parity matrix
+
+## F1 — Codex Desktop parity
+
+Already merged:
+- ✅ Terminal discoverability
+- ✅ Browser discoverability
+- ✅ Multi-folder projects
+- ✅ Settings command-palette coverage
+- ✅ stable slash-command subset
+- ✅ side chats
+- ✅ Linux Computer Use platform-bound contract
+- ✅ Linux/official-Linux parity lab evidence
+
+Remaining:
+- ⬜ remaining P2 backlog
+- ⬜ P3 residuals
+- ⬜ final parity journeys
+- ⬜ accessibility/keyboard-only/reduced-motion pass
+- ⬜ release-candidate soak/reconnect/performance gates
+
+**Gate:** every remaining parity difference is explicitly classified and the
+release-critical journeys pass.
+
+## F2 — Canonical contracts
+
+- ⬜ Workspace
+- ⬜ Session
+- ⬜ Task
+- ⬜ Environment
+- ⬜ ExecutionProvider
+- ⬜ ModelProvider
+- ⬜ Model
+- ⬜ AgentRuntime
+- ⬜ Agent
+- ⬜ Skill
+- ⬜ Capability
+- ⬜ Artifact
+- ⬜ ProviderConnection
+- ⬜ versioned session/event transport
+- ⬜ conformance fixtures
+
+**Gate:** fake model/runtime/environment/provider implementations pass the
+contracts without real external services.
+
+## F3 — Environment fabric
+
+- ⬜ LocalEnvironmentProvider wrapping current terminal/browser/Computer Use/Git
+- ⬜ environment lifecycle
+- ⬜ capability advertisement
+- ⬜ remote attach/detach
+- ⬜ cancellation/heartbeat/reconnect
+- ⬜ artifact transfer
+- ⬜ provider-neutral environment UI
+
+**Gate:** desktop uses local and fake-remote environments through one contract.
+
+## F4 — Model/runtime fabric
+
+- ⬜ Flauz model registry
+- ⬜ model-provider registry
+- ⬜ model discovery/capability metadata
+- ⬜ secure credential references
+- ⬜ Codex runtime adapter
+- ⬜ OpenAI API
+- ⬜ Gemini
+- ⬜ Anthropic
+- ⬜ GitHub Copilot SDK/runtime
+- ⬜ Ollama
+- ⬜ LM Studio
+- ⬜ OpenAI-compatible custom endpoint
+- ⬜ custom agent-runtime adapter
+
+**Gate:** a non-Codex model/provider can run a bounded test task without changing
+the Codex app-server integration.
+
+## F5 — Capability/skill fabric
+
+- ⬜ capability registry
+- ⬜ skill requirement schema
+- ⬜ model/environment discovery
+- ⬜ policy/permission filtering
+- ⬜ resolver
+- ⬜ skill dependency validation
+- ⬜ capability-gap diagnostics
+- ⬜ skill-unlock actions
+- ⬜ Computer Use compound capability model
+
+**Gate:** an unavailable skill explains the missing capability and offers a valid
+unlock route when one exists.
+
+## F6 — Orchestration
+
+- ⬜ execution-plan graph
+- ⬜ agent roles
+- ⬜ serial delegation
+- ⬜ parallel agents
+- ⬜ model-as-tool
+- ⬜ shared artifacts/context
+- ⬜ verification
+- ⬜ fallback/rerouting
+- ⬜ cancellation/dependency propagation
+- ⬜ execution provenance
+
+**Gate:** two independent model/runtime adapters cooperate on one task and
+produce attributable results.
+
+## F7 — User-owned providers / free-tier routing
+
+- ⬜ provider connection UI
+- ⬜ OAuth/API-key flows
+- ⬜ secure credential vault/references
+- ⬜ multiple accounts/provider
+- ⬜ quota/usage
+- ⬜ free-tier metadata
+- ⬜ user routing policies
+- ⬜ free-tier-first scheduling
+- ⬜ concurrency/session/spend limits
+
+Initial execution providers:
+- ⬜ E2B
+- ⬜ Daytona
+- ⬜ Azure
+- ⬜ GitHub Actions
+- ⬜ Codemagic
+- ⬜ Vercel Sandbox
+- ⬜ Cloudflare Sandbox
+
+**Gate:** a user can consume their own provider quota without requiring a
+Flauz-owned global account.
+
+## F8 — Provider-neutral parity lab
+
+- ✅ local Linux GUI lab foundation
+- ⬜ GitHub Windows
+- ⬜ Azure Windows GUI
+- ⬜ GitHub macOS
+- ⬜ Codemagic macOS
+- ⬜ E2B
+- ⬜ Daytona
+- ⬜ evidence schema
+- ⬜ screenshots/action/accessibility evidence
+- ⬜ reference/candidate comparator
+- ⬜ provider-independent journeys
+
+**Gate:** one journey runs unchanged against at least two providers.
+
+## F9 — Collaboration
+
+- ⬜ Workspace membership/permissions
+- ⬜ presence
+- ⬜ shared sessions
+- ⬜ shared environments
+- ⬜ collaborative documents
+- ⬜ collaborative sheets
+- ⬜ collaborative code
+- ⬜ isolated worktrees
+- ⬜ explicit shared-filesystem mode
+- ⬜ activity/history/comments
+
+**Gate:** two independent clients can concurrently use one workspace/session
+without losing authorized state.
+
+## F10 — macOS client
+
+- ⬜ native client adapter
+- ⬜ local Mac environment
+- ⬜ local Computer Use/terminal/browser/Git
+- ⬜ Codex runtime
+- ⬜ remote environment selection
+- ⬜ parity journeys
+- ⬜ packaging
+
+## F11 — Web client
+
+- ⬜ Web shell
+- ⬜ authenticated workspace/session connection
+- ⬜ remote environment control
+- ⬜ model/provider selection
+- ⬜ skill-unlock UI
+- ⬜ collaboration/presence
+- ⬜ artifacts/documents/sheets
+- ⬜ accessibility/responsive pass
+
+## F12 — Mobile client
+
+- ⬜ mobile shell
+- ⬜ workspace/session
+- ⬜ remote control
+- ⬜ approvals/notifications
+- ⬜ handoff/resume
+- ⬜ collaboration/presence
+- ⬜ appropriate model/provider/skill controls
+- ⬜ mobile security/storage boundary
+
+## F13 — Production
+
+- ⬜ signed desktop releases
+- ⬜ Linux distribution strategy
+- ⬜ web/mobile release channels
+- ⬜ automatic updates
+- ⬜ migrations
+- ⬜ observability
+- ⬜ recovery
+- ⬜ security review
+- ⬜ provider outage behavior
+- ⬜ protocol compatibility guarantees
+
+## Stable work-order prefixes
+
+```
+PAR-*   Codex parity
+ARCH-*  canonical architecture/contracts
+ENV-*   environments
+MOD-*   model providers
+RT-*    agent runtimes
+CAP-*   capabilities/skills
+ORCH-*  orchestration
+PROV-*  execution providers
+LAB-*   parity labs
+COL-*   collaboration
+CLI-*   clients
+SEC-*   security/credentials
+REL-*   release
+```
+
+Only the Tech Lead changes roadmap status. A worker report never closes a phase.
+A phase closes only after merged implementation plus acceptance evidence.
