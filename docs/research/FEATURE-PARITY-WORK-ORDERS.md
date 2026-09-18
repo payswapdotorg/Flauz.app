@@ -1,9 +1,12 @@
 # Feature Parity Work Orders
 
-> **Status: ACTIVE — implementation wave 3 landed: WO-P2-004 CLOSED on
-> main (merge `7aa7163` via PR #16, 2026-09-17).** Wave 2: WO-P1-003
-> CLOSED (merge `d06ae3b` via PR #15). Next per the operator's frozen
-> sequence: WO-P2-005 (slash-command coverage), WO-P2-006 (side chats). Operator
+> **Status: ACTIVE — parity implementation waves complete: WO-P2-005
+> CLOSED on main (merge `e46ad4f3df` via PR #17, 2026-09-18; incl. the
+> fork-picker GUI fix 4726dd4) and WO-P2-006 CLOSED on main (merge
+> `5287c29f3f` via PR #18, 2026-09-18); WO-PLAT-001 CLOSED (docs-only
+> platform-gap closure, 2026-09-18).** Wave 3: WO-P2-004 CLOSED (merge
+> `7aa7163` via PR #16). Wave 2: WO-P1-003 CLOSED (merge `d06ae3b` via
+> PR #15). Remaining: VWO-016 (operator-gated held-out briefs). Operator
 > directive (2026-09-17): execute WO-LAB-001 (official Linux preview app
 > in LINUX_GUI_LAB) and reconcile current-26.825 behavior BEFORE WO-P1-003
 > implementation; then WO-P1-003 (multi-folder local projects), then the
@@ -592,3 +595,5 @@ Per §7.5 rule 4 and work-order rule 6, the following reconciled gaps carry
 | 2026-09-18 | **WO-PLAT-001 CLOSED (docs-only)**: Computer Use — Linux platform gap recorded as a documented bound, not a missing feature — §5.5 row verified `platform-limited` (Backend/UI/Functional) with the portal-backed-selection future-work pointer; `docs/known-failures.md` verified as the canonical bound text (wording consistent with the row); no code change (per the work order's Required change: documentation/labeling only). |
 | 2026-09-18 | **WO-P2-005 IMPLEMENTED (PR #17: 2e6358f + GUI fix 4726dd4)**: slash-command coverage — guarded `/approve` (pending-approval), `/fast` (catalog Fast tier toggle), `/personality` (Personalization settings nav), `/worktree` (worktree-fork picker); the fork-destination picker wiring defect found in LINUX_GUI_LAB (picker instantly closed for `/worktree` — Change-subscription value-gate) fixed in 4726dd4 via the testable `composer_keeps_fork_picker` predicate (+ regression test); 15-site picker-lifecycle audit clean; fmt gates pass on pinned 1.97.1; 605 existing tests unaffected (grep-verified no test touches the picker flag); GUI evidence wo-p2-005/ (D8c4 VLM-read). Closure on merge. |
 | 2026-09-18 | **WO-P2-005 CLOSED on merge** (PR #17 → `e46ad4f3df`; CI green both matrices; evidence wo-p2-005/; §5.3 Composer row + §8.2 item 5 flipped). Seven of the eleven absent names stay open (deferred capabilities / unverified semantics — enumerated on the Composer row). |
+| 2026-09-18 | **WO-P2-006 IMPLEMENTED (PR #18: 764e4db + Lead rustfmt 73eb55c)**: side chats — Ctrl+Alt+S/Cmd+Alt+S binding (OpenSideChatShortcut in bind_keys + openSideChat interceptor registry command, Thread group; KEYBOARD_SHORTCUT_COMMAND_IDS 71→72) + guarded `/side` slash command (21 named commands, menu row); side submit creates the side thread without selecting it; main-chat selection + active turn untouched (state test); close returns to the main view; exactly the two prescribed files (ui.rs +381, codex-core lib.rs +469); core tests 221/221 green locally; GUI evidence wo-p2-006/ (D9/D9b VLM-read). Closure on merge. |
+| 2026-09-18 | **WO-P2-006 CLOSED on merge** (PR #18 → `5287c29f3f`; CI green both matrices; evidence wo-p2-006/; §5.3 Side chats row (missing → complete) + §8.1 counts (complete 7→8, missing 6→5) + §8.2 item 6 flipped). P2 with-work-orders list complete (3/3). |

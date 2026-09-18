@@ -167,7 +167,7 @@ only — no platform validation is claimed.
 | Approvals and user input | Stable public `item/commandExecution/requestApproval`, `item/fileChange/requestApproval`, `item/permissions/requestApproval`; tool user-input cards with countdown/snooze `[historical-record] A §1/§8` | Native command/file/permission/dynamic-tool approvals with bounded typed payloads `[historical-record] PM`; approval dropdown beside composer "+" affordance `[runtime-observed] ev/01`; pending connector-specific methods (ledger bounded) | win `[historical-record]`; linux `[runtime-observed shell]` | partial | partial | partial (contextual cards; composer dropdown persistent) | partial | partial | — | PM "Approvals and user input"; A §8; B2 §2 ev/01 | backend — deferred (connector-specific public contracts) |
 | Streaming timeline | Compact `Explored`/`Ran`, file-change, web-search, subagent, image-inspection/generation, background-terminal summaries; bottom-aligned variable-height list `[historical-record] A §1]` | Same stable-style summaries in native list `[historical-record] PM`; live streaming bound unauthenticated (no turns possible) `[runtime-observed bound] B2 §1` | win `[historical-record]`; linux `[historical-record]` (runtime-bound) | partial | partial | complete (timeline is the primary chat surface) | partial | partial | — | PM "Streaming timeline"; A §1; B2 §1 | ux — P3 (activity grouping, citation navigation, source aggregation) |
 | Scheduled tasks | `/automations` route + Scheduled: suggestions, manual/chat-assisted creation, schedule editor, run history, unread/archive states, pause/edit/delete, notifications — cloud-backed `[historical-record] A §10`; **26.825: event-triggered tasks (Gmail/Slack/GitHub events, filters, `Run now`, Scheduled inbox)** `[docs-derived]` | Not implemented — cloud tasks backend proprietary; no surface in UI or source beyond plugin includes `[historical-record] PM; source-derived absence B2 audit]` | win `[historical-record]`; linux `[source-derived absence]` | deferred | deferred | — (no surface) | — | deferred | — | PM "Scheduled tasks"; A §10; B2 corrected-count audit | backend (proprietary) — deferred (event triggers same bound) |
-| Side chats **(added by C2 audit)** | `Open side chat` Ctrl/Cmd+Alt+S; temporary side conversation without interrupting the main chat; `/side` in current command set `[historical-record + docs-derived] A §1 (confidence medium-high — 26.707 "side conversations" note + current docs)` | No side-chat surface: no Ctrl+Alt+S binding in the key registry, no `/side` in the slash executor `[source-derived absence: ui.rs:4459-4552 key registry; ui.rs:7510-7621 slash executor; sweep at f113515]` | win `[historical-record]`; linux `[source-derived absence]` | missing | missing | missing | — | missing | — | A §1 Side chats; B2 shortcut inventory (no Ctrl+Alt+S); C2 source sweep | backend — P2 → **WO-P2-006** |
+| Side chats **(added by C2 audit)** | `Open side chat` Ctrl/Cmd+Alt+S; temporary side conversation without interrupting the main chat; `/side` in current command set `istorical-record + docs-derived] A §1 (confidence medium-high — 26.707 "side conversations" note + current docs)` | Implemented: Ctrl+Alt+S (Cmd+Alt+S on macOS) opens the side panel with the main chat still selected; the side composer submits into the side thread without selecting it; `/side` (availability-guarded, menu row) reopens the panel; close dismisses it with the main view intact; the main chat's selection and active turn are untouched `[source-derived ui.rs + codex-core lib.rs @764e4db: OpenSideChatShortcut binding + openSideChat interceptor command + KEYBOARD_SHORTCUT_COMMAND_IDS 71→72; runtime-observed LINUX_GUI_LAB D9/D9b]` | win `istorical-record]`; linux `[runtime-observed D9]` | complete | complete | complete (Ctrl+Alt+S binding + `/side` slash row + shortcuts dialog Thread group) | complete | complete | close returns to the main view | WO-P2-006 delivery (764e4db + Lead rustfmt 73eb55c); evidence docs/research/evidence/wo-p2-006/ (D9/D9b VLM-read) | none recorded — **CLOSED (WO-P2-006, PR #18 → `5287c29f3f`)** |
 
 ### 5.2 Composer
 
@@ -390,9 +390,9 @@ by the audit per §7.2):
 
 | Status | Count | Rows |
 | --- | --- | --- |
-| `complete` | **7** | Runtime bootstrap; Multi-root workspace handling (regression control); Git process hygiene; Marketplace admin-disabled install; Keyboard shortcut reference; Feedback; Stable-failure regression controls |
+| `complete` | **8** | Runtime bootstrap; Multi-root workspace handling (regression control); Git process hygiene; Marketplace admin-disabled install; Keyboard shortcut reference; Feedback; Stable-failure regression controls; Side chats |
 | `partial` | **31** | all §5.1-§5.10 rows not listed elsewhere (incl. Terminal, In-app browser, Projects and chats, Settings shell, Import and migration, etc.) |
-| `missing` | **6** | Side chats; WebMCP site tools; Browser extension (adjacent); In-app Markdown/code editing; Record & Replay; Activity view & unread attention |
+| `missing` | **5** | WebMCP site tools; Browser extension (adjacent); In-app Markdown/code editing; Record & Replay; Activity view & unread attention |
 | `platform-limited` | **2** | Computer Use — Linux; Linux packaging |
 | `deferred` | **7** | Scheduled tasks; Voice input; Sites; Visualizations; Cloud environments; Appshots; Pets and Codex Micro |
 
@@ -429,8 +429,8 @@ unusable.
    main; CI green both matrices; runtime evidence
    docs/research/evidence/wo-p1-003/.
 
-**P2 — meaningful difference (with work orders, 3; 1 of 3 CLOSED
-2026-09-17):**
+**P2 — meaningful difference (with work orders, 3; 3 of 3 CLOSED
+2026-09-18):**
 
 4. Command palette does not index all settings pages ("import" → No matches
    while the Import page exists in nav; 6 nav pages unindexed) → **CLOSED
@@ -448,7 +448,7 @@ unusable.
    picker GUI fix (4726dd4); seven names stay open (deferred capabilities /
    unverified semantics — enumerated on the §5.3 Composer row); CI green
    both matrices; runtime evidence docs/research/evidence/wo-p2-005/.
-6. Side chats (in-baseline Ctrl+Alt+S + `/side`) → **WO-P2-006**.
+6. Side chats (in-baseline Ctrl+Alt+S + `/side`) → **CLOSED (WO-P2-006 merged via PR #18 → `5287c29f3f`, 2026-09-18)**: Ctrl+Alt+S + guarded `/side` open the side composer; side submit creates the side thread without selecting it; the main chat's selection + active turn are untouched; close returns to the main view; CI green both matrices; runtime evidence docs/research/evidence/wo-p2-006/ (D9/D9b VLM-read).
 
 **P2 — recorded in rows, no work order yet (needs scoping / blocked, 11):**
 
@@ -705,3 +705,5 @@ cell, in report order:
 | 2026-09-18 | **WO-PLAT-001 CLOSED (docs-only):** Computer Use — Linux stays a documented platform bound (screenshot-only X11/XWayland observation; portal-backed selection = future work) — §5.5 row `platform-limited` + `docs/known-failures.md` canonical wording verified consistent; no code change. |
 | 2026-09-18 | **WO-P2-005 implemented (PR #17: 2e6358f + GUI fix 4726dd4)**: slash-command coverage — `/approve /fast /personality /worktree` (guarded) + menu rows + unit tests; LINUX_GUI_LAB D8 found the fork-picker wiring defect (picker closed for `/worktree`); fix 4726dd4 = testable `composer_keeps_fork_picker` predicate + regression test, 15-site lifecycle audit clean; §5.3 Composer row + §8.2 item 5 updates; runtime evidence wo-p2-005/ (D8c4). Row flip to closed on merge. |
 | 2026-09-18 | **Merge closure:** WO-P2-005 CLOSED (PR #17 → `e46ad4f3df`; CI green both matrices); §5.3 Composer row + §8.2 item 5 flipped to CLOSED; five closure gates satisfied; P2 progress 2/3. |
+| 2026-09-18 | **WO-P2-006 implemented (PR #18: 764e4db + Lead rustfmt 73eb55c)**: side chats — Ctrl+Alt+S binding (bind_keys + interceptor registry, Thread group) + guarded `/side` (21 named commands); side submit creates the side thread without selecting it; main-chat selection/active-turn untouched (state test); close returns to main view; §5.3 Side chats row + §8.2 item 6 updates; runtime evidence wo-p2-006/ (D9/D9b VLM-read). Row flip to closed on merge. |
+| 2026-09-18 | **Merge closure:** WO-P2-006 CLOSED (PR #18 → `5287c29f3f`; CI green both matrices); §5.3 Side chats row flipped missing → complete; §8.1 counts (complete 7→8, missing 6→5); §8.2 item 6 flipped to CLOSED; five closure gates satisfied; P2 with-work-orders 3/3 complete. |

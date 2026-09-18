@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the four screenshots provided, here are the details for each image:\n\n**Image 002 (main-created)**\n1.  **Side panel visible:** No\n2.  **Main bottom composer text:** \"Ask Codex to change, inspect, or explain...\" (placeholder)\n3.  **Selected sidebar item:** \"side chat fixture main\"\n4.  **Side panel text:** N/A\n\n**Image 004 (side-open)**\n1.  **Side panel visible:** Yes\n2.  **Main bottom composer text:** \"Ask Codex to change, inspect, or explain...\" (placeholder)\n3.  **Selected sidebar item:** \"side chat fixture main\"\n4.  **Side panel text:** \"Ask a side question without interrupting this chat.\"\n\n**Image 005 (side-typed)**\n1.  **Side panel visible:** Yes\n2.  **Main bottom composer text:** \"Ask Codex to change, inspect, or explain...\" (placeholder)\n3.  **Selected sidebar item:** \"side chat fixture main\"\n4.  **Side panel text:** \"quick aside question\" (typed in the composer at the bottom of the side panel)\n\n**Image 007 (aftermath)**\n1.  **Side panel visible:** Yes\n2.  **Main bottom composer text:** \"Ask Codex to change, inspect, or explain...\" (placeholder)\n3.  **Selected sidebar item:** \"side chat fixture main\" (Note: A new item \"quick aside question\" appears above it in the list, but \"side chat fixture main\" remains highlighted/selected as the active main view).\n4.  **Side panel text:** \"quick aside question\"",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789703121,
+  "id": "20260918114511b3c3ea5648ee4818",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260918114511b3c3ea5648ee4818",
+  "usage": {
+    "completion_tokens": 351,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 8186,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 8537
+  }
+}

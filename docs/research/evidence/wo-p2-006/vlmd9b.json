@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "SIDE PANEL VISIBLE: yes\nSIDE PANEL VISIBLE: yes\nSIDE PANEL VISIBLE: yes\nSIDE PANEL VISIBLE: no, the side panel is closed and the main view expanded to full width.\nSIDE PANEL VISIBLE: no, a dropdown menu appeared in the main view.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789703300,
+  "id": "20260918114815715719f8368f4a19",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260918114815715719f8368f4a19",
+  "usage": {
+    "completion_tokens": 59,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 10152,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 10211
+  }
+}
