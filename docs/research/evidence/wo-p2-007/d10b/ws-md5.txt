@@ -1,0 +1,3 @@
+a9ad7e0ce57201bf1a8217302d945a36  /home/z/parity-lab/evidence/d10b/ws-01-workspace-surface.png
+857b824c5872d1dd37a233579aaadc31  /home/z/parity-lab/evidence/d10b/ws-02-after-ctrl-p.png
+a9ad7e0ce57201bf1a8217302d945a36  /home/z/parity-lab/evidence/d10b/ws-03-after-escape.png

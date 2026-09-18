@@ -1,0 +1,4 @@
+bb5139b3d119c06db7009c3e663cfd1c  /home/z/parity-lab/evidence/d10-baseline/d10-01-entry-surface.png
+bb5139b3d119c06db7009c3e663cfd1c  /home/z/parity-lab/evidence/d10-baseline/d10-02-after-ctrl-p.png
+bb5139b3d119c06db7009c3e663cfd1c  /home/z/parity-lab/evidence/d10-baseline/d10-03-after-escape.png
+c8c351fbcbe0e4d1f801f8162b10ce29  /home/z/parity-lab/evidence/d10-baseline/d10-04-palette-search-files.png
