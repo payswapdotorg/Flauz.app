@@ -129,17 +129,18 @@ pub const MAX_IMPORT_DETAIL_ITEMS: usize = 100;
 pub const MAX_IMPORT_FIELD_BYTES: usize = 8 * 1024;
 pub const MAX_IMPORT_SESSIONS: u32 = 50;
 pub const MAX_IMPORT_SESSION_AGE_DAYS: u32 = 30;
-pub const MAX_KEYBOARD_SHORTCUT_COMMANDS: usize = 71;
+pub const MAX_KEYBOARD_SHORTCUT_COMMANDS: usize = 76;
 pub const MAX_KEYBOARD_SHORTCUTS_PER_COMMAND: usize = 4;
 pub const MAX_KEYBOARD_SHORTCUT_ACCELERATOR_BYTES: usize = 128;
 pub const STANDARD_SERVICE_TIER_ID: &str = "default";
 
-pub const KEYBOARD_SHORTCUT_COMMAND_IDS: [&str; 72] = [
+pub const KEYBOARD_SHORTCUT_COMMAND_IDS: [&str; 76] = [
     "newTask",
     "newProjectlessTask",
     "openSideChat",
     "archiveThread",
     "toggleThreadPin",
+    "toggleThreadUnread",
     "copyConversationMarkdown",
     "copyDeeplink",
     "copySessionId",
@@ -150,6 +151,9 @@ pub const KEYBOARD_SHORTCUT_COMMAND_IDS: [&str; 72] = [
     "navigateForward",
     "previousThread",
     "nextThread",
+    "toggleActivityView",
+    "nextUnreadChat",
+    "clearAllUnread",
     "thread1",
     "thread2",
     "thread3",
@@ -4747,6 +4751,10 @@ pub struct AppState {
     pub next_worktree_fork_request_id: u64,
     pub archived_tasks: ArchivedTasksState,
     pub pinned_task_ids: Vec<String>,
+    /// Chats that finished agent activity (turn-completed or
+    /// approval-requested) while not selected and have not been visited
+    /// since (WO-P2-008 session state; not persisted).
+    pub needs_attention_task_ids: Vec<String>,
     pub seen_model_upgrade_ids: Vec<String>,
     pub local_projects: Vec<LocalProjectSummary>,
     pub local_project_order: Vec<PathBuf>,
@@ -4821,6 +4829,7 @@ impl Default for AppState {
             next_worktree_fork_request_id: 1,
             archived_tasks: ArchivedTasksState::default(),
             pinned_task_ids: Vec::new(),
+            needs_attention_task_ids: Vec::new(),
             seen_model_upgrade_ids: Vec::new(),
             local_projects: Vec::new(),
             local_project_order: Vec::new(),
@@ -5142,6 +5151,9 @@ pub enum Action {
     SelectTask(String),
     OpenBackgroundCompletion,
     DismissBackgroundCompletion,
+    ToggleActivityView,
+    ClearUnreadIndicators,
+    ToggleSelectedTaskUnread,
     TaskRuntimeLoaded {
         task_id: String,
         generation: u64,
@@ -8861,6 +8873,24 @@ fn installed_apps_current_for_selected_task(state: &AppState) -> bool {
         && state.marketplace.installed_apps_thread_id == state.selected_task_id
 }
 
+/// Flags a chat as needing attention (WO-P2-008). Bounded to the visible
+/// task list: ids are only inserted for known tasks and the list is capped
+/// at `MAX_VISIBLE_THREADS`, mirroring the background-completion queue.
+fn mark_task_needing_attention(state: &mut AppState, task_id: &str) {
+    if task_id.len() > MAX_PINNED_TASK_ID_BYTES
+        || state
+            .needs_attention_task_ids
+            .iter()
+            .any(|unread_task_id| unread_task_id == task_id)
+    {
+        return;
+    }
+    if state.needs_attention_task_ids.len() >= MAX_VISIBLE_THREADS {
+        state.needs_attention_task_ids.remove(0);
+    }
+    state.needs_attention_task_ids.push(task_id.to_owned());
+}
+
 pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
     match action {
         Action::Connect | Action::RetryConnection => {
@@ -10499,6 +10529,9 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             state
                 .pinned_task_ids
                 .retain(|pinned_task_id| pinned_task_id != &task_id);
+            state
+                .needs_attention_task_ids
+                .retain(|unread_task_id| unread_task_id != &task_id);
             let archived_task = state
                 .tasks
                 .iter()
@@ -10606,6 +10639,53 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             vec![Effect::PersistPinnedTasks {
                 task_ids: state.pinned_task_ids.clone(),
             }]
+        }
+        Action::ToggleActivityView => {
+            // The Activity view surface is a separate future work order;
+            // the binding still resolves visibly instead of a silent
+            // no-op (WO-P2-008, the WO-P2-007 input-quality doctrine).
+            state.status_message = Some(
+                "Activity view is not available yet. Use \"Next chat needing attention\" to jump to unread chats."
+                    .to_owned(),
+            );
+            Vec::new()
+        }
+        Action::ClearUnreadIndicators => {
+            let cleared = state.needs_attention_task_ids.len();
+            state.needs_attention_task_ids.clear();
+            state.status_message = Some(if cleared == 0 {
+                "No unread chats".to_owned()
+            } else if cleared == 1 {
+                "Cleared unread indicators for 1 chat".to_owned()
+            } else {
+                format!("Cleared unread indicators for {cleared} chats")
+            });
+            Vec::new()
+        }
+        Action::ToggleSelectedTaskUnread => {
+            let Some(task_id) = state.selected_task_id.clone() else {
+                // Honest guidance instead of a silent no-op when no chat is
+                // selected (WO-P2-008).
+                state.status_message = Some("Select a chat before marking it unread.".to_owned());
+                return Vec::new();
+            };
+            let can_toggle = task_id.len() <= MAX_PINNED_TASK_ID_BYTES
+                && state.tasks.iter().any(|task| task.id == task_id);
+            if !can_toggle {
+                return Vec::new();
+            }
+            if let Some(index) = state
+                .needs_attention_task_ids
+                .iter()
+                .position(|unread_task_id| *unread_task_id == task_id)
+            {
+                state.needs_attention_task_ids.remove(index);
+                state.status_message = Some("Chat marked read".to_owned());
+            } else {
+                mark_task_needing_attention(state, &task_id);
+                state.status_message = Some("Chat marked unread".to_owned());
+            }
+            Vec::new()
         }
         Action::PinnedTasksLoaded(tasks) => {
             for task in tasks {
@@ -11031,6 +11111,12 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
                 state.tasks.truncate(MAX_VISIBLE_THREADS);
             }
             if task_changed {
+                // Visiting a chat clears its unread-attention flag
+                // (WO-P2-008). A manually marked-unread selected chat keeps
+                // the flag until the selection moves away and returns.
+                state
+                    .needs_attention_task_ids
+                    .retain(|unread_task_id| unread_task_id != &task_id);
                 advance_task_selection_generation(state);
                 clear_pending_task_fork_status(state);
                 state.artifacts = ArtifactState::default();
@@ -13690,6 +13776,15 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
                     None
                 };
             if completed_active
+                && state.selected_task_id.as_deref() != Some(task_id.as_str())
+                && let Some(known_task_id) = known_task_id.as_deref()
+            {
+                // Terminal agent activity in a non-selected chat requires
+                // attention (WO-P2-008). Failed turns are included: a chat
+                // the user must look at is attention, regardless of outcome.
+                mark_task_needing_attention(state, known_task_id);
+            }
+            if completed_active
                 && completed
                 && !failed
                 && state.selected_task_id.as_deref() != Some(task_id.as_str())
@@ -14003,6 +14098,13 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
                 .find(|task| task.id == request.task_id)
             {
                 task.status = TaskRunStatus::WaitingForApproval;
+            }
+            if state.selected_task_id.as_deref() != Some(request.task_id.as_str())
+                && state.tasks.iter().any(|task| task.id == request.task_id)
+            {
+                // An approval waiting in a chat the user is not looking at
+                // requires attention (WO-P2-008).
+                mark_task_needing_attention(state, &request.task_id);
             }
             state.approvals.push_back(request);
             Vec::new()
@@ -37228,5 +37330,248 @@ mod tests {
             reduce(&mut state, Action::WorkflowRefreshInstances),
             [Effect::WorkflowRequest(WorkflowRequest::InstanceList)]
         );
+    }
+
+    #[test]
+    fn background_turn_completion_marks_the_chat_needing_attention() {
+        let mut state = AppState::default();
+        reduce(&mut state, Action::TaskCreated(task("selected")));
+        reduce(&mut state, Action::TaskCreated(task("background")));
+        reduce(&mut state, Action::TaskCreated(task("failing")));
+        reduce(&mut state, Action::SelectTask("selected".to_owned()));
+
+        reduce(
+            &mut state,
+            Action::TurnStarted {
+                task_id: "background".to_owned(),
+                turn_id: "turn-background".to_owned(),
+            },
+        );
+        reduce(
+            &mut state,
+            Action::TurnCompleted {
+                task_id: "background".to_owned(),
+                turn_id: "turn-background".to_owned(),
+                completed: true,
+                failed: false,
+            },
+        );
+        assert_eq!(state.needs_attention_task_ids, ["background"]);
+
+        // A failed turn still requires the user's attention.
+        reduce(
+            &mut state,
+            Action::TurnStarted {
+                task_id: "failing".to_owned(),
+                turn_id: "turn-failing".to_owned(),
+            },
+        );
+        reduce(
+            &mut state,
+            Action::TurnCompleted {
+                task_id: "failing".to_owned(),
+                turn_id: "turn-failing".to_owned(),
+                completed: true,
+                failed: true,
+            },
+        );
+        assert_eq!(state.needs_attention_task_ids, ["background", "failing"]);
+
+        // Completing a turn in the selected chat never flags it.
+        reduce(
+            &mut state,
+            Action::TurnStarted {
+                task_id: "selected".to_owned(),
+                turn_id: "turn-selected".to_owned(),
+            },
+        );
+        reduce(
+            &mut state,
+            Action::TurnCompleted {
+                task_id: "selected".to_owned(),
+                turn_id: "turn-selected".to_owned(),
+                completed: true,
+                failed: false,
+            },
+        );
+        assert_eq!(state.needs_attention_task_ids, ["background", "failing"]);
+
+        // Terminal events for unknown tasks never flag anything.
+        reduce(
+            &mut state,
+            Action::TurnCompleted {
+                task_id: "unknown".to_owned(),
+                turn_id: "turn-unknown".to_owned(),
+                completed: true,
+                failed: false,
+            },
+        );
+        assert_eq!(state.needs_attention_task_ids, ["background", "failing"]);
+    }
+
+    #[test]
+    fn approval_request_marks_background_chats_needing_attention() {
+        let approval = |task_id: &str| ApprovalRequest {
+            request_id: format!("approval-{task_id}"),
+            task_id: task_id.to_owned(),
+            turn_id: Some("turn-1".to_owned()),
+            kind: ApprovalKind::DynamicTool,
+            title: "Allow tool?".to_owned(),
+            detail: "Run a tool".to_owned(),
+            context: ApprovalContext::DynamicTool,
+        };
+        let mut state = AppState {
+            tasks: vec![task("selected"), task("background")],
+            selected_task_id: Some("selected".to_owned()),
+            ..AppState::default()
+        };
+
+        assert!(
+            reduce(
+                &mut state,
+                Action::ApprovalRequested(approval("background"))
+            )
+            .is_empty()
+        );
+        assert_eq!(state.needs_attention_task_ids, ["background"]);
+
+        // An approval in the chat the user is looking at is already visible.
+        assert!(reduce(&mut state, Action::ApprovalRequested(approval("selected"))).is_empty());
+        assert_eq!(state.needs_attention_task_ids, ["background"]);
+
+        // Approvals for unknown tasks never flag anything.
+        assert!(reduce(&mut state, Action::ApprovalRequested(approval("unknown"))).is_empty());
+        assert_eq!(state.needs_attention_task_ids, ["background"]);
+    }
+
+    #[test]
+    fn visiting_a_chat_clears_its_attention_flag() {
+        let approval = |task_id: &str| ApprovalRequest {
+            request_id: format!("approval-{task_id}"),
+            task_id: task_id.to_owned(),
+            turn_id: None,
+            kind: ApprovalKind::DynamicTool,
+            title: "Allow tool?".to_owned(),
+            detail: "Run a tool".to_owned(),
+            context: ApprovalContext::DynamicTool,
+        };
+        let mut state = AppState {
+            tasks: vec![task("a"), task("b")],
+            selected_task_id: Some("a".to_owned()),
+            ..AppState::default()
+        };
+        assert!(reduce(&mut state, Action::ApprovalRequested(approval("b"))).is_empty());
+        assert_eq!(state.needs_attention_task_ids, ["b"]);
+
+        // Selecting the flagged chat visits it and clears the flag.
+        reduce(&mut state, Action::SelectTask("b".to_owned()));
+        assert!(state.needs_attention_task_ids.is_empty());
+
+        // A manually marked-unread selected chat keeps the flag while it
+        // stays selected; moving away and back clears it.
+        reduce(&mut state, Action::SelectTask("a".to_owned()));
+        assert!(reduce(&mut state, Action::ToggleSelectedTaskUnread).is_empty());
+        assert_eq!(state.needs_attention_task_ids, ["a"]);
+        reduce(&mut state, Action::SelectTask("a".to_owned()));
+        assert_eq!(state.needs_attention_task_ids, ["a"]);
+        reduce(&mut state, Action::SelectTask("b".to_owned()));
+        reduce(&mut state, Action::SelectTask("a".to_owned()));
+        assert!(state.needs_attention_task_ids.is_empty());
+    }
+
+    #[test]
+    fn clear_all_unread_indicators_reports_honestly() {
+        let approval = |task_id: &str| ApprovalRequest {
+            request_id: format!("approval-{task_id}"),
+            task_id: task_id.to_owned(),
+            turn_id: None,
+            kind: ApprovalKind::DynamicTool,
+            title: "Allow tool?".to_owned(),
+            detail: "Run a tool".to_owned(),
+            context: ApprovalContext::DynamicTool,
+        };
+        let mut state = AppState {
+            tasks: vec![task("a"), task("b")],
+            selected_task_id: Some("a".to_owned()),
+            ..AppState::default()
+        };
+        assert!(reduce(&mut state, Action::ApprovalRequested(approval("b"))).is_empty());
+        state.needs_attention_task_ids.push("a".to_owned());
+
+        assert!(reduce(&mut state, Action::ClearUnreadIndicators).is_empty());
+        assert!(state.needs_attention_task_ids.is_empty());
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Cleared unread indicators for 2 chats")
+        );
+
+        // Clearing with nothing flagged stays visible instead of silently
+        // no-oping.
+        assert!(reduce(&mut state, Action::ClearUnreadIndicators).is_empty());
+        assert_eq!(state.status_message.as_deref(), Some("No unread chats"));
+    }
+
+    #[test]
+    fn toggle_selected_chat_unread_round_trips_with_status() {
+        let mut state = AppState {
+            tasks: vec![task("a")],
+            ..AppState::default()
+        };
+
+        // Without a selected chat the action surfaces guidance instead of
+        // silently no-oping.
+        assert!(reduce(&mut state, Action::ToggleSelectedTaskUnread).is_empty());
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Select a chat before marking it unread.")
+        );
+
+        reduce(&mut state, Action::SelectTask("a".to_owned()));
+        assert!(reduce(&mut state, Action::ToggleSelectedTaskUnread).is_empty());
+        assert_eq!(state.needs_attention_task_ids, ["a"]);
+        assert_eq!(state.status_message.as_deref(), Some("Chat marked unread"));
+
+        assert!(reduce(&mut state, Action::ToggleSelectedTaskUnread).is_empty());
+        assert!(state.needs_attention_task_ids.is_empty());
+        assert_eq!(state.status_message.as_deref(), Some("Chat marked read"));
+    }
+
+    #[test]
+    fn archiving_a_chat_drops_its_attention_flag() {
+        let approval = |task_id: &str| ApprovalRequest {
+            request_id: format!("approval-{task_id}"),
+            task_id: task_id.to_owned(),
+            turn_id: None,
+            kind: ApprovalKind::DynamicTool,
+            title: "Allow tool?".to_owned(),
+            detail: "Run a tool".to_owned(),
+            context: ApprovalContext::DynamicTool,
+        };
+        let mut state = AppState {
+            tasks: vec![task("a"), task("b")],
+            selected_task_id: Some("a".to_owned()),
+            ..AppState::default()
+        };
+        assert!(reduce(&mut state, Action::ApprovalRequested(approval("b"))).is_empty());
+        assert_eq!(state.needs_attention_task_ids, ["b"]);
+
+        assert_eq!(
+            reduce(&mut state, Action::ArchiveTask("b".to_owned())),
+            vec![Effect::ArchiveTask {
+                task_id: "b".to_owned()
+            }]
+        );
+        assert!(reduce(&mut state, Action::TaskArchived("b".to_owned())).is_empty());
+        assert!(state.needs_attention_task_ids.is_empty());
+    }
+
+    #[test]
+    fn toggle_activity_view_surfaces_honest_guidance() {
+        // The Activity view surface is out of scope for WO-P2-008; the
+        // binding must still resolve visibly (never a silent no-op).
+        let mut state = AppState::default();
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        let message = state.status_message.clone();
+        assert!(message.is_some_and(|message| !message.is_empty()));
     }
 }
