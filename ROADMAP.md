@@ -1,75 +1,46 @@
 # Roadmap
 
-The roadmap is ordered by release risk rather than feature count. Items move
-only when an observable requirement or failure justifies the work.
+The product roadmap is now governed by [docs/FLAUZ-SOURCE-OF-TRUTH.md](docs/FLAUZ-SOURCE-OF-TRUTH.md) and [docs/IMPLEMENTATION-ROADMAP.md](docs/IMPLEMENTATION-ROADMAP.md). This file remains a concise release-facing index.
 
-The product goal is a native Rust replacement with full Codex Desktop
-behavioral and UX parity. The detailed contract lives in the
-[parity matrix](docs/parity-matrix.md).
+## Current state
 
-## v0.1.0-rc.2
+- [x] Native Rust/GPUI Codex-compatible desktop foundation.
+- [x] Windows and Linux desktop targets.
+- [x] Official Codex app-server supervision boundary.
+- [x] Native terminal, Browser, Computer Use, Git, Skills, plugins, MCP Apps, and Marketplace foundations.
+- [x] P1/P2 parity work completed to the current merged work-order set.
+- [x] Linux parity lab and official Linux reference+1 lab.
+- [ ] Complete the remaining Codex parity backlog and release-candidate gates.
 
-- [x] Bounded official app-server supervisor and typed protocol.
-- [x] Native GPUI task browser, composer, streaming timeline, forks, and approvals.
-- [x] Repository view with staged/unstaged files and virtualized unified diffs.
-- [x] Safe branch switching and sibling worktree creation.
-- [x] Native Worktrees settings for the managed root, repository inventory, and
-  linked-chat navigation.
-- [x] Native Personalization settings backed by official app-server config,
-  including explicit personality propagation to normal threads and turns.
-- [x] Native Configuration settings backed by layered `config/read`,
-  `configRequirements/read`, and versioned `config/batchWrite`.
-- [x] Native PTY/ConPTY terminal.
-- [x] Opt-in native Computer Use with selected-app approval, task access, and an
-  app-server-owned always-allowed list.
-- [x] App-server plugin marketplace.
-- [x] Separate single-writer codexRS SQLite state.
-- [x] Windows smoke path and Windows/Linux CI matrix.
-- [x] Publish unsigned Windows and Linux release archives with checksums.
-- [x] Complete the first public Ubuntu CI run.
+## Approved platform direction
 
-## Release-candidate hardening
+After parity closure, implement in this order:
 
-- [ ] Smoke-test GNOME, KDE, X11, and XWayland sessions.
-- [ ] Add portal-backed pure Wayland Computer Use.
-- [ ] Complete keyboard-only navigation and accessibility semantics.
-- [ ] Soak-test long streaming tasks, reconnects, large diffs, and PTY output.
-- [ ] Add branch comparison and clearer multi-worktree navigation.
-- [ ] Measure startup, idle memory, diff rendering, and event latency.
+1. [ ] Canonical Workspace/Session/Environment/Provider/Model/Agent/Skill/Capability contracts.
+2. [ ] Environment/provider fabric with local and remote execution through one contract.
+3. [ ] Model-provider and agent-runtime fabric, including BYOK and non-Codex models.
+4. [ ] Capability resolver, skill dependency checking, and skill-unlock UX.
+5. [ ] Multi-model, multi-agent, and multi-environment orchestration.
+6. [ ] User-owned provider connections, quotas, cost policies, and free-tier-first routing.
+7. [ ] Provider-neutral Windows/macOS/Linux parity labs and execution providers.
+8. [ ] Multi-user workspaces, presence, shared sessions, collaborative documents/sheets, and collaborative code.
+9. [ ] macOS client adapter.
+10. [ ] Web client adapter.
+11. [ ] Mobile client adapter.
+12. [ ] Production hardening, signed releases, migrations, observability, and compatibility guarantees.
 
-## Desktop parity release candidate
+## Frozen architectural decisions
 
-- [x] Pin the installed Desktop, bundled CLI hash, official UI evidence, renderer
-  route inventory, settings inventory, and generated app-server schemas.
-- [x] Load the live model, reasoning-effort, and permission-profile catalogs
-  into the composer and forward selections to new threads and turns.
-- [x] Match native file/folder/image attachments, Plan collaboration mode, and
-  the app-server-owned Goal lifecycle with live status, progress, guarded
-  continuation, and pause-before-stop behavior.
-- [x] Match active-turn Send, Steer, and Stop behavior through typed stable
-  app-server methods.
-- [x] Add bounded Unified/Split diff review with real old/new hunk line numbers.
-- [ ] Match the project/chat shell, thread lifecycle, sidebar, header, composer,
-  search, commands, attachments, goals, plans, and execution targets.
-- [ ] Match activity, diff review, Git, worktrees, terminal, outputs, and pull
-  request workflows.
-- [ ] Match Computer Use, browser, skills, plugins, MCP apps, scheduled tasks,
-  cloud environments, and notifications.
-- [ ] Complete remote control beyond the current native public-RPC UI; keep-awake,
-  SSH profiles, remote chats, and handoff require a public app-server contract.
-- [ ] Match artifacts, files, Sites, visualizations, appshots, image/audio/voice,
-  previews, and the output library.
-- [ ] Match all settings, onboarding, account, usage, update, accessibility,
-  Windows, and Linux contracts listed in the parity matrix.
-- [ ] Pass same-state screenshot comparison and native interaction smoke tests
-  for every release-critical flow.
+- Desktop clients can control local **and** remote environments.
+- Web and mobile are clients of the same Workspace/Session model, not separate products.
+- Codex app-server is a first-class agent runtime, not the universal Flauz model registry.
+- Skills are reusable, model-agnostic artifacts with explicit capability requirements.
+- Multiple models/agents may cooperate on one skill.
+- E2B is an execution-provider adapter, not the canonical environment.
+- GitHub Actions, Codemagic, Azure, E2B, Daytona, Vercel Sandbox, Cloudflare Sandbox, local machines, and future providers are interchangeable behind provider contracts.
+- Users may connect their own provider accounts and consume their own free/paid quotas.
+- Workflow/Pack development remains frozen and is not the new execution architecture.
 
-## Stable release
+See [docs/IMPLEMENTATION-ROADMAP.md](docs/IMPLEMENTATION-ROADMAP.md) for the full dependency graph and work-order IDs.
 
-- [ ] Publish signed Windows and Linux packages.
-- [ ] Document the compatibility window for newer official Codex CLI versions.
-- [ ] Promote only after Windows and Linux release gates remain green.
-
-Feature proposals belong in GitHub Issues or Discussions. A proposal should
-name the user-visible behavior, acceptance criteria, and the evidence that
-requires expanding the current scope.
+Feature proposals and architecture changes require a repository-recorded amendment before implementation.
