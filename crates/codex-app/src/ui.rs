@@ -1406,6 +1406,24 @@ fn approval_keyboard_context_is_blocking(context_stack: &[KeyContext]) -> bool {
         })
 }
 
+/// WO-P2-010 palette guard for the Approve/Decline rows: mirrors the
+/// registry's approval enabled-guard minus its palette-open
+/// self-reference (the rows must be able to appear while the palette
+/// itself is open) — visible exactly while a pending approval request
+/// owns the selected chat.
+fn approval_palette_rows_visible(state: &AppState) -> bool {
+    selected_approval_request(state).is_some()
+}
+
+/// WO-P2-010 palette guard for the maximize-side-panel row: the same
+/// predicate the `toggleMaximizeSidePanel` registry enabled-guard uses
+/// (Tasks route, a selected chat, and a maximizable inspector pane).
+fn side_panel_maximize_available(state: &AppState) -> bool {
+    state.route == MainRoute::Tasks
+        && state.selected_task_id.is_some()
+        && !matches!(state.inspector, InspectorPane::Hidden | InspectorPane::Terminal)
+}
+
 fn linked_pull_request_detail(state: &AppState) -> Option<&PullRequestDetail> {
     let linked_url = state.git.pull_request.as_ref()?.url.as_str();
     state
@@ -3341,10 +3359,29 @@ enum PaletteCommand {
     OpenConfigurationSettings,
     OpenHooksSettings,
     OpenGitSettings,
+    ToggleReviewTab,
+    ToggleMaximizeSidePanel,
+    ForkThread,
+    RenameChat,
+    CopyDeeplink,
+    CopySessionId,
+    CopyWorkingDirectory,
+    CopyConversationMarkdown,
+    ApproveRequest,
+    DeclineRequest,
+    GoToChat1,
+    GoToChat2,
+    GoToChat3,
+    GoToChat4,
+    GoToChat5,
+    GoToChat6,
+    GoToChat7,
+    GoToChat8,
+    GoToChat9,
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 51] = [
+    const ALL: [Self; 70] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3363,10 +3400,27 @@ impl PaletteCommand {
         Self::ArchiveChat,
         Self::NewStandaloneChat,
         Self::ToggleChatPin,
+        Self::ForkThread,
+        Self::RenameChat,
+        Self::CopyDeeplink,
+        Self::CopySessionId,
+        Self::CopyWorkingDirectory,
+        Self::CopyConversationMarkdown,
+        Self::ApproveRequest,
+        Self::DeclineRequest,
         Self::NavigateBack,
         Self::NavigateForward,
         Self::PreviousChat,
         Self::NextChat,
+        Self::GoToChat1,
+        Self::GoToChat2,
+        Self::GoToChat3,
+        Self::GoToChat4,
+        Self::GoToChat5,
+        Self::GoToChat6,
+        Self::GoToChat7,
+        Self::GoToChat8,
+        Self::GoToChat9,
         Self::FindInThread,
         Self::ToggleSidebar,
         Self::ToggleBottomPanel,
@@ -3382,6 +3436,8 @@ impl PaletteCommand {
         Self::OpenPullRequest,
         Self::OpenReviewTab,
         Self::ToggleReviewPanel,
+        Self::ToggleReviewTab,
+        Self::ToggleMaximizeSidePanel,
         Self::DisableGitReview,
         Self::EnableGitReview,
         Self::ToggleTerminal,
@@ -3451,6 +3507,25 @@ impl PaletteCommand {
             Self::OpenConfigurationSettings => "Configuration",
             Self::OpenHooksSettings => "Hooks",
             Self::OpenGitSettings => "Git",
+            Self::ToggleReviewTab => "Toggle review",
+            Self::ToggleMaximizeSidePanel => "Toggle maximize side panel",
+            Self::ForkThread => "Continue in new chat",
+            Self::RenameChat => "Rename chat",
+            Self::CopyDeeplink => "Copy deeplink",
+            Self::CopySessionId => "Copy session id",
+            Self::CopyWorkingDirectory => "Copy working directory",
+            Self::CopyConversationMarkdown => "Copy as Markdown",
+            Self::ApproveRequest => "Approve request",
+            Self::DeclineRequest => "Decline request",
+            Self::GoToChat1 => "Go to chat 1",
+            Self::GoToChat2 => "Go to chat 2",
+            Self::GoToChat3 => "Go to chat 3",
+            Self::GoToChat4 => "Go to chat 4",
+            Self::GoToChat5 => "Go to chat 5",
+            Self::GoToChat6 => "Go to chat 6",
+            Self::GoToChat7 => "Go to chat 7",
+            Self::GoToChat8 => "Go to chat 8",
+            Self::GoToChat9 => "Go to chat 9",
         }
     }
 
@@ -3507,6 +3582,25 @@ impl PaletteCommand {
             Self::OpenConfigurationSettings => "Open Configuration settings",
             Self::OpenHooksSettings => "Open Hooks settings",
             Self::OpenGitSettings => "Open Git settings",
+            Self::ToggleReviewTab => "Show or hide Review for the current Git-backed chat",
+            Self::ToggleMaximizeSidePanel => "Expand or restore the side panel",
+            Self::ForkThread => "Create a new chat from the current chat",
+            Self::RenameChat => "Rename the current chat",
+            Self::CopyDeeplink => "Copy a deeplink to the current chat",
+            Self::CopySessionId => "Copy the current chat session ID",
+            Self::CopyWorkingDirectory => "Copy the current chat working directory",
+            Self::CopyConversationMarkdown => "Copy the current chat as Markdown",
+            Self::ApproveRequest => "Approve the active request",
+            Self::DeclineRequest => "Decline the active request",
+            Self::GoToChat1 => "Open the visible chat in this shortcut slot",
+            Self::GoToChat2 => "Open the visible chat in this shortcut slot",
+            Self::GoToChat3 => "Open the visible chat in this shortcut slot",
+            Self::GoToChat4 => "Open the visible chat in this shortcut slot",
+            Self::GoToChat5 => "Open the visible chat in this shortcut slot",
+            Self::GoToChat6 => "Open the visible chat in this shortcut slot",
+            Self::GoToChat7 => "Open the visible chat in this shortcut slot",
+            Self::GoToChat8 => "Open the visible chat in this shortcut slot",
+            Self::GoToChat9 => "Open the visible chat in this shortcut slot",
         }
     }
 
@@ -3569,6 +3663,25 @@ impl PaletteCommand {
             Self::ToggleBrowserPanel => Some("toggleBrowserPanel"),
             Self::FocusBrowserAddressBar => Some("focusBrowserAddressBar"),
             Self::OpenPersonalitySettings => Some("personalitySettings"),
+            Self::ToggleReviewTab => Some("toggleReviewTab"),
+            Self::ToggleMaximizeSidePanel => Some("toggleMaximizeSidePanel"),
+            Self::ForkThread => Some("forkThread"),
+            Self::RenameChat => Some("renameThread"),
+            Self::CopyDeeplink => Some("copyDeeplink"),
+            Self::CopySessionId => Some("copySessionId"),
+            Self::CopyWorkingDirectory => Some("copyWorkingDirectory"),
+            Self::CopyConversationMarkdown => Some("copyConversationMarkdown"),
+            Self::ApproveRequest => Some("approval.approve"),
+            Self::DeclineRequest => Some("approval.decline"),
+            Self::GoToChat1 => Some("thread1"),
+            Self::GoToChat2 => Some("thread2"),
+            Self::GoToChat3 => Some("thread3"),
+            Self::GoToChat4 => Some("thread4"),
+            Self::GoToChat5 => Some("thread5"),
+            Self::GoToChat6 => Some("thread6"),
+            Self::GoToChat7 => Some("thread7"),
+            Self::GoToChat8 => Some("thread8"),
+            Self::GoToChat9 => Some("thread9"),
             _ => None,
         }
     }
@@ -3624,6 +3737,25 @@ impl PaletteCommand {
             Self::OpenConfigurationSettings => IconName::Settings2,
             Self::OpenHooksSettings => IconName::Bell,
             Self::OpenGitSettings => IconName::GitHub,
+            Self::ToggleReviewTab => IconName::PanelRight,
+            Self::ToggleMaximizeSidePanel => IconName::Maximize,
+            Self::ForkThread => IconName::Redo2,
+            Self::RenameChat => IconName::CaseSensitive,
+            Self::CopyDeeplink
+            | Self::CopySessionId
+            | Self::CopyWorkingDirectory
+            | Self::CopyConversationMarkdown => IconName::Copy,
+            Self::ApproveRequest => IconName::CircleCheck,
+            Self::DeclineRequest => IconName::CircleX,
+            Self::GoToChat1
+            | Self::GoToChat2
+            | Self::GoToChat3
+            | Self::GoToChat4
+            | Self::GoToChat5
+            | Self::GoToChat6
+            | Self::GoToChat7
+            | Self::GoToChat8
+            | Self::GoToChat9 => IconName::ArrowRight,
         }
     }
 
@@ -3641,20 +3773,39 @@ impl PaletteCommand {
             | Self::OpenConfigurationSettings
             | Self::OpenHooksSettings
             | Self::OpenGitSettings => PaletteGroup::Settings,
-            Self::ArchiveChat | Self::NewStandaloneChat | Self::ToggleChatPin => {
-                PaletteGroup::Thread
-            }
+            Self::ArchiveChat
+            | Self::NewStandaloneChat
+            | Self::ToggleChatPin
+            | Self::ForkThread
+            | Self::RenameChat
+            | Self::CopyDeeplink
+            | Self::CopySessionId
+            | Self::CopyWorkingDirectory
+            | Self::CopyConversationMarkdown
+            | Self::ApproveRequest
+            | Self::DeclineRequest => PaletteGroup::Thread,
             Self::SearchChats
             | Self::NavigateBack
             | Self::NavigateForward
             | Self::PreviousChat
             | Self::NextChat
+            | Self::GoToChat1
+            | Self::GoToChat2
+            | Self::GoToChat3
+            | Self::GoToChat4
+            | Self::GoToChat5
+            | Self::GoToChat6
+            | Self::GoToChat7
+            | Self::GoToChat8
+            | Self::GoToChat9
             | Self::FindInThread
             | Self::FocusBrowserAddressBar => PaletteGroup::Navigation,
             Self::ToggleSidebar
             | Self::ToggleBottomPanel
             | Self::OpenReviewTab
             | Self::ToggleReviewPanel
+            | Self::ToggleReviewTab
+            | Self::ToggleMaximizeSidePanel
             | Self::ToggleTerminal
             | Self::OpenBrowserTab
             | Self::ToggleBrowserPanel
@@ -3711,6 +3862,12 @@ impl PaletteCommand {
                 | Self::ToggleBrowserPanel
                 | Self::FocusBrowserAddressBar
                 | Self::ShowComputerUse
+                | Self::ForkThread
+                | Self::RenameChat
+                | Self::CopyDeeplink
+                | Self::CopySessionId
+                | Self::CopyWorkingDirectory
+                | Self::CopyConversationMarkdown
         )
     }
 
@@ -3720,6 +3877,7 @@ impl PaletteCommand {
             Self::FindInThread
                 | Self::ToggleBottomPanel
                 | Self::OpenReviewTab
+                | Self::ToggleReviewTab
                 | Self::ToggleReviewPanel
                 | Self::ToggleTerminal
                 | Self::OpenBrowserTab
@@ -3738,6 +3896,7 @@ impl PaletteCommand {
                 | Self::CreateBranch
                 | Self::MergePullRequest
                 | Self::OpenPullRequest
+                | Self::ToggleReviewTab
         )
     }
 
@@ -3882,6 +4041,12 @@ impl CommandPaletteView {
             .map_or(GitReviewMode::Full, |workspace| {
                 workspace.read(cx).state.git_preferences.review_mode
             });
+        let approval_rows_visible = self.workspace.upgrade().is_some_and(|workspace| {
+            approval_palette_rows_visible(&workspace.read(cx).state)
+        });
+        let can_maximize_side_panel = self.workspace.upgrade().is_some_and(|workspace| {
+            side_panel_maximize_available(&workspace.read(cx).state)
+        });
         PaletteCommand::ALL
             .into_iter()
             .filter(|command| !command.requires_selected_chat() || has_selected_chat)
@@ -3895,6 +4060,15 @@ impl CommandPaletteView {
                 *command != PaletteCommand::MergePullRequest || can_open_linked_pull_request_merge
             })
             .filter(|command| *command != PaletteCommand::SearchFiles || has_workspace)
+            .filter(|command| match command {
+                PaletteCommand::ApproveRequest | PaletteCommand::DeclineRequest => {
+                    approval_rows_visible
+                }
+                _ => true,
+            })
+            .filter(|command| {
+                *command != PaletteCommand::ToggleMaximizeSidePanel || can_maximize_side_panel
+            })
             .filter(|command| match command {
                 PaletteCommand::DisableGitReview => git_review_mode == GitReviewMode::Full,
                 PaletteCommand::EnableGitReview => git_review_mode == GitReviewMode::LastTurnOnly,
@@ -4181,6 +4355,41 @@ impl CommandPaletteView {
             PaletteCommand::OpenGitSettings => {
                 workspace.open_settings_section(SettingsSection::Git, cx);
             }
+            PaletteCommand::ToggleReviewTab => {
+                workspace.dispatch(Action::ToggleReviewTab, cx);
+            }
+            PaletteCommand::ToggleMaximizeSidePanel => {
+                workspace.dispatch(Action::ToggleMaximizeSidePanel, cx);
+            }
+            PaletteCommand::ForkThread => workspace.dispatch(Action::ForkSelectedTask, cx),
+            PaletteCommand::RenameChat => workspace.rename_selected_chat(window, cx),
+            PaletteCommand::CopyDeeplink => {
+                workspace.copy_selected_task_value(TaskCopyKind::Deeplink, cx);
+            }
+            PaletteCommand::CopySessionId => {
+                workspace.copy_selected_task_value(TaskCopyKind::SessionId, cx);
+            }
+            PaletteCommand::CopyWorkingDirectory => {
+                workspace.copy_selected_task_value(TaskCopyKind::WorkingDirectory, cx);
+            }
+            PaletteCommand::CopyConversationMarkdown => {
+                workspace.copy_selected_conversation_as_markdown(cx);
+            }
+            PaletteCommand::ApproveRequest => {
+                workspace.resolve_active_approval(ApprovalDecision::Accept, cx);
+            }
+            PaletteCommand::DeclineRequest => {
+                workspace.resolve_active_approval(ApprovalDecision::Decline, cx);
+            }
+            PaletteCommand::GoToChat1 => workspace.navigate_chat_slot(1, cx),
+            PaletteCommand::GoToChat2 => workspace.navigate_chat_slot(2, cx),
+            PaletteCommand::GoToChat3 => workspace.navigate_chat_slot(3, cx),
+            PaletteCommand::GoToChat4 => workspace.navigate_chat_slot(4, cx),
+            PaletteCommand::GoToChat5 => workspace.navigate_chat_slot(5, cx),
+            PaletteCommand::GoToChat6 => workspace.navigate_chat_slot(6, cx),
+            PaletteCommand::GoToChat7 => workspace.navigate_chat_slot(7, cx),
+            PaletteCommand::GoToChat8 => workspace.navigate_chat_slot(8, cx),
+            PaletteCommand::GoToChat9 => workspace.navigate_chat_slot(9, cx),
             PaletteCommand::SearchChats | PaletteCommand::SearchFiles => {}
         });
     }
@@ -10346,14 +10555,7 @@ impl WorkspaceView {
                         })
                         .is_some_and(|tab| tab.can_go_forward)
             }
-            "toggleMaximizeSidePanel" => {
-                self.state.route == MainRoute::Tasks
-                    && self.state.selected_task_id.is_some()
-                    && !matches!(
-                        self.state.inspector,
-                        InspectorPane::Hidden | InspectorPane::Terminal
-                    )
-            }
+            "toggleMaximizeSidePanel" => side_panel_maximize_available(&self.state),
             "logOut" => {
                 self.state.account.profile.is_some()
                     && self.state.account.auth_operation == AccountAuthOperation::Idle
@@ -46977,7 +47179,8 @@ mod tests {
         SettingsSection, ShellWidthClass, TaskCopyKind, ThreadFindSurface, accelerators_conflict,
         account_daily_usage_rows, account_device_code, account_refresh_disabled, adjacent_task_id,
         app_chatgpt_url, app_mention_prompt, appearance_color, appearance_color_value,
-        appearance_theme_share_string, archived_chat_groups, archived_chat_projects,
+        appearance_theme_share_string, approval_palette_rows_visible,
+        archived_chat_groups, archived_chat_projects,
         archived_delete_confirmation_copy, background_chat_running_count,
         background_chat_window_title, background_completion_notification_transition,
         background_terminal_summary, bedrock_workspace_notice,
@@ -47014,7 +47217,8 @@ mod tests {
         sanitize_assistant_markdown, selected_approval_request, selected_model_upgrade_notice,
         selected_task_copy_value, settings_section_matches, settings_section_refreshes_account,
         shell_width_class, sidebar_browser_affordance, sidebar_layout_width,
-        sidebar_task_list_visible, sidebar_terminal_affordance, split_diff_rows,
+        sidebar_task_list_visible, sidebar_terminal_affordance,
+        side_panel_maximize_available, split_diff_rows,
         startup_recovery_card, status_context_total_label, status_rate_limit_label,
         status_rate_limit_reset_metadata_at, task_slot_id, task_workspace_active,
         terminal_browser_affordances_available, terminal_tab_label,
@@ -48732,6 +48936,139 @@ mod tests {
                 None,
                 PaletteGroup::Settings,
             ),
+            (
+                PaletteCommand::ToggleReviewTab,
+                "Toggle review",
+                "Show or hide Review for the current Git-backed chat",
+                None,
+                PaletteGroup::Panels,
+            ),
+            (
+                PaletteCommand::ToggleMaximizeSidePanel,
+                "Toggle maximize side panel",
+                "Expand or restore the side panel",
+                None,
+                PaletteGroup::Panels,
+            ),
+            (
+                PaletteCommand::ForkThread,
+                "Continue in new chat",
+                "Create a new chat from the current chat",
+                None,
+                PaletteGroup::Thread,
+            ),
+            (
+                PaletteCommand::RenameChat,
+                "Rename chat",
+                "Rename the current chat",
+                None,
+                PaletteGroup::Thread,
+            ),
+            (
+                PaletteCommand::CopyDeeplink,
+                "Copy deeplink",
+                "Copy a deeplink to the current chat",
+                None,
+                PaletteGroup::Thread,
+            ),
+            (
+                PaletteCommand::CopySessionId,
+                "Copy session id",
+                "Copy the current chat session ID",
+                None,
+                PaletteGroup::Thread,
+            ),
+            (
+                PaletteCommand::CopyWorkingDirectory,
+                "Copy working directory",
+                "Copy the current chat working directory",
+                None,
+                PaletteGroup::Thread,
+            ),
+            (
+                PaletteCommand::CopyConversationMarkdown,
+                "Copy as Markdown",
+                "Copy the current chat as Markdown",
+                None,
+                PaletteGroup::Thread,
+            ),
+            (
+                PaletteCommand::ApproveRequest,
+                "Approve request",
+                "Approve the active request",
+                None,
+                PaletteGroup::Thread,
+            ),
+            (
+                PaletteCommand::DeclineRequest,
+                "Decline request",
+                "Decline the active request",
+                None,
+                PaletteGroup::Thread,
+            ),
+            (
+                PaletteCommand::GoToChat1,
+                "Go to chat 1",
+                "Open the visible chat in this shortcut slot",
+                None,
+                PaletteGroup::Navigation,
+            ),
+            (
+                PaletteCommand::GoToChat2,
+                "Go to chat 2",
+                "Open the visible chat in this shortcut slot",
+                None,
+                PaletteGroup::Navigation,
+            ),
+            (
+                PaletteCommand::GoToChat3,
+                "Go to chat 3",
+                "Open the visible chat in this shortcut slot",
+                None,
+                PaletteGroup::Navigation,
+            ),
+            (
+                PaletteCommand::GoToChat4,
+                "Go to chat 4",
+                "Open the visible chat in this shortcut slot",
+                None,
+                PaletteGroup::Navigation,
+            ),
+            (
+                PaletteCommand::GoToChat5,
+                "Go to chat 5",
+                "Open the visible chat in this shortcut slot",
+                None,
+                PaletteGroup::Navigation,
+            ),
+            (
+                PaletteCommand::GoToChat6,
+                "Go to chat 6",
+                "Open the visible chat in this shortcut slot",
+                None,
+                PaletteGroup::Navigation,
+            ),
+            (
+                PaletteCommand::GoToChat7,
+                "Go to chat 7",
+                "Open the visible chat in this shortcut slot",
+                None,
+                PaletteGroup::Navigation,
+            ),
+            (
+                PaletteCommand::GoToChat8,
+                "Go to chat 8",
+                "Open the visible chat in this shortcut slot",
+                None,
+                PaletteGroup::Navigation,
+            ),
+            (
+                PaletteCommand::GoToChat9,
+                "Go to chat 9",
+                "Open the visible chat in this shortcut slot",
+                None,
+                PaletteGroup::Navigation,
+            ),
         ] {
             assert_eq!(command.title(), title);
             assert_eq!(command.description(), description);
@@ -48771,6 +49108,19 @@ mod tests {
         assert!(PaletteCommand::CreateBranch.requires_repository());
         assert!(PaletteCommand::MergePullRequest.requires_repository());
         assert!(PaletteCommand::OpenPullRequest.requires_repository());
+        assert!(PaletteCommand::ToggleReviewTab.requires_task_workspace());
+        assert!(PaletteCommand::ToggleReviewTab.requires_repository());
+        assert!(PaletteCommand::ForkThread.requires_selected_chat());
+        assert!(PaletteCommand::RenameChat.requires_selected_chat());
+        assert!(PaletteCommand::CopyDeeplink.requires_selected_chat());
+        assert!(PaletteCommand::CopySessionId.requires_selected_chat());
+        assert!(PaletteCommand::CopyWorkingDirectory.requires_selected_chat());
+        assert!(PaletteCommand::CopyConversationMarkdown.requires_selected_chat());
+        assert!(!PaletteCommand::ToggleMaximizeSidePanel.requires_selected_chat());
+        assert!(!PaletteCommand::ApproveRequest.requires_selected_chat());
+        assert!(!PaletteCommand::DeclineRequest.requires_selected_chat());
+        assert!(!PaletteCommand::GoToChat1.requires_selected_chat());
+        assert!(!PaletteCommand::GoToChat9.requires_selected_chat());
         assert_eq!(sidebar_layout_width(true), 275.0);
         assert_eq!(sidebar_layout_width(false), 0.0);
         for key in ["`", "grave", "backquote", "ё", "Ё"] {
@@ -48857,6 +49207,87 @@ mod tests {
                 "command palette query {query:?} does not resolve to {section:?}"
             );
         }
+    }
+
+    #[test]
+    fn palette_registry_command_rows_reuse_the_registry_copy() {
+        // WO-P2-010: every palette row added for a keyboard-registry
+        // command resolves to that command's registry id and mirrors its
+        // exact title/description (the shortcut-settings rows are the copy
+        // source — reuse, do not invent copy).
+        for (command, command_id) in [
+            (PaletteCommand::ToggleReviewTab, "toggleReviewTab"),
+            (PaletteCommand::ToggleMaximizeSidePanel, "toggleMaximizeSidePanel"),
+            (PaletteCommand::ForkThread, "forkThread"),
+            (PaletteCommand::RenameChat, "renameThread"),
+            (PaletteCommand::CopyDeeplink, "copyDeeplink"),
+            (PaletteCommand::CopySessionId, "copySessionId"),
+            (PaletteCommand::CopyWorkingDirectory, "copyWorkingDirectory"),
+            (PaletteCommand::CopyConversationMarkdown, "copyConversationMarkdown"),
+            (PaletteCommand::ApproveRequest, "approval.approve"),
+            (PaletteCommand::DeclineRequest, "approval.decline"),
+            (PaletteCommand::GoToChat1, "thread1"),
+            (PaletteCommand::GoToChat2, "thread2"),
+            (PaletteCommand::GoToChat3, "thread3"),
+            (PaletteCommand::GoToChat4, "thread4"),
+            (PaletteCommand::GoToChat5, "thread5"),
+            (PaletteCommand::GoToChat6, "thread6"),
+            (PaletteCommand::GoToChat7, "thread7"),
+            (PaletteCommand::GoToChat8, "thread8"),
+            (PaletteCommand::GoToChat9, "thread9"),
+        ] {
+            let Some(item) = ACTIVE_KEYBOARD_SHORTCUTS
+                .iter()
+                .find(|item| item.id == command_id)
+            else {
+                panic!("{command_id} must remain in the shortcut registry");
+            };
+            assert_eq!(command.shortcut_command_id(), Some(command_id));
+            assert_eq!(command.title(), item.title);
+            assert_eq!(command.description(), item.description);
+            assert!(
+                PaletteCommand::ALL.contains(&command),
+                "{command_id} palette row must stay indexed"
+            );
+        }
+    }
+
+    #[test]
+    fn palette_state_guarded_rows_follow_the_registry_guards() {
+        // WO-P2-010: the approval rows mirror the registry's
+        // pending-approval guard (minus its palette-open self-reference)
+        // and the maximize row mirrors the registry's inspector-state
+        // guard; both hide in the wrong state.
+        let approval = |request_id: &str, task_id: &str| ApprovalRequest {
+            request_id: request_id.to_owned(),
+            task_id: task_id.to_owned(),
+            turn_id: Some("turn-1".to_owned()),
+            kind: ApprovalKind::DynamicTool,
+            title: "Allow Computer Use?".to_owned(),
+            detail: "Control the selected app".to_owned(),
+            context: ApprovalContext::DynamicTool,
+        };
+        let mut state = AppState {
+            selected_task_id: Some("thread-1".to_owned()),
+            approvals: [approval("approval-1", "thread-1")].into_iter().collect(),
+            ..AppState::default()
+        };
+        assert!(approval_palette_rows_visible(&state));
+        state.approvals.clear();
+        assert!(!approval_palette_rows_visible(&state));
+
+        let mut state = AppState::default();
+        assert!(!side_panel_maximize_available(&state));
+        state.selected_task_id = Some("thread-1".to_owned());
+        state.inspector = InspectorPane::Changes;
+        assert!(side_panel_maximize_available(&state));
+        state.inspector = InspectorPane::Terminal;
+        assert!(!side_panel_maximize_available(&state));
+        state.inspector = InspectorPane::Hidden;
+        assert!(!side_panel_maximize_available(&state));
+        state.inspector = InspectorPane::Changes;
+        state.route = MainRoute::Settings;
+        assert!(!side_panel_maximize_available(&state));
     }
 
     #[test]
