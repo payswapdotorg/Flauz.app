@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Status message text (exact):**\n`Activity view is not available yet. Use \"Next chat needing attention\" to jump to unread chats.`\n\n**Sidebar state:**\n*   The sidebar is showing **'No chats'** (there are no chat rows listed).\n*   Yes, there is a **'Connection failed'** row visible at the bottom of the sidebar.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789821043,
+  "id": "20260919203041f7fd99f277864979",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919203041f7fd99f277864979",
+  "usage": {
+    "completion_tokens": 78,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1748,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1826
+  }
+}

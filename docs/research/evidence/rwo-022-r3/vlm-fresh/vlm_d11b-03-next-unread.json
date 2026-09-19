@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Status message text: **No chats need attention.**\n\nSidebar state: The sidebar is showing **'No chats'** (there are no chat rows).\n\nConnection status: Yes, there is a **'Connection failed'** row visible in the sidebar bottom (with a red dot and a refresh icon).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789821041,
+  "id": "202609192030383bd2c1adebfe405e",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609192030383bd2c1adebfe405e",
+  "usage": {
+    "completion_tokens": 62,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1748,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1810
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) Yes, a right-docked SIDE CHAT panel is visible (a narrow panel on the right side with 'Side chat' header).\n(2) The selected/highlighted sidebar chat item on the left is **\"side chat fixture main\"**.\n(3) The text in the main bottom composer is: **\"Ask Codex to change, inspect, or explain...\"**\n(4) Yes, a toast/banner is visible. It reads: **\"Codex couldn't complete the request. Try again, or check the account and connection settings.\"**",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789820820,
+  "id": "20260919202657c24adadae90e4c78",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919202657c24adadae90e4c78",
+  "usage": {
+    "completion_tokens": 117,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2100,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2217
+  }
+}

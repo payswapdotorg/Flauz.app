@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) `/worktree`\n(2) No, there is no menu/picker list visible directly below the composer input.\n(3) \"Codex couldn't complete the request. Try again, or check the account and connection settings.\"",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789820588,
+  "id": "20260919202306433b50d85bae4a0c",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919202306433b50d85bae4a0c",
+  "usage": {
+    "completion_tokens": 50,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2108,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 2158
+  }
+}

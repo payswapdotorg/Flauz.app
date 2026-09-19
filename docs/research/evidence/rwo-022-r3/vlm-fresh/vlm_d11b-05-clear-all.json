@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Status message text: **No unread chats**\n\nSidebar chats: **'No chats'** (no chat rows are visible).\n\nConnection status: **Yes**, there is a **'Connection failed'** row visible at the bottom of the sidebar.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789821045,
+  "id": "2026091920304380e174c2582342ce",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091920304380e174c2582342ce",
+  "usage": {
+    "completion_tokens": 50,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1748,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1798
+  }
+}
