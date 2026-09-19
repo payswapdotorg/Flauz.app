@@ -102,3 +102,46 @@ the review base instead of trusting archived counts:
   parity-report/ledger changes (status vocabulary is C2/Tech Lead-owned).
 - The token used for clone/push appears only in the git command lines,
   never in any file, commit message, or report field.
+
+## N8 — Duplicate-dispatch reconciliation (second dispatch, 2026-09-20 UTC)
+
+A second RWO-020 dispatch (this session) ran the full order from scratch
+(clone; base `d479c7b9e725e1af1353140d49226b3f9a16be9d` verified;
+branch `research/rwo-020`; parity report + ledger + evidence tree read;
+anchors re-verified at the base) before discovering, at push time, that the
+first dispatch's commit `734b1e7` already occupied the branch tip. Handling
+follows the WO-P2-008 duplicate-delivery precedent (PR §10, 2026-09-19):
+no force-push, no overwrite — the first dispatch's `rubric.md` and these
+notes are preserved verbatim, and the second dispatch ships as
+`rubric-r2.md` on top (fast-forward lineage). The Lead adjudicates which
+lineage B executes.
+
+Deltas between the two rubrics (both derived independently from the same
+repo evidence at the same base):
+
+- **Coverage:** `rubric.md` = 13 rows / 71 criteria (all 8 `complete` rows
+  incl. Git process hygiene, Marketplace admin-disabled install,
+  Stable-failure regression controls + the 5 named partial rows).
+  `rubric-r2.md` = the directive's minimum 10 rows / 46 criteria — its
+  Appendix E.5 flag for the 3 uncovered `complete` rows is resolved by the
+  sibling's coverage.
+- **Second-dispatch additions:** a verified source-anchor table (16
+  symbol-level anchors resolved at base `d479c7b`, Appendix A of r2);
+  verbatim-status criteria for the D11b four-binding scene (AV-3);
+  the NT-2 evidence-class trap (ev/03-04 are error-path banners, not the
+  completion banner — recorded to block evidence-class substitution);
+  SS-4 ImportProvider anchor check; KA-3 `PaletteCommand::ALL = 51` drift
+  check; a result-capture template for Worker B (Appendix D of r2);
+  per-row attack-vector lists keyed to C's falsification rules.
+- **Agreement (independently reproduced):** MAX_KEYBOARD_SHORTCUT_COMMANDS
+  = 76 at base; `PaletteCommand::ALL` = 51; `DEFAULT_NAV_SECTIONS` = 15 /
+  `SettingsSection` = 18; `MAX_LOCAL_PROJECT_FOLDERS` = 16; the five
+  feedback category IDs (`bug`, `bad-result`, `good-result`,
+  `safety_check`, `other`); resolver order explicit → env → hash-gated
+  cache → npm → bare name. The two dispatches agree on every shared
+  quantitative anchor — no conflicting claims were found.
+- **EQ-1 dependency:** r2's SC-2 (re-run D9) and AV-5 (full-flow scene)
+  remain conditional on resolving EQ-1 (lab-runtime presence drift between
+  2026-09-18 and 2026-09-19), same as the first dispatch's treatment.
+- Follow-up WO candidates from the second dispatch: none beyond the first
+  dispatch's §6 list; the anchor-drift recount discipline is shared.
