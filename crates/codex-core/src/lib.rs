@@ -15230,15 +15230,12 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
         // order's file boundary), which plugs into the distinct action
         // id without re-touching the keybinding surface.
         Action::ReloadBrowser | Action::ForceReloadBrowser => {
-            match state
-                .selected_task_id
-                .clone()
-                .filter(|task_id| {
-                    state
-                        .browser
-                        .get(task_id)
-                        .is_some_and(|browser| browser.status == LoadStatus::Ready)
-                }) {
+            match state.selected_task_id.clone().filter(|task_id| {
+                state
+                    .browser
+                    .get(task_id)
+                    .is_some_and(|browser| browser.status == LoadStatus::Ready)
+            }) {
                 Some(task_id) => vec![Effect::BrowserReload { task_id }],
                 None => {
                     // No page loaded: honest guidance instead of a silent
