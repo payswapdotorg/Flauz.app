@@ -1,0 +1,21 @@
+# md5 manifest — wo-p2-005/d8c4 frames (RWO-022 FW-8: hash-anchor the
+# evidence; the 005 directory previously had no manifest, unlike 007/008).
+6195971c6503663a80c89060c1ef7163  d8c4-001-typed.png
+26c164d548283700f54bfeae8c5be2f6  d8c4-002-task-created.png
+0c833c46d8ffa387b51de68b6665ca1e  d8c4-003-settled.png
+04bc7458826421ed35027dac81c82478  d8c4-004-slash-row.png
+9629f276531c8d9554433fdfd32bdd2a  d8c4-005-picker-open.png
+ffedfcb4296787c07beffabfb9bb287d  d8c4-006-picker-still-open.png
+23925833ed3bd5ecdca9ce15a67b7f29  d8c4-007-fork-dispatched.png
+23925833ed3bd5ecdca9ce15a67b7f29  d8c4-008-aftermath.png
+093d0e12d4f399dbb7cbf4bcb871889d  d8c4-wo-p2-005-happypath.sh
+c078caddbe10159b859fa9e8b76700d8  git-worktree-list.txt
+6b01f99d0cce96e0d1e122cc956e8f43  vlm008.json
+b691e5534f248b8b7d5053568edb0617  vlmd8c4.json
+
+# 15-site picker-lifecycle audit note (RWO-022 FW-8): the audit has no
+# archived per-site artifact in-tree; it is SOURCE-DERIVABLE and was
+# independently re-derived with the full per-site table in
+# docs/research/evidence/rwo-020/adversarial.md (T1, item 3).
+# Script quirk also recorded there: d8c4-wo-p2-005-happypath.sh line 2
+# self-identifies as "Scene D8c2" (cosmetic).

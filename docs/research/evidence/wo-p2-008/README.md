@@ -16,7 +16,7 @@ official Codex CLI as its runtime** (`resolve_codex_binary` → PATH `codex` /
 doctrine forbids mocking a runtime. Without a runtime the sidebar is the
 entry surface with zero threads ("No chats"), so dot-on-row and
 jump-between-chats are **not GUI-exercisable here** — they are covered by the
-codex-core state-machine tests (7) and codex-app binding/jump tests (6, CI).
+codex-core state-machine tests (7) and codex-app binding/jump tests (5, CI — RWO-022 FW-1 correction: five delivered, not six).
 
 Captured anyway (d11/): the 7-frame md5 sequence + VLM read of frame 03
 showing the honest no-selection status **"Select a chat before marking it
@@ -61,7 +61,7 @@ All five frames differ (md5 in `d11b-md5.txt`); VLM reads in
   observation in this lab (same class as the 007 F-A4 no-workspace
   residual): the lab has no Codex CLI runtime and no runtime may be mocked.
   Unit coverage: `next_unread_task_id` + reducer semantics (7 core tests);
-  binding ownership/metadata/dispatch (6 app tests, CI).
+  binding ownership/metadata/dispatch (5 app tests, CI — RWO-022 FW-1 correction).
 - Activity view surface: separate future work order (binding gives honest
   guidance meanwhile).
 - Unread-state persistence across restarts: reference behavior unverified
