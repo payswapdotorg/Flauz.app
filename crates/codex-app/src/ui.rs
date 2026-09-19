@@ -8203,13 +8203,21 @@ impl WorkspaceView {
             return true;
         }
         if command == "/review" {
-            if !self.composer_review_submenu_open && !self.composer_review_available() {
-                return true;
-            }
-            if self.composer_review_submenu_open {
-                self.start_composer_review(ReviewTarget::UncommittedChanges, window, cx);
-            } else {
-                self.open_composer_review_submenu(window, cx);
+            match review_slash_command_action(
+                self.composer_review_submenu_open,
+                self.composer_review_available(),
+            ) {
+                // Review unavailable: fall through so the typed command
+                // submits as a visible message, mirroring every other
+                // guarded slash command (WO-P2-012 — previously a silent
+                // swallow with no message and no composer change).
+                ReviewSlashCommandAction::FallThrough => return false,
+                ReviewSlashCommandAction::StartDefaultReview => {
+                    self.start_composer_review(ReviewTarget::UncommittedChanges, window, cx);
+                }
+                ReviewSlashCommandAction::OpenSubmenu => {
+                    self.open_composer_review_submenu(window, cx);
+                }
             }
             return true;
         }
@@ -8356,6 +8364,14 @@ impl WorkspaceView {
         cx: &mut Context<Self>,
     ) {
         if !self.composer_review_available() {
+            // Honest guidance instead of a silent no-op when review state
+            // changes while the submenu is open (WO-P2-012): the submenu
+            // rows, the branch-picker confirm, and a typed Enter on an
+            // open submenu all funnel through this guard.
+            self.dispatch(
+                Action::SetStatus(composer_review_unavailable_status(&self.state).to_owned()),
+                cx,
+            );
             return;
         }
         self.composer_review_submitting = true;
@@ -8897,15 +8913,29 @@ impl WorkspaceView {
     }
 
     fn archive_selected_chat(&mut self, cx: &mut Context<Self>) {
-        if let Some(task_id) = self.state.selected_task_id.clone() {
-            self.dispatch(Action::ArchiveTask(task_id), cx);
-        }
+        let Some(task_id) = self.state.selected_task_id.clone() else {
+            // Honest guidance instead of a silent no-op when no chat is
+            // selected (WO-P2-012, the WO-P2-007 input-quality doctrine).
+            self.dispatch(
+                Action::SetStatus("Select a chat before archiving it.".to_owned()),
+                cx,
+            );
+            return;
+        };
+        self.dispatch(Action::ArchiveTask(task_id), cx);
     }
 
     fn toggle_selected_chat_pin(&mut self, cx: &mut Context<Self>) {
-        if let Some(task_id) = self.state.selected_task_id.clone() {
-            self.dispatch(Action::ToggleTaskPinned(task_id), cx);
-        }
+        let Some(task_id) = self.state.selected_task_id.clone() else {
+            // Honest guidance instead of a silent no-op when no chat is
+            // selected (WO-P2-012, the WO-P2-007 input-quality doctrine).
+            self.dispatch(
+                Action::SetStatus("Select a chat before pinning or unpinning it.".to_owned()),
+                cx,
+            );
+            return;
+        };
+        self.dispatch(Action::ToggleTaskPinned(task_id), cx);
     }
 
     fn navigate_adjacent_chat(&mut self, next: bool, cx: &mut Context<Self>) {
@@ -9051,6 +9081,12 @@ impl WorkspaceView {
 
     fn rename_selected_chat(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let Some(task_id) = self.state.selected_task_id.clone() else {
+            // Honest guidance instead of a silent no-op when no chat is
+            // selected (WO-P2-012, the WO-P2-007 input-quality doctrine).
+            self.dispatch(
+                Action::SetStatus("Select a chat before renaming it.".to_owned()),
+                cx,
+            );
             return;
         };
         let Some(title) = self
@@ -9060,6 +9096,12 @@ impl WorkspaceView {
             .find(|task| task.id == task_id)
             .map(|task| task.title.clone())
         else {
+            // The selected chat is missing from the visible task list:
+            // report it instead of no-oping silently (WO-P2-012).
+            self.dispatch(
+                Action::SetStatus("The selected chat is no longer available.".to_owned()),
+                cx,
+            );
             return;
         };
         self.begin_task_rename(task_id, title, window, cx);
@@ -10961,6 +11003,15 @@ impl WorkspaceView {
 
     fn open_commit_modal(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         if self.state.git.pending_pull_request.is_some() {
+            // Honest guidance instead of a silent no-op while a pull
+            // request workflow is already in flight (WO-P2-012). The
+            // palette row stays visible in this transient state, matching
+            // the neighboring Create PR rows (rows are hidden only for
+            // missing-capability states, not busy states).
+            self.dispatch(
+                Action::SetStatus("A Git workflow is already running.".to_owned()),
+                cx,
+            );
             return;
         }
         if self.state.git.repository_root.is_none() {
@@ -45797,6 +45848,46 @@ fn composer_keeps_fork_picker(value: &str) -> bool {
     trimmed == "/fork" || trimmed == "/worktree"
 }
 
+/// The typed `/review` executor decision (WO-P2-012).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ReviewSlashCommandAction {
+    /// Review unavailable and the submenu is closed: fall through so the
+    /// typed command submits as a visible message (the guarded-slash
+    /// command pattern). Previously the executor swallowed the command
+    /// with no message and no composer change.
+    FallThrough,
+    /// Submenu closed and review available: open the review submenu.
+    OpenSubmenu,
+    /// Submenu open: start the default (uncommitted-changes) review.
+    StartDefaultReview,
+}
+
+fn review_slash_command_action(
+    submenu_open: bool,
+    review_available: bool,
+) -> ReviewSlashCommandAction {
+    if !submenu_open && !review_available {
+        ReviewSlashCommandAction::FallThrough
+    } else if submenu_open {
+        ReviewSlashCommandAction::StartDefaultReview
+    } else {
+        ReviewSlashCommandAction::OpenSubmenu
+    }
+}
+
+/// Honest status for a review start attempted while review is unavailable
+/// (WO-P2-012): the `/review` submenu rows and the typed-command executor
+/// previously no-oped silently in this state.
+fn composer_review_unavailable_status(state: &AppState) -> &'static str {
+    if state.selected_task_id.is_none() {
+        "Open a chat before starting a code review."
+    } else if state.review_start.pending.is_some() {
+        "A review is starting."
+    } else {
+        "Code review is not available right now."
+    }
+}
+
 fn project_trigger_matches(query: &str) -> bool {
     let query = query.trim().to_ascii_lowercase();
     query.is_empty()
@@ -47664,8 +47755,11 @@ mod tests {
     use std::collections::HashSet;
     use std::path::{Path, PathBuf};
 
+    use super::ReviewSlashCommandAction;
     use super::composer_keeps_fork_picker;
+    use super::composer_review_unavailable_status;
     use super::edit_project_surface;
+    use super::review_slash_command_action;
     use super::{
         ACTIVE_KEYBOARD_SHORTCUTS, APPEARANCE_THEME_SHARE_PREFIX, ArchivedChatDeleteScope,
         ArchivedChatKindFilter, ArchivedChatProjectFilter, ArchivedChatSortKey, AssistantFinding,
@@ -47740,6 +47834,7 @@ mod tests {
         TurnDiffState, reduce,
     };
     use codex_core::{LocalProjectSummary, MAX_LOCAL_PROJECT_FOLDERS};
+    use codex_core::{PendingReviewStart, ReviewDelivery, ReviewTarget};
 
     fn task(id: &str, cwd: &str) -> TaskSummary {
         TaskSummary {
@@ -48796,6 +48891,57 @@ mod tests {
         assert!(!composer_keeps_fork_picker("/project"));
         assert!(!composer_keeps_fork_picker("/review"));
         assert!(!composer_keeps_fork_picker("hello"));
+    }
+
+    #[test]
+    fn review_slash_command_falls_through_when_review_is_unavailable() {
+        // WO-P2-012 (F-D1, FW-9): the typed `/review` guard falls through
+        // to visible message submission instead of the previous silent
+        // swallow (no message, no composer change).
+        assert_eq!(
+            review_slash_command_action(false, false),
+            ReviewSlashCommandAction::FallThrough
+        );
+        // Available with the submenu closed: open the submenu (unchanged).
+        assert_eq!(
+            review_slash_command_action(false, true),
+            ReviewSlashCommandAction::OpenSubmenu
+        );
+        // Submenu open: Enter starts the default review; a re-checked
+        // unavailability is reported honestly by the start guard.
+        assert_eq!(
+            review_slash_command_action(true, false),
+            ReviewSlashCommandAction::StartDefaultReview
+        );
+        assert_eq!(
+            review_slash_command_action(true, true),
+            ReviewSlashCommandAction::StartDefaultReview
+        );
+    }
+
+    #[test]
+    fn review_start_unavailable_status_reports_honest_guidance() {
+        // WO-P2-012 (F-D1): a review start attempted while review is
+        // unavailable surfaces guidance instead of no-oping silently —
+        // the submenu rows, the branch-picker confirm, and Enter on an
+        // open submenu all funnel through the start guard.
+        let mut state = AppState::default();
+        assert_eq!(
+            composer_review_unavailable_status(&state),
+            "Open a chat before starting a code review."
+        );
+        reduce(&mut state, Action::TaskCreated(task("thread-1", "/repo")));
+        assert_eq!(
+            composer_review_unavailable_status(&state),
+            "Code review is not available right now."
+        );
+        state.review_start.pending = Some(PendingReviewStart {
+            generation: 1,
+            source_task_id: "thread-1".to_owned(),
+            target: ReviewTarget::UncommittedChanges,
+            delivery: ReviewDelivery::Inline,
+        });
+        assert_eq!(composer_review_unavailable_status(&state), "A review is starting.");
     }
 
     #[test]
