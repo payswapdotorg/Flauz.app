@@ -8,26 +8,30 @@ The product roadmap is now governed by [docs/FLAUZ-SOURCE-OF-TRUTH.md](docs/FLAU
 - [x] Windows and Linux desktop targets.
 - [x] Official Codex app-server supervision boundary.
 - [x] Native terminal, Browser, Computer Use, Git, Skills, plugins, MCP Apps, and Marketplace foundations.
-- [x] P1/P2 parity work orders completed to the current merged work-order set.
+- [x] P1/P2 parity work orders completed to the current merged work-order set, including P2-007 through P2-011.
+- [x] RWO-020/RWO-021/RWO-022 reference, verification, and adversarial review waves.
 - [x] Linux parity lab and official Linux reference+1 lab.
-- [ ] Complete the remaining Codex parity backlog and release-candidate gates.
+- [x] Release-critical parity scope closed with remaining proprietary/platform and full-reference deltas explicitly bounded.
+- [ ] Complete the remaining full-reference Codex parity backlog and release-candidate gates.
 
 ## Approved platform direction
 
 After parity closure, implement in this order:
 
-1. [ ] Canonical Workspace/Session/Environment/Provider/Model/Agent/Skill/Capability contracts.
-2. [ ] Environment/provider fabric with local and remote execution through one contract.
-3. [ ] Model-provider and agent-runtime fabric, including BYOK and non-Codex models.
-4. [ ] Capability resolver, skill dependency checking, and skill-unlock UX.
-5. [ ] Multi-model, multi-agent, and multi-environment orchestration.
-6. [ ] User-owned provider connections, quotas, cost policies, and free-tier-first routing.
-7. [ ] Provider-neutral Windows/macOS/Linux parity labs and execution providers.
-8. [ ] Multi-user workspaces, presence, shared sessions, collaborative documents/sheets, and collaborative code.
-9. [ ] macOS client adapter.
-10. [ ] Web client adapter.
-11. [ ] Mobile client adapter.
-12. [ ] Production hardening, signed releases, migrations, observability, and compatibility guarantees.
+1. [ ] Canonical Workspace/Session/Task/Environment/Resource/Artifact/Evidence/Procedure/Context/Provider/Model/Agent/Skill/Capability contracts.
+2. [ ] Context Engine and model-aware Harness contracts: retrieval, tiered memory, compaction/reset, dynamic tool exposure, provenance, telemetry.
+3. [ ] Environment/provider fabric with local and remote execution through one contract, including browser/site/terminal/sandbox topology.
+4. [ ] Model-provider and agent-runtime fabric, including BYOK and non-Codex models.
+5. [ ] Capability resolver, skill dependency checking, and skill-unlock UX.
+6. [ ] Reactive execution graph, multi-model/multi-agent orchestration, verification, resource leases/conflict handling, and human takeover.
+7. [ ] User-owned provider connections, quotas, cost policies, and free-tier-first routing.
+8. [ ] Provider-neutral parity labs and cross-environment execution validation.
+9. [ ] Collaboration: shared task state, presence, shared sessions/environments, documents/sheets, collaborative code, private-vs-shared context.
+10. [ ] Procedure library and learn → save → discover → run → deviation → improve lifecycle.
+11. [ ] macOS client adapter.
+12. [ ] Web client adapter.
+13. [ ] Mobile client adapter.
+14. [ ] Production hardening, signed releases, migrations, observability, recovery, and compatibility guarantees.
 
 ## Frozen architectural decisions
 
@@ -44,3 +48,6 @@ After parity closure, implement in this order:
 See [docs/IMPLEMENTATION-ROADMAP.md](docs/IMPLEMENTATION-ROADMAP.md) for the full dependency graph and work-order IDs.
 
 Feature proposals and architecture changes require a repository-recorded amendment before implementation.
+
+Major product capabilities also require GUI journeys and discoverability evidence;
+see `docs/PRODUCT-UX-JOURNEYS.md`.
