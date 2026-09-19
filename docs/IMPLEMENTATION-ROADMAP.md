@@ -1,11 +1,14 @@
 # Flauz Master Implementation Roadmap
 
-**Status:** FROZEN PLAN — 2026-09-18  
+**Status:** FROZEN PLAN — base 2026-09-18; approved context/harness/UX extension 2026-09-19  
 **Execution:** Tech Lead + up to 3 concurrent workers
 
 The frozen architecture is in
-[FLAUZ-SOURCE-OF-TRUTH.md](FLAUZ-SOURCE-OF-TRUTH.md). Codex-specific parity is
-in [parity-matrix.md](parity-matrix.md).
+[FLAUZ-SOURCE-OF-TRUTH.md](FLAUZ-SOURCE-OF-TRUTH.md). The approved context/harness
+extension is in [CONTEXT-HARNESS-ARCHITECTURE.md](CONTEXT-HARNESS-ARCHITECTURE.md).
+Required product journeys and GUI discoverability are in
+[PRODUCT-UX-JOURNEYS.md](PRODUCT-UX-JOURNEYS.md). Codex-specific parity is in
+[parity-matrix.md](parity-matrix.md).
 
 ## Graph
 
@@ -82,11 +85,22 @@ release-critical journeys pass.
 - ⬜ Capability
 - ⬜ Artifact
 - ⬜ ProviderConnection
+- ⬜ Context
+- ⬜ MemoryItem / durable task memory
+- ⬜ Resource
+- ⬜ ResourceState
+- ⬜ ExecutionGraph / ExecutionNode
+- ⬜ Event / Observation / Claim / Evidence
+- ⬜ ResourceLease
+- ⬜ Procedure / ProcedureVersion
+- ⬜ ContextSnapshot / ContextProvenance
+- ⬜ ModelContextProfile
 - ⬜ versioned session/event transport
 - ⬜ conformance fixtures
 
 **Gate:** fake model/runtime/environment/provider implementations pass the
-contracts without real external services.
+contracts without real external services; context, resource, execution,
+evidence and procedure fixtures round-trip without external services.
 
 ## F3 — Environment fabric
 
@@ -136,19 +150,31 @@ unlock route when one exists.
 
 ## F6 — Orchestration
 
-- ⬜ execution-plan graph
+- ⬜ reactive execution graph
+- ⬜ context compilation/retrieval
+- ⬜ tiered memory
+- ⬜ structured compaction/reset
+- ⬜ dynamic tool discovery/schema loading
+- ⬜ model-aware context compilation
 - ⬜ agent roles
 - ⬜ serial delegation
 - ⬜ parallel agents
 - ⬜ model-as-tool
+- ⬜ resource-aware routing
+- ⬜ leases/conflict resolution
 - ⬜ shared artifacts/context
-- ⬜ verification
+- ⬜ independent evaluators/verifiers
+- ⬜ claims/observations/evidence
 - ⬜ fallback/rerouting
 - ⬜ cancellation/dependency propagation
+- ⬜ human takeover/approval/handoff
 - ⬜ execution provenance
+- ⬜ reusable Procedure capture/execution/improvement
+- ⬜ harness telemetry and replay
 
-**Gate:** two independent model/runtime adapters cooperate on one task and
-produce attributable results.
+**Gate:** two independent model/runtime adapters cooperate on one task across
+multiple execution surfaces and produce attributable, independently verifiable
+results without a shared giant transcript.
 
 ## F7 — User-owned providers / free-tier routing
 
@@ -251,6 +277,30 @@ without losing authorized state.
 - ⬜ provider outage behavior
 - ⬜ protocol compatibility guarantees
 
+
+## Cross-cutting GUI/UX discoverability gate
+
+Every major capability introduced from F2 onward must map to one or more
+journeys in [PRODUCT-UX-JOURNEYS.md](PRODUCT-UX-JOURNEYS.md).
+
+A work order is not complete until its GUI/lab evidence demonstrates, where
+applicable:
+
+- a visible primary entry point;
+- a contextual affordance when the capability is relevant;
+- command-palette/search discovery;
+- a useful first-run empty state;
+- a success/next-step state;
+- keyboard-accessible discovery and action paths;
+- truthful state, provenance and failure feedback.
+
+For Procedures specifically, the journey must cover learning, saving,
+discovering later, running, detecting deviations, and intentional improvement.
+
+The product architecture is domain-neutral. Journey validation must include
+at least one non-code example once the corresponding runtime capabilities
+exist; coding is not the universal acceptance scenario.
+
 ## Stable work-order prefixes
 
 ```
@@ -260,10 +310,11 @@ ENV-*   environments
 MOD-*   model providers
 RT-*    agent runtimes
 CAP-*   capabilities/skills
-ORCH-*  orchestration
+ORCH-*  orchestration, context, harness, task graphs and verification
 PROV-*  execution providers
 LAB-*   parity labs
 COL-*   collaboration
+UX-*    cross-cutting GUI journeys and discoverability
 CLI-*   clients
 SEC-*   security/credentials
 REL-*   release

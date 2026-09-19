@@ -2,7 +2,7 @@
 
 ## Flauz source of truth
 
-Before implementation, read [Flauz Architecture & Implementation Constitution](docs/FLAUZ-SOURCE-OF-TRUTH.md), [Master Implementation Roadmap](docs/IMPLEMENTATION-ROADMAP.md), and [Work Order Template / Execution Protocol](docs/WORK-ORDER-TEMPLATE.md). These documents define the frozen product architecture and execution process. `docs/parity-matrix.md` is authoritative for Codex-specific parity only.
+Before implementation, read [Flauz Architecture & Implementation Constitution](docs/FLAUZ-SOURCE-OF-TRUTH.md), [Master Implementation Roadmap](docs/IMPLEMENTATION-ROADMAP.md), [Work Order Template / Execution Protocol](docs/WORK-ORDER-TEMPLATE.md), [Context/Harness Architecture](docs/CONTEXT-HARNESS-ARCHITECTURE.md), and [Product UX Journeys](docs/PRODUCT-UX-JOURNEYS.md). These documents define the product architecture, runtime context/harness contracts, UX discoverability requirements, and execution process. `docs/parity-matrix.md` is authoritative for Codex-specific parity only.
 
 - Build a native Rust replacement for Codex Desktop. Do not add Electron, Tauri,
   Wry, WebView, Node.js, or browser-runtime dependencies.
@@ -69,3 +69,16 @@ Before implementation, read [Flauz Architecture & Implementation Constitution](d
   revert, stage, or reformat changes outside the assigned scope.
 - Keep cleanup targeted, reviewable, and reversible. Never use an automated
   cleanup `--apply` mode for repository-context work.
+
+
+## Product discoverability
+
+- A major capability is not product-complete merely because its backend or
+  runtime path exists. Its assigned work order must map it to a journey in
+  `docs/PRODUCT-UX-JOURNEYS.md`.
+- Major capabilities require a normal visible entry point, a contextual
+  affordance, a search/palette fallback, a useful empty state, and a
+  success/next-step state where applicable.
+- Do not hide reusable Procedures, context inspection, multi-environment
+  execution, collaboration, evidence, or other platform primitives behind
+  developer-only surfaces.

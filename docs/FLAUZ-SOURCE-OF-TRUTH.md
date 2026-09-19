@@ -1,6 +1,6 @@
 # Flauz Architecture & Implementation Constitution
 
-**Status:** FROZEN — 2026-09-18
+**Status:** FROZEN — base architecture 2026-09-18; approved runtime/UX extension 2026-09-19
 
 This is the authoritative product/architecture contract for Flauz. It governs the
 approved evolution from the current native Codex-compatible desktop client into
@@ -15,7 +15,9 @@ workspace.
 4. The assigned work order: concrete scope and acceptance.
 5. `docs/architecture.md`: detailed implementation boundaries.
 6. `docs/parity-matrix.md`: Codex Desktop parity only.
-7. Code/tests are implementation evidence, not permission to redefine contracts.
+7. `docs/CONTEXT-HARNESS-ARCHITECTURE.md`: detailed approved context/harness/runtime extension.
+8. `docs/PRODUCT-UX-JOURNEYS.md`: approved product journeys and discoverability contract.
+9. Code/tests are implementation evidence, not permission to redefine contracts.
 
 External documentation/research may provide evidence, but it does not change
 Flauz requirements. Architecture changes require a repository-recorded
@@ -191,6 +193,85 @@ documents, sheets, artifacts, presence, permissions and policy.
 Shared documents/sheets may use true real-time collaboration. Code must preserve
 Git/worktree semantics and distinguish isolated worktrees from intentional
 shared-filesystem mode.
+
+## Approved runtime architecture evolution — 2026-09-19
+
+The Flauz architecture now explicitly includes the following cross-cutting
+primitives:
+
+- **Context Engine** — compiles model context from durable state, memory,
+  retrieval, tools, environment state, policy and provenance.
+- **Harness** — manages task state, execution, observation, verification,
+  recovery and context around an AgentRuntime.
+- **Task Execution Graph** — reactive dependency graph supporting parallelism,
+  conditions, loops, waits, human gates, cancellation and recovery.
+- **Resource Graph** — canonical resource identities decoupled from browser,
+  API, CLI, MCP and other access surfaces.
+- **Evidence plane** — claims and observations are distinct from verified
+  evidence.
+- **Leases/conflict management** — concurrent reads are distinct from
+  coordinated writes and commits.
+- **Procedure** — durable, reusable, versioned representations of successful
+  work.
+- **Collaboration state** — private agent/user context is distinct from shared
+  task state.
+- **Harness observability** — context, retrieval, execution, verification and
+  recovery are measurable.
+- **General-purpose project model** — project/task/resource/artifact concepts
+  are domain-neutral; software development is only one specialization.
+
+The detailed contracts are recorded in
+[docs/CONTEXT-HARNESS-ARCHITECTURE.md](CONTEXT-HARNESS-ARCHITECTURE.md).
+The architecture amendment is recorded in
+[ADR-001](adr/ADR-001-context-harness-world-state-ux.md).
+
+### GUI discoverability is part of product correctness
+
+A platform primitive is not complete merely because the runtime path exists.
+Major capabilities must have discoverable product journeys recorded in
+[docs/PRODUCT-UX-JOURNEYS.md](PRODUCT-UX-JOURNEYS.md).
+
+At minimum, applicable capabilities must have:
+
+- a visible primary entry point;
+- a contextual entry when the capability becomes relevant;
+- a global search/command-palette fallback;
+- a useful empty state for first discovery;
+- a success or next-step affordance.
+
+The command palette may accelerate discovery but may never be the sole entry
+point for a major capability.
+
+**Procedure is explicitly discoverable.** A successful repeatable task should
+be able to surface a user-facing "Save as a reusable workflow" path; Procedures
+must also have a persistent library, search, task-context suggestions, readable
+detail, execution, deviation visibility and intentional improvement/versioning.
+
+The GUI must use domain-neutral concepts such as Project, Task, Procedure,
+Resource, Environment, Agent, Artifact, Evidence, Activity and Context.
+Software-specific concepts remain contextual specializations.
+
+### Architectural separation
+
+The platform must preserve these distinctions:
+
+```
+Session != Context
+Context != Memory
+TaskState != AgentContext
+Resource != AccessSurface
+ResourceState != ToolResult
+Claim != Evidence
+Plan != Execution
+Execution != Verification
+Artifact != Message
+HumanApproval != AgentDecision
+Agent != Environment
+```
+
+Durable state cannot depend on the current model context window. A model switch,
+context reset, environment switch or agent handoff must preserve the logical
+Task and its authorized durable state.
 
 ## Implementation invariants
 

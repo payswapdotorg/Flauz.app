@@ -20,6 +20,11 @@ Inputs:
 Outputs/artifacts:
 Tests:
 GUI/lab evidence:
+UX journey IDs:
+Primary discovery surface:
+Contextual discovery surface:
+Search/palette discovery:
+Empty/success-state behavior:
 Acceptance criteria:
 Rollback/recovery:
 Integration notes:
@@ -36,6 +41,8 @@ A work order is CLOSED only when applicable:
 4. Boundary — no unauthorized trust/data/runtime boundary crossed.
 5. Evidence — UI/provider/lab behavior is reproducible.
 6. Integration — Tech Lead reviewed merged impact.
+7. Discoverability — applicable product journey(s) are reachable through the GUI
+   without requiring knowledge of internal implementation terms.
 
 ## Worker rules
 
@@ -49,7 +56,10 @@ Before coding, read:
 - the relevant parity rows/work-order history
 
 Workers must preserve behavior outside scope, inspect existing code first, keep
-ownership bounded, and report exact files/tests/evidence.
+ownership bounded, and report exact files/tests/evidence. For product-facing
+changes, workers must map the change to `docs/PRODUCT-UX-JOURNEYS.md` and verify
+its primary, contextual, search/palette, empty-state and success-state surfaces
+where applicable.
 
 Workers must not invent competing abstractions, silently redefine frozen
 architecture, hard-code providers into product contracts, or commit credentials.
