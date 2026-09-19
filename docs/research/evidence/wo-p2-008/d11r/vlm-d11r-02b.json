@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the precise description of the requested elements:\n\n1.  **Left Sidebar under 'Chats':**\n    *   **List:** There are **no** chat or thread rows listed.\n    *   **Text Displayed:** The area displays the placeholder text: **\"No chats\"**.\n    *   **Dot Indicator:** There is no dot indicator present as there are no chat rows.\n\n2.  **Selected/Highlighted Row:**\n    *   In the **Projects** section (above Chats), the row titled **\"Untitled task\"** is highlighted with a light blue background.\n\n3.  **Composer State:**\n    *   The composer (the text input box at the bottom) contains **placeholder text** but is otherwise empty of user input. The text reads: *\"Ask Codex to change, inspect, or explain...\"*\n\n4.  **Footer Bottom-Left Status:**\n    *   **\"App-server online\"** (preceded by a green dot indicator).\n\n5.  **Banner/Toast:**\n    *   There is a banner located directly above the composer box at the bottom right. It reads: **\"Codex hit an error and is retrying.\"** (with a \"Dismiss\" button on the right).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789837098,
+  "id": "20260920005812858aa848290f4935",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920005812858aa848290f4935",
+  "usage": {
+    "completion_tokens": 265,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1748,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2013
+  }
+}

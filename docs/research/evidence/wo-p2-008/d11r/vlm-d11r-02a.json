@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the precise description of the requested elements:\n\n1.  **Composer at bottom:** The text field contains the typed text: **\"alpha attention chat\"** (with a cursor visible at the end).\n2.  **Left sidebar under Chats:** It displays the text: **\"No chats\"** (indicating there are no rows/list items).\n3.  **Footer bottom-left:** The status text reads exactly: **\"App-server online\"** (preceded by a green dot icon).\n4.  **Modal/Card visible:** There is a central card with the heading: **\"Sign in to get started\"**.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789837288,
+  "id": "20260920010124d61919d7d9914b57",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920010124d61919d7d9914b57",
+  "usage": {
+    "completion_tokens": 137,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1731,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1868
+  }
+}

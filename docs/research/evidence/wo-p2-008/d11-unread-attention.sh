@@ -1,5 +1,13 @@
 #!/bin/bash
 # D11 — WO-P2-008 GUI verification (per-chat unread-attention + 4 bindings).
+# FW-5 FIX (RWO-022 T4, applied 2026-09-19): the original scene submitted
+# with plain `Return`, which is NOT the composer submit key (D8c/D9
+# calibration: submits are CTRL+RETURN) — chat creation would have failed
+# even with a runtime present. The two submits are corrected in place; the
+# frames in d11/ were produced by the ORIGINAL defective script (pre-fix,
+# git history preserves it) and are relabeled accordingly. The corrected
+# full-flow re-run (runtime pin + this key fix + NUX dismissal + composer
+# click ladder) is d11r-unread-attention.sh — frames in d11r/.
 #
 # Delivery under test: feat/wo-p2-008-unread-attention @ c37c21b20
 #   - Ctrl+Shift+U  toggleThreadUnread   (mark SELECTED chat unread → dot)
@@ -84,7 +92,7 @@ sleep 0.5
 type_text "alpha attention chat"
 sleep 1.0
 cap "$OUT/d11-02a-typed.png"
-key Return
+key ctrl+Return
 sleep 6
 cap "$OUT/d11-02b-chatA-created.png"; B2=$(md5 "$OUT/d11-02b-chatA-created.png")
 
@@ -101,7 +109,7 @@ DISPLAY=$DISP xdotool mousemove 720 700 click 1 2>/dev/null || true
 sleep 0.5
 type_text "beta background chat"
 sleep 1.0
-key Return
+key ctrl+Return
 sleep 6
 cap "$OUT/d11-04-chatB-created.png"; B4=$(md5 "$OUT/d11-04-chatB-created.png")
 

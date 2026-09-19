@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the precise description of the left sidebar and interface elements:\n\n**1) Left Sidebar Details:**\n\n*   **Projects Section:**\n    *   **parity-lab**: No small blue dot (has a folder icon).\n    *   **beta background chat**: No small blue dot (has a red circle status icon).\n    *   **alpha attention chat**: No small blue dot (has a green circle status icon).\n\n*   **Chats Section:**\n    *   **No chats**: No small blue dot (this is a placeholder text, not an interactive row with a dot).\n\n**2) Selected Row:**\nThe row **\"alpha attention chat\"** under the **Projects** section is selected (indicated by the light blue highlight background).\n\n**3) Status/Banner/Toast:**\nThere is a toast notification at the bottom of the main content area that reads exactly:\n> \"Cleared unread indicators for 1 chat\"\n(It includes a \"Dismiss\" button on the right).\n\n**4) Footer Bottom-Left:**\nThe text in the bottom-left corner reads exactly:\n> \"App-server online\"\n(Preceded by a green dot indicator).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789837188,
+  "id": "202609200059412a439875ed124967",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609200059412a439875ed124967",
+  "usage": {
+    "completion_tokens": 245,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1756,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2001
+  }
+}

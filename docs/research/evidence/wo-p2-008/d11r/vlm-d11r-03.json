@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the precise description:\n\n**1) Left Sidebar Content:**\n\n*   **Projects Section:**\n    *   Row 1: **parity-lab**\n    *   Row 2: **alpha attention chat** (This row has a red circle icon on the left and a blue dot indicator next to the text \"now\")\n\n*   **Chats Section:**\n    *   There are no rows listed under this header. The text displayed is simply: **No chats**\n\n**2) Selected/Highlighted Row:**\nThe row **\"alpha attention chat\"** under the 'Projects' section is selected (highlighted with a light blue background).\n\n**3) Status Message/Banner/Toast:**\nThere is a banner at the bottom of the main content area (inside the input box area) that reads exactly:\n> **\"Chat marked unread\"**\n(With a \"Dismiss\" button on the right side of this message).\n\n**4) Footer Bottom-Left:**\nThe text at the very bottom left of the sidebar reads exactly:\n> **● App-server online**",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789837113,
+  "id": "20260920005828665480d92a544c55",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920005828665480d92a544c55",
+  "usage": {
+    "completion_tokens": 226,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1754,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1980
+  }
+}

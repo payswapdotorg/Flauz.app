@@ -1,0 +1,9 @@
+d11r-01-entry:            e7185a646877dbf50b00cec28bfb820d   (VLM: footer 'App-server online')
+d11r-01b-nux-cleared:     2f5b4a6dc4a0a4a1a732a31be85090ac
+d11r-02a-typed:           468345edee3ae6f3bbb7f132cb3d8891
+d11r-02b-chatA-created:   9bc34b22f5da9772401753de8e5aa748   (VLM: sidebar row 'alpha attention chat')
+d11r-03-marked-unread:    efedb5a62910e580ac95c27b66dabe77   (VLM: dot on A + 'Chat marked unread')
+d11r-04-chatB-created:    7df5e791c6c5b9e336b9f801748cef6b   (VLM: B selected, A dot stays)
+d11r-05-jumped-to-A:      8ca7e38c7582d8ecb37e72b5943d687b   (VLM: A selected, dot cleared)
+d11r-06-remarked:         6ccaaa17a1afc11a8768a13ef741db92   (VLM: dot back on A)
+d11r-07-cleared:          b2d1809eec840286fd1c1901098d2f77   (VLM: 'Cleared unread indicators for 1 chat', dot gone)

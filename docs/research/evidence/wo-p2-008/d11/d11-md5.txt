@@ -1,7 +1,8 @@
-d11-01-entry:            bb5139b3d119c06db7009c3e663cfd1c
-d11-02b-chatA-created:   acf8b24bee7a59c0f83b913b2e8ec1df
-d11-03-marked-unread:    c122fe25fb9195b8e329721587f11f25
-d11-04-chatB-created:    cebca6e55ea8e9d5c98be62481494e86
-d11-05-jumped-to-A:      4075670e436867d7cbce86724f7fc698
-d11-06-remarked:         205b4c025836e0b135b7b6670e5bb9db
-d11-07-cleared:          2f95438b01244a5a7922ed2296fd993e
+d11-01-entry: bb5139b3d119c06db7009c3e663cfd1c
+d11-02a-typed: 81a85b83290ae89b97cc82722d1729f6
+d11-02b-draft-unsubmitted: acf8b24bee7a59c0f83b913b2e8ec1df
+d11-03-no-selection: c122fe25fb9195b8e329721587f11f25
+d11-04-no-chat-b: cebca6e55ea8e9d5c98be62481494e86
+d11-05-no-unread: 4075670e436867d7cbce86724f7fc698
+d11-06-no-selection: 205b4c025836e0b135b7b6670e5bb9db
+d11-07-empty-surface: 2f95438b01244a5a7922ed2296fd993e

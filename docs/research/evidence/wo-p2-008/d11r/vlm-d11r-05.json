@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the precise description:\n\n**1) Left Sidebar - Rows and Indicators:**\n\n*   **Projects Section:**\n    *   **parity-lab**: No dot indicator (has a folder icon).\n    *   **beta background chat**: Has a red dot indicator.\n    *   **alpha attention chat**: Has a green dot indicator.\n\n*   **Chats Section:**\n    *   **No chats**: No dot indicator.\n\n**2) Selected/Highlighted Row:**\nThe row **\"alpha attention chat\"** under the 'Projects' section is selected/highlighted with a light blue background.\n\n**3) Status/Banner/Toast:**\nThere is a toast notification at the bottom of the main content area that reads exactly:\n> \"Codex couldn't complete the request. Try again, or check the account and connection settings.\"\n(It includes a \"Dismiss\" button on the right).\n\n**4) Footer Bottom-Left:**\nThe text in the footer at the very bottom left of the sidebar reads:\n> \"App-server online\"\n(Preceded by a green dot).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789837139,
+  "id": "2026092000584908f1a96026734900",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026092000584908f1a96026734900",
+  "usage": {
+    "completion_tokens": 229,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1742,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 1971
+  }
+}

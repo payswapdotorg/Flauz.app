@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**BEFORE Image:**\n\n*   **parity-lab**: No small blue dot. (Status icon: Blue folder icon)\n*   **beta background chat**: No small blue dot. (Status icon: Blue circle with a clock/refresh symbol)\n*   **alpha attention chat**: **Yes**, there is a small blue dot. (Status icon: Red circle with an 'X' or cross)\n\n**AFTER Image:**\n\n*   **parity-lab**: No small blue dot. (Status icon: Blue folder icon)\n*   **beta background chat**: No small blue dot. (Status icon: Red circle with an 'X' or cross)\n*   **alpha attention chat**: No small blue dot. (Status icon: Green circle with a checkmark)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789837172,
+  "id": "20260920005928592863c9b3a04e93",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920005928592863c9b3a04e93",
+  "usage": {
+    "completion_tokens": 158,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 303,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 461
+  }
+}

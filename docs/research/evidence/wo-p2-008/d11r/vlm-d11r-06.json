@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the precise description:\n\n**1) Left Sidebar Details:**\n\n*   **Projects:**\n    *   **parity-lab**: No dot indicator.\n    *   **beta background chat**: No dot indicator (has a red circle icon and \"now\" text).\n    *   **alpha attention chat**: **Yes**, there is a small blue dot indicator next to the title (also has a green circle icon and \"now\" text).\n\n*   **Chats:**\n    *   **No chats**: No dot indicator.\n\n**2) Selected/Highlighted Row:**\nThe row **\"alpha attention chat\"** under the 'Projects' section is selected/highlighted with a light blue background.\n\n**3) Status/Banner/Toast:**\nThere is a banner at the bottom of the main chat area that reads exactly:\n> \"Chat marked unread\"\n(It has a \"Dismiss\" button on the right.)\n\n**4) Footer Bottom-Left:**\nThe text in the bottom-left corner reads exactly:\n> \"App-server online\"\n(Preceded by a small green dot indicator.)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789837157,
+  "id": "20260920005911aab7c89f46bd41e9",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920005911aab7c89f46bd41e9",
+  "usage": {
+    "completion_tokens": 229,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1742,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1971
+  }
+}

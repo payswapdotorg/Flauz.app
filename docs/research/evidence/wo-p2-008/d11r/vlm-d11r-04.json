@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the precise description:\n\n**1) Left Sidebar - Rows and Indicators:**\n\n*   **Projects Section:**\n    *   **parity-lab**: No dot indicator.\n    *   **beta background chat**: No dot indicator (has a \"now\" label).\n    *   **alpha attention chat**: **Yes**, there is a small blue dot indicator next to it (also has a \"now\" label).\n\n*   **Chats Section:**\n    *   There are no rows listed under this section, only the text \"**No chats**\".\n\n**2) Selected/Highlighted Row:**\nThe row **\"beta background chat\"** under the Projects section is selected/highlighted with a light blue background.\n\n**3) Status/Banner/Toast:**\nThere is a toast notification at the bottom of the main input area that reads exactly: **\"Codex hit an error and retrying.\"** (with a \"Dismiss\" button to the right).\n\n**4) Footer Bottom-Left:**\nThe text in the footer reads exactly: **\"App-server online\"** (preceded by a green dot indicator).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789837124,
+  "id": "2026092000583823b4d220eec64b2f",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026092000583823b4d220eec64b2f",
+  "usage": {
+    "completion_tokens": 237,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1742,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1979
+  }
+}
