@@ -8,6 +8,12 @@
   difference is explicitly classified; release-critical journeys remain green;
   and the final parity/accessibility/release journeys pass").
 
+> **Lead integration note (2026-09-19, Task 85):** the proposed follow-up IDs
+> WO-P2-013..016 in this packet were renumbered to **WO-P2-017..020** — the
+> WO-P2-013 ID is already assigned to the in-flight Activity-view work order
+> (Wave-1 Worker B, dispatched 20:00 UTC before this packet was authored).
+> Scope text unchanged; only the IDs moved.
+
 ## 1. Gate clause 1 — "every remaining full-reference difference is explicitly classified"
 
 **Delivered by this packet** (parity-inventory.md): all 41 Product-parity rows
@@ -21,7 +27,7 @@ triage):
 | --- | --- | --- |
 | D-1 Layer rule for post-baseline items (26.727/26.825) | keep the pinned-baseline rule of this inventory (P3) vs adopt the parity report's current-target rule (P2) | freeze the **pinned-baseline rule for F1** (the parity-matrix is the F1 spine) and carry the re-sliced items (multi-repository projects, artifacts renderers/canvas, first-run welcome set) as an explicit "current-target backlog" annex for F2 |
 | D-2 "unread state" staleness in PM Projects-and-chats row | edit the row text (Lead-owned) or leave | edit after WO-P2-012/Activity-view merge — the row currently lists a remainder that WO-P2-008 closed (see parity-inventory §6.3) |
-| D-3 F-A4 (Ctrl+P silent with no workspace) | extend WO-P2-012's scope or open WO-P2-016 | extend WO-P2-012 if the rebase is cheap (one more guarded status); otherwise WO-P2-016 (below) |
+| D-3 F-A4 (Ctrl+P silent with no workspace) | extend WO-P2-012's scope or open WO-P2-020 | extend WO-P2-012 if the rebase is cheap (one more guarded status); otherwise WO-P2-020 (below) |
 
 ## 2. Gate clause 2 — "release-critical journeys remain green"
 
@@ -64,12 +70,12 @@ contracts — rows 9/15/18/20/22/24–27/31–36/40/41).
 | Finding | Class | F1 treatment |
 | --- | --- | --- |
 | Silent no-op family F-A1/A2/A3/A6/F-D1/D2 | defect | **blocker** — WO-P2-012 (in-flight) |
-| F-A4 Ctrl+P silent without workspace | defect | **blocker-decision** — WO-P2-012 scope extension or WO-P2-016 |
-| Palette close focus restoration | gap | **blocker** for the "final accessibility journeys" clause — WO-P2-013 |
-| Visible palette entry (no toolbar button) | gap | **blocker** for the discoverability contract (PJ §1 layer 1) — WO-P2-014 |
-| Icon-only archived-chats deletion; attention-dot label | gap | WO-P2-014 |
-| Tab-trap completion for the four non-evidenced confirmation modals | gap | WO-P2-015 |
-| Broader focus order; full contrast parity | gap | bounded F1 close-out slice inside WO-P2-013/015 + a contrast item; the remainder is honestly open (PM baseline) |
+| F-A4 Ctrl+P silent without workspace | defect | **blocker-decision** — WO-P2-012 scope extension or WO-P2-020 |
+| Palette close focus restoration | gap | **blocker** for the "final accessibility journeys" clause — WO-P2-017 |
+| Visible palette entry (no toolbar button) | gap | **blocker** for the discoverability contract (PJ §1 layer 1) — WO-P2-018 |
+| Icon-only archived-chats deletion; attention-dot label | gap | WO-P2-018 |
+| Tab-trap completion for the four non-evidenced confirmation modals | gap | WO-P2-019 |
+| Broader focus order; full contrast parity | gap | bounded F1 close-out slice inside WO-P2-017/015 + a contrast item; the remainder is honestly open (PM baseline) |
 | Screen-reader labels / AT tree; OS-level reduced-motion; status AT announcement; titlebar AT naming | platform-bound | **document, do not block F1** — record as upstream-GPUI dependencies in the close packet; revisit at F11 (web client has its own a11y pass) |
 
 ### 3.2 Release-gate execution set
@@ -82,10 +88,10 @@ RG-FRESH-01..04, PKG-1..5, CI-1..3. Full battery in the file.
 
 | ID | Title | Bounded scope | Files/subsystems | Tests / evidence |
 | --- | --- | --- | --- | --- |
-| **WO-P2-013** | Palette/overlay close — focus restoration | on `close_command_palette` (ui.rs:8961–8971) and the shortcuts-overlay close path, explicitly restore focus to the previously focused surface (or a deterministic default); no other behavior | `crates/codex-app/src/ui.rs` only | 2 focused tests (restore target after palette close; after overlay close) + one D-scene (open → close → focus probe); a11y inventory §(a)/(d) anchors |
-| **WO-P2-014** | Visible-entry + label parity for icon-only controls | add a visible command-palette entry button in the chrome; give the archived-chats single deletion a visible label (or tooltip); give the unread-attention dot a tooltip/text alternative | `crates/codex-app/src/ui.rs` only | focused render tests + D-scene (cold start: open palette via button); journey-inventory §2 anchors |
-| **WO-P2-015** | Confirmation-modal focus-trap completion | extend the evidenced tab/shift-tab trap pattern (ui.rs:5112–5156) to the four confirmation modals that have focus handles but no trap bindings (remote pairing, remote confirmation, account logout, plugin install) — or record an explicit waiver | `crates/codex-app/src/ui.rs` only | focused tests per modal + D-scene |
-| **WO-P2-016** | F-A4 — honest feedback for Ctrl+P without workspace | the Files palette early-return (ui.rs:8943–8945) emits a bounded honest status instead of silence (parity treatment decision: honest status vs empty palette) | `crates/codex-app/src/ui.rs` (+ status string in core if needed) | 1 focused test + D-scene; only if D-3 chooses a separate WO over the WO-P2-012 scope extension |
+| **WO-P2-017** | Palette/overlay close — focus restoration | on `close_command_palette` (ui.rs:8961–8971) and the shortcuts-overlay close path, explicitly restore focus to the previously focused surface (or a deterministic default); no other behavior | `crates/codex-app/src/ui.rs` only | 2 focused tests (restore target after palette close; after overlay close) + one D-scene (open → close → focus probe); a11y inventory §(a)/(d) anchors |
+| **WO-P2-018** | Visible-entry + label parity for icon-only controls | add a visible command-palette entry button in the chrome; give the archived-chats single deletion a visible label (or tooltip); give the unread-attention dot a tooltip/text alternative | `crates/codex-app/src/ui.rs` only | focused render tests + D-scene (cold start: open palette via button); journey-inventory §2 anchors |
+| **WO-P2-019** | Confirmation-modal focus-trap completion | extend the evidenced tab/shift-tab trap pattern (ui.rs:5112–5156) to the four confirmation modals that have focus handles but no trap bindings (remote pairing, remote confirmation, account logout, plugin install) — or record an explicit waiver | `crates/codex-app/src/ui.rs` only | focused tests per modal + D-scene |
+| **WO-P2-020** | F-A4 — honest feedback for Ctrl+P without workspace | the Files palette early-return (ui.rs:8943–8945) emits a bounded honest status instead of silence (parity treatment decision: honest status vs empty palette) | `crates/codex-app/src/ui.rs` (+ status string in core if needed) | 1 focused test + D-scene; only if D-3 chooses a separate WO over the WO-P2-012 scope extension |
 | **WO-UX-001** | Keyboard-only journey battery (a11y scenes) | define + run RG-A11Y-01 (keyboard-only full journey: palette → settings → terminal → browser → history → attention, no pointer) and RG-A11Y-02 (focus-order probes for the source-unverifiable findings) | docs/evidence only (scene scripts) | scene evidence + VLM reads; settles accessibility-inventory §source-unverifiable 1–4 |
 | **WO-REL-001** | Reconnect/recovery release scenes | execute RG-RECONNECT-01..07 at the release SHA in LINUX_GUI_LAB (isolated `CODEX_HOME`, pinned CLI, `CODEX_RS_CODEX_BIN` per the RWO-022 FW-7 restore pattern) | lab assets + evidence | per-scene pass criteria in release-gate-inventory §(a) |
 | **WO-REL-002** | Fresh-machine/packaging release scenes | execute FR-1..FR-4 + PKG-1..PKG-5 from the published archives on a clean profile | lab assets + evidence | per-scene pass criteria in release-gate-inventory §(c) |
