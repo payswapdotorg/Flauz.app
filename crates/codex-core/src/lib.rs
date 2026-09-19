@@ -13323,6 +13323,14 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
                     return Vec::new();
                 };
                 if !selected_thread_runtime_ready(state) {
+                    // Honest guidance instead of a silent no-op while the
+                    // selected thread's runtime is still loading
+                    // (WO-P2-012 F-D2): every neighboring /compact guard
+                    // reports through composer_error, and the Goal path
+                    // uses the same loading-state copy shape.
+                    state.composer_error = Some(
+                        "Wait for the chat to finish loading before compacting context.".to_owned(),
+                    );
                     return Vec::new();
                 }
                 let timeline = state.timelines.entry(task_id.clone()).or_default();
@@ -26975,9 +26983,15 @@ mod tests {
         reduce(&mut state, Action::SelectTask("t1".to_owned()));
         reduce(&mut state, Action::ComposerChanged("/compact".to_owned()));
 
+        // WO-P2-012 (F-D2): the selected thread's runtime is still
+        // loading — the guard reports honestly via composer_error
+        // instead of the previous silent no-op.
         assert!(reduce(&mut state, Action::SubmitComposer).is_empty());
         assert_eq!(state.composer, "/compact");
-        assert!(state.composer_error.is_none());
+        assert_eq!(
+            state.composer_error.as_deref(),
+            Some("Wait for the chat to finish loading before compacting context.")
+        );
         assert!(!state.timelines["t1"].compaction_in_flight);
 
         reduce(
@@ -27027,6 +27041,77 @@ mod tests {
             state.composer_error.as_deref(),
             Some("Compact is disabled while a chat is in progress.")
         );
+    }
+
+    #[test]
+    fn compact_slash_command_reports_when_thread_runtime_is_not_ready() {
+        // WO-P2-012 (F-D2, FW-9): /compact while the selected thread's
+        // runtime has not loaded surfaces composer_error guidance
+        // (mirroring the neighboring /compact guards) instead of a silent
+        // no-op; once the runtime loads, the same command compacts and the
+        // error clears.
+        let mut state = AppState::default();
+        reduce(&mut state, Action::TaskCreated(task("t1")));
+        reduce(&mut state, Action::SelectTask("t1".to_owned()));
+        reduce(&mut state, Action::ComposerChanged("/compact".to_owned()));
+
+        assert!(reduce(&mut state, Action::SubmitComposer).is_empty());
+        assert_eq!(
+            state.composer_error.as_deref(),
+            Some("Wait for the chat to finish loading before compacting context.")
+        );
+        assert_eq!(state.composer, "/compact");
+        assert!(!state.timelines["t1"].compaction_in_flight);
+
+        reduce(
+            &mut state,
+            Action::TaskRuntimeLoaded {
+                task_id: "t1".to_owned(),
+                generation: 1,
+                active_turn_id: None,
+                active_turn_is_review: false,
+                run_status: Some(TaskRunStatus::Idle),
+            },
+        );
+        assert_eq!(
+            reduce(&mut state, Action::SubmitComposer),
+            [Effect::CompactThread {
+                task_id: "t1".to_owned(),
+            }]
+        );
+        assert!(state.composer_error.is_none());
+    }
+
+    #[test]
+    fn review_slash_command_falls_through_to_a_visible_message_submission() {
+        // WO-P2-012 (F-D1, FW-9): when review is unavailable, the typed
+        // `/review` falls back to plain-message submission — the reducer
+        // has no `/review` special case, so the command text submits
+        // visibly instead of being swallowed.
+        let mut state = AppState::default();
+        reduce(&mut state, Action::ComposerChanged("/review".to_owned()));
+        let new_chat_draft_generation = state.new_chat_draft_generation;
+        assert_eq!(
+            reduce(&mut state, Action::SubmitComposer),
+            [Effect::CreateTask {
+                cwd: None,
+                composer_draft_generation: state.composer_draft_generation,
+                model: None,
+                effort: None,
+                service_tier: None,
+                permissions: None,
+                approval_policy: None,
+                approvals_reviewer: None,
+                initial_message: "/review".to_owned(),
+                attachments: Vec::new(),
+                plan_mode: false,
+                goal_objective: None,
+                memory_preferences: None,
+                new_chat_draft_generation,
+            }]
+        );
+        assert!(state.composer.is_empty());
+        assert!(state.composer_error.is_none());
     }
 
     #[test]
