@@ -257,7 +257,7 @@ only — no platform validation is claimed.
 | Windows packaging | Signed MSIX installer + desktop integration + updating `[historical-record]` | Unsigned portable ZIP release strategy (code signing unavailable to this program); SHA-256 checksums + documented verify step; no MSI/installer/updater `[historical-record] PM ledger; KF limitations]` | win `[historical-record]` | partial | partial | partial (documented verify step) | difference documented | partial | verify via published SHA-256 | PM ledger "Windows"; KF limitations | intentional difference — documented (GUI-006) |
 | Linux packaging | No official Linux target at baseline `[historical-record]`; **official Linux preview app exists since 2026-08-11** `[docs-derived] A platform table]` | Unsigned portable tar.gz; explicit `codexrs --install-desktop-entry` per-user integration (never overwrites); no system package, Wayland portals, tray, or global shortcuts — documented in `docs/platform-support.md` `[historical-record] PM ledger; KF; runtime-observed B2 wave]` | linux `[runtime-observed]` | platform-limited | platform-limited | partial (documented `--install-desktop-entry` path) | platform-limited (documented) | platform-limited | documented `--install-desktop-entry` path | PM ledger "Linux"; KF limitations; docs/platform-support.md | platform — documented; lab-upgrade opportunity WO-LAB-001 may re-baseline this row's reference layer |
 | Stable-failure regression controls | Public failure reports: Windows multi-root white screen; 594 MB JSONL line; ~9 GB startup history scan; `git.exe` storm; process-cleanup storm; unbounded logging `[historical-record] KF]` | All six controlled as acceptance tests: native paths; bounded app-server pages + `useStateDbOnly: true`; 300 ms Git debounce; one supervised tree + Windows Job Object; narrowly scoped owned logging `[historical-record] KF]` | win, linux `[historical-record]` | complete | complete | complete (automatic) | complete | complete | controls are standing acceptance tests | KF failure table | none (regression controls) |
-| Activity view & unread attention **(added by C2 audit)** | **26.727: Activity view** — bell icon / Ctrl/Cmd+Alt+U shows recently engaged chats needing attention; Shift+Esc clears unread indicators; Ctrl/Cmd+Alt+A next chat needing attention `[historical-record + docs-derived] A §10]` | No Activity view or unread-attention surface: no bell, no Ctrl+Alt+U / Ctrl+Alt+A / Shift+Esc bindings, no unread state `[source-derived absence: key registry ui.rs:4459-4552; sweep at f113515]` | win, macos `[docs-derived]`; linux `[source-derived absence]` | missing | missing | missing | — | missing | — | A §10 Sidebar; B2 shortcut inventory; C2 source sweep | backend — P2 (unread-state dependent; no WO yet — needs scoping; upgrades the PM ledger's P3 "unread state" note, §9) |
+| Activity view & unread attention **(added by C2 audit)** | **26.727: Activity view** — bell icon / Ctrl/Cmd+Alt+U shows recently engaged chats needing attention; Shift+Esc clears unread indicators; Ctrl/Cmd+Alt+A next chat needing attention `[historical-record + docs-derived] A §10]` | Unread-attention session state + four registry bindings **on main (WO-P2-008, merged via PR #23 → `00a3392`, 2026-09-19)**: bounded `needs_attention_task_ids` (capped `MAX_VISIBLE_THREADS`, not persisted) flagged on background turn completion (failed turns included — attention regardless of outcome) + approval requests in non-selected chats; visit clears, archive drops; sidebar 6px dot + medium-weight title; `toggleThreadUnread` Ctrl+Shift+U (round-trip + honest no-selection status), `nextUnreadChat` Ctrl+Alt+A (cyclic sidebar-order jump, selected chat never a candidate, honest empty statuses), `clearAllUnread` Shift+Escape (honest count incl. "No unread chats"), `toggleActivityView` Ctrl+Alt+U (honest guidance — view surface is a separate future WO); `MAX_KEYBOARD_SHORTCUT_COMMANDS` 71→76; 7 core state tests + 6 app binding tests `[source-derived ui.rs/lib.rs; runtime-observed: evidence wo-p2-008/ — D11b all four bindings resolve visibly (VLM-read verbatim statuses), D11 honest no-selection path]` | win, macos `[docs-derived]`; linux `[source-derived + runtime-observed]` | partial | partial | partial (attention state + bindings delivered; Activity view surface pending) | partial | partial | — | A §10 Sidebar; B2 shortcut inventory; C2 source sweep | ux — P2 unread-attention state + bindings **CLOSED (WO-P2-008 merged via PR #23 → `00a3392`, 2026-09-19; CI green both matrices; evidence wo-p2-008/)**; residuals: Activity view surface (separate future WO; binding gives honest guidance meanwhile), unread-state persistence across restarts (reference behavior unverified), dot-on-row GUI observation needs a runtime-enabled lab (no codex CLI in lab — documented, unit-covered; same residual class as 007's F-A4) |
 
 ---
 
@@ -391,8 +391,8 @@ by the audit per §7.2):
 | Status | Count | Rows |
 | --- | --- | --- |
 | `complete` | **8** | Runtime bootstrap; Multi-root workspace handling (regression control); Git process hygiene; Marketplace admin-disabled install; Keyboard shortcut reference; Feedback; Stable-failure regression controls; Side chats |
-| `partial` | **31** | all §5.1-§5.10 rows not listed elsewhere (incl. Terminal, In-app browser, Projects and chats, Settings shell, Import and migration, etc.) |
-| `missing` | **5** | WebMCP site tools; Browser extension (adjacent); In-app Markdown/code editing; Record & Replay; Activity view & unread attention |
+| `partial` | **32** | all §5.1-§5.10 rows not listed elsewhere (incl. Terminal, In-app browser, Projects and chats, Settings shell, Import and migration, Activity view & unread attention (state + bindings; view surface pending), etc.) |
+| `missing` | **4** | WebMCP site tools; Browser extension (adjacent); In-app Markdown/code editing; Record & Replay |
 | `platform-limited` | **2** | Computer Use — Linux; Linux packaging |
 | `deferred` | **7** | Scheduled tasks; Voice input; Sites; Visualizations; Cloud environments; Appshots; Pets and Codex Micro |
 
@@ -454,7 +454,9 @@ unusable.
 
 7. In-app Markdown/code editing (26.707, in-baseline) — editor surface needs
    Tech Lead scoping before a bounded order can be written.
-8. Activity view & unread attention (26.727) — depends on unread state.
+8. Activity view surface (26.727) — the unread-attention state + bindings
+   landed (WO-P2-008); the remaining gap is the bell/view surface itself
+   (auth-walled in the reference — view shape unverified).
 9. WebMCP site tools (26.825) — blocked on fork-runtime WebMCP capability.
 10. Record & Replay (26.727-era) — Computer-Use-dependent; Linux slice
     platform-bound.
@@ -673,6 +675,17 @@ cell, in report order:
     open the Files palette early-returns by design — Ctrl+P stays silent
     on the bare entry surface (WO-R-SWEEP finding F-A4); parity treatment
     of that state is follow-up material.
+18. **Status flip on merge — Activity view & unread attention (2026-09-19).**
+    The C2 source-absence sweep (at `f113515`) recorded the row `missing`
+    (no unread state, none of the three bindings). WO-P2-008 (merged via
+    PR #23 → `00a3392`) delivers the unread-attention session state, all
+    three attention bindings plus the mark-unread binding, and the sidebar
+    dot — per §7.3 the newer source-derived + runtime-observed evidence
+    wins → the row flips `missing` → `partial` (the Activity view *surface*
+    itself remains absent — honest-guidance binding meanwhile). §8 counts:
+    missing 5→4, partial 31→32. The sweep's MAX=71 quirk (constant vs
+    72-array) is superseded: the registry is now 76 commands with
+    MAX_KEYBOARD_SHORTCUT_COMMANDS=76 in step.
 
 ---
 
@@ -721,3 +734,4 @@ cell, in report order:
 | 2026-09-18 | **WO-P2-007 implemented (PR #20: 2948bf2 + Lead rustfmt 5574c95)**: Ctrl+P silent no-op fixed — dead `OpenFileSearch` action + binding removed, `searchFiles` interceptor arm owns the key; 5-assertion regression test; D10 baseline (defect proof: byte-identical frames on unfixed main) + D10b (fix proof, workspace-seeded: palette opens, VLM-read; Escape closes byte-identical); F-A4 no-workspace residual documented. Row + §9 override 17 updates on merge. |
 | 2026-09-18 | **Merge closure:** WO-P2-007 CLOSED (PR #20 → `a3c0e01`; CI green both matrices); §5.9 Keyboard row + §9 override 17 updated to FIXED; Wave R research landed (PR #21 sweep evidence `d659eb3`, PR #22 reference research `bf61964`). |
 | 2026-09-18 | **WO-R-SWEEP delivered:** input-surface integrity sweep at base 3c9f113 — zero dead commands (72/72); 8 silent-state no-ops (F-A1..A6, F-D1/D2); 24/25 bound GPUI actions declared-but-never-handled (bind_keys = menu-label provider); MAX_KEYBOARD_SHORTCUT_COMMANDS 71-vs-72 quirk; Plugins not palette-indexed. Evidence wo-p2-007/input-surface-sweep.md (PR #21). |
+| 2026-09-19 | **WO-P2-008 implemented + CLOSED on merge** (PR #23 → `00a3392`; Worker delivery c37c21b + Lead verification; CI green both matrices): unread-attention session state (bounded, visit-clears, archive-drops; background turn completion incl. failed turns + approval requests flag non-selected chats) + four registry bindings (Ctrl+Shift+U mark-unread round-trip, Ctrl+Alt+A next-unread cyclic jump, Shift+Escape clear-all honest count, Ctrl+Alt+U Activity-view honest guidance) + sidebar dot/medium-weight title; MAX_KEYBOARD_SHORTCUT_COMMANDS 71→76 (registry 76). Gates: fmt ✓, 7/7 core state tests (per-test verified), 6 app binding tests (CI), guarded build ✓, D11/D11b lab scenes (VLM-read verbatim statuses; D11 documents the no-runtime-lab limitation honestly — dot-on-row unit-covered). §5.10 row missing → partial; §8 counts missing 5→4, partial 31→32; §9 override 18; §8.2 P2 item 8 rescoped to the Activity view surface. Duplicate delivery 64b28f6 (the orphaned re-dispatch's delayed sandbox push, 2026-09-19 00:14) adjudicated redundant — the verified lineage merged. |
