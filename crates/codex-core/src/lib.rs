@@ -4766,6 +4766,10 @@ pub struct AppState {
     /// approval-requested) while not selected and have not been visited
     /// since (WO-P2-008 session state; not persisted).
     pub needs_attention_task_ids: Vec<String>,
+    /// Whether the Activity view overlay is open (WO-P2-013 session
+    /// state; not persisted). The view lists the chats in
+    /// `needs_attention_task_ids` — there is no second activity store.
+    pub activity_view_open: bool,
     pub seen_model_upgrade_ids: Vec<String>,
     pub local_projects: Vec<LocalProjectSummary>,
     pub local_project_order: Vec<PathBuf>,
@@ -4842,6 +4846,7 @@ impl Default for AppState {
             archived_tasks: ArchivedTasksState::default(),
             pinned_task_ids: Vec::new(),
             needs_attention_task_ids: Vec::new(),
+            activity_view_open: false,
             seen_model_upgrade_ids: Vec::new(),
             local_projects: Vec::new(),
             local_project_order: Vec::new(),
@@ -5165,6 +5170,7 @@ pub enum Action {
     OpenBackgroundCompletion,
     DismissBackgroundCompletion,
     ToggleActivityView,
+    CloseActivityView,
     ClearUnreadIndicators,
     ToggleSelectedTaskUnread,
     TaskRuntimeLoaded {
@@ -7836,6 +7842,11 @@ fn prepare_new_chat(state: &mut AppState, cwd: Option<PathBuf>) -> Vec<Effect> {
         state.marketplace.pending_skill_path = None;
     }
     let mut effects = clear_fuzzy_file_search(state);
+    // Starting a new chat is navigation away from the current surface:
+    // the Activity view overlay must not cover the new-chat composer
+    // (WO-P2-013, the same dismissal rule as route navigation and chat
+    // selection).
+    state.activity_view_open = false;
     state.route = MainRoute::Tasks;
     if state.selected_task_id.is_some() {
         advance_task_selection_generation(state);
@@ -9273,6 +9284,11 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             Vec::new()
         }
         Action::Navigate(route) => {
+            // Route navigation (titlebar, Ctrl+, settings, palette rows)
+            // dismisses the Activity view: a transient attention surface
+            // must not cover the surface the user navigated to
+            // (WO-P2-013).
+            state.activity_view_open = false;
             state.route = route;
             let mut effects = vec![Effect::PersistUiState {
                 route: state.route,
@@ -10668,13 +10684,18 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             }]
         }
         Action::ToggleActivityView => {
-            // The Activity view surface is a separate future work order;
-            // the binding still resolves visibly instead of a silent
-            // no-op (WO-P2-008, the WO-P2-007 input-quality doctrine).
-            state.status_message = Some(
-                "Activity view is not available yet. Use \"Next chat needing attention\" to jump to unread chats."
-                    .to_owned(),
-            );
+            // WO-P2-013: the Activity view surface exists now, so the
+            // binding toggles the bounded overlay instead of surfacing
+            // placeholder guidance. The rows come from the existing
+            // needs-attention session state (WO-P2-008); the surface owns
+            // its own empty state when nothing needs attention.
+            state.activity_view_open = !state.activity_view_open;
+            Vec::new()
+        }
+        Action::CloseActivityView => {
+            // Escape / overlay dismissal; idempotent so the interceptor
+            // and the keystroke observer can both route here (WO-P2-013).
+            state.activity_view_open = false;
             Vec::new()
         }
         Action::ClearUnreadIndicators => {
@@ -11122,6 +11143,10 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             state
                 .background_completion_task_ids
                 .retain(|completed_task_id| completed_task_id != &task_id);
+            // Jumping to a chat from any surface — the Activity view, the
+            // sidebar, the palette — navigates away from the overlay: the
+            // selected chat must not stay covered (WO-P2-013).
+            state.activity_view_open = false;
             let previous_cwds = composer_workspace_roots(state);
             let previous_task_id = state.selected_task_id.clone();
             let task_changed = previous_task_id.as_deref() != Some(task_id.as_str());
@@ -37801,12 +37826,87 @@ mod tests {
     }
 
     #[test]
-    fn toggle_activity_view_surfaces_honest_guidance() {
-        // The Activity view surface is out of scope for WO-P2-008; the
-        // binding must still resolve visibly (never a silent no-op).
+    fn activity_view_navigation_dismisses_the_surface() {
+        // Route navigation dismisses the overlay: a transient attention
+        // surface must not cover the surface the user navigated to
+        // (WO-P2-013).
+        let mut state = AppState {
+            activity_view_open: true,
+            ..AppState::default()
+        };
+        reduce(&mut state, Action::Navigate(MainRoute::Settings));
+        assert!(!state.activity_view_open);
+    }
+
+    #[test]
+    fn activity_view_toggle_opens_and_closes_the_surface() {
+        // WO-P2-013: the toggle binding drives a real surface flag —
+        // the WO-P2-008 honest-placeholder era is over. The toggle is a
+        // pure state flip: no effects, no status message (opening the
+        // surface is its own visible feedback).
+        let mut state = AppState::default();
+        assert!(!state.activity_view_open);
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(state.activity_view_open);
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(!state.activity_view_open);
+    }
+
+    #[test]
+    fn activity_view_close_action_closes_the_surface() {
+        // Escape routes through the dedicated close action and stays
+        // closed when already closed (idempotent — the interceptor and
+        // the keystroke observer can both dispatch it).
         let mut state = AppState::default();
         assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
-        let message = state.status_message.clone();
-        assert!(message.is_some_and(|message| !message.is_empty()));
+        assert!(state.activity_view_open);
+        assert!(reduce(&mut state, Action::CloseActivityView).is_empty());
+        assert!(!state.activity_view_open);
+        assert!(reduce(&mut state, Action::CloseActivityView).is_empty());
+        assert!(!state.activity_view_open);
+    }
+
+    #[test]
+    fn activity_view_jump_resolves_attention_and_closes_the_view() {
+        // The view's rows jump through the existing SelectTask path: the
+        // visit clears the attention flag (WO-P2-008 semantics untouched)
+        // and the overlay closes so the chat is visible (WO-P2-013).
+        let mut state = AppState {
+            tasks: vec![task("a"), task("b")],
+            selected_task_id: Some("a".to_owned()),
+            needs_attention_task_ids: vec!["b".to_owned()],
+            activity_view_open: true,
+            ..AppState::default()
+        };
+        reduce(&mut state, Action::SelectTask("b".to_owned()));
+        assert_eq!(state.selected_task_id.as_deref(), Some("b"));
+        assert!(state.needs_attention_task_ids.is_empty());
+        assert!(!state.activity_view_open);
+    }
+
+    #[test]
+    fn activity_view_composes_with_existing_attention_state() {
+        // The surface flag composes with — never mutates — the existing
+        // needs-attention session state (no second store): flags added or
+        // cleared while the view is open change only the row set.
+        let mut state = AppState {
+            tasks: vec![task("a"), task("b")],
+            selected_task_id: Some("a".to_owned()),
+            activity_view_open: true,
+            ..AppState::default()
+        };
+        // Marking the selected chat unread adds a flag with the view open.
+        assert!(reduce(&mut state, Action::ToggleSelectedTaskUnread).is_empty());
+        assert_eq!(state.needs_attention_task_ids, ["a"]);
+        assert!(state.activity_view_open);
+        // Clearing all indicators empties the row set but keeps the view
+        // open — the surface owns its own empty state.
+        assert!(reduce(&mut state, Action::ClearUnreadIndicators).is_empty());
+        assert!(state.needs_attention_task_ids.is_empty());
+        assert!(state.activity_view_open);
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Cleared unread indicators for 1 chat")
+        );
     }
 }
