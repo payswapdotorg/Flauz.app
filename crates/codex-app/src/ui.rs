@@ -1456,6 +1456,79 @@ fn pull_request_merge_submission_enabled(
         && pending.is_none()
 }
 
+// Guarded-command honest guidance (WO-P2-012): each helper returns the
+// status message exactly when its command's guard fires, so the app layer
+// reports through `Action::SetStatus` instead of silently swallowing the
+// input. This mirrors the reducer-side guards (the /compact neighbors via
+// `composer_error`, WO-P2-008 `toggleThreadUnread` via `status_message`).
+fn archive_thread_command_status(state: &AppState) -> Option<&'static str> {
+    // F-A1: Ctrl+Shift+A with no selected chat was a silent no-op.
+    if state.selected_task_id.is_none() {
+        return Some("Select a chat before archiving.");
+    }
+    None
+}
+
+fn toggle_thread_pin_command_status(state: &AppState) -> Option<&'static str> {
+    // F-A2: Ctrl+Alt+P with no selected chat was a silent no-op.
+    if state.selected_task_id.is_none() {
+        return Some("Select a chat before toggling its pin.");
+    }
+    None
+}
+
+fn rename_thread_command_status(state: &AppState) -> Option<&'static str> {
+    // F-A3: Ctrl+Alt+R with no selected chat — or with a selection that is
+    // missing from the loaded task list — silently returned twice.
+    let Some(task_id) = state.selected_task_id.as_deref() else {
+        return Some("Select a chat before renaming.");
+    };
+    if !state.tasks.iter().any(|task| task.id == task_id) {
+        return Some("The selected chat is unavailable.");
+    }
+    None
+}
+
+fn commit_or_push_command_status(state: &AppState) -> Option<&'static str> {
+    // F-A6: the palette row stays visible while a pull request is pending,
+    // but `open_commit_modal` silently returned; the repository and
+    // no-changes guards keep their existing copy.
+    if state.git.pending_pull_request.is_some() {
+        return Some("Commit or push is unavailable while a pull request is being created.");
+    }
+    if state.git.repository_root.is_none() {
+        return Some("Select a task backed by a Git repository.");
+    }
+    if state.git.changed_files == 0 && state.git.ahead == 0 {
+        return Some("No changes or commits to push.");
+    }
+    None
+}
+
+fn composer_review_available(state: &AppState) -> bool {
+    let Some(task_id) = state.selected_task_id.as_deref() else {
+        return false;
+    };
+    state.connection == ConnectionStatus::Online
+        && state.git.repository_root.is_some()
+        && state.git_preferences.review_mode == GitReviewMode::Full
+        && state.composer_attachments.is_empty()
+        && state.review_start.pending.is_none()
+        && state.review_start.unresolved_detached.is_none()
+        && state.timelines.get(task_id).is_none_or(|timeline| {
+            timeline.active_turn_id.is_none() && timeline.active_review_turn_id.is_none()
+        })
+}
+
+fn review_command_status(state: &AppState) -> Option<&'static str> {
+    // F-D1: a typed /review while review is unavailable was swallowed by
+    // the executor with no message and no composer change.
+    if !composer_review_available(state) {
+        return Some("Review is unavailable right now.");
+    }
+    None
+}
+
 #[cfg(test)]
 fn is_terminal_shortcut_key(key: &str) -> bool {
     matches!(key, "`" | "grave" | "backquote" | "ё" | "Ё")
@@ -8204,6 +8277,11 @@ impl WorkspaceView {
         }
         if command == "/review" {
             if !self.composer_review_submenu_open && !self.composer_review_available() {
+                // F-D1 (WO-P2-012): a typed /review while review is
+                // unavailable was swallowed with no message and no composer
+                // change. The slash menu row hides honestly in this state;
+                // surface guidance so the typed path is not silent too.
+                self.dispatch_command_status(review_command_status(&self.state), cx);
                 return true;
             }
             if self.composer_review_submenu_open {
@@ -8319,18 +8397,7 @@ impl WorkspaceView {
     }
 
     fn composer_review_available(&self) -> bool {
-        let Some(task_id) = self.state.selected_task_id.as_deref() else {
-            return false;
-        };
-        self.state.connection == ConnectionStatus::Online
-            && self.state.git.repository_root.is_some()
-            && self.state.git_preferences.review_mode == GitReviewMode::Full
-            && self.state.composer_attachments.is_empty()
-            && self.state.review_start.pending.is_none()
-            && self.state.review_start.unresolved_detached.is_none()
-            && self.state.timelines.get(task_id).is_none_or(|timeline| {
-                timeline.active_turn_id.is_none() && timeline.active_review_turn_id.is_none()
-            })
+        composer_review_available(&self.state)
     }
 
     fn open_composer_review_submenu(&mut self, window: &mut Window, cx: &mut Context<Self>) {
@@ -8356,6 +8423,11 @@ impl WorkspaceView {
         cx: &mut Context<Self>,
     ) {
         if !self.composer_review_available() {
+            // Same-class /review guard (WO-P2-012; the RWO-021 KSR-C5
+            // second site): the submenu can stay open while availability
+            // changes (a starting review, an active turn, attachments), so
+            // report honestly instead of silently returning.
+            self.dispatch_command_status(review_command_status(&self.state), cx);
             return;
         }
         self.composer_review_submitting = true;
@@ -8896,16 +8968,35 @@ impl WorkspaceView {
         }
     }
 
-    fn archive_selected_chat(&mut self, cx: &mut Context<Self>) {
-        if let Some(task_id) = self.state.selected_task_id.clone() {
-            self.dispatch(Action::ArchiveTask(task_id), cx);
+    /// Surface a guarded command's honest guidance instead of silently
+    /// swallowing the input (WO-P2-012): the command status helpers return
+    /// the guidance exactly when their guard fires, mirroring the
+    /// WO-P2-008 `toggleThreadUnread` reducer guard at the app layer.
+    fn dispatch_command_status(&mut self, status: Option<&'static str>, cx: &mut Context<Self>) {
+        if let Some(status) = status {
+            self.dispatch(Action::SetStatus(status.to_owned()), cx);
         }
     }
 
+    fn archive_selected_chat(&mut self, cx: &mut Context<Self>) {
+        let Some(task_id) = self.state.selected_task_id.clone() else {
+            // Honest guidance instead of a silent no-op when no chat is
+            // selected (WO-P2-012 F-A1; the WO-P2-008 toggleThreadUnread
+            // pattern).
+            self.dispatch_command_status(archive_thread_command_status(&self.state), cx);
+            return;
+        };
+        self.dispatch(Action::ArchiveTask(task_id), cx);
+    }
+
     fn toggle_selected_chat_pin(&mut self, cx: &mut Context<Self>) {
-        if let Some(task_id) = self.state.selected_task_id.clone() {
-            self.dispatch(Action::ToggleTaskPinned(task_id), cx);
-        }
+        let Some(task_id) = self.state.selected_task_id.clone() else {
+            // Honest guidance instead of a silent no-op when no chat is
+            // selected (WO-P2-012 F-A2; same shape as F-A1).
+            self.dispatch_command_status(toggle_thread_pin_command_status(&self.state), cx);
+            return;
+        };
+        self.dispatch(Action::ToggleTaskPinned(task_id), cx);
     }
 
     fn navigate_adjacent_chat(&mut self, next: bool, cx: &mut Context<Self>) {
@@ -9051,6 +9142,9 @@ impl WorkspaceView {
 
     fn rename_selected_chat(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let Some(task_id) = self.state.selected_task_id.clone() else {
+            // Honest guidance instead of a silent no-op when no chat is
+            // selected (WO-P2-012 F-A3).
+            self.dispatch_command_status(rename_thread_command_status(&self.state), cx);
             return;
         };
         let Some(title) = self
@@ -9060,6 +9154,9 @@ impl WorkspaceView {
             .find(|task| task.id == task_id)
             .map(|task| task.title.clone())
         else {
+            // Honest guidance when the selected chat is missing from the
+            // loaded task list (WO-P2-012 F-A3, second silent return).
+            self.dispatch_command_status(rename_thread_command_status(&self.state), cx);
             return;
         };
         self.begin_task_rename(task_id, title, window, cx);
@@ -10960,21 +11057,12 @@ impl WorkspaceView {
     }
 
     fn open_commit_modal(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        if self.state.git.pending_pull_request.is_some() {
-            return;
-        }
-        if self.state.git.repository_root.is_none() {
-            self.dispatch(
-                Action::SetStatus("Select a task backed by a Git repository.".to_owned()),
-                cx,
-            );
-            return;
-        }
-        if self.state.git.changed_files == 0 && self.state.git.ahead == 0 {
-            self.dispatch(
-                Action::SetStatus("No changes or commits to push.".to_owned()),
-                cx,
-            );
+        if let Some(status) = commit_or_push_command_status(&self.state) {
+            // Honest guidance instead of a silent return when a pull
+            // request is pending (WO-P2-012 F-A6); the repository and
+            // no-changes guards keep their existing copy and now share
+            // this single lookup.
+            self.dispatch(Action::SetStatus(status.to_owned()), cx);
             return;
         }
         self.commit_message.update(cx, |input, cx| {
@@ -47664,8 +47752,14 @@ mod tests {
     use std::collections::HashSet;
     use std::path::{Path, PathBuf};
 
+    use super::archive_thread_command_status;
+    use super::commit_or_push_command_status;
     use super::composer_keeps_fork_picker;
+    use super::composer_review_available;
     use super::edit_project_surface;
+    use super::rename_thread_command_status;
+    use super::review_command_status;
+    use super::toggle_thread_pin_command_status;
     use super::{
         ACTIVE_KEYBOARD_SHORTCUTS, APPEARANCE_THEME_SHARE_PREFIX, ArchivedChatDeleteScope,
         ArchivedChatKindFilter, ArchivedChatProjectFilter, ArchivedChatSortKey, AssistantFinding,
@@ -47739,6 +47833,8 @@ mod tests {
         TaskSummary, TerminalDockLocation, TerminalTabState, TimelineItem, TimelineKind,
         TurnDiffState, reduce,
     };
+    use codex_core::GitPullRequestPhase;
+    use codex_core::GitState;
     use codex_core::{LocalProjectSummary, MAX_LOCAL_PROJECT_FOLDERS};
 
     fn task(id: &str, cwd: &str) -> TaskSummary {
@@ -52364,5 +52460,124 @@ mod tests {
             next_unread_task_id(&tasks, &pinned_task_ids, &unread(&["ghost"]), Some("a")),
             None
         );
+    }
+
+    #[test]
+    fn archive_thread_command_reports_when_no_chat_is_selected() {
+        // F-A1 (WO-P2-012): Ctrl+Shift+A with no selected chat must surface
+        // guidance instead of silently no-oping (the WO-P2-008
+        // toggleThreadUnread pattern).
+        let mut state = AppState::default();
+        assert_eq!(archive_thread_command_status(&state), Some("Select a chat before archiving."));
+        state.selected_task_id = Some("t1".to_owned());
+        assert_eq!(archive_thread_command_status(&state), None);
+    }
+
+    #[test]
+    fn toggle_thread_pin_command_reports_when_no_chat_is_selected() {
+        // F-A2 (WO-P2-012): Ctrl+Alt+P with no selected chat must surface
+        // guidance instead of silently no-oping (same shape as F-A1).
+        let mut state = AppState::default();
+        assert_eq!(
+            toggle_thread_pin_command_status(&state),
+            Some("Select a chat before toggling its pin.")
+        );
+        state.selected_task_id = Some("t1".to_owned());
+        assert_eq!(toggle_thread_pin_command_status(&state), None);
+    }
+
+    #[test]
+    fn rename_thread_command_reports_missing_selection_or_task() {
+        // F-A3 (WO-P2-012): Ctrl+Alt+R with no selected chat — or with a
+        // selection missing from the loaded task list — must surface
+        // guidance instead of silently returning twice.
+        let mut state = AppState::default();
+        assert_eq!(rename_thread_command_status(&state), Some("Select a chat before renaming."));
+        state.selected_task_id = Some("t1".to_owned());
+        assert_eq!(rename_thread_command_status(&state), Some("The selected chat is unavailable."));
+        state.tasks = vec![task("t1", "C:\\repo")];
+        assert_eq!(rename_thread_command_status(&state), None);
+    }
+
+    #[test]
+    fn commit_or_push_command_reports_every_guarded_state() {
+        // F-A6 (WO-P2-012): the palette row stays visible while a pull
+        // request is pending, so the guard must report honestly instead of
+        // silently returning; the repository and no-changes guards keep
+        // their existing copy.
+        let pending = AppState {
+            git: GitState {
+                pending_pull_request: Some(GitPullRequestPhase::Creating),
+                repository_root: Some(PathBuf::from("/repo")),
+                changed_files: 3,
+                ..GitState::default()
+            },
+            ..AppState::default()
+        };
+        assert_eq!(
+            commit_or_push_command_status(&pending),
+            Some("Commit or push is unavailable while a pull request is being created.")
+        );
+        assert_eq!(
+            commit_or_push_command_status(&AppState::default()),
+            Some("Select a task backed by a Git repository.")
+        );
+        let clean_repository = AppState {
+            git: GitState {
+                repository_root: Some(PathBuf::from("/repo")),
+                ..GitState::default()
+            },
+            ..AppState::default()
+        };
+        assert_eq!(
+            commit_or_push_command_status(&clean_repository),
+            Some("No changes or commits to push.")
+        );
+        let ready = AppState {
+            git: GitState {
+                repository_root: Some(PathBuf::from("/repo")),
+                changed_files: 3,
+                ..GitState::default()
+            },
+            ..AppState::default()
+        };
+        assert_eq!(commit_or_push_command_status(&ready), None);
+    }
+
+    #[test]
+    fn review_command_status_reports_when_review_is_unavailable() {
+        // F-D1 (WO-P2-012): a typed /review while review is unavailable must
+        // surface guidance instead of being swallowed by the executor. The
+        // slash menu row hides honestly in this state; the typed path was
+        // the only silent one.
+        let mut state = AppState::default();
+        assert_eq!(review_command_status(&state), Some("Review is unavailable right now."));
+        state.connection = ConnectionStatus::Online;
+        state.git.repository_root = Some(PathBuf::from("/repo"));
+        state.selected_task_id = Some("t1".to_owned());
+        // Default preferences already use full review mode, and an absent
+        // timeline counts as idle, so review becomes available here.
+        assert!(composer_review_available(&state));
+        assert_eq!(review_command_status(&state), None);
+        // A running turn makes review unavailable again.
+        state
+            .timelines
+            .entry("t1".to_owned())
+            .or_default()
+            .active_turn_id = Some("turn-1".to_owned());
+        assert!(!composer_review_available(&state));
+        assert_eq!(review_command_status(&state), Some("Review is unavailable right now."));
+    }
+
+    #[test]
+    fn guarded_command_status_lands_in_the_status_message() {
+        // FW-9 (WO-P2-012): the guarded commands surface their guidance
+        // through Action::SetStatus, which the reducer maps to the visible
+        // status message — the same mechanism the neighboring git guards
+        // use — so the feedback is observable rather than silence.
+        let mut state = AppState::default();
+        let status = archive_thread_command_status(&state).expect("guard fires");
+        reduce(&mut state, Action::SetStatus(status.to_owned()));
+        assert_eq!(state.status_message.as_deref(), Some("Select a chat before archiving."));
     }
 }

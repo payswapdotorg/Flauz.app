@@ -13322,6 +13322,12 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
                     return Vec::new();
                 };
                 if !selected_thread_runtime_ready(state) {
+                    // Honest guidance instead of a silent swallow while the
+                    // selected thread's runtime status is still loading
+                    // (WO-P2-012 F-D2): every neighboring /compact guard
+                    // reports through composer_error.
+                    state.composer_error =
+                        Some("Compact is unavailable while the chat is loading.".to_owned());
                     return Vec::new();
                 }
                 let timeline = state.timelines.entry(task_id.clone()).or_default();
@@ -26961,9 +26967,14 @@ mod tests {
         reduce(&mut state, Action::SelectTask("t1".to_owned()));
         reduce(&mut state, Action::ComposerChanged("/compact".to_owned()));
 
+        // Runtime status has not loaded yet: the guard reports honestly
+        // instead of silently swallowing the command (WO-P2-012 F-D2).
         assert!(reduce(&mut state, Action::SubmitComposer).is_empty());
         assert_eq!(state.composer, "/compact");
-        assert!(state.composer_error.is_none());
+        assert_eq!(
+            state.composer_error.as_deref(),
+            Some("Compact is unavailable while the chat is loading.")
+        );
         assert!(!state.timelines["t1"].compaction_in_flight);
 
         reduce(
@@ -27013,6 +27024,26 @@ mod tests {
             state.composer_error.as_deref(),
             Some("Compact is disabled while a chat is in progress.")
         );
+    }
+
+    #[test]
+    fn compact_slash_command_reports_honestly_when_runtime_is_not_ready() {
+        // F-D2 (WO-P2-012): /compact while the selected thread's runtime
+        // status has not loaded used to return `Vec::new()` silently; the
+        // guard now reports through composer_error like every neighboring
+        // /compact guard, without clearing the composer text.
+        let mut state = AppState::default();
+        reduce(&mut state, Action::TaskCreated(task("t1")));
+        reduce(&mut state, Action::SelectTask("t1".to_owned()));
+        reduce(&mut state, Action::ComposerChanged("/compact".to_owned()));
+
+        assert!(reduce(&mut state, Action::SubmitComposer).is_empty());
+        assert_eq!(
+            state.composer_error.as_deref(),
+            Some("Compact is unavailable while the chat is loading.")
+        );
+        assert_eq!(state.composer, "/compact");
+        assert!(!state.timelines["t1"].compaction_in_flight);
     }
 
     #[test]
