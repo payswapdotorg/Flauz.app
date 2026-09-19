@@ -19,12 +19,15 @@ pub const MAX_LOCAL_PROJECTS: usize = 64;
 pub const MAX_LOCAL_PROJECT_NAME_BYTES: usize = 256;
 pub const MAX_LOCAL_PROJECT_FOLDERS: usize = 16;
 pub const MAX_BROWSER_DOWNLOAD_RECORDS: usize = 200;
+pub const MAX_BROWSING_HISTORY_ENTRIES: usize = 500;
 
-const SCHEMA_VERSION: i64 = 4;
+const SCHEMA_VERSION: i64 = 5;
 const MAX_BROWSER_DOWNLOAD_ID_BYTES: usize = 256;
 const MAX_BROWSER_DOWNLOAD_CONTEXT_BYTES: usize = 256;
 const MAX_BROWSER_DOWNLOAD_FILENAME_BYTES: usize = 512;
 const MAX_BROWSER_DOWNLOAD_PATH_BYTES: usize = 4 * 1024;
+const MAX_BROWSING_HISTORY_URL_BYTES: usize = 8 * 1024;
+const MAX_BROWSING_HISTORY_TITLE_BYTES: usize = 512;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EventTooLarge {
@@ -56,6 +59,7 @@ pub enum StoreError {
     WorkspaceNameInvalid,
     WorkspaceFolderInvalid,
     BrowserDownloadInvalid,
+    BrowsingHistoryInvalid,
 }
 
 impl fmt::Display for StoreError {
@@ -82,6 +86,9 @@ impl fmt::Display for StoreError {
             Self::BrowserDownloadInvalid => {
                 formatter.write_str("browser download record is invalid")
             }
+            Self::BrowsingHistoryInvalid => {
+                formatter.write_str("browsing history record is invalid")
+            }
         }
     }
 }
@@ -98,7 +105,8 @@ impl Error for StoreError {
             | Self::WorkspacePathTooLarge
             | Self::WorkspaceNameInvalid
             | Self::WorkspaceFolderInvalid
-            | Self::BrowserDownloadInvalid => None,
+            | Self::BrowserDownloadInvalid
+            | Self::BrowsingHistoryInvalid => None,
         }
     }
 }
@@ -165,6 +173,17 @@ pub struct StoredBrowserDownload {
     pub total_bytes: u64,
     pub updated_at_ms: u64,
     pub user_initiated: bool,
+}
+
+/// One stored visit in the global browsing history. The store keeps at most
+/// [`MAX_BROWSING_HISTORY_ENTRIES`] visits (most recent first when listed)
+/// and evicts the oldest beyond that bound on every insert. The title is
+/// the best page title known at record time, if any.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StoredBrowsingHistoryEntry {
+    pub url: String,
+    pub title: Option<String>,
+    pub visited_at_ms: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -592,6 +611,82 @@ impl Store {
             Err(StoreError::WrongThread)
         }
     }
+
+    /// Records one top-level browsing-history visit (global scope) and
+    /// evicts the oldest entries beyond [`MAX_BROWSING_HISTORY_ENTRIES`].
+    pub fn record_browsing_history(
+        &mut self,
+        url: &str,
+        title: Option<&str>,
+        visited_at_ms: u64,
+    ) -> Result<(), StoreError> {
+        self.ensure_owner()?;
+        validate_browsing_history(url, title, visited_at_ms)?;
+        let transaction = self.connection.transaction()?;
+        transaction.execute(
+            "INSERT INTO browsing_history(url, title, visited_at_ms)
+             VALUES (?1, ?2, ?3)",
+            params![
+                url,
+                title.filter(|title| !title.is_empty()),
+                sqlite_u64(visited_at_ms)
+            ],
+        )?;
+        transaction.execute(
+            "DELETE FROM browsing_history
+             WHERE id NOT IN (
+                SELECT id FROM browsing_history
+                ORDER BY visited_at_ms DESC, id DESC
+                LIMIT ?1
+             )",
+            [i64::try_from(MAX_BROWSING_HISTORY_ENTRIES).unwrap_or(i64::MAX)],
+        )?;
+        transaction.commit()?;
+        Ok(())
+    }
+
+    /// Lists stored browsing-history visits, most recent first.
+    pub fn browsing_history(
+        &self,
+        requested_limit: usize,
+        offset: usize,
+    ) -> Result<Page<StoredBrowsingHistoryEntry>, StoreError> {
+        self.ensure_owner()?;
+        let limit = requested_limit.clamp(1, MAX_BROWSING_HISTORY_ENTRIES);
+        let mut statement = self.connection.prepare_cached(
+            "SELECT url, title, visited_at_ms
+             FROM browsing_history
+             ORDER BY visited_at_ms DESC, id DESC
+             LIMIT ?1 OFFSET ?2",
+        )?;
+        let rows = statement.query_map(
+            params![
+                i64::try_from(limit).unwrap_or(i64::MAX),
+                i64::try_from(offset).unwrap_or(i64::MAX)
+            ],
+            |row| {
+                Ok(StoredBrowsingHistoryEntry {
+                    url: row.get(0)?,
+                    title: row.get(1)?,
+                    visited_at_ms: row.get::<_, i64>(2)?.max(0) as u64,
+                })
+            },
+        )?;
+        let mut items = Vec::with_capacity(limit);
+        for row in rows {
+            items.push(row?);
+        }
+        let next_offset = (items.len() == limit).then(|| offset.saturating_add(items.len()));
+        Ok(Page { items, next_offset })
+    }
+
+    /// Removes every stored browsing-history visit.
+    pub fn clear_browsing_history(&mut self) -> Result<(), StoreError> {
+        self.ensure_owner()?;
+        self.connection
+            .execute("DELETE FROM browsing_history", [])?;
+        Ok(())
+    }
 }
 
 fn migrate(connection: &mut Connection) -> Result<(), StoreError> {
@@ -683,6 +778,24 @@ fn migrate(connection: &mut Connection) -> Result<(), StoreError> {
         )?;
         transaction.commit()?;
     }
+    // Fresh databases and legacy upgrades land on user_version 4 above, so
+    // re-read the version before applying the next sequential step.
+    let version = connection.query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0))?;
+    if version == 4 {
+        let transaction = connection.transaction()?;
+        transaction.execute_batch(
+            "CREATE TABLE browsing_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                url TEXT NOT NULL,
+                title TEXT,
+                visited_at_ms INTEGER NOT NULL CHECK(visited_at_ms >= 0)
+             ) STRICT;
+             CREATE INDEX browsing_history_visited
+             ON browsing_history(visited_at_ms DESC, id DESC);
+             PRAGMA user_version = 5;",
+        )?;
+        transaction.commit()?;
+    }
     Ok(())
 }
 
@@ -727,6 +840,24 @@ fn validate_browser_download(download: &StoredBrowserDownload) -> Result<(), Sto
         || download.updated_at_ms > i64::MAX as u64
     {
         return Err(StoreError::BrowserDownloadInvalid);
+    }
+    Ok(())
+}
+
+fn validate_browsing_history(
+    url: &str,
+    title: Option<&str>,
+    visited_at_ms: u64,
+) -> Result<(), StoreError> {
+    if url.is_empty()
+        || url.len() > MAX_BROWSING_HISTORY_URL_BYTES
+        || url.chars().any(char::is_control)
+        || title.is_some_and(|title| {
+            title.len() > MAX_BROWSING_HISTORY_TITLE_BYTES || title.chars().any(char::is_control)
+        })
+        || visited_at_ms > i64::MAX as u64
+    {
+        return Err(StoreError::BrowsingHistoryInvalid);
     }
     Ok(())
 }
@@ -795,9 +926,10 @@ mod tests {
 
     use super::{
         BrowserDownloadRecordStatus, DEFAULT_HISTORY_PAGE_SIZE, MAX_BROWSER_DOWNLOAD_RECORDS,
-        MAX_HISTORY_PAGE_SIZE, MAX_INLINE_EVENT_BYTES, MAX_LOCAL_PROJECT_FOLDERS,
-        MAX_LOCAL_PROJECTS, MAX_PREFERENCE_VALUE_BYTES, MAX_WORKSPACE_PATH_BYTES, Store,
-        StoreError, StoredBrowserDownload, bounded_history_page_size, validate_inline_event_size,
+        MAX_BROWSING_HISTORY_ENTRIES, MAX_HISTORY_PAGE_SIZE, MAX_INLINE_EVENT_BYTES,
+        MAX_LOCAL_PROJECT_FOLDERS, MAX_LOCAL_PROJECTS, MAX_PREFERENCE_VALUE_BYTES,
+        MAX_WORKSPACE_PATH_BYTES, Store, StoreError, StoredBrowserDownload,
+        StoredBrowsingHistoryEntry, bounded_history_page_size, validate_inline_event_size,
     };
 
     #[test]
@@ -1218,6 +1350,152 @@ mod tests {
             store.recent_workspaces(1, 0)?.items[0].name.as_deref(),
             Some("Migrated")
         );
+        Ok(())
+    }
+
+    #[test]
+    fn browsing_history_records_lists_and_clears() -> Result<(), Box<dyn Error>> {
+        let mut store = Store::open_in_memory()?;
+        assert!(store.browsing_history(10, 0)?.items.is_empty());
+
+        store.record_browsing_history("https://example.com/", None, 1)?;
+        store.record_browsing_history("https://docs.rs/rust/", Some("Rust docs"), 2)?;
+        store.record_browsing_history("https://example.com/deep", Some(""), 3)?;
+
+        let page = store.browsing_history(2, 0)?;
+        assert_eq!(page.items.len(), 2);
+        assert_eq!(
+            page.items,
+            vec![
+                StoredBrowsingHistoryEntry {
+                    url: "https://example.com/deep".to_owned(),
+                    title: None,
+                    visited_at_ms: 3,
+                },
+                StoredBrowsingHistoryEntry {
+                    url: "https://docs.rs/rust/".to_owned(),
+                    title: Some("Rust docs".to_owned()),
+                    visited_at_ms: 2,
+                },
+            ]
+        );
+        assert_eq!(page.next_offset, Some(2));
+        assert_eq!(
+            store
+                .browsing_history(2, 2)?
+                .items
+                .first()
+                .map(|entry| entry.url.as_str()),
+            Some("https://example.com/")
+        );
+
+        store.clear_browsing_history()?;
+        assert!(
+            store
+                .browsing_history(MAX_BROWSING_HISTORY_ENTRIES, 0)?
+                .items
+                .is_empty()
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn browsing_history_is_bounded_and_evicts_the_oldest_visits() -> Result<(), Box<dyn Error>> {
+        let mut store = Store::open_in_memory()?;
+        for index in 0..=MAX_BROWSING_HISTORY_ENTRIES {
+            store.record_browsing_history(
+                &format!("https://example.com/visit-{index:03}"),
+                Some(&format!("Visit {index:03}")),
+                u64::try_from(index).unwrap_or_default(),
+            )?;
+        }
+
+        let page = store.browsing_history(MAX_BROWSING_HISTORY_ENTRIES, 0)?;
+        assert_eq!(page.items.len(), MAX_BROWSING_HISTORY_ENTRIES);
+        assert_eq!(
+            page.items.first().map(|entry| entry.url.as_str()),
+            Some("https://example.com/visit-500")
+        );
+        assert!(
+            page.items
+                .iter()
+                .all(|entry| entry.url != "https://example.com/visit-000")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn rejects_invalid_browsing_history_values() -> Result<(), Box<dyn Error>> {
+        let mut store = Store::open_in_memory()?;
+        let oversized_url = format!("https://example.com/{}", "x".repeat(9 * 1024));
+        for (url, title) in [
+            ("", None),
+            ("https://example.com/\u{7}", None),
+            (oversized_url.as_str(), None),
+            ("https://example.com/", Some("title\n")),
+            ("https://example.com/", Some(&"x".repeat(513))),
+        ] {
+            let error = match store.record_browsing_history(url, title, 1) {
+                Err(error) => error,
+                Ok(()) => panic!("an invalid browsing-history record was accepted"),
+            };
+            assert!(matches!(error, StoreError::BrowsingHistoryInvalid));
+        }
+        let error = match store.record_browsing_history("https://example.com/", None, u64::MAX) {
+            Err(error) => error,
+            Ok(()) => panic!("values above SQLite's signed integer range were accepted"),
+        };
+        assert!(matches!(error, StoreError::BrowsingHistoryInvalid));
+        assert!(store.browsing_history(1, 0)?.items.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn version_four_storage_migrates_browsing_history() -> Result<(), Box<dyn Error>> {
+        let connection = Connection::open_in_memory()?;
+        connection.execute_batch(
+            "CREATE TABLE ui_preferences (
+                key TEXT PRIMARY KEY NOT NULL,
+                value TEXT NOT NULL,
+                updated_at INTEGER NOT NULL
+             ) STRICT;
+             CREATE TABLE recent_workspaces (
+                path BLOB PRIMARY KEY NOT NULL,
+                last_opened_at INTEGER NOT NULL,
+                name TEXT,
+                pinned INTEGER NOT NULL DEFAULT 0 CHECK(pinned IN (0, 1))
+             ) STRICT;
+             CREATE TABLE browser_downloads (
+                id TEXT PRIMARY KEY NOT NULL,
+                context_id TEXT NOT NULL,
+                filename TEXT NOT NULL,
+                path BLOB NOT NULL,
+                received_bytes INTEGER NOT NULL CHECK(received_bytes >= 0),
+                started_at_ms INTEGER NOT NULL CHECK(started_at_ms >= 0),
+                status INTEGER NOT NULL CHECK(status IN (0, 1, 2)),
+                total_bytes INTEGER NOT NULL CHECK(total_bytes >= 0),
+                updated_at_ms INTEGER NOT NULL CHECK(updated_at_ms >= 0),
+                user_initiated INTEGER NOT NULL CHECK(user_initiated IN (0, 1))
+             ) STRICT;
+             CREATE INDEX browser_downloads_updated
+             ON browser_downloads(updated_at_ms DESC, id ASC);
+             CREATE TABLE workspace_folders (
+                workspace_path BLOB NOT NULL,
+                folder_path BLOB NOT NULL,
+                position INTEGER NOT NULL CHECK(position >= 0),
+                PRIMARY KEY (workspace_path, folder_path)
+             ) STRICT;
+             CREATE INDEX workspace_folders_position
+             ON workspace_folders(workspace_path, position ASC);
+             PRAGMA user_version = 4;",
+        )?;
+        let mut store = Store::from_connection(connection)?;
+        assert!(store.browsing_history(10, 0)?.items.is_empty());
+        store.record_browsing_history("https://example.com/", Some("Example"), 7)?;
+        let entry = store.browsing_history(1, 0)?.items.remove(0);
+        assert_eq!(entry.url, "https://example.com/");
+        assert_eq!(entry.title.as_deref(), Some("Example"));
+        assert_eq!(entry.visited_at_ms, 7);
         Ok(())
     }
 }
