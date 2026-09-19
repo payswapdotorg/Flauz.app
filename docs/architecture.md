@@ -135,6 +135,51 @@ Detailed sequencing and work-order discipline are frozen in
 [docs/IMPLEMENTATION-ROADMAP.md](IMPLEMENTATION-ROADMAP.md), and
 [docs/WORK-ORDER-TEMPLATE.md](WORK-ORDER-TEMPLATE.md).
 
+
+## Context, harness, resource and UX evolution contract
+
+The current native Codex architecture remains the implementation foundation. The
+approved future platform adds cross-cutting contracts described in
+[CONTEXT-HARNESS-ARCHITECTURE.md](CONTEXT-HARNESS-ARCHITECTURE.md) and
+[PRODUCT-UX-JOURNEYS.md](PRODUCT-UX-JOURNEYS.md).
+
+The implementation direction is:
+
+```
+Workspace
+  -> Project / Task
+  -> Task Execution Graph
+  -> Agent Runtime / Harness
+       -> Context Engine
+       -> Tool Registry
+       -> Policy
+       -> Execution
+       -> Verification
+  -> Resource Graph
+       -> Browser
+       -> Terminal
+       -> Sandbox
+       -> Desktop
+       -> API / MCP
+  -> Artifact / Evidence state
+  -> Collaboration state
+```
+
+Important boundaries:
+
+- the durable Task is not the model context;
+- the Context Engine compiles model-specific context from durable state;
+- a Resource is not synonymous with its browser/API/CLI/MCP access surface;
+- tool results are observations/artifacts, not automatically verified truth;
+- environments may be replaced without changing Task identity;
+- Procedures are durable product objects, not hidden prompt memory;
+- users and agents share canonical task state without requiring a shared giant
+  transcript;
+- every major capability must have the corresponding discoverable GUI journey.
+
+These contracts are future-facing during F1 parity closure; implementation is
+introduced only through assigned work orders.
+
 ## Git and worktrees
 
 All Git commands run off the UI thread and are serialized by the backend.
