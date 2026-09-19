@@ -59,16 +59,27 @@ Already merged:
 - ✅ side chats
 - ✅ Linux Computer Use platform-bound contract
 - ✅ Linux/official-Linux parity lab evidence
+- ✅ WO-P2-007 Ctrl+P file-search silent-no-op fix
+- ✅ WO-P2-008 per-chat unread-attention state and attention bindings
+- ✅ WO-P2-009 persistent browsing history / revisit / Settings management
+- ✅ WO-P2-010 evidenced command-palette rows and availability guards
+- ✅ WO-P2-011 context-scoped browser reload/force-reload/copy-URL chords
+- ✅ RWO-020/RWO-021/RWO-022 reference/review/adversarial verification waves
+- ✅ Release-critical parity scope is green for the selected public/runtime-owned rows;
+  bounded proprietary/platform rows remain explicitly classified.
 
 Remaining:
-- ⬜ remaining P2 backlog
-- ⬜ P3 residuals
-- ⬜ final parity journeys
-- ⬜ accessibility/keyboard-only/reduced-motion pass
+- ⬜ WO-P2-012 guard-honesty follow-up (active work exists only on an unmerged
+  branch and must be rebased/reconciled with current `main` before merge)
+- ⬜ Activity-view surface corresponding to the deferred `toggleActivityView`
+- ⬜ remaining full-reference P2/P3 parity differences
+- ⬜ final parity journeys across the remaining partial/platform rows
+- ⬜ accessibility/keyboard-only/reduced-motion/screen-reader/contrast pass
 - ⬜ release-candidate soak/reconnect/performance gates
 
-**Gate:** every remaining parity difference is explicitly classified and the
-release-critical journeys pass.
+**Gate:** every remaining full-reference difference is explicitly classified;
+release-critical journeys remain green; and the final parity/accessibility/release
+journeys pass.
 
 ## F2 — Canonical contracts
 
