@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Row 1**\n*   **URL:** `...`\n*   **Page Title:** `...`\n*   **Time:** `148w`\n\n**Row 2**\n*   **URL:** `...`\n*   **Page Title:** `...`\n*   **Time:** `148w`\n\n**Row 3**\n*   **URL:** `...`\n*   **Page Title:** `...`\n*   **Time:** `148w`\n\n**Footer Text:**\n`Connection lost. Reconnecting...` (with a \"Dismiss\" button on the right)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789799697,
+  "id": "20260919143455c99b31f073fa40e4",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919143455c99b31f073fa40e4",
+  "usage": {
+    "completion_tokens": 118,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1744,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1862
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Frame 1**\n*   **Query:** `copy working directory`\n*   **Visible Rows:**\n    *   `Loading chats...` (This is the only row visible in the list area, positioned below the input field. There are no rows above or below it.)\n\n**Frame 2**\n*   **Query:** `approve request`\n*   **Visible Rows:**\n    *   `Loading chats...` (This is the only row visible in the list area, positioned below the input field. There are no rows above or below it.)\n\n**Frame 3**\n*   **Query:** `decline request`\n*   **Visible Rows:**\n    *   `Loading chats...` (This is the only row visible in the list area, positioned below the input field. There are no rows above or below it.)\n\n**Frame 4**\n*   **Query:** `rename chat`\n*   **Visible Rows:**\n    *   `Loading chats...` (This is the only row visible in the list area, positioned below the input field. There are no rows above or below it.)\n\n**Frame 5**\n*   **Query:** `go to chat 1`\n*   **Visible Rows:**\n    *   **Commands** (Section Header)\n        *   **Go to chat 1** | Open the visible chat in this shortcut slot | `Ctrl+1`\n    *   `Loading chats...` (Sits below the \"Go to chat 1\" command row. There are no other rows visible below it.)\n\n**Frame 6**\n*   **Query:** `maximize side panel`\n*   **Visible Rows:**\n    *   `Loading chats...` (This is the only row visible in the list area, positioned below the input field. There are no rows above or below it.)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789803260,
+  "id": "202609191534095fa78923c9da48a1",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191534095fa78923c9da48a1",
+  "usage": {
+    "completion_tokens": 376,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 10080,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 10456
+  }
+}

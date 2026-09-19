@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the two frames provided:\n\n**Frame 1 (Confirmation Modal):**\n*   **Title:** Clear browsing history?\n*   **Body Text:** This removes all stored browsing history from this device\n*   **Button Labels:** Cancel, Clear\n\n**Frame 2 (After Confirming):**\n*   **Browsing-history rows remaining:** 0 (the list is empty)\n*   **Empty-state text:** No browsing history yet\n*   **Clear button state:** Disabled (it appears grayed out/inactive)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789808987,
+  "id": "20260919170943f97de827e7e24f5c",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919170943f97de827e7e24f5c",
+  "usage": {
+    "completion_tokens": 108,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 3397,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 3505
+  }
+}

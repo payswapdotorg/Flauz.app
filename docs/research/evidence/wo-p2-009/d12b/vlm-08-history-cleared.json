@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1) No, there is no modal open.\n2) 0\n3) Label: \"Clear\", State: disabled/greyed out (light pink/grey background)\n4) \"No browsing history yet\"",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789802282,
+  "id": "20260919151800c545e610d4dc4d6f",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919151800c545e610d4dc4d6f",
+  "usage": {
+    "completion_tokens": 45,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1755,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1800
+  }
+}

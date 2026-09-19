@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here are the details of the confirmation modal:\n\n**Modal Title:**\nClear browsing history?\n\n**Modal Body Text:**\nThis removes all stored browsing history from this device\n\n**Buttons:**\n*   **Cancel** (Left position)\n*   **Clear** (Right position)\n\n**Background State:**\nYes, the page behind the modal is dimmed (a dark overlay is visible over the settings content).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789802273,
+  "id": "2026091915175127e42edb6ef44ec2",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091915175127e42edb6ef44ec2",
+  "usage": {
+    "completion_tokens": 89,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1718,
+    "prompt_tokens_details": {
+      "cached_tokens": 3
+    },
+    "total_tokens": 1807
+  }
+}

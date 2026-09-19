@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Row 1 title: Ask where to save downloads\nRow 1 URL: Show a save dialog for downloads you start in the built-in browser\nRow 2 title: Download history\nRow 2 URL: View and manage files downloaded from the built-in browser\nRow 3 title: Browsing history\nRow 3 URL: Pages you visit in the built-in browser, most recent first",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789799765,
+  "id": "20260919143603adb556cdcf6442e7",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919143603adb556cdcf6442e7",
+  "usage": {
+    "completion_tokens": 81,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2201,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2282
+  }
+}

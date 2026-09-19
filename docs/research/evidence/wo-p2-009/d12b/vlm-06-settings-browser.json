@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the exact text for every row in the **Browsing history** list, along with the state of the Clear button:\n\n**Clear Button State:**\n*   **Label Text:** \"Clear\"\n*   **State:** Visible and active (red background).\n\n**Browsing History List Rows:**\n\n1.  **Row 1:**\n    *   Title/URL: `...`\n    *   Timestamp/Info: `148w`\n    *   *Note: Shows only dots '...' instead of real text.*\n\n2.  **Row 2:**\n    *   Title/URL: `...`\n    *   Timestamp/Info: *(Empty)*\n    *   *Note: Shows only dots '...' instead of real text.*\n\n3.  **Row 3:**\n    *   Title/URL: `...`\n    *   Timestamp/Info: `148w`\n    *   *Note: Shows only dots '...' instead of real text.*\n\n4.  **Row 4:**\n    *   Title/URL: `...`\n    *   Timestamp/Info: *(Empty)*\n    *   *Note: Shows only dots '...' instead of real text.*\n\n5.  **Row 5:**\n    *   Title/URL: `...`\n    *   Timestamp/Info: `148w`\n    *   *Note: Shows only dots '...' instead of real text.*\n\n6.  **Row 6 (Notification Banner):**\n    *   Text: `Connection lost. Reconnecting...`\n    *   Action Button: `Dismiss`",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789802199,
+  "id": "20260919151629c12efc9dd75b4d2f",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919151629c12efc9dd75b4d2f",
+  "usage": {
+    "completion_tokens": 332,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1748,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 2080
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Frame 1**\n*   **Typed Query:** `toggle review`\n*   **Palette Rows:**\n    *   (No rows visible; only \"Loading chats...\" is shown)\n\n**Frame 2**\n*   **Typed Query:** `fork`\n*   **Palette Rows:**\n    *   (No rows visible; only \"Loading chats...\" is shown)\n\n**Frame 3**\n*   **Typed Query:** `copy deeplink`\n*   **Palette Rows:**\n    *   (No rows visible; only \"Loading chats...\" is shown)\n\n**Frame 4**\n*   **Typed Query:** `copy session id`\n*   **Palette Rows:**\n    *   (No rows visible; only \"Loading chats...\" is shown)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789803220,
+  "id": "20260919153336de385ab744394322",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919153336de385ab744394322",
+  "usage": {
+    "completion_tokens": 155,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 6731,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 6886
+  }
+}

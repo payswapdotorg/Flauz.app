@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the **Browsing history** section in the image, here is the exact transcription of every row:\n\n**Row 1:**\n*   **Title:** Hacker News\n*   **URL:** news.ycombinator.com\n*   **Timestamp:** 148w\n\n**Row 2:**\n*   **Title:** Chat\n*   **URL:** chatgpt.com/c/abc123\n*   **Timestamp:** 148w\n\n**Row 3:**\n*   **Title:** payswapdotorg/Flauz.app\n*   **URL:** github.com/payswapdotorg/Flauz.app\n*   **Timestamp:** 148w\n\n***\n\n**Clear Button Details:**\n*   **Label:** Clear\n*   **State:** Active (Red background with white text)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789808966,
+  "id": "20260919170921df1fb147373e49e4",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919170921df1fb147373e49e4",
+  "usage": {
+    "completion_tokens": 169,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1724,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1893
+  }
+}
