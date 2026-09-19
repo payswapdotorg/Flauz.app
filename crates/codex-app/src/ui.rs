@@ -1420,6 +1420,70 @@ fn approval_keyboard_context_is_blocking(context_stack: &[KeyContext]) -> bool {
         })
 }
 
+/// The context-scoped browser-pane chords (WO-P2-011): reload, force
+/// reload, and copy-URL. The chords resolve only while the browser pane
+/// has focus — the "Browser" key context on the browser page surface —
+/// so outside that focus state they fall through untouched and keep
+/// their other meanings (Ctrl+Shift+C stays the registry's
+/// copyWorkingDirectory, matching the official dual-meaning chords).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum BrowserPaneChord {
+    Reload,
+    ForceReload,
+    CopyUrl,
+}
+
+impl BrowserPaneChord {
+    fn accelerator(self) -> &'static str {
+        match self {
+            BrowserPaneChord::Reload => "CmdOrCtrl+R",
+            BrowserPaneChord::ForceReload => "CmdOrCtrl+Shift+R",
+            BrowserPaneChord::CopyUrl => "CmdOrCtrl+Shift+C",
+        }
+    }
+}
+
+/// The browser-pane chords, in resolution order. Interceptor-only by
+/// design (the bounded WO-P2-011 default): no customizable-registry rows
+/// back these chords, so the WO-P2-007 doctrine for registry rows does
+/// not apply here — the parity row is Lead-owned.
+const BROWSER_PANE_CHORDS: [BrowserPaneChord; 3] = [
+    BrowserPaneChord::Reload,
+    BrowserPaneChord::ForceReload,
+    BrowserPaneChord::CopyUrl,
+];
+
+fn browser_pane_focused(context_stack: &[KeyContext]) -> bool {
+    context_stack
+        .iter()
+        .filter_map(KeyContext::primary)
+        .any(|entry| entry.key.as_ref() == "Browser")
+}
+
+fn browser_pane_chord(accelerator: &str) -> Option<BrowserPaneChord> {
+    let pressed = normalized_accelerator(accelerator)?;
+    BROWSER_PANE_CHORDS
+        .iter()
+        .find(|chord| {
+            normalized_accelerator(chord.accelerator()).is_some_and(|binding| binding == pressed)
+        })
+        .copied()
+}
+
+/// The browser-pane chord for `accelerator`, but only while the browser
+/// pane has focus — the interception seam the keystroke interceptor
+/// consults ahead of the customizable-registry lookup.
+fn browser_pane_chord_action(
+    context_stack: &[KeyContext],
+    accelerator: &str,
+) -> Option<BrowserPaneChord> {
+    if browser_pane_focused(context_stack) {
+        browser_pane_chord(accelerator)
+    } else {
+        None
+    }
+}
+
 fn linked_pull_request_detail(state: &AppState) -> Option<&PullRequestDetail> {
     let linked_url = state.git.pull_request.as_ref()?.url.as_str();
     state
@@ -2496,6 +2560,17 @@ fn browser_display_url(value: &str) -> String {
         .strip_suffix('/')
         .unwrap_or(without_scheme)
         .to_owned()
+}
+
+/// The value the browser-pane copy-URL chord copies (WO-P2-011): a
+/// supported page URL copies; anything else (no page loaded, or an
+/// internal placeholder like `about:blank`) surfaces the honest
+/// guidance status instead of a silent no-op.
+fn browser_url_copy_value(url: Option<&str>) -> Result<String, &'static str> {
+    url.map(str::trim)
+        .filter(|url| is_supported_external_url(url))
+        .map(str::to_owned)
+        .ok_or("Open a page before copying the Browser address.")
 }
 
 fn browser_site_permission_summary(site: &BrowserSitePermission) -> &'static str {
@@ -10282,6 +10357,21 @@ impl WorkspaceView {
         }
     }
 
+    /// Ctrl+Shift+C while the browser pane has focus (WO-P2-011): copies
+    /// the active browser tab's URL. With no page loaded the chord
+    /// surfaces the honest guidance status instead of a silent no-op.
+    fn copy_browser_url(&mut self, cx: &mut Context<Self>) {
+        match browser_url_copy_value(self.active_browser_url().as_deref()) {
+            Ok(url) => {
+                cx.write_to_clipboard(ClipboardItem::new_string(url));
+                self.dispatch(Action::SetStatus("Copied Browser address".to_owned()), cx);
+            }
+            Err(message) => {
+                self.dispatch(Action::SetStatus(message.to_owned()), cx);
+            }
+        }
+    }
+
     fn continue_conversation_markdown_copy(&mut self, cx: &mut Context<Self>) {
         let Some(task_id) = self
             .pending_conversation_markdown_copy
@@ -10680,6 +10770,20 @@ impl WorkspaceView {
         } else {
             accelerator
         };
+        // Context-scoped browser chords (WO-P2-011): while the browser
+        // pane has focus, the reload / force-reload / copy-URL chords
+        // resolve here — ahead of the registry lookup, so the
+        // browser-scoped meaning wins over copyWorkingDirectory on
+        // Ctrl+Shift+C. Outside the browser pane the chords fall through
+        // untouched (the official dual meanings).
+        if let Some(chord) = browser_pane_chord_action(context_stack, &accelerator) {
+            match chord {
+                BrowserPaneChord::Reload => self.dispatch(Action::ReloadBrowser, cx),
+                BrowserPaneChord::ForceReload => self.dispatch(Action::ForceReloadBrowser, cx),
+                BrowserPaneChord::CopyUrl => self.copy_browser_url(cx),
+            }
+            return true;
+        }
         let exact_command = ACTIVE_KEYBOARD_SHORTCUTS.iter().find_map(|item| {
             if !self.keyboard_shortcut_command_enabled(item.id, context_stack) {
                 return None;
@@ -47669,7 +47773,8 @@ mod tests {
     use super::{
         ACTIVE_KEYBOARD_SHORTCUTS, APPEARANCE_THEME_SHARE_PREFIX, ArchivedChatDeleteScope,
         ArchivedChatKindFilter, ArchivedChatProjectFilter, ArchivedChatSortKey, AssistantFinding,
-        BedrockWorkspaceNotice, CONVERSATION_MARKDOWN_TRUNCATED_NOTICE, ComposerSlashAvailability,
+        BedrockWorkspaceNotice, BrowserPaneChord, CONVERSATION_MARKDOWN_TRUNCATED_NOTICE,
+        ComposerSlashAvailability,
         DiffLineKind, DiffReviewRow, INIT_AGENTS_PROMPT, KeyboardShortcutGroup,
         MAX_CONVERSATION_MARKDOWN_BYTES, MAX_NAVIGATION_HISTORY_ENTRIES,
         MAX_THREAD_FIND_HISTORY_PAGES, MAX_THREAD_FIND_MATCHES, MODEL_AVAILABILITY_NUX_SOL_COPY,
@@ -47683,7 +47788,8 @@ mod tests {
         background_terminal_summary, bedrock_workspace_notice,
         bottom_terminal_panel_toggle_available, bounded_keyboard_shortcut_search_query,
         bounded_settings_search_query, bounded_thread_find_query, browser_display_url,
-        browser_navigation_url, browser_surface_coordinates, build_plugin_catalog_sections,
+        browser_navigation_url, browser_pane_chord_action, browser_pane_focused,
+        browser_surface_coordinates, browser_url_copy_value, build_plugin_catalog_sections,
         case_insensitive_match_ranges, command_task_slot, composer_app_commands,
         composer_at_skill_commands, composer_desktop_app_commands, composer_file_query,
         composer_file_search_max_height, composer_model_picker_items, composer_model_placeholder,
@@ -47728,8 +47834,8 @@ mod tests {
         AccountAuthOperation, AccountDailyUsageBucket, AccountKind, AccountProfile, AccountState,
         Action, AppCard, AppState, AppearancePalette, AppearanceVariant, ApprovalContext,
         ApprovalKind, ApprovalRequest, ComposerAttachment, ComposerAttachmentKind,
-        ComputerApplicationState, ConnectionStatus, GitDiffScope, GitFileKind, GitFileState,
-        GitPullRequestState, GitWorktreeState, InspectorPane, InstalledAppRuntime,
+        ComputerApplicationState, ConnectionStatus, Effect, GitDiffScope, GitFileKind,
+        GitFileState, GitPullRequestState, GitWorktreeState, InspectorPane, InstalledAppRuntime,
         IntegratedTerminalShell, KEYBOARD_SHORTCUT_COMMAND_IDS, LoadStatus,
         MAX_PENDING_WORKTREE_FORKS, MainRoute, McpAuthStatus, ModelOption, ModelUpgradeNotice,
         PendingWorktreeFork, PendingWorktreeForkPhase, PluginCard, ProcessManagerState,
@@ -52363,6 +52469,157 @@ mod tests {
         assert_eq!(
             next_unread_task_id(&tasks, &pinned_task_ids, &unread(&["ghost"]), Some("a")),
             None
+        );
+    }
+
+    #[test]
+    fn browser_pane_chords_resolve_only_inside_browser_focus() {
+        // WO-P2-011: the three browser chords resolve while the browser
+        // pane has focus (the "Browser" key context on the browser page
+        // surface) and fall through untouched without it — the official
+        // dual-meaning chords keep their other meanings outside the
+        // browser pane.
+        let platform_chord = |binding: &str| match normalized_accelerator(binding) {
+            Some(chords) => chords.join(" "),
+            None => panic!("chord binding normalizes"),
+        };
+        let browser_focus = match gpui::KeyContext::parse("Browser") {
+            Ok(context) => context,
+            Err(_) => panic!("the Browser key context parses"),
+        };
+        let other_focus = match gpui::KeyContext::parse("Editor") {
+            Ok(context) => context,
+            Err(_) => panic!("the Editor key context parses"),
+        };
+        let browser_stack = [browser_focus];
+        let other_stack = [other_focus];
+
+        // The focus gate itself: the "Browser" key context marks the
+        // browser pane's focus state; anything else is outside it.
+        assert!(browser_pane_focused(&browser_stack));
+        assert!(!browser_pane_focused(&other_stack));
+        assert!(!browser_pane_focused(&[]));
+
+        // With browser focus each chord resolves to its browser action.
+        assert_eq!(
+            browser_pane_chord_action(&browser_stack, &platform_chord("CmdOrCtrl+R")),
+            Some(BrowserPaneChord::Reload)
+        );
+        assert_eq!(
+            browser_pane_chord_action(&browser_stack, &platform_chord("CmdOrCtrl+Shift+R")),
+            Some(BrowserPaneChord::ForceReload)
+        );
+        assert_eq!(
+            browser_pane_chord_action(&browser_stack, &platform_chord("CmdOrCtrl+Shift+C")),
+            Some(BrowserPaneChord::CopyUrl)
+        );
+
+        // Without browser focus the chords fall through untouched —
+        // another focus context, or none at all.
+        for binding in ["CmdOrCtrl+R", "CmdOrCtrl+Shift+R", "CmdOrCtrl+Shift+C"] {
+            let accelerator = platform_chord(binding);
+            assert_eq!(browser_pane_chord_action(&other_stack, &accelerator), None);
+            assert_eq!(browser_pane_chord_action(&[], &accelerator), None);
+        }
+
+        // Other chords never resolve in the browser pane (no hijack:
+        // Ctrl+P stays the registry's searchFiles command).
+        assert_eq!(
+            browser_pane_chord_action(&browser_stack, &platform_chord("CmdOrCtrl+P")),
+            None
+        );
+
+        // The interception stays honest about its scope: no registry
+        // rows own the reload chords (interceptor-only, the bounded
+        // WO-P2-011 default — the parity row is Lead-owned)...
+        for binding in ["CmdOrCtrl+R", "CmdOrCtrl+Shift+R"] {
+            assert!(ACTIVE_KEYBOARD_SHORTCUTS.iter().all(|item| {
+                item.shortcuts.iter().all(|shortcut| {
+                    normalized_accelerator(shortcut) != normalized_accelerator(binding)
+                })
+            }));
+        }
+        // ...while Ctrl+Shift+C keeps exactly one registry meaning
+        // outside the browser pane: copyWorkingDirectory (the
+        // dual-meaning chord).
+        let copy_url_owners = ACTIVE_KEYBOARD_SHORTCUTS
+            .iter()
+            .filter(|item| {
+                item.shortcuts.iter().any(|binding| {
+                    normalized_accelerator(binding) == normalized_accelerator("CmdOrCtrl+Shift+C")
+                })
+            })
+            .map(|item| item.id)
+            .collect::<Vec<_>>();
+        assert_eq!(copy_url_owners, ["copyWorkingDirectory"]);
+    }
+
+    #[test]
+    fn browser_pane_copy_url_copies_page_urls_and_guides_otherwise() {
+        // The copy-URL chord's decision path (WO-P2-011): a page URL
+        // copies; with no page loaded (or an internal placeholder) the
+        // chord surfaces honest guidance instead of a silent no-op. The
+        // clipboard write itself is GUI-lab verified (headless tests
+        // exercise the decision path only).
+        assert_eq!(
+            browser_url_copy_value(Some("https://example.com/page")),
+            Ok("https://example.com/page".to_owned())
+        );
+        assert_eq!(
+            browser_url_copy_value(Some("http://localhost:3000/")),
+            Ok("http://localhost:3000/".to_owned())
+        );
+        assert_eq!(
+            browser_url_copy_value(Some("about:blank")),
+            Err("Open a page before copying the Browser address.")
+        );
+        assert_eq!(
+            browser_url_copy_value(None),
+            Err("Open a page before copying the Browser address.")
+        );
+    }
+
+    #[test]
+    fn browser_reload_chords_report_honestly_without_a_loaded_page() {
+        // The reload chords' no-page guard (WO-P2-011): with no browser
+        // session ready, both chords surface the neighboring guards'
+        // style of status message — never a silent no-op.
+        let mut state = AppState::default();
+        assert!(reduce(&mut state, Action::ReloadBrowser).is_empty());
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Open a page before reloading the Browser.")
+        );
+        assert!(reduce(&mut state, Action::ForceReloadBrowser).is_empty());
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Open a page before reloading the Browser.")
+        );
+        // A chat is selected but the browser session is not ready yet.
+        state.tasks.push(task("chat", "C:/repo"));
+        state.selected_task_id = Some("chat".to_owned());
+        assert!(reduce(&mut state, Action::ReloadBrowser).is_empty());
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Open a page before reloading the Browser.")
+        );
+        // With the browser session ready, both chords dispatch the live
+        // reload effect (the visible reload is the feedback).
+        let mut ready = AppState::default();
+        ready.tasks.push(task("chat", "C:/repo"));
+        ready.selected_task_id = Some("chat".to_owned());
+        ready.browser.entry("chat".to_owned()).or_default().status = LoadStatus::Ready;
+        assert_eq!(
+            reduce(&mut ready, Action::ReloadBrowser),
+            [Effect::BrowserReload {
+                task_id: "chat".to_owned()
+            }]
+        );
+        assert_eq!(
+            reduce(&mut ready, Action::ForceReloadBrowser),
+            [Effect::BrowserReload {
+                task_id: "chat".to_owned()
+            }]
         );
     }
 }
