@@ -1530,6 +1530,38 @@ fn task_slot_id(
         .cloned()
 }
 
+/// WO-P2-008: the next chat carrying an unread indicator, following the
+/// visible sidebar order and wrapping around after the last one, so
+/// "next chat needing attention" keeps cycling while any indicator remains.
+/// Returns `None` only when no chat needs attention (the binding then
+/// surfaces a visible status message instead of a silent no-op).
+fn next_task_id_needing_attention(
+    tasks: &[TaskSummary],
+    pinned_task_ids: &[String],
+    needs_attention: &HashSet<String>,
+    selected_task_id: Option<&str>,
+) -> Option<String> {
+    let ordered = visible_task_ids(tasks, pinned_task_ids);
+    let unread_positions = ordered
+        .iter()
+        .enumerate()
+        .filter(|(_, task_id)| needs_attention.contains(*task_id))
+        .map(|(position, _)| position)
+        .collect::<Vec<_>>();
+    let first_unread = unread_positions.first().copied()?;
+    let next = match selected_task_id
+        .and_then(|selected| ordered.iter().position(|task_id| task_id == selected))
+    {
+        Some(selected_position) => unread_positions
+            .iter()
+            .copied()
+            .find(|position| *position > selected_position)
+            .unwrap_or(first_unread),
+        None => first_unread,
+    };
+    ordered.get(next).cloned()
+}
+
 fn command_task_slot(command_id: &str) -> Option<usize> {
     command_id
         .strip_prefix("thread")?
@@ -2812,6 +2844,20 @@ const ACTIVE_KEYBOARD_SHORTCUTS: &[KeyboardShortcutItem] = &[
         shortcuts: &["CmdOrCtrl+Alt+P"],
     },
     KeyboardShortcutItem {
+        id: "toggleThreadUnread",
+        title: "Mark chat unread",
+        description: "Toggle the unread indicator on the current chat",
+        group: KeyboardShortcutGroup::Thread,
+        shortcuts: &["CmdOrCtrl+Shift+U"],
+    },
+    KeyboardShortcutItem {
+        id: "clearAllUnread",
+        title: "Clear all unread indicators",
+        description: "Clear the unread indicator on every chat",
+        group: KeyboardShortcutGroup::Thread,
+        shortcuts: &["Shift+Esc"],
+    },
+    KeyboardShortcutItem {
         id: "copyConversationMarkdown",
         title: "Copy as Markdown",
         description: "Copy the current chat as Markdown",
@@ -2880,6 +2926,20 @@ const ACTIVE_KEYBOARD_SHORTCUTS: &[KeyboardShortcutItem] = &[
         description: "Switch to the next chat",
         group: KeyboardShortcutGroup::Navigation,
         shortcuts: NEXT_CHAT_SHORTCUTS,
+    },
+    KeyboardShortcutItem {
+        id: "toggleActivityView",
+        title: "Toggle Activity view",
+        description: "Show chats you engaged with recently that need attention",
+        group: KeyboardShortcutGroup::Navigation,
+        shortcuts: &["CmdOrCtrl+Alt+U"],
+    },
+    KeyboardShortcutItem {
+        id: "nextUnreadChat",
+        title: "Next chat needing attention",
+        description: "Select the next chat with an unread indicator",
+        group: KeyboardShortcutGroup::Navigation,
+        shortcuts: &["CmdOrCtrl+Alt+A"],
     },
     KeyboardShortcutItem {
         id: "thread1",
@@ -8561,6 +8621,27 @@ impl WorkspaceView {
         self.dispatch(Action::SelectTask(task_id), cx);
     }
 
+    fn select_next_chat_needing_attention(&mut self, cx: &mut Context<Self>) {
+        // WO-P2-008: Ctrl+Alt+A selects the next chat carrying an unread
+        // indicator following the visible sidebar order. When nothing needs
+        // attention the binding answers with a visible status message
+        // instead of a silent no-op.
+        let Some(task_id) = next_task_id_needing_attention(
+            &self.state.tasks,
+            &self.state.pinned_task_ids,
+            &self.state.chats_needing_attention,
+            self.state.selected_task_id.as_deref(),
+        ) else {
+            self.dispatch(
+                Action::SetStatus("No chats currently need attention.".to_owned()),
+                cx,
+            );
+            return;
+        };
+        self.navigate(MainRoute::Tasks, cx);
+        self.dispatch(Action::SelectTask(task_id), cx);
+    }
+
     fn toggle_sidebar(&mut self, cx: &mut Context<Self>) {
         self.sidebar_responsive = false;
         self.sidebar_visible = !self.sidebar_visible;
@@ -10279,6 +10360,13 @@ impl WorkspaceView {
         context_stack: &[KeyContext],
     ) -> bool {
         match command_id {
+            // WO-P2-008: Shift+Esc belongs to the Esc family. While an
+            // Esc-consuming surface (login form, plugin confirmation or
+            // detail overlay, pull-request detail, thread find) is up, the
+            // keystroke belongs to that surface and the unread-clear
+            // binding stays out of the way; the reducer arm remains live
+            // everywhere else.
+            "clearAllUnread" => !self.esc_consuming_surface_active(),
             "approval.approve" | "approval.decline" => {
                 self.approval_shortcuts_available()
                     && !approval_keyboard_context_is_blocking(context_stack)
@@ -10363,6 +10451,21 @@ impl WorkspaceView {
             }
             _ => true,
         }
+    }
+
+    fn esc_consuming_surface_active(&self) -> bool {
+        self.api_key_login_visible
+            || self.bedrock_login_visible
+            || self
+                .state
+                .marketplace
+                .pending_plugin_install_confirmation
+                .is_some()
+            || !self.state.marketplace.apps_needing_auth.is_empty()
+            || self.state.marketplace.selected_app_id.is_some()
+            || self.state.marketplace.selected_plugin_id.is_some()
+            || self.state.pull_requests.selected.is_some()
+            || self.thread_find_open
     }
 
     fn approval_shortcuts_available(&self) -> bool {
@@ -10509,6 +10612,10 @@ impl WorkspaceView {
             "renameThread" => self.rename_selected_chat(window, cx),
             "closeWindow" | "quit" => window.remove_window(),
             "toggleFullScreen" => window.toggle_fullscreen(),
+            "toggleActivityView" => self.dispatch(Action::ToggleActivityView, cx),
+            "nextUnreadChat" => self.select_next_chat_needing_attention(cx),
+            "clearAllUnread" => self.dispatch(Action::ClearAllUnread, cx),
+            "toggleThreadUnread" => self.dispatch(Action::ToggleSelectedChatUnread, cx),
             _ => {}
         }
     }
@@ -14173,6 +14280,7 @@ impl WorkspaceView {
         let (status_icon, status_color) = task_status_icon(task.status, cx);
         let updated_at = relative_time(task.updated_at);
         let forked = task.forked_from_id.is_some();
+        let needs_attention = self.state.chats_needing_attention.contains(&task.id);
 
         Button::new(SharedString::from(format!("task-{}", task.id)))
             .w_full()
@@ -14201,7 +14309,28 @@ impl WorkspaceView {
                     .gap_2()
                     .items_center()
                     .child(Icon::new(status_icon).xsmall().text_color(status_color))
-                    .child(div().flex_1().min_w_0().text_sm().truncate().child(title))
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .text_sm()
+                            .truncate()
+                            // WO-P2-008: chats needing attention get a bolder
+                            // title plus an unread dot in the sidebar row.
+                            .when(needs_attention, |task_title| {
+                                task_title.font_weight(gpui::FontWeight::MEDIUM)
+                            })
+                            .child(title),
+                    )
+                    .when(needs_attention, |row| {
+                        row.child(
+                            div()
+                                .flex_none()
+                                .size(px(7.0))
+                                .rounded_full()
+                                .bg(cx.theme().warning),
+                        )
+                    })
                     .when(forked, |row| {
                         row.child(
                             Icon::new(IconName::ExternalLink)
@@ -47004,21 +47133,21 @@ mod tests {
         keyboard_shortcut_stable_order, linked_pull_request_merge_command_enabled,
         mcp_auth_status_label, mcp_authentication_start_is_accepted, modal_surface_max_height,
         modal_surface_width, model_availability_nux_candidate, model_upgrade_learn_more_visible,
-        normalized_accelerator, output_artifact_type_label, parse_appearance_theme_share_string,
-        parse_mcp_list, parse_mcp_record, parse_unified_diff, plugin_logo_format,
-        process_manager_auto_refresh_allowed, project_trigger_matches, project_workspace_options,
-        pull_request_merge_submission_enabled, reasoning_effort_target, reduced_motion_enabled,
-        remote_control_status_label, render_conversation_markdown, replace_composer_file_query,
-        repository_file_scopes, repository_uses_split_diff, reserve_thread_find_history_page,
-        right_panels_hide_for_width_transition, right_panels_restore_for_width_class,
-        sanitize_assistant_markdown, selected_approval_request, selected_model_upgrade_notice,
-        selected_task_copy_value, settings_section_matches, settings_section_refreshes_account,
-        shell_width_class, sidebar_browser_affordance, sidebar_layout_width,
-        sidebar_task_list_visible, sidebar_terminal_affordance, split_diff_rows,
-        startup_recovery_card, status_context_total_label, status_rate_limit_label,
-        status_rate_limit_reset_metadata_at, task_slot_id, task_workspace_active,
-        terminal_browser_affordances_available, terminal_tab_label,
-        thread_find_right_offset_for_shell, timeline_activity_content,
+        next_task_id_needing_attention, normalized_accelerator, output_artifact_type_label,
+        parse_appearance_theme_share_string, parse_mcp_list, parse_mcp_record, parse_unified_diff,
+        plugin_logo_format, process_manager_auto_refresh_allowed, project_trigger_matches,
+        project_workspace_options, pull_request_merge_submission_enabled, reasoning_effort_target,
+        reduced_motion_enabled, remote_control_status_label, render_conversation_markdown,
+        replace_composer_file_query, repository_file_scopes, repository_uses_split_diff,
+        reserve_thread_find_history_page, right_panels_hide_for_width_transition,
+        right_panels_restore_for_width_class, sanitize_assistant_markdown,
+        selected_approval_request, selected_model_upgrade_notice, selected_task_copy_value,
+        settings_section_matches, settings_section_refreshes_account, shell_width_class,
+        sidebar_browser_affordance, sidebar_layout_width, sidebar_task_list_visible,
+        sidebar_terminal_affordance, split_diff_rows, startup_recovery_card,
+        status_context_total_label, status_rate_limit_label, status_rate_limit_reset_metadata_at,
+        task_slot_id, task_workspace_active, terminal_browser_affordances_available,
+        terminal_tab_label, thread_find_right_offset_for_shell, timeline_activity_content,
         turn_diff_update_is_accepted, usage_limit_reset_summary_copy,
         usage_settings_requires_sign_in, validate_plugin_logo_dimensions, worktree_fork_queue_full,
         worktree_use_disabled,
@@ -48879,7 +49008,7 @@ mod tests {
         assert_eq!(
             stable_order
                 .iter()
-                .take(5)
+                .take(7)
                 .map(|item| item.id)
                 .collect::<Vec<_>>(),
             [
@@ -48887,7 +49016,9 @@ mod tests {
                 "archiveThread",
                 "newProjectlessTask",
                 "openSideChat",
+                "clearAllUnread",
                 "toggleThreadPin",
+                "toggleThreadUnread",
             ]
         );
         assert!(
@@ -51046,6 +51177,157 @@ mod tests {
                 400,
             ),
             None
+        );
+    }
+
+    #[test]
+    fn attention_bindings_route_to_live_unread_commands() {
+        // The ctrl_p regression pattern (WO-P2-007) applied to the four
+        // WO-P2-008 attention bindings: every accelerator is owned by
+        // exactly one registry command, every command is part of the
+        // persisted customizable registry, and every registry entry carries
+        // the expected metadata — no registered shortcut without a live
+        // interceptor arm.
+        for (binding, command, title, group) in [
+            (
+                "CmdOrCtrl+Alt+U",
+                "toggleActivityView",
+                "Toggle Activity view",
+                KeyboardShortcutGroup::Navigation,
+            ),
+            (
+                "CmdOrCtrl+Alt+A",
+                "nextUnreadChat",
+                "Next chat needing attention",
+                KeyboardShortcutGroup::Navigation,
+            ),
+            (
+                "Shift+Esc",
+                "clearAllUnread",
+                "Clear all unread indicators",
+                KeyboardShortcutGroup::Thread,
+            ),
+            (
+                "CmdOrCtrl+Shift+U",
+                "toggleThreadUnread",
+                "Mark chat unread",
+                KeyboardShortcutGroup::Thread,
+            ),
+        ] {
+            let owners = ACTIVE_KEYBOARD_SHORTCUTS
+                .iter()
+                .filter(|item| {
+                    item.shortcuts.iter().any(|candidate| {
+                        normalized_accelerator(candidate) == normalized_accelerator(binding)
+                    })
+                })
+                .map(|item| item.id)
+                .collect::<Vec<_>>();
+            assert_eq!(owners, [command], "{binding} must be owned by {command}");
+            assert!(KEYBOARD_SHORTCUT_COMMAND_IDS.contains(&command));
+            let Some(item) = ACTIVE_KEYBOARD_SHORTCUTS
+                .iter()
+                .find(|item| item.id == command)
+            else {
+                panic!("{command} must exist in the registry");
+            };
+            assert_eq!(item.title, title);
+            assert_eq!(item.shortcuts, [binding]);
+            assert_eq!(item.group, group);
+        }
+    }
+
+    #[test]
+    fn attention_command_actions_resolve_with_visible_state_changes() {
+        // The side_chat binding pattern (WO-P2-006) applied to the
+        // WO-P2-008 commands: the actions the bindings dispatch change
+        // observable state — never a silent no-op.
+        let mut state = AppState {
+            tasks: vec![task("thread-1", "C:\\repo")],
+            selected_task_id: Some("thread-1".to_owned()),
+            ..AppState::default()
+        };
+
+        // toggleThreadUnread toggles the selected chat's indicator.
+        assert!(reduce(&mut state, Action::ToggleSelectedChatUnread).is_empty());
+        assert!(state.chats_needing_attention.contains("thread-1"));
+        assert!(reduce(&mut state, Action::ToggleSelectedChatUnread).is_empty());
+        assert!(!state.chats_needing_attention.contains("thread-1"));
+
+        // toggleActivityView answers with the honest not-yet-available
+        // guidance carrying the live attention count.
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some(
+                "The Activity view is not available in this build yet. No chats currently need attention."
+            )
+        );
+
+        // clearAllUnread reports what it cleared.
+        assert!(reduce(&mut state, Action::ToggleSelectedChatUnread).is_empty());
+        assert!(reduce(&mut state, Action::ClearAllUnread).is_empty());
+        assert!(state.chats_needing_attention.is_empty());
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Cleared the unread indicator for 1 chat.")
+        );
+    }
+
+    #[test]
+    fn next_chat_needing_attention_follows_the_visible_sidebar_order_and_wraps() {
+        // The adjacent-chat navigation pattern: the next-unread selection
+        // follows the same visible sidebar order (pinned first, then recent
+        // chats grouped by first-seen project cwd) and wraps around once
+        // past the last unread chat, so Ctrl+Alt+A keeps cycling while any
+        // indicator remains (WO-P2-008).
+        let tasks = vec![
+            task("project-a-new", r"C:\project-a"),
+            task("project-b", r"C:\project-b"),
+            task("project-a-old", r"C:\project-a"),
+            task("pinned", r"C:\project-c"),
+        ];
+        let pinned = vec!["pinned".to_owned()];
+        let unread = ["project-a-old", "project-b"]
+            .into_iter()
+            .map(str::to_owned)
+            .collect::<HashSet<String>>();
+
+        // Without any indicator the binding has nothing to select and the
+        // interceptor arm surfaces the visible no-attention status instead.
+        assert_eq!(
+            next_task_id_needing_attention(&tasks, &pinned, &HashSet::new(), None),
+            None
+        );
+
+        // Visible order: pinned, project-a-new, project-a-old, project-b.
+        assert_eq!(
+            next_task_id_needing_attention(&tasks, &pinned, &unread, None).as_deref(),
+            Some("project-a-old")
+        );
+        assert_eq!(
+            next_task_id_needing_attention(&tasks, &pinned, &unread, Some("pinned")).as_deref(),
+            Some("project-a-old")
+        );
+        assert_eq!(
+            next_task_id_needing_attention(&tasks, &pinned, &unread, Some("project-a-new"))
+                .as_deref(),
+            Some("project-a-old")
+        );
+        assert_eq!(
+            next_task_id_needing_attention(&tasks, &pinned, &unread, Some("project-a-old"))
+                .as_deref(),
+            Some("project-b")
+        );
+        // Past the last unread chat the selection wraps to the first one.
+        assert_eq!(
+            next_task_id_needing_attention(&tasks, &pinned, &unread, Some("project-b")).as_deref(),
+            Some("project-a-old")
+        );
+        // An unknown selection behaves like no selection: first unread.
+        assert_eq!(
+            next_task_id_needing_attention(&tasks, &pinned, &unread, Some("missing")).as_deref(),
+            Some("project-a-old")
         );
     }
 
