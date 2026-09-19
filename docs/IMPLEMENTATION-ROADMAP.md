@@ -314,6 +314,7 @@ ORCH-*  orchestration, context, harness, task graphs and verification
 PROV-*  execution providers
 LAB-*   parity labs
 COL-*   collaboration
+UX-*    cross-cutting GUI journeys and discoverability
 CLI-*   clients
 SEC-*   security/credentials
 REL-*   release
