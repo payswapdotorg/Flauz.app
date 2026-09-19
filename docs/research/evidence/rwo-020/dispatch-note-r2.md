@@ -1,20 +1,19 @@
 # RWO-020 duplicate-dispatch note (for Tech Lead adjudication)
 
-**Situation:** the remote branch `research/rwo-020` already carried a
-delivery of this same work order when this dispatch attempted its push:
+**Situation:** THREE parallel deliveries of this work order exist on the
+remote, all on the same base `d479c7b9e725e1af1353140d49226b3f9a16be9d`
+(consistent with the program's documented re-dispatch pattern — see the
+WO-P2-008 wave-S capacity-fight history in the ledger):
 
-- Remote (first arrival): `research/rwo-020` @ `734b1e7cf34f9d51fbf24ce260260ab03c2b231a`
-  — one docs commit on the same base `d479c7b9e725e1af1353140d49226b3f9a16be9d`,
-  delivering `docs/research/evidence/rwo-020/rubric.md` (594 lines) +
-  `notes.md` (104 lines).
-- This dispatch (second arrival): `research/rwo-020-alt` @ this branch's
-  tip — one docs commit on the same base, delivering
-  `docs/research/evidence/rwo-020/rubric.md` (678 lines; 13 rows, 64
-  criteria) + this note.
+| Branch | Tip | Contents |
+| --- | --- | --- |
+| `research/rwo-020` (first arrival) | `734b1e7cf34f9d51fbf24ce260260ab03c2b231a` | rubric.md (594 lines) + notes.md (104 lines), one docs commit |
+| `research/rwo-020-r2` | `09359733cba3624b58f90b20f30ebf7930d90fb7` | rubric.md (600 lines) + notes.md (98 lines), two docs commits; header scopes "8 complete + 2 highest-traffic partial rows" while listing the 10 named rows |
+| `research/rwo-020-alt` (this lineage) | this branch's tip | rubric.md (678 lines; 13 rows, 64 criteria) + this note |
 
 **Handling (per AGENTS.md concurrent-work rules and the WO-P2-008 duplicate
-precedent):** the existing remote branch was NOT force-pushed, reverted, or
-reformatted. Both lineages are preserved for adjudication — same pattern as
+precedent):** neither existing remote branch was force-pushed, reverted, or
+reformatted. All lineages are preserved for adjudication — same pattern as
 the WO-P2-008 duplicate delivery (`c37c21b` vs `64b28f6`), where the Lead
 kept the verified lineage and recorded the duplicate as redundant.
 
@@ -43,7 +42,7 @@ kept the verified lineage and recorded the duplicate as redundant.
    (the control is architectural + the WO-P1-003 battery); B records the
    test-anchor status rather than fabricating one.
 
-**Either lineage satisfies the work order's deliverable** (rubric on a
-research branch, derived from the repo's own reference evidence); the Lead
-picks one (or merges selectively) and adjudicates the other redundant, per
-program precedent.
+**Any of the three lineages satisfies the work order's deliverable** (rubric
+on a research branch, derived from the repo's own reference evidence); the
+Lead picks one (or merges selectively) and adjudicates the others redundant,
+per program precedent.
