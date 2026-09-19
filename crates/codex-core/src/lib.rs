@@ -5683,6 +5683,7 @@ pub enum Action {
     NavigateBrowserBack,
     NavigateBrowserForward,
     ReloadBrowser,
+    ForceReloadBrowser,
     StopBrowser,
     SelectBrowserTab(String),
     CloseBrowserTab(String),
@@ -15222,17 +15223,30 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             })
             .map(|task_id| vec![Effect::BrowserForward { task_id }])
             .unwrap_or_default(),
-        Action::ReloadBrowser => state
-            .selected_task_id
-            .clone()
-            .filter(|task_id| {
+        // Reload + force reload (WO-P2-011): the browser-pane chords.
+        // Both route to the live reload effect today; the force chord's
+        // no-cache variant needs a platform-side CDP
+        // `Page.reload {ignoreCache: true}` command (outside this work
+        // order's file boundary), which plugs into the distinct action
+        // id without re-touching the keybinding surface.
+        Action::ReloadBrowser | Action::ForceReloadBrowser => {
+            match state.selected_task_id.clone().filter(|task_id| {
                 state
                     .browser
                     .get(task_id)
                     .is_some_and(|browser| browser.status == LoadStatus::Ready)
-            })
-            .map(|task_id| vec![Effect::BrowserReload { task_id }])
-            .unwrap_or_default(),
+            }) {
+                Some(task_id) => vec![Effect::BrowserReload { task_id }],
+                None => {
+                    // No page loaded: honest guidance instead of a silent
+                    // no-op (the WO-P2-007 input-quality doctrine), in
+                    // the neighboring browser guards' voice.
+                    state.status_message =
+                        Some("Open a page before reloading the Browser.".to_owned());
+                    Vec::new()
+                }
+            }
+        }
         Action::StopBrowser => state
             .selected_task_id
             .clone()
