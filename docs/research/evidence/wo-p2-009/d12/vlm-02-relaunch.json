@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) The application is in its initial state with no active chat, displaying a connection error message and an empty sidebar.\n(2) No modal or overlay is open; the error is displayed inline within the main content area.\n(3) \"Couldn't connect to the Codex app-server\"",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789799610,
+  "id": "20260919143328e34af0090cff413e",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919143328e34af0090cff413e",
+  "usage": {
+    "completion_tokens": 61,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1709,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1770
+  }
+}

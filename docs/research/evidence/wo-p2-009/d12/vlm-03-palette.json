@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) The application is in its default idle state with the main chat area displaying a connection error and no active project or chat selected.\n(2) No, there are no modals, overlays, or palettes open.\n(3) \"Couldn't connect to the Codex app-server\"",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789799612,
+  "id": "202609191433304f84f6aed81f418b",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191433304f84f6aed81f418b",
+  "usage": {
+    "completion_tokens": 61,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1709,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1770
+  }
+}

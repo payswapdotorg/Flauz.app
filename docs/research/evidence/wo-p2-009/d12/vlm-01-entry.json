@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) The UI is a completely black screen with a white \"X\" cursor in the center, indicating an empty or loading state.\n(2) No modal, overlay, or palette is open.\n(3) No error text is visible.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789799607,
+  "id": "202609191433267dee691d549341e7",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191433267dee691d549341e7",
+  "usage": {
+    "completion_tokens": 51,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1709,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1760
+  }
+}

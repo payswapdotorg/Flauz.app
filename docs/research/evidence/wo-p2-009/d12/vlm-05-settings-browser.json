@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) No, there is no command palette overlay open with a search query.\n(2) Yes, a Settings page is open. The active section is **Browser** (under the \"Integrations\" category).\n(3) Browsing-history-related UI verbatim:\n*   **Header:** Browsing history\n*   **Sub-header/Description:** Pages you visit in the built-in browser, most recent first\n*   **Button:** Clear\n*   **Row entries:**\n    *   ... | 148w\n    *   ...\n    *   ... | 148w\n    *   ...\n    *   ... | 148w\n    *   ...",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789799688,
+  "id": "20260919143445541c777e2dd34c8e",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919143445541c777e2dd34c8e",
+  "usage": {
+    "completion_tokens": 140,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1736,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1876
+  }
+}

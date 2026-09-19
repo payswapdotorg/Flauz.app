@@ -27633,13 +27633,15 @@ impl WorkspaceView {
                             .child(Icon::new(IconName::File).xsmall()),
                     )
                     .child(
+                        // Same convention as the command-palette rows /
+                        // browsing-history rows: flex_1+min_w_0 column, plain
+                        // title div (wraps), truncate on the secondary line
+                        // (see the browsing-history fix note above).
                         v_flex()
                             .flex_1()
                             .min_w_0()
-                            .gap_1()
                             .child(
                                 div()
-                                    .truncate()
                                     .text_sm()
                                     .font_weight(gpui::FontWeight::MEDIUM)
                                     .child(download.filename),
@@ -37103,7 +37105,8 @@ impl WorkspaceView {
             .browsing_history
             .iter()
             .take(BROWSING_HISTORY_SETTINGS_ROWS)
-            .map(|entry| {
+            .enumerate()
+            .map(|(row_index, entry)| {
                 let display_url = browser_display_url(&entry.url);
                 let primary = if entry.title.is_empty() {
                     display_url.clone()
@@ -37112,31 +37115,44 @@ impl WorkspaceView {
                 };
                 let ago =
                     relative_time(i64::try_from(entry.visited_at_ms).unwrap_or_default() / 1_000);
-                h_flex()
+                // WO-P2-009 integration fix. The original row mixed
+                // justify_between with a flex_1 (basis-0) text column and
+                // min_w_0'd truncate children — the text collapsed to a
+                // lone ellipsis through four build/verify cycles (D12,
+                // D12b flex_1, D12c justify_start, D12d w_full — all
+                // byte-identical frames). The command-palette row
+                // (render_command) is the repo's proven two-line pattern
+                // (VLM-verified rendering in evidence d13/): a stateful
+                // row div, a flex_1+min_w_0 column WITHOUT gap, a plain
+                // title div (no truncate — wraps like the reference), and
+                // a truncate div for the secondary line. This row mirrors
+                // that structure exactly.
+                div()
+                    .id(SharedString::from(format!(
+                        "browsing-history-row-{row_index}"
+                    )))
                     .min_h(px(44.0))
                     .px_4()
                     .py_2()
+                    .flex()
+                    .flex_row()
                     .gap_3()
                     .items_center()
-                    .justify_between()
                     .border_t_1()
                     .border_color(cx.theme().border)
                     .child(
                         v_flex()
+                            .flex_1()
                             .min_w_0()
-                            .gap_1()
                             .child(
                                 div()
                                     .text_sm()
                                     .font_weight(gpui::FontWeight::MEDIUM)
-                                    .min_w_0()
-                                    .truncate()
                                     .child(primary),
                             )
                             .child(
                                 div()
                                     .text_xs()
-                                    .min_w_0()
                                     .truncate()
                                     .text_color(cx.theme().muted_foreground)
                                     .child(display_url),

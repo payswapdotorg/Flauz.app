@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Browsing history\nClear\nPages you visit in the built-in browser, most recent first\n...\n148w\n...\n...\n148w\n...",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789799707,
+  "id": "202609191435033e556bee07ab46cc",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191435033e556bee07ab46cc",
+  "usage": {
+    "completion_tokens": 30,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2108,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2138
+  }
+}

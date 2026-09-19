@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is a detailed description of the command palette overlay:\n\n**Search Input:**\n*   **Placeholder Text:** \"Search chats or run a command\"\n\n**List Rows (from top to bottom):**\n\n*   **Section Header:** \"Suggested\"\n    *   **Row 1 (Highlighted/Selected):**\n        *   **Icon:** Plus sign (+)\n        *   **Title:** \"New chat\"\n        *   **Shortcut (Right-aligned):** \"Ctrl+N\"\n    *   **Row 2:**\n        *   **Icon:** Folder icon\n        *   **Title:** \"Open folder\"\n        *   **Shortcut (Right-aligned):** \"Ctrl+O\"\n    *   **Row 3:**\n        *   **Icon:** Magnifying glass icon\n        *   **Title:** \"Search files\"\n        *   **Shortcut (Right-aligned):** \"Ctrl+P\"\n\n*   **Section Header:** \"Settings\"\n    *   **Row 4:**\n        *   **Icon:** Gear icon\n        *   **Title:** \"General\"\n    *   **Row 5:**\n        *   **Icon:** Paintbrush/palette icon\n        *   **Title:** \"Appearance\"\n    *   **Row 6:**\n        *   **Icon:** Asterisk/star icon\n        *   **Title:** \"Keyboard shortcuts\"\n    *   **Row 7:**\n        *   **Icon:** Clock/chart icon\n        *   **Title:** \"Usage & billing\"\n    *   **Row 8:**\n        *   **Icon:** Computer monitor icon\n        *   **Title:** \"Computer use\"\n    *   **Row 9:**\n        *   **Icon:** User profile icon\n        *   **Title:** \"Profile\"\n    *   **Row 10:**\n        *   **Icon:** Down arrow icon\n        *   **Title:** \"Import\"\n    *   **Row 11 (Partially visible at bottom edge):**\n        *   **Icon:** Globe icon\n        *   **Title:** \"Browser\" (cut off)\n\n**Loading Indicators and Positioning:**\n*   There is a black **\"X\" cursor** visible in the center of the white space within the \"Settings\" section, positioned between the \"General\" and \"Appearance\" rows.\n*   There are **no traditional loading indicators** (such as spinners or progress bars) visible in this view.\n*   The list rows appear continuously; there is no dedicated loading row separating the suggested commands from the settings list.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789803240,
+  "id": "20260919153349cc00dbf116df4405",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919153349cc00dbf116df4405",
+  "usage": {
+    "completion_tokens": 536,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1724,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2260
+  }
+}

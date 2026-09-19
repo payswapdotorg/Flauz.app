@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Downloads\n\nLocation\nSystem Downloads folder\nChange\n\nAsk where to save downloads\nShow a save dialog for downloads you start in the bu...in browser\n\nDownload history\nView and manage files downloaded from the built-in browser\nManage\n\nBrowsing history\nPages you visit in the built-in browser, most recent first\nClear\n\n...\n...\n148w\n\n...\n...\n148w\n\n...\n...\n148w\n\nConnection lost. Reconnecting...\nDismiss",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789799718,
+  "id": "2026091914351520c70158d58d4651",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091914351520c70158d58d4651",
+  "usage": {
+    "completion_tokens": 89,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2930,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 3019
+  }
+}
