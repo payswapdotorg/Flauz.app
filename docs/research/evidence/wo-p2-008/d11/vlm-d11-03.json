@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1) Yes, there is a small red dot indicator next to the row titled **\"Connection failed\"**.\n2) Yes, the status message at the bottom reads: **\"Select a chat before marking it unread.\"**\n3) No chat is currently selected or highlighted in the sidebar; it displays **\"No chats\"**.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789776973,
+  "id": "20260919081611120b49a0ebf640ac",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919081611120b49a0ebf640ac",
+  "usage": {
+    "completion_tokens": 69,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1758,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1827
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "No chats need attention.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789777229,
+  "id": "202609190820287fbd8234c9e944ab",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609190820287fbd8234c9e944ab",
+  "usage": {
+    "completion_tokens": 6,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1691,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1697
+  }
+}

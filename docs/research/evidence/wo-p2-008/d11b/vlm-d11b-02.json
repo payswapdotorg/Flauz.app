@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Select a chat before marking it unread.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789777228,
+  "id": "202609190820277c7e3da80ad2476d",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609190820277c7e3da80ad2476d",
+  "usage": {
+    "completion_tokens": 9,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1691,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1700
+  }
+}
