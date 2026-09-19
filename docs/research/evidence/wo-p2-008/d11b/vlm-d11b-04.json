@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Activity view is not available yet. Use \"Next chat needing attention\" to jump to unread chats.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789777230,
+  "id": "20260919082029d1fdf1a152504527",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919082029d1fdf1a152504527",
+  "usage": {
+    "completion_tokens": 21,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1694,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1715
+  }
+}

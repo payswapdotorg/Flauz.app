@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "No unread chats",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789777232,
+  "id": "2026091908203175ba518f1ab84f35",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091908203175ba518f1ab84f35",
+  "usage": {
+    "completion_tokens": 4,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1691,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1695
+  }
+}
