@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "blank\n• • •\n• • •",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789806829,
+  "id": "2026091916334832751bde5aeb4a79",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091916334832751bde5aeb4a79",
+  "usage": {
+    "completion_tokens": 10,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 829,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 839
+  }
+}

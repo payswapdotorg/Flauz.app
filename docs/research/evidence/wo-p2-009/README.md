@@ -43,7 +43,7 @@ frame 5) is the repo's proven two-line pattern: a stateful row div, a
 `flex_1`+`min_w_0` column WITHOUT gap, a plain title div (no truncate —
 wraps), and a `truncate()` div for the secondary line.
 
-**Fix (`3617789`):** the history rows and the downloads-modal rows
+**Fix (`0375e0f` — PR #27 → merged `fe3903e`):** the history rows and the downloads-modal rows
 (same text-stack class) now mirror the palette-row convention exactly.
 
 | Run | Binary | Phase A | Phase B rows | Phase C (Clear) |
@@ -51,11 +51,13 @@ wraps), and a `truncate()` div for the secondary line.
 | d12/ (06:33) | pre-fix (post-merge main) | PASS | **FAIL — `…`-only rows** (crop5 zoom) | — (driven later on d12b) |
 | d12b/ (07:15) | + flex_1 attempt | PASS | FAIL — frames **byte-identical** to d12 | PASS (modal verbatim; cleared + empty state + disabled Clear) |
 | d12c/ (08:1x) | + justify_start | PASS | FAIL — still byte-identical (grow works; divs still 0-wide — pixel-proven) | — |
+| d12d/ (08:44) | + w_full attempt (build 2) | PASS | FAIL — frames still byte-identical to d12 (the third dead theory; md5 in-tree); sidebar crops confirm no collateral layout change | — |
 | d12e/ (09:0x) | same binary, mixed seed lengths (incl. 1-char title) | PASS | FAIL — even 1-char text renders `…` ⇒ zero-width divs, not content | — |
 | **d12f/ (09:1x)** | **palette-convention clone** | **PASS** | **PASS — rows verbatim**: "Hacker News"/"news.ycombinator.com"/148w; "Chat"/"chatgpt.com/c/abc123"/148w; "payswapdotorg/Flauz.app"/"github.com/payswapdotorg/Flauz.app"/148w (first frame-hash change across all builds; ink 0→1112 px) | **PASS** — modal "Clear browsing history?" / "This removes all stored browsing history from this device" / Cancel+Clear → 0 rows, "No browsing history yet", Clear disabled |
 
-d12e/ holds the seed-length experiment frames; d12f/ the final full-pass
-frames + md5s + VLM reads.
+d12c/ holds the pixel-forensics crops + zoom VLM reads; d12d/ the w_full-attempt
+frames (byte-identical, md5 in-tree) + sidebar-crop collateral check; d12e/ the
+seed-length experiment frames; d12f/ the final full-pass frames + md5s + VLM reads.
 
 ## Residuals (documented, not fabricated)
 

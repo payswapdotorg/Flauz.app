@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "This is a description of a desktop application window displaying a \"Browser\" settings page, presented in a clean, modern interface with a light theme.\n\n**Window Header (Top Bar)**\n*   **Left Side:** A grid icon (menu), a back arrow, a forward arrow.\n*   **Menu Bar:** File, Edit, View, Help.\n*   **Right Side (Window Controls):** Minimize (dash), Maximize (square), Close (X).\n\n**Main Layout**\nThe interface is divided into two primary columns: a navigation sidebar on the left and the main content area on the right.\n\n---\n\n### **Left Sidebar (Navigation)**\n\n1.  **Top Link:** \"< Back to app\" (with a left arrow icon).\n2.  **Search Bar:** Contains placeholder text \"Search settings...\" and a magnifying glass icon.\n3.  **Section Heading: Personal**\n    *   **General** (with a slider/toggles icon)\n    *   **Appearance** (with a sun/gear icon)\n    *   **Personalization** (with a toolbox icon)\n    *   **Keyboard shortcuts** (with an asterisk/star icon)\n    *   **Profile** (with a person silhouette icon)\n    *   **Usage & billing** (with a clock/chart icon)\n    *   **Import** (with a downward arrow icon)\n4.  **Section Heading: Integrations**\n    *   **Plugins** (with a puzzle piece icon)\n    *   **MCP servers** (with a server stack icon)\n    *   **Browser** (with a globe icon) — *This item is highlighted/selected with a light grey background.*\n    *   **Computer use** (with a monitor/screen icon)\n    *   **Connections** (with a network node icon)\n5.  **Section Heading: Coding**\n    *   **Configuration** (with a slider/toggles icon)\n    *   **Hooks** (with a bell icon)\n    *   **Git** (with a circular git logo icon)\n\n---\n\n### **Right Content Area (Browser Settings)**\n\n**Page Title: Browser**\n\n**Section Heading: General**\n\n*   **Row: Approval**\n    *   **Subtext:** Ask before opening websites\n    *   **Control (Right):** A dropdown menu displaying the text \"**Always ask**\" followed by a down-chevron arrow.\n\n**Section Heading: Downloads**\n\n*   **Row: Location**\n    *   **Subtext:** System Downloads folder\n    *   **Control (Right):** A button labeled \"**Change**\".\n*   **Row: Ask where to save downloads**\n    *   **Subtext:** Show a save dialog for downloads you start in the b...in browser (Note: The text appears truncated or obscured by a black 'X' mark).\n    *   **Control (Right):** A toggle switch (appears to be in the 'off' position).\n*   **Row: Download history**\n    *   **Subtext:** View and manage files downloaded from the built-in browser\n    *   **Control (Right):** A button labeled \"**Manage**\".\n\n**Section Heading: Browsing history**\n\n*   **Header Subtext:** Pages you visit in the built-in browser, most recent first\n*   **Control (Right of Header):** A red button labeled \"**Clear**\".\n\n*   **List Item 1:**\n    *   Left Text: \"...\"\n    *   Right Text: \"148w\"\n*   **List Item 2:**\n    *   Left Text: \"...\"\n    *   (No right text visible)\n*   **List Item 3:**\n    *   Left Text: \"...\"\n    *   Right Text: \"148w\"\n*   **List Item 4:**\n    *   Left Text: \"...\"\n    *   Right Text: \"148w\"\n*   **List Item 5:**\n    *   Left Text: \"...\"\n\n**Bottom Notification Banner**\n*   **Text:** Connection lost. Reconnecting...\n*   **Control (Far Right):** A text link/button labeled \"**Dismiss**\".",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789807736,
+  "id": "20260919164823e9d72a61fee64711",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919164823e9d72a61fee64711",
+  "usage": {
+    "completion_tokens": 847,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1713,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2560
+  }
+}

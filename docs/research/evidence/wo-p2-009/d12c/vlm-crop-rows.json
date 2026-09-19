@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Pages you visit in the built-in browser, most recent first\n...\n...\n148w\n...\n...\n148w\n...\n...\n148w\nConnection lost. Reconnecting...",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789806790,
+  "id": "20260919163309c2167c4ac1d54d3e",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919163309c2167c4ac1d54d3e",
+  "usage": {
+    "completion_tokens": 35,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1733,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1768
+  }
+}

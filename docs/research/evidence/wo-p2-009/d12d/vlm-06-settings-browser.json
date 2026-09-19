@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the exact transcription of the **Browsing history** section:\n\n### Browsing History Rows\n\n*   **Row 1:**\n    *   Title: `...`\n    *   URL: `...`\n    *   Timestamp: `148w`\n\n*   **Row 2:**\n    *   Title: `...`\n    *   URL: `...`\n    *   Timestamp: `148w`\n\n*   **Row 3:**\n    *   Title: `...`\n    *   URL: `...`\n    *   Timestamp: `148w`\n\n*(Note: All visible rows in the list show only dots '...' for both the title and the URL text.)*\n\n### Clear Button\n*   **Label:** `Clear`\n*   **State:** The button is red (indicating a destructive action) and appears to be in an active/enabled state.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789807560,
+  "id": "20260919164555b00ecdfb74e04695",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919164555b00ecdfb74e04695",
+  "usage": {
+    "completion_tokens": 190,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1735,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1925
+  }
+}

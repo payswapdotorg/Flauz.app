@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, the sidebar is completely black and contains no visible text, chat rows, task list items, or timestamps. There is no content to transcribe.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789807641,
+  "id": "202609191647201f0bbe217f934d30",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191647201f0bbe217f934d30",
+  "usage": {
+    "completion_tokens": 36,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1186,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1222
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, the entire area is a solid black rectangle. There are **no visible UI elements, text, list rows, titles, or timestamps** to describe or transcribe. The image appears to be either completely black, empty, or the content is not rendering.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789807650,
+  "id": "20260919164728ca1e4334ac1e40ca",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919164728ca1e4334ac1e40ca",
+  "usage": {
+    "completion_tokens": 58,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1851,
+    "prompt_tokens_details": {
+      "cached_tokens": 3
+    },
+    "total_tokens": 1909
+  }
+}

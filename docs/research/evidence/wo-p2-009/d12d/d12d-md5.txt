@@ -1,0 +1,6 @@
+95b7dc92b6d065c41f7cdf5c6c70302b  01-entry.jpg
+187880d120baf52a1a47ad22d84df8d3  02-relaunch.jpg
+4c92a2d537158aa324d17d65831c2014  03-palette.jpg
+5b6af65dcd2b61b629c93ef5db8de68e  04-palette-query.jpg
+4a7b5a9cc5c11179be8a8ccec4497faa  05-settings-browser.jpg
+4a7b5a9cc5c11179be8a8ccec4497faa  06-settings-browser-settled.jpg

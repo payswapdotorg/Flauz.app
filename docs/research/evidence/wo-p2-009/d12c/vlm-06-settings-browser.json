@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the **Browsing history** section in the image, here is the complete list of every row:\n\n**Row 1:**\n*   **Title:** `...`\n*   **URL:** `...`\n*   **Timestamp:** `148w`\n\n**Row 2:**\n*   **Title:** `...`\n*   **URL:** `...`\n*   **Timestamp:** `148w`\n\n**Row 3:**\n*   **Title:** `...`\n*   **URL:** `...`\n*   **Timestamp:** `148w`\n\n**Clear Button Label:**\n`Clear`",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789806734,
+  "id": "20260919163212f7345fedfc614c03",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919163212f7345fedfc614c03",
+  "usage": {
+    "completion_tokens": 125,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1734,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1859
+  }
+}
