@@ -51,7 +51,8 @@ pub use browser::{
     BrowserDownloadStatus, BrowserError, BrowserEvent, BrowserKeyInput, BrowserMouseButton,
     BrowserSession, BrowserTab, MAX_BROWSER_CONTEXT_ID_BYTES, MAX_BROWSER_FRAME_BYTES,
     MAX_BROWSER_TABS, MAX_BROWSER_TITLE_BYTES, MAX_BROWSER_URL_BYTES, browser_permission_for_url,
-    default_browser_download_dir, normalize_browser_origin, resolve_browser_binary,
+    browsing_history_revisit_target, default_browser_download_dir, normalize_browser_origin,
+    resolve_browser_binary,
 };
 pub use byte_budget::{ByteBudget, ByteLease};
 pub use computer_interruption::{ComputerUseInterruptionMonitor, ComputerUseTurnKey};

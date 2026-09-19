@@ -277,6 +277,12 @@ pub enum BrowserEvent {
     DownloadRemoved {
         id: String,
     },
+    Navigated {
+        context_id: String,
+        url: String,
+        title: String,
+        visited_at_ms: u64,
+    },
     OperationFailed(String),
     Failed(String),
     Exited,
@@ -1110,6 +1116,29 @@ pub fn normalize_browser_origin(value: &str) -> Option<String> {
     }
     let origin = url.origin().ascii_serialization();
     (origin != "null" && origin.len() <= MAX_BROWSER_URL_BYTES).then_some(origin)
+}
+
+/// Matches address-bar input against browsing history and returns the URL of
+/// the best hit to revisit. Entries must be supplied most recent first; an
+/// entry matches when the input is a case-insensitive substring of its URL
+/// or of its (non-empty) title, and the first — most recent — match wins.
+/// `None` means there is no match and the caller should fall back to search.
+#[must_use]
+pub fn browsing_history_revisit_target<'a>(
+    input: &str,
+    entries: impl IntoIterator<Item = (&'a str, Option<&'a str>)>,
+) -> Option<&'a str> {
+    let needle = input.trim().to_lowercase();
+    if needle.is_empty() {
+        return None;
+    }
+    entries
+        .into_iter()
+        .find(|(url, title)| {
+            url.to_lowercase().contains(&needle)
+                || title.is_some_and(|title| title.trim().to_lowercase().contains(&needle))
+        })
+        .map(|(url, _)| url)
 }
 
 #[must_use]
@@ -2298,6 +2327,7 @@ impl BrowserRuntime {
                 if let Some(index) = self.tab_index_for_session(session_id.as_deref()) {
                     self.tabs[index].public.loading = false;
                     self.refresh_tab(index)?;
+                    self.emit_browsing_history_visit(index);
                     let context_id = self.tabs[index].context_id.clone();
                     self.emit_tabs(&context_id);
                 }
@@ -4424,6 +4454,26 @@ impl BrowserRuntime {
         });
     }
 
+    /// Records one top-level browsing-history visit for the tab: the page
+    /// URL, the best title known once the load completed, and the visit
+    /// timestamp. Blank and `about:blank` pages (fresh tabs) are not
+    /// recorded.
+    fn emit_browsing_history_visit(&self, index: usize) {
+        let Some(tab) = self.tabs.get(index) else {
+            return;
+        };
+        let url = tab.public.url.trim();
+        if url.is_empty() || url.eq_ignore_ascii_case("about:blank") {
+            return;
+        }
+        self.emit(BrowserEvent::Navigated {
+            context_id: tab.context_id.clone(),
+            url: url.to_owned(),
+            title: tab.public.title.trim().to_owned(),
+            visited_at_ms: unix_time_ms(),
+        });
+    }
+
     fn emit(&self, event: BrowserEvent) {
         let _ = self.ui_events.control.try_send(event);
     }
@@ -5211,8 +5261,9 @@ mod tests {
         DevToolsEndpoint, LatestBrowserFrame, MAX_AGENT_CHILD_SESSIONS, MAX_BROWSER_URL_BYTES,
         MAX_CDP_PENDING_EVENT_BYTES, PendingCdpEvents, agent_tab_id_for_cdp_session,
         allowed_agent_cdp_method, browser_agent_tab_matches, browser_command,
-        browser_origin_pattern_matches, browser_permission_for_url, cached_agent_expression_key,
-        cdp_key_name, checked_agent_browser_id, checked_agent_viewport, checked_download_url,
+        browser_origin_pattern_matches, browser_permission_for_url,
+        browsing_history_revisit_target, cached_agent_expression_key, cdp_key_name,
+        checked_agent_browser_id, checked_agent_viewport, checked_download_url,
         checked_navigation_url, control_download_transfer, create_browser_job, effective_viewport,
         graceful_browser_exit, move_download_to_destination, next_browser_command,
         normalize_browser_origin, parse_devtools_marker, record_agent_child_session,
@@ -5326,6 +5377,54 @@ mod tests {
             "a Browser process-group descendant ran after its job was dropped"
         );
         Ok(())
+    }
+
+    #[test]
+    fn browsing_history_matches_urls_and_titles_most_recent_first() {
+        let history = [
+            ("https://github.com/payswapdotorg/Flauz.app", None),
+            ("https://docs.rs/rust/std/", Some("std - Rust")),
+            ("https://www.rust-lang.org/learn", Some("Learn Rust")),
+        ];
+
+        // Most recent first: the newest matching entry wins over older hits.
+        assert_eq!(
+            browsing_history_revisit_target("rust", history),
+            Some("https://docs.rs/rust/std/")
+        );
+        // Case-insensitive URL substring.
+        assert_eq!(
+            browsing_history_revisit_target("GITHUB.COM/PAYSWAP", history),
+            Some("https://github.com/payswapdotorg/Flauz.app")
+        );
+        // Case-insensitive title substring.
+        assert_eq!(
+            browsing_history_revisit_target("learn rust", history),
+            Some("https://www.rust-lang.org/learn")
+        );
+        // No match falls through to the caller's search fallback.
+        assert_eq!(
+            browsing_history_revisit_target("native wasm repl", history),
+            None
+        );
+        // Empty (or whitespace-only) input never matches.
+        assert_eq!(browsing_history_revisit_target("   ", history), None);
+        assert_eq!(browsing_history_revisit_target("", history), None);
+        // An empty history never matches.
+        assert_eq!(browsing_history_revisit_target("rust", []), None);
+    }
+
+    #[test]
+    fn browsing_history_ignores_blank_titles_when_matching() {
+        let history = [
+            ("https://example.com/first", Some("")),
+            ("https://example.com/second", None),
+        ];
+        // Empty titles are treated as unavailable, not as wildcard matches.
+        assert_eq!(
+            browsing_history_revisit_target("example", history),
+            Some("https://example.com/first")
+        );
     }
 
     #[test]

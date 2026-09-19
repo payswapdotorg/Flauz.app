@@ -33,7 +33,7 @@ use codex_core::{
     HookSource, HookTrustStatus, ImportHistory, ImportItemFailure, ImportItemSuccess,
     ImportItemType, ImportMigrationItem, ImportProvider, InspectorPane, InstalledAppRuntime,
     IntegratedTerminalShell, KeyboardShortcutPreferences, KeyboardShortcutUpdateTarget, LoadStatus,
-    LocalProjectSummary, MAX_COMPOSER_OPTIONS, MAX_FEEDBACK_DETAILS_BYTES,
+    LocalProjectSummary, MAX_BROWSING_HISTORY, MAX_COMPOSER_OPTIONS, MAX_FEEDBACK_DETAILS_BYTES,
     MAX_FUZZY_FILE_QUERY_BYTES, MAX_GIT_COMMIT_MESSAGE_CHARS, MAX_GIT_PULL_REQUEST_BODY_CHARS,
     MAX_GIT_PULL_REQUEST_TITLE_CHARS, MAX_KEYBOARD_SHORTCUT_ACCELERATOR_BYTES,
     MAX_KEYBOARD_SHORTCUTS_PER_COMMAND, MAX_LOCAL_PROJECT_NAME_BYTES,
@@ -64,8 +64,9 @@ use codex_core::{
     reduce, selected_thread_runtime_ready, validate_mcp_form_content,
 };
 use codex_platform::{
-    BackgroundCompletionNotifier, computer_use_platform_available, default_browser_download_dir,
-    desktop_work_areas, normalize_browser_origin, read_artifact_image,
+    BackgroundCompletionNotifier, browsing_history_revisit_target, computer_use_platform_available,
+    default_browser_download_dir, desktop_work_areas, normalize_browser_origin,
+    read_artifact_image,
 };
 use codex_protocol::SecretString;
 use gpui::{
@@ -124,6 +125,7 @@ const INSPECTOR_WIDTH: f32 = 360.0;
 const CHANGES_INSPECTOR_WIDTH: f32 = 680.0;
 const OUTPUT_VIEWER_WIDTH: f32 = 680.0;
 const BROWSER_INSPECTOR_WIDTH: f32 = 680.0;
+const BROWSING_HISTORY_SETTINGS_ROWS: usize = 50;
 const TERMINAL_BOTTOM_DEFAULT_HEIGHT: f32 = 280.0;
 const TERMINAL_BOTTOM_MIN_HEIGHT: f32 = 160.0;
 const TERMINAL_RIGHT_DEFAULT_WIDTH: f32 = 600.0;
@@ -1661,6 +1663,8 @@ gpui::actions!(
         DeleteArchivedTasksFocusPrev,
         ResetMemoriesFocusNext,
         ResetMemoriesFocusPrev,
+        ClearBrowsingHistoryFocusNext,
+        ClearBrowsingHistoryFocusPrev,
         ResetKeyboardShortcutsFocusNext,
         ResetKeyboardShortcutsFocusPrev,
         AllowAllBrowserSitesFocusNext,
@@ -2244,6 +2248,7 @@ enum WorkspaceModal {
         request_id: String,
         source_name: String,
     },
+    ClearBrowsingHistory,
     Commit,
     CreatePullRequest,
     PullRequestAction(PullRequestActionKind),
@@ -2332,7 +2337,12 @@ enum PullRequestEditKind {
     Description,
 }
 
-fn browser_navigation_url(value: &str) -> Option<String> {
+/// Resolves URL-shaped address-bar input: `about:blank`, explicit
+/// `http(s)://` URLs, and address-like hosts (with a scheme added) navigate
+/// directly. Returns `None` when the input is not URL-shaped, in which case
+/// the caller should try browsing-history matching and then the search
+/// fallback.
+fn direct_browser_navigation_url(value: &str) -> Option<String> {
     let value = value.trim();
     if value.is_empty() || value.chars().any(char::is_control) {
         return None;
@@ -2364,15 +2374,47 @@ fn browser_navigation_url(value: &str) -> Option<String> {
             || authority.rsplit_once(':').is_some_and(|(_, port)| {
                 !port.is_empty() && port.chars().all(|ch| ch.is_ascii_digit())
             }));
-    let normalized = if looks_like_address {
-        format!("{}://{value}", if local { "http" } else { "https" })
-    } else {
-        format!(
-            "https://www.google.com/search?q={}",
-            browser_form_urlencode(value)
-        )
-    };
+    if !looks_like_address {
+        return None;
+    }
+    let normalized = format!("{}://{value}", if local { "http" } else { "https" });
     (normalized.len() <= codex_core::MAX_BROWSER_URL_BYTES).then_some(normalized)
+}
+
+/// The Google-search fallback for address-bar input that is neither
+/// URL-shaped nor a browsing-history match.
+fn browser_search_url(value: &str) -> Option<String> {
+    let value = value.trim();
+    if value.is_empty() || value.chars().any(char::is_control) {
+        return None;
+    }
+    let normalized = format!(
+        "https://www.google.com/search?q={}",
+        browser_form_urlencode(value)
+    );
+    (normalized.len() <= codex_core::MAX_BROWSER_URL_BYTES).then_some(normalized)
+}
+
+fn browser_navigation_url(value: &str) -> Option<String> {
+    direct_browser_navigation_url(value).or_else(|| browser_search_url(value))
+}
+
+/// Resolves address-bar input against the persisted browsing history:
+/// URL-shaped input navigates directly; otherwise the best history match
+/// (case-insensitive substring on the URL or title, most recent first) is
+/// revisited; with no match the existing Google fallback
+/// ([`browser_navigation_url`]'s search branch) fires. `history` must yield
+/// entries most recent first.
+fn resolve_browser_address_target<'a>(
+    value: &str,
+    history: impl IntoIterator<Item = (&'a str, Option<&'a str>)>,
+) -> Option<String> {
+    let Some(url) = direct_browser_navigation_url(value) else {
+        return browsing_history_revisit_target(value, history)
+            .map(str::to_owned)
+            .or_else(|| browser_navigation_url(value));
+    };
+    Some(url)
 }
 
 fn browser_form_urlencode(value: &str) -> String {
@@ -4703,6 +4745,16 @@ pub fn run() {
                 ),
                 KeyBinding::new(
                     "tab",
+                    ClearBrowsingHistoryFocusNext,
+                    Some("ClearBrowsingHistoryModal"),
+                ),
+                KeyBinding::new(
+                    "shift-tab",
+                    ClearBrowsingHistoryFocusPrev,
+                    Some("ClearBrowsingHistoryModal"),
+                ),
+                KeyBinding::new(
+                    "tab",
                     ResetKeyboardShortcutsFocusNext,
                     Some("ResetKeyboardShortcutsModal"),
                 ),
@@ -5289,6 +5341,8 @@ struct WorkspaceView {
     delete_archived_tasks_focus_requested: bool,
     reset_memories_focus: FocusHandle,
     reset_memories_focus_requested: bool,
+    clear_browsing_history_focus: FocusHandle,
+    clear_browsing_history_focus_requested: bool,
     reset_keyboard_shortcuts_focus: FocusHandle,
     reset_keyboard_shortcuts_focus_requested: bool,
     allow_all_browser_sites_focus: FocusHandle,
@@ -5371,6 +5425,7 @@ impl WorkspaceView {
         let remove_local_project_focus = cx.focus_handle();
         let delete_archived_tasks_focus = cx.focus_handle();
         let reset_memories_focus = cx.focus_handle();
+        let clear_browsing_history_focus = cx.focus_handle();
         let reset_keyboard_shortcuts_focus = cx.focus_handle();
         let allow_all_browser_sites_focus = cx.focus_handle();
         let account_logout_focus = cx.focus_handle();
@@ -5890,7 +5945,15 @@ impl WorkspaceView {
                     InputEvent::Blur => this.sync_browser_address(window, cx),
                     InputEvent::PressEnter { .. } => {
                         let value = input.read(cx).value().to_string();
-                        let Some(url) = browser_navigation_url(&value) else {
+                        let Some(url) = resolve_browser_address_target(
+                            &value,
+                            this.state.browsing_history.iter().map(|entry| {
+                                (
+                                    entry.url.as_str(),
+                                    (!entry.title.is_empty()).then_some(entry.title.as_str()),
+                                )
+                            }),
+                        ) else {
                             return;
                         };
                         let unchanged = this
@@ -6478,6 +6541,8 @@ impl WorkspaceView {
             delete_archived_tasks_focus_requested: false,
             reset_memories_focus,
             reset_memories_focus_requested: false,
+            clear_browsing_history_focus,
+            clear_browsing_history_focus_requested: false,
             reset_keyboard_shortcuts_focus,
             reset_keyboard_shortcuts_focus_requested: false,
             allow_all_browser_sites_focus,
@@ -9181,6 +9246,36 @@ impl WorkspaceView {
             window.focus_next();
             if !self.reset_memories_focus.contains_focused(window, cx) {
                 self.reset_memories_focus.focus(window);
+                window.focus_next();
+            }
+        }
+        cx.stop_propagation();
+    }
+
+    fn cycle_clear_browsing_history_focus(
+        &mut self,
+        backwards: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if backwards {
+            window.focus_prev();
+            if self.clear_browsing_history_focus.is_focused(window)
+                || !self
+                    .clear_browsing_history_focus
+                    .contains_focused(window, cx)
+            {
+                self.clear_browsing_history_focus.focus(window);
+                window.focus_next();
+                window.focus_next();
+            }
+        } else {
+            window.focus_next();
+            if !self
+                .clear_browsing_history_focus
+                .contains_focused(window, cx)
+            {
+                self.clear_browsing_history_focus.focus(window);
                 window.focus_next();
             }
         }
@@ -36624,6 +36719,81 @@ impl WorkspaceView {
                 this.dispatch(Action::SetBrowserFullCdpAccessEnabled(*enabled), cx);
             }))
             .into_any_element();
+        let browsing_history_total = self.state.browsing_history.len();
+        let browsing_history_rows = self
+            .state
+            .browsing_history
+            .iter()
+            .take(BROWSING_HISTORY_SETTINGS_ROWS)
+            .map(|entry| {
+                let display_url = browser_display_url(&entry.url);
+                let primary = if entry.title.is_empty() {
+                    display_url.clone()
+                } else {
+                    entry.title.clone()
+                };
+                let ago =
+                    relative_time(i64::try_from(entry.visited_at_ms).unwrap_or_default() / 1_000);
+                h_flex()
+                    .min_h(px(44.0))
+                    .px_4()
+                    .py_2()
+                    .gap_3()
+                    .items_center()
+                    .justify_between()
+                    .border_t_1()
+                    .border_color(cx.theme().border)
+                    .child(
+                        v_flex()
+                            .min_w_0()
+                            .gap_1()
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .font_weight(gpui::FontWeight::MEDIUM)
+                                    .min_w_0()
+                                    .truncate()
+                                    .child(primary),
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .min_w_0()
+                                    .truncate()
+                                    .text_color(cx.theme().muted_foreground)
+                                    .child(display_url),
+                            ),
+                    )
+                    .when(!ago.is_empty(), |row| {
+                        row.child(
+                            div()
+                                .text_xs()
+                                .flex_none()
+                                .text_color(cx.theme().muted_foreground)
+                                .child(ago),
+                        )
+                    })
+                    .into_any_element()
+            })
+            .collect::<Vec<_>>();
+        let clear_browsing_history_control = Button::new("browser-browsing-history-clear")
+            .label("Clear")
+            .small()
+            .danger()
+            .disabled(browsing_history_rows.is_empty())
+            .on_click(cx.listener(|this, _, _, cx| {
+                this.workspace_modal = Some(WorkspaceModal::ClearBrowsingHistory);
+                cx.notify();
+            }))
+            .into_any_element();
+        let browsing_history_footer = if browsing_history_total > BROWSING_HISTORY_SETTINGS_ROWS {
+            format!(
+                "Showing the {BROWSING_HISTORY_SETTINGS_ROWS} most recent of \
+                 {browsing_history_total} stored visits"
+            )
+        } else {
+            format!("Browsing history keeps your {MAX_BROWSING_HISTORY} most recent visits")
+        };
         let site_rows = permissions
             .sites
             .iter()
@@ -36851,6 +37021,67 @@ impl WorkspaceView {
                                 history_control,
                                 cx,
                             )),
+                    )
+                    .child(
+                        v_flex()
+                            .w_full()
+                            .max_w(px(760.0))
+                            .overflow_hidden()
+                            .rounded_lg()
+                            .border_1()
+                            .border_color(cx.theme().border)
+                            .bg(cx.theme().sidebar)
+                            .child(
+                                h_flex()
+                                    .min_h(px(50.0))
+                                    .px_4()
+                                    .py_2()
+                                    .gap_4()
+                                    .items_center()
+                                    .justify_between()
+                                    .child(
+                                        v_flex()
+                                            .gap_1()
+                                            .child(
+                                                div()
+                                                    .font_weight(gpui::FontWeight::SEMIBOLD)
+                                                    .child("Browsing history"),
+                                            )
+                                            .child(
+                                                div()
+                                                    .text_xs()
+                                                    .text_color(cx.theme().muted_foreground)
+                                                    .child(
+                                                        "Pages you visit in the built-in browser, \
+                                                         most recent first",
+                                                    ),
+                                            ),
+                                    )
+                                    .child(clear_browsing_history_control),
+                            )
+                            .when(browsing_history_rows.is_empty(), |card| {
+                                card.child(
+                                    div()
+                                        .border_t_1()
+                                        .border_color(cx.theme().border)
+                                        .px_4()
+                                        .py_5()
+                                        .text_sm()
+                                        .text_color(cx.theme().muted_foreground)
+                                        .child("No browsing history yet"),
+                                )
+                            })
+                            .children(browsing_history_rows)
+                            .child(
+                                div()
+                                    .border_t_1()
+                                    .border_color(cx.theme().border)
+                                    .px_4()
+                                    .py_3()
+                                    .text_xs()
+                                    .text_color(cx.theme().muted_foreground)
+                                    .child(browsing_history_footer),
+                            ),
                     )
                     .child(site_permissions_card)
                     .child(
@@ -41003,6 +41234,67 @@ impl WorkspaceView {
                     .into_any_element();
                 self.render_workspace_modal_overlay(panel, !pending, cx)
             }
+            WorkspaceModal::ClearBrowsingHistory => {
+                let panel = v_flex()
+                    .w(px(modal_surface_width(self.shell_viewport_width, 460.0)))
+                    .p_5()
+                    .gap_4()
+                    .rounded(px(16.0))
+                    .bg(cx.theme().popover)
+                    .shadow_xl()
+                    .occlude()
+                    .track_focus(&self.clear_browsing_history_focus)
+                    .tab_group()
+                    .tab_stop(true)
+                    .key_context("ClearBrowsingHistoryModal")
+                    .on_action(cx.listener(
+                        |this, _: &ClearBrowsingHistoryFocusNext, window, cx| {
+                            this.cycle_clear_browsing_history_focus(false, window, cx);
+                        },
+                    ))
+                    .on_action(cx.listener(
+                        |this, _: &ClearBrowsingHistoryFocusPrev, window, cx| {
+                            this.cycle_clear_browsing_history_focus(true, window, cx);
+                        },
+                    ))
+                    .on_any_mouse_down(|_, _, cx| cx.stop_propagation())
+                    .child(
+                        div()
+                            .text_lg()
+                            .font_weight(gpui::FontWeight::SEMIBOLD)
+                            .child("Clear browsing history?"),
+                    )
+                    .child(
+                        div()
+                            .text_sm()
+                            .text_color(cx.theme().muted_foreground)
+                            .child("This removes all stored browsing history from this device"),
+                    )
+                    .child(
+                        h_flex()
+                            .justify_end()
+                            .gap_2()
+                            .child(
+                                Button::new("cancel-clear-browsing-history")
+                                    .label("Cancel")
+                                    .ghost()
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.close_workspace_modal(cx);
+                                    })),
+                            )
+                            .child(
+                                Button::new("confirm-clear-browsing-history")
+                                    .label("Clear")
+                                    .danger()
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.workspace_modal = None;
+                                        this.dispatch(Action::ClearBrowsingHistory, cx);
+                                    })),
+                            ),
+                    )
+                    .into_any_element();
+                self.render_workspace_modal_overlay(panel, true, cx)
+            }
             WorkspaceModal::ResetKeyboardShortcuts => {
                 let pending = self.keyboard_shortcut_reset_all_pending;
                 let error = self.keyboard_shortcut_reset_all_error.clone();
@@ -41232,6 +41524,7 @@ impl WorkspaceView {
             | WorkspaceModal::ModelAvailabilityNux { .. }
             | WorkspaceModal::ChatMemories
             | WorkspaceModal::ResetMemories
+            | WorkspaceModal::ClearBrowsingHistory
             | WorkspaceModal::ImportProviders
             | WorkspaceModal::ImportItems
             | WorkspaceModal::KeyboardShortcuts
@@ -42796,6 +43089,17 @@ impl Render for WorkspaceView {
             }
         } else {
             self.reset_memories_focus_requested = false;
+        }
+        if matches!(
+            self.workspace_modal,
+            Some(WorkspaceModal::ClearBrowsingHistory)
+        ) {
+            if !self.clear_browsing_history_focus_requested {
+                self.clear_browsing_history_focus.focus(window);
+                self.clear_browsing_history_focus_requested = true;
+            }
+        } else {
+            self.clear_browsing_history_focus_requested = false;
         }
         if matches!(
             self.workspace_modal,
@@ -46544,7 +46848,9 @@ fn settings_section_matches(section: SettingsSection, raw_query: &str) -> bool {
         SettingsSection::McpServers => {
             "mcp servers tools data sources integrations oauth resources authenticate"
         }
-        SettingsSection::Browser => "browser downloads location folder save dialog history manage",
+        SettingsSection::Browser => {
+            "browser browsing downloads location folder save dialog history manage visits"
+        }
         SettingsSection::ComputerUse => {
             "computer use windows applications application apps permissions"
         }
@@ -47010,15 +47316,15 @@ mod tests {
         pull_request_merge_submission_enabled, reasoning_effort_target, reduced_motion_enabled,
         remote_control_status_label, render_conversation_markdown, replace_composer_file_query,
         repository_file_scopes, repository_uses_split_diff, reserve_thread_find_history_page,
-        right_panels_hide_for_width_transition, right_panels_restore_for_width_class,
-        sanitize_assistant_markdown, selected_approval_request, selected_model_upgrade_notice,
-        selected_task_copy_value, settings_section_matches, settings_section_refreshes_account,
-        shell_width_class, sidebar_browser_affordance, sidebar_layout_width,
-        sidebar_task_list_visible, sidebar_terminal_affordance, split_diff_rows,
-        startup_recovery_card, status_context_total_label, status_rate_limit_label,
-        status_rate_limit_reset_metadata_at, task_slot_id, task_workspace_active,
-        terminal_browser_affordances_available, terminal_tab_label,
-        thread_find_right_offset_for_shell, timeline_activity_content,
+        resolve_browser_address_target, right_panels_hide_for_width_transition,
+        right_panels_restore_for_width_class, sanitize_assistant_markdown,
+        selected_approval_request, selected_model_upgrade_notice, selected_task_copy_value,
+        settings_section_matches, settings_section_refreshes_account, shell_width_class,
+        sidebar_browser_affordance, sidebar_layout_width, sidebar_task_list_visible,
+        sidebar_terminal_affordance, split_diff_rows, startup_recovery_card,
+        status_context_total_label, status_rate_limit_label, status_rate_limit_reset_metadata_at,
+        task_slot_id, task_workspace_active, terminal_browser_affordances_available,
+        terminal_tab_label, thread_find_right_offset_for_shell, timeline_activity_content,
         turn_diff_update_is_accepted, usage_limit_reset_summary_copy,
         usage_settings_requires_sign_in, validate_plugin_logo_dimensions, worktree_fork_queue_full,
         worktree_use_disabled,
@@ -51021,6 +51327,64 @@ mod tests {
             "example.com"
         );
         assert_eq!(browser_display_url("about:blank"), "");
+    }
+
+    #[test]
+    fn browser_address_prefers_direct_urls_over_history_and_search() {
+        let history = [
+            ("https://github.com/openai/codex", Some("openai codex")),
+            ("https://docs.rs/rust/std/", Some("std - Rust")),
+        ];
+
+        // URL-shaped input navigates directly; history never shadows it.
+        assert_eq!(
+            resolve_browser_address_target("github.com/payswapdotorg/Flauz.app", history),
+            Some("https://github.com/payswapdotorg/Flauz.app".to_owned())
+        );
+        assert_eq!(
+            resolve_browser_address_target("https://example.com/", history),
+            Some("https://example.com/".to_owned())
+        );
+        assert_eq!(
+            resolve_browser_address_target("localhost:3000", history),
+            Some("http://localhost:3000".to_owned())
+        );
+        assert_eq!(
+            resolve_browser_address_target("about:blank", history),
+            Some("about:blank".to_owned())
+        );
+    }
+
+    #[test]
+    fn browser_address_revisits_history_before_falling_back_to_search() {
+        let history = [
+            ("https://github.com/payswapdotorg/Flauz.app", None),
+            ("https://docs.rs/rust/std/", Some("Standard library docs")),
+        ];
+
+        // Non-URL input revisits the best history match (URL substring,
+        // case-insensitive, most recent first).
+        assert_eq!(
+            resolve_browser_address_target("flauz", history),
+            Some("https://github.com/payswapdotorg/Flauz.app".to_owned())
+        );
+        // Title matches also revisit.
+        assert_eq!(
+            resolve_browser_address_target("STANDARD LIBRARY", history),
+            Some("https://docs.rs/rust/std/".to_owned())
+        );
+        // With no history hit the existing Google fallback fires unchanged.
+        assert_eq!(
+            resolve_browser_address_target("native rust client", history),
+            Some("https://www.google.com/search?q=native+rust+client".to_owned())
+        );
+        assert_eq!(
+            resolve_browser_address_target("native rust client", []),
+            Some("https://www.google.com/search?q=native+rust+client".to_owned())
+        );
+        // Empty and control-character input still resolves to nothing.
+        assert_eq!(resolve_browser_address_target("   ", history), None);
+        assert_eq!(resolve_browser_address_target("bad\ninput", history), None);
     }
 
     #[test]

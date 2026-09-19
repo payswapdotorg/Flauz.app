@@ -778,7 +778,8 @@ mod tests {
                     | BrowserEvent::VisibilityRequested { .. }
                     | BrowserEvent::DownloadChanged(_)
                     | BrowserEvent::DownloadSaveRequested { .. }
-                    | BrowserEvent::DownloadRemoved { .. },
+                    | BrowserEvent::DownloadRemoved { .. }
+                    | BrowserEvent::Navigated { .. },
                 )
                 | None => {
                     if Instant::now() >= ready_deadline {
@@ -999,7 +1000,8 @@ mod tests {
                     | BrowserEvent::VisibilityRequested { .. }
                     | BrowserEvent::DownloadChanged(_)
                     | BrowserEvent::DownloadSaveRequested { .. }
-                    | BrowserEvent::DownloadRemoved { .. },
+                    | BrowserEvent::DownloadRemoved { .. }
+                    | BrowserEvent::Navigated { .. },
                 )
                 | None => thread::sleep(Duration::from_millis(5)),
             }
@@ -1334,7 +1336,8 @@ mod tests {
                     | BrowserEvent::VisibilityRequested { .. }
                     | BrowserEvent::DownloadChanged(_)
                     | BrowserEvent::DownloadSaveRequested { .. }
-                    | BrowserEvent::DownloadRemoved { .. },
+                    | BrowserEvent::DownloadRemoved { .. }
+                    | BrowserEvent::Navigated { .. },
                 )
                 | None => {
                     if Instant::now() >= manual_deadline {

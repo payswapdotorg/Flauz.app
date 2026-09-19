@@ -66,6 +66,7 @@ pub const MAX_BROWSER_FRAME_BYTES: usize = 4 * 1024 * 1024;
 pub const MAX_BROWSER_KEY_BYTES: usize = 64;
 pub const MAX_BROWSER_TEXT_BYTES: usize = 256;
 pub const MAX_BROWSER_DOWNLOADS: usize = 200;
+pub const MAX_BROWSING_HISTORY: usize = 500;
 pub const MAX_BROWSER_DOWNLOAD_PATH_BYTES: usize = 8 * 1024;
 pub const MAX_BROWSER_SITE_PERMISSIONS: usize = 200;
 pub const MAX_BROWSER_PERMISSION_ORIGIN_BYTES: usize = 8 * 1024;
@@ -1776,6 +1777,16 @@ pub struct BrowserDownloadState {
 pub struct BrowserDownloadsState {
     pub downloads: VecDeque<BrowserDownloadState>,
     pub unacknowledged_ids: HashSet<String>,
+}
+
+/// One visit in the global browsing history, most recent first in state.
+/// An empty `title` means no page title was known when the visit was
+/// recorded.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BrowsingHistoryEntry {
+    pub url: String,
+    pub title: String,
+    pub visited_at_ms: u64,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -4772,6 +4783,7 @@ pub struct AppState {
     pub remote_control: RemoteControlState,
     pub browser: HashMap<String, BrowserState>,
     pub browser_downloads: BrowserDownloadsState,
+    pub browsing_history: VecDeque<BrowsingHistoryEntry>,
     pub browser_download_preferences: BrowserDownloadPreferences,
     pub browser_permissions: BrowserPermissionsState,
     pub marketplace: MarketplaceState,
@@ -4846,6 +4858,7 @@ impl Default for AppState {
             remote_control: RemoteControlState::default(),
             browser: HashMap::new(),
             browser_downloads: BrowserDownloadsState::default(),
+            browsing_history: VecDeque::new(),
             browser_download_preferences: BrowserDownloadPreferences::default(),
             browser_permissions: BrowserPermissionsState::default(),
             marketplace: MarketplaceState::default(),
@@ -5727,6 +5740,13 @@ pub enum Action {
     BrowserDownloadRemoved {
         id: String,
     },
+    BrowserNavigated {
+        url: String,
+        title: String,
+        visited_at_ms: u64,
+    },
+    BrowsingHistoryLoaded(Vec<BrowsingHistoryEntry>),
+    ClearBrowsingHistory,
     BrowserOperationFailed(String),
     BrowserFailed {
         task_id: Option<String>,
@@ -6911,6 +6931,12 @@ pub enum Effect {
     DeletePersistedBrowserDownload {
         id: String,
     },
+    PersistBrowsingHistory {
+        url: String,
+        title: String,
+        visited_at_ms: u64,
+    },
+    ClearPersistedBrowsingHistory,
     LoadComputerUsePolicy,
     LoadRemoteControlStatus {
         generation: u64,
@@ -15647,6 +15673,55 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
                 .into_iter()
                 .collect()
         }
+        Action::BrowserNavigated {
+            url,
+            title,
+            visited_at_ms,
+        } => {
+            let url = bounded_string(url.trim().to_owned(), MAX_BROWSER_URL_BYTES);
+            let title = bounded_string(title.trim().to_owned(), MAX_BROWSER_TITLE_BYTES);
+            if url.is_empty() || visited_at_ms > i64::MAX as u64 {
+                return Vec::new();
+            }
+            state.browsing_history.push_front(BrowsingHistoryEntry {
+                url: url.clone(),
+                title: title.clone(),
+                visited_at_ms,
+            });
+            state.browsing_history.truncate(MAX_BROWSING_HISTORY);
+            vec![Effect::PersistBrowsingHistory {
+                url,
+                title,
+                visited_at_ms,
+            }]
+        }
+        Action::BrowsingHistoryLoaded(mut entries) => {
+            entries.retain(|entry| !entry.url.trim().is_empty());
+            for entry in &mut entries {
+                entry.url = bounded_string(entry.url.clone(), MAX_BROWSER_URL_BYTES);
+                entry.title = bounded_string(entry.title.clone(), MAX_BROWSER_TITLE_BYTES);
+                entry.visited_at_ms = entry.visited_at_ms.min(i64::MAX as u64);
+            }
+            let mut merged = std::mem::take(&mut state.browsing_history);
+            for entry in entries {
+                if !merged.iter().any(|existing| {
+                    existing.url == entry.url && existing.visited_at_ms == entry.visited_at_ms
+                }) {
+                    merged.push_back(entry);
+                }
+            }
+            merged.truncate(MAX_BROWSING_HISTORY);
+            state.browsing_history = merged;
+            Vec::new()
+        }
+        Action::ClearBrowsingHistory => {
+            let had_entries = !state.browsing_history.is_empty();
+            state.browsing_history.clear();
+            had_entries
+                .then_some(Effect::ClearPersistedBrowsingHistory)
+                .into_iter()
+                .collect()
+        }
         Action::BrowserOperationFailed(message) => {
             state.status_message = Some(bounded_string(message, MAX_COMPOSER_BYTES));
             Vec::new()
@@ -21123,25 +21198,25 @@ mod tests {
         BrowserDownloadStatus, BrowserKeyInput, BrowserMouseButton,
         BrowserOriginElicitationDecision, BrowserPermissionResource, BrowserPermissionValue,
         BrowserPermissionsState, BrowserResourceElicitationDecision, BrowserSitePermission,
-        BrowserTabState, ChatMemoryPreferences, CommandApprovalContext, ComposerAttachment,
-        ComposerAttachmentKind, ComposerControlsState, ComputerApplicationState, ComputerUseState,
-        ConnectionStatus, DiffMarkerStyle, Effect, FeedbackClassification, FuzzyFileMatchType,
-        FuzzyFileResult, GitBranchConflictState, GitCommitNextStep, GitCommitPhase, GitDiffScope,
-        GitPreferences, GitPullRequestNextStep, GitPullRequestPhase, GitPullRequestProvider,
-        GitPullRequestState, GitReviewCommitState, GitReviewMode, GitState, GitWorktreeState,
-        HookCard, HookEventName, HookHandlerType, HookProjectEntry, HookSource, HookTrustStatus,
-        ImportBatch, ImportHistory, ImportItemSuccess, ImportItemType, ImportMigrationDetails,
-        ImportMigrationItem, ImportProvider, ImportProviderItems, ImportTypeResult, InspectorPane,
-        InstalledAppRuntime, IntegratedTerminalShell, KeyboardShortcutPreferences,
-        KeyboardShortcutUpdateTarget, LoadStatus, LocalProjectSummary,
-        MAX_ACCOUNT_DAILY_USAGE_BUCKETS, MAX_ACCOUNT_FIELD_BYTES, MAX_BROWSER_DOWNLOADS,
-        MAX_COMPOSER_BYTES, MAX_GIT_BRANCH_BYTES, MAX_GIT_DIFF_BYTES, MAX_GIT_INSTRUCTIONS_BYTES,
-        MAX_GIT_SHA_BYTES, MAX_LOCAL_PROJECT_FOLDERS, MAX_PINNED_TASK_ID_BYTES,
-        MAX_PLUGIN_DETAIL_ITEMS, MAX_REVIEW_START_ERROR_BYTES, MAX_TIMELINE_ITEMS,
-        MAX_TURN_DIFF_BYTES, MAX_VISIBLE_THREADS, MAX_WORKFLOW_INSTANCES,
-        MAX_WORKFLOW_PUBLISHED_VERSIONS, MainRoute, MarketplaceManageTab, MarketplaceSectionFilter,
-        MarketplaceSourceCard, MarketplaceTab, MarketplaceUpgradeFailure, McpAuthStatus,
-        McpBrowserOriginElicitation, McpBrowserResourceElicitation, McpElicitation,
+        BrowserTabState, BrowsingHistoryEntry, ChatMemoryPreferences, CommandApprovalContext,
+        ComposerAttachment, ComposerAttachmentKind, ComposerControlsState,
+        ComputerApplicationState, ComputerUseState, ConnectionStatus, DiffMarkerStyle, Effect,
+        FeedbackClassification, FuzzyFileMatchType, FuzzyFileResult, GitBranchConflictState,
+        GitCommitNextStep, GitCommitPhase, GitDiffScope, GitPreferences, GitPullRequestNextStep,
+        GitPullRequestPhase, GitPullRequestProvider, GitPullRequestState, GitReviewCommitState,
+        GitReviewMode, GitState, GitWorktreeState, HookCard, HookEventName, HookHandlerType,
+        HookProjectEntry, HookSource, HookTrustStatus, ImportBatch, ImportHistory,
+        ImportItemSuccess, ImportItemType, ImportMigrationDetails, ImportMigrationItem,
+        ImportProvider, ImportProviderItems, ImportTypeResult, InspectorPane, InstalledAppRuntime,
+        IntegratedTerminalShell, KeyboardShortcutPreferences, KeyboardShortcutUpdateTarget,
+        LoadStatus, LocalProjectSummary, MAX_ACCOUNT_DAILY_USAGE_BUCKETS, MAX_ACCOUNT_FIELD_BYTES,
+        MAX_BROWSER_DOWNLOADS, MAX_BROWSING_HISTORY, MAX_COMPOSER_BYTES, MAX_GIT_BRANCH_BYTES,
+        MAX_GIT_DIFF_BYTES, MAX_GIT_INSTRUCTIONS_BYTES, MAX_GIT_SHA_BYTES,
+        MAX_LOCAL_PROJECT_FOLDERS, MAX_PINNED_TASK_ID_BYTES, MAX_PLUGIN_DETAIL_ITEMS,
+        MAX_REVIEW_START_ERROR_BYTES, MAX_TIMELINE_ITEMS, MAX_TURN_DIFF_BYTES, MAX_VISIBLE_THREADS,
+        MAX_WORKFLOW_INSTANCES, MAX_WORKFLOW_PUBLISHED_VERSIONS, MainRoute, MarketplaceManageTab,
+        MarketplaceSectionFilter, MarketplaceSourceCard, MarketplaceTab, MarketplaceUpgradeFailure,
+        McpAuthStatus, McpBrowserOriginElicitation, McpBrowserResourceElicitation, McpElicitation,
         McpElicitationContent, McpElicitationDecision, McpElicitationValue, McpFormElicitation,
         McpFormField, McpFormFieldKind, McpFormImagePickerItem, McpFormOption, McpFormStringFormat,
         McpResourceCard, McpResourceContentCard, McpServerCard, McpServerDraft,
@@ -35536,6 +35611,152 @@ mod tests {
                 .downloads
                 .iter()
                 .all(|entry| entry.id != "active")
+        );
+    }
+
+    #[test]
+    fn browser_navigations_record_bounded_browsing_history_most_recent_first() {
+        let mut state = AppState::default();
+        let navigate = |url: String, title: String, visited_at_ms: u64| Action::BrowserNavigated {
+            url,
+            title,
+            visited_at_ms,
+        };
+
+        assert_eq!(
+            reduce(
+                &mut state,
+                navigate("https://example.com/".to_owned(), "Example".to_owned(), 1,),
+            ),
+            [Effect::PersistBrowsingHistory {
+                url: "https://example.com/".to_owned(),
+                title: "Example".to_owned(),
+                visited_at_ms: 1,
+            }]
+        );
+        reduce(
+            &mut state,
+            navigate("https://docs.rs/rust/std/".to_owned(), String::new(), 2),
+        );
+        assert_eq!(
+            state
+                .browsing_history
+                .iter()
+                .map(|entry| entry.url.as_str())
+                .collect::<Vec<_>>(),
+            ["https://docs.rs/rust/std/", "https://example.com/"]
+        );
+        assert_eq!(state.browsing_history[0].title, "");
+        assert_eq!(state.browsing_history[1].title, "Example");
+
+        // Empty URLs and impossible timestamps are dropped without effects.
+        assert!(reduce(&mut state, navigate("   ".to_owned(), String::new(), 3)).is_empty());
+        assert!(
+            reduce(
+                &mut state,
+                navigate("https://example.com/".to_owned(), String::new(), u64::MAX,),
+            )
+            .is_empty()
+        );
+        assert_eq!(state.browsing_history.len(), 2);
+
+        // The history is bounded: the oldest visits are evicted first.
+        for index in 0..=MAX_BROWSING_HISTORY {
+            reduce(
+                &mut state,
+                navigate(
+                    format!("https://example.com/visit-{index:03}"),
+                    String::new(),
+                    u64::try_from(index).unwrap_or_default() + 10,
+                ),
+            );
+        }
+        assert_eq!(state.browsing_history.len(), MAX_BROWSING_HISTORY);
+        assert_eq!(
+            state
+                .browsing_history
+                .front()
+                .map(|entry| entry.url.as_str()),
+            Some("https://example.com/visit-500")
+        );
+        assert!(
+            state
+                .browsing_history
+                .iter()
+                .all(|entry| entry.url != "https://example.com/visit-000"
+                    && entry.url != "https://example.com/"
+                    && entry.url != "https://docs.rs/rust/std/")
+        );
+    }
+
+    #[test]
+    fn clear_browsing_history_empties_state_and_persists_the_clearing() {
+        let mut state = AppState::default();
+        reduce(
+            &mut state,
+            Action::BrowserNavigated {
+                url: "https://example.com/".to_owned(),
+                title: String::new(),
+                visited_at_ms: 1,
+            },
+        );
+        assert_eq!(
+            reduce(&mut state, Action::ClearBrowsingHistory),
+            [Effect::ClearPersistedBrowsingHistory]
+        );
+        assert!(state.browsing_history.is_empty());
+        // Clearing an already-empty history emits nothing.
+        assert!(reduce(&mut state, Action::ClearBrowsingHistory).is_empty());
+    }
+
+    #[test]
+    fn restored_browsing_history_merges_bounded_and_sanitized() {
+        let mut state = AppState::default();
+        reduce(
+            &mut state,
+            Action::BrowserNavigated {
+                url: "https://live.example/".to_owned(),
+                title: "Live".to_owned(),
+                visited_at_ms: 99,
+            },
+        );
+        // Restored entries arrive most recent first (the storage read order).
+        let mut restored: Vec<BrowsingHistoryEntry> = (0..=MAX_BROWSING_HISTORY)
+            .rev()
+            .map(|index| BrowsingHistoryEntry {
+                url: format!("https://restored.example/visit-{index:03}"),
+                title: String::new(),
+                visited_at_ms: u64::try_from(index).unwrap_or_default(),
+            })
+            .collect();
+        restored.push(BrowsingHistoryEntry {
+            url: "   ".to_owned(),
+            title: String::new(),
+            visited_at_ms: 1,
+        });
+
+        assert!(reduce(&mut state, Action::BrowsingHistoryLoaded(restored)).is_empty());
+        // Live entries stay in front; blank URLs are dropped; the bound holds.
+        assert_eq!(state.browsing_history.len(), MAX_BROWSING_HISTORY);
+        assert_eq!(
+            state
+                .browsing_history
+                .front()
+                .map(|entry| entry.url.as_str()),
+            Some("https://live.example/")
+        );
+        assert_eq!(
+            state
+                .browsing_history
+                .get(1)
+                .map(|entry| entry.url.as_str()),
+            Some("https://restored.example/visit-500")
+        );
+        assert!(
+            state
+                .browsing_history
+                .iter()
+                .all(|entry| entry.url != "https://restored.example/visit-000")
         );
     }
 
