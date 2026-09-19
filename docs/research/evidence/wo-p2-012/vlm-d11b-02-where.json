@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The text **'Select a chat before marking it unread.'** is located in the **bottom bar** (specifically, a notification bar at the very bottom of the main content area). \n\nIt is surrounded by:\n*   **Above it:** The text input field (composer) with the placeholder \"Ask Codex to change, inspect, or explain...\".\n*   **To its right:** A \"Dismiss\" button.\n*   **Below it:** The outer edge/border of the application window.\n\nThe text in the **bottom-left footer** (of the sidebar) is: **Connection failed** (followed by a refresh icon).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789861196,
+  "id": "20260920073950b07a61a1d2d5420c",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920073950b07a61a1d2d5420c",
+  "usage": {
+    "completion_tokens": 131,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1719,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1850
+  }
+}

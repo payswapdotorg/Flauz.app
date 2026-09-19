@@ -1,0 +1,7 @@
+c01-entry:     e7185a646877dbf50b00cec28bfb820d
+c02-unread:    e7185a646877dbf50b00cec28bfb820d   (KNOWN-GOOD: expect delta vs c01 + status text)
+c03-settle:    e7185a646877dbf50b00cec28bfb820d   (status faded?)
+c04-archive:   e7185a646877dbf50b00cec28bfb820d   (F-A1)
+c05-pin:       e7185a646877dbf50b00cec28bfb820d   (F-A2)
+c06-rename:    e7185a646877dbf50b00cec28bfb820d   (F-A3)
+c07-clearall:  9f953cbadca57313ec5166731f708b3d   (KNOWN-GOOD #2: 'No unread chats')

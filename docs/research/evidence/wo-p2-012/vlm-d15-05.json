@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot provided, here is the precise description:\n\n1.  **Command Palette/Search Overlay:** Yes, a command palette overlay is open and centered on the screen. The query text inside it is **\"commit\"**.\n2.  **Visible Palette Rows:** There is only one row visible within the palette area below the input field, which reads: **\"No matches\"**.\n3.  **Left Sidebar State:** The left sidebar is fully expanded. It contains the following sections and items:\n    *   **Top Section:** \"+ New chat\", \"Repository\", \"Pull requests\", \"Plugins\", \"Workflows\".\n    *   **Projects Section:** Header \"Projects\" with a \"+\" icon, followed by \"No projects\".\n    *   **Chats Section:** Header \"Chats\" with search and refresh icons, followed by \"No chats\".\n    *   **Bottom Section:** \"Terminal\", \"Browser\", \"Settings\".\n    *   **Status Bar (bottom):** A green dot with the text \"App-server online\".\n4.  **Modal or Card Overlay:** Yes, there is a card/panel visible in the background (behind the command palette). It contains the text **\"Sign in to start using Codex.\"** followed by four button options: **\"Sign in with ChatGPT\"**, **\"Use device code\"**, **\"Use API key\"**, and **\"Use Amazon Bedrock (Experimental)\"**.\n5.  **Composer State:** The composer (input area) at the bottom of the main window is visible but inactive (obscured by the palette). It contains the placeholder text **\"Ask Codex to change, inspect, or explain...\"**. Below the text area are controls: a **\"+\"** icon, a dropdown set to **\"Ask for approval\"**, a model selector showing **\"GPT-5.6-Sol\"**, a setting showing **\"Low\"**, a mode showing **\"Standard\"**, and a submit arrow icon.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789860255,
+  "id": "20260920072400afa1377850074420",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920072400afa1377850074420",
+  "usage": {
+    "completion_tokens": 412,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1730,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2142
+  }
+}

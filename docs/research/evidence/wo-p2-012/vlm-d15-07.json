@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot provided, here is the precise description of the desktop app's state:\n\n**(1) Left Sidebar Rows:**\n*   **Top Section:** \"+ New chat\", \"Repository\", \"Pull requests\", \"Plugins\", \"Workflows\".\n*   **Projects Section:** Header \"Projects\" with a \"+\" icon. Underneath, there is a folder icon followed by \"**scripts**\" (with a \"+\" and other icons to its right). Indented below that is a chat bubble icon followed by \"**/review**\" with the status text \"**now**\".\n*   **Chats Section:** Header \"Chats\" (with search and refresh icons). The row below reads \"**No chats**\".\n*   **Bottom Section:** \"Terminal\", \"Browser\", \"Settings\", and a green dot followed by \"**App-server online**\".\n\n**(2) Main Transcript Area:**\n*   The main area is largely empty/white.\n*   There is no visible user message text in the conversation history.\n*   In the bottom right corner of the transcript area, there is metadata text reading:\n    > \"/review\n    > d15 compact probe\"\n\n**(3) Error/Status/Toast Text:**\n*   Located directly below the composer input box, there is a status banner containing the exact text:\n    > \"Codex hit an error and is retrying.\"\n*   To the right of this message is a \"**Dismiss**\" button.\n\n**(4) Full Composer State:**\n*   **Context Card:** Above the input box, there is a pill labeled \"**Compact**\" with the sub-text \"Compact this chat's context\".\n*   **Typed Text:** The text inside the main input field is:\n    > \"/compact\"\n*   **Controls (Left):** A \"+\" icon followed by a dropdown menu currently set to \"**Ask for approval**\".\n*   **Controls (Right):** Three dropdown menus set to \"**GPT-5.6-Sol**\", \"**Low**\", and \"**Standard**\", followed by a circular submit button with an upward arrow icon.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789860295,
+  "id": "20260920072445aaa8699c3fb24a5e",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920072445aaa8699c3fb24a5e",
+  "usage": {
+    "completion_tokens": 422,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1740,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2162
+  }
+}

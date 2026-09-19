@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) `/compact`\n(2) None\n(3) New chat, Repository, Pull requests, Plugins, Workflows, Projects (with a + button), No projects, Chats (with search and refresh icons), No chats, Terminal, Browser, Settings\n(4) \"Codex hit an error and is retrying.\" with a \"Dismiss\" button",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789861949,
+  "id": "20260920075227816ca708c74a4c76",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920075227816ca708c74a4c76",
+  "usage": {
+    "completion_tokens": 76,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1719,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1795
+  }
+}

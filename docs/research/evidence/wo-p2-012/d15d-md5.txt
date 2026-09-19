@@ -1,0 +1,11 @@
+d01-entry:       e7185a646877dbf50b00cec28bfb820d   (NUX modal state)
+d02-modalclear:  9f953cbadca57313ec5166731f708b3d   (expect != d01)
+d03-defocused:   2f1af578a730570da333e0eaf5765b69
+d04-early:       2f1af578a730570da333e0eaf5765b69   (F-A1 @1.2s)
+d04-late:        2f1af578a730570da333e0eaf5765b69   (F-A1 @2.7s)
+d05-early:       2f1af578a730570da333e0eaf5765b69   (F-A2 @1.2s)
+d05-late:        2f1af578a730570da333e0eaf5765b69   (F-A2 @2.7s)
+d06-early:       2f1af578a730570da333e0eaf5765b69   (F-A3 @1.2s)
+d06-late:        2f1af578a730570da333e0eaf5765b69   (F-A3 @2.7s)
+d07-early:       06bb4c7513d7e1ab9583610eb220b36d   (cross-check @1.2s)
+d07-late:        06bb4c7513d7e1ab9583610eb220b36d   (cross-check @2.7s)

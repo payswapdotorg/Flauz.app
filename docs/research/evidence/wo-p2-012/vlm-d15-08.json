@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot provided, here is a detailed description of the desktop application interface:\n\n**1. Sidebar Chat Rows and Titles**\nThe left sidebar contains the following navigation items and project structure:\n*   **Top Actions:**\n    *   `+ New chat`\n    *   `Repository` (with folder icon)\n    *   `Pull requests` (with git branch icon)\n    *   `Plugins` (with puzzle piece icon)\n    *   `Workflows` (with grid icon)\n*   **Projects Section:**\n    *   Header: `Projects` (with a `+` icon on the right)\n    *   **Row 1:** `scripts` (folder icon, highlighted in light blue, with `+`, sort, and `...` icons to the right)\n    *   **Row 2:** `/review` (branch icon, status text `now`, highlighted in light blue)\n*   **Chats Section:**\n    *   Header: `Chats` (with search and refresh icons on the right)\n    *   Content: `No chats`\n*   **Bottom Actions:**\n    *   `Terminal`\n    *   `Browser`\n    *   `Settings`\n    *   Status: `App-server online` (with a green dot)\n\n**2. Main Area Content**\nThe main panel displays the context for the current view:\n*   **Header:** `/review` with subtext `/home/z/replay2/scripts`.\n*   **Action Bar:** Contains buttons for `Commit or push` (blue/active), `Fork`, `Refresh Git`, `Changes`, `Outputs`, `Browser`, `Terminal`, `Computer`, and `...`.\n*   **Context Card (Top Right):** Displays `/review` and `d15 compact probe`.\n*   **Info Box:** A rounded rectangle containing:\n    *   Icon (clock/history style)\n    *   Title: `Compact`\n    *   Description: `Compact this chat's context`\n\n**3. Toast or Error Text**\nAt the very bottom of the main area, there is a notification banner:\n*   **Text:** \"Codex hit an error and retrying.\"\n*   **Action Button:** \"Dismiss\" (aligned to the right).\n\n**4. Composer Contents**\nThe input area at the bottom of the main panel contains:\n*   **Text Input Field:** Contains the command `/compact` followed by a cursor line `|`.\n*   **Toolbar (Bottom Left):** A `+` icon followed by a dropdown menu labeled `Ask for approval`.\n*   **Settings (Bottom Right):** Three dropdown menus:\n    1.  `GPT-5.6-Sol`\n    2.  `Low`\n    3.  `Standard`\n*   **Submit Button:** A circular button with an upward arrow icon located at the far right of the toolbar row.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789860312,
+  "id": "202609200724555a5196f0fb394ae6",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609200724555a5196f0fb394ae6",
+  "usage": {
+    "completion_tokens": 594,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1713,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2307
+  }
+}

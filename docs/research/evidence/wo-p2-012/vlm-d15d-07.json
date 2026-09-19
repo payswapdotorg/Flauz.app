@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot provided, here are the answers to your questions:\n\n1.  **Notification/Status message bar below text input:** Yes. The exact text is: **\"Select a chat before marking it unread.\"** (There is also a \"Dismiss\" button on the right).\n2.  **'Sign in' card or modal:** Yes, there is a card in the center of the screen with the heading **\"Sign in to get started\"**.\n3.  **Bottom-left footer text:** Yes. The exact text is: **\"App-server online\"** (preceded by a green dot icon).\n4.  **Other transient message:** Yes, there is a toast or notification banner at the very bottom of the main content area containing the text: **\"Select a chat before marking it unread.\"** (This corresponds to the bar mentioned in question #1).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789861903,
+  "id": "20260920075132e78bd763c4e345ce",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920075132e78bd763c4e345ce",
+  "usage": {
+    "completion_tokens": 181,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1740,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 1921
+  }
+}

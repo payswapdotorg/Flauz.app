@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, there is **no** notification or status bar with a \"Dismiss\" button visible at the very bottom of the window. The area below the text input field is empty white space.\n\nThe bottom-left footer text (located in the sidebar) is:\n**App-server online**",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789861523,
+  "id": "20260920074520edf97bc646ce42ce",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920074520edf97bc646ce42ce",
+  "usage": {
+    "completion_tokens": 61,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1714,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1775
+  }
+}

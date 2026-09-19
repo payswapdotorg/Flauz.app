@@ -1,0 +1,12 @@
+d15b-01-entry:        e7185a646877dbf50b00cec28bfb820d
+d15b-01b-neutral:     e6040c7115c3eed487cb479afc737483   (focus deflection: expect ~entry or minor hover delta)
+d15b-02-early:        e6040c7115c3eed487cb479afc737483   (F-A1 @1.2s)
+d15b-02-late:         e6040c7115c3eed487cb479afc737483   (F-A1 @2.7s — status may fade)
+d15b-03-early:        e6040c7115c3eed487cb479afc737483   (F-A2 @1.2s)
+d15b-03-late:         e6040c7115c3eed487cb479afc737483   (F-A2 @2.7s)
+d15b-04-early:        e6040c7115c3eed487cb479afc737483   (F-A3 @1.2s; no rename dialog must open)
+d15b-04-late:         e6040c7115c3eed487cb479afc737483   (F-A3 @2.7s)
+d15b-05-review:       175862303663bbfbe0a2c3a33e33a0e4   (F-D1: thread row + literal '/review' at +10s)
+d15b-06-early:        8f462017ea52bfbc8e76e64c14e10a14   (F-D2 @1.5s: composer error guidance?)
+d15b-06-late:         57705b53fcb9e6d4caf39643bf21142b   (F-D2 @4s)
+d15b-07-settle:       57705b53fcb9e6d4caf39643bf21142b

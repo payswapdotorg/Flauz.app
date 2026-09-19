@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot provided, here is the precise description of the desktop application interface:\n\n**(1) Modal/Banner Overlay**\nThere is a central modal overlay titled **\"Sign in to get started\"**. The body text reads **\"Sign in to start using Codex.\"**. It contains four buttons:\n*   **\"Sign in with ChatGPT\"**\n*   **\"Use device code\"** (This button has a small 'x' icon on its right edge)\n*   **\"Use API key\"**\n*   **\"Use Amazon Bedrock (Experimental)\"**\n\n**(2) Left Sidebar Content**\nUnder the **\"Projects\"** heading, the text reads **\"No projects\"**.\nUnder the **\"Chats\"** heading (which has a search icon and a refresh icon to its right), the text reads **\"No chats\"**.\n\n**(3) Bottom-Left Footer Status Text**\nThe status text at the very bottom left is: **\"App-server online\"** (preceded by a green dot icon).\n\n**(4) Composer/Input Area State**\nThe input area at the bottom contains the placeholder text: **\"Ask Codex to change, inspect, or explain...\"**.\nBelow the input field, there are controls:\n*   A dropdown menu displaying **\"Ask for approval\"**.\n*   A model selector displaying **\"GPT-5.6-Sol\"**.\n*   A setting selector displaying **\"Low\"**.\n*   A mode selector displaying **\"Standard\"**.\n*   A circular submit button with an upward arrow icon.\n\n**(5) Status Bar Message Text**\nThe main content area behind the modal displays the header text **\"What should we work on?\"** and the subtext **\"Start a new chat or open one from the sidebar.\"**.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789860218,
+  "id": "202609200723230778653432954389",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609200723230778653432954389",
+  "usage": {
+    "completion_tokens": 375,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1741,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 2116
+  }
+}

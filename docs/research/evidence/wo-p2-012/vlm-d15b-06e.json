@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot provided, here are the details you requested:\n\n**(1) Composer Input Area (Text/Command Pill):**\nThe text shown in the input field is:\n> **`/compact`**\n\n**(2) Error or Guidance Message:**\nThe message displayed in the banner just below the input area is:\n> **\"Codex hit an error and is retrying.\"**\n\n**(3) Sidebar Rows:**\n*   **+ New chat**\n*   **Repository**\n*   **Pull requests**\n*   **Plugins**\n*   **Workflows**\n*   **Projects** (with a `+` icon)\n*   **No projects**\n*   **Chats** (with search and refresh icons)\n*   **No chats**\n*   **Terminal**\n*   **Browser**\n*   **Settings**\n*   **App-server online** (indicated by a green dot)\n\n**(4) Toast/Banner at the Bottom:**\nThis is the same error message mentioned above, located at the bottom of the chat interface:\n> **\"Codex hit an error and is retrying.\"**\n(It also has a \"Dismiss\" button on the right).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789861947,
+  "id": "20260920075221ee0d099b9bdd4684",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920075221ee0d099b9bdd4684",
+  "usage": {
+    "completion_tokens": 238,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1736,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1974
+  }
+}

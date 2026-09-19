@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot provided, here is a precise description of the desktop application (OpenAI Codex):\n\n**(1) Left Sidebar Rows**\nUnder the **Projects** section:\n*   \"No projects\"\n\nUnder the **Chats** section:\n*   \"No chats\"\n\nOther sidebar items include: \"+ New chat\", \"Repository\", \"Pull requests\", \"Plugins\", \"Workflows\", \"Terminal\", \"Browser\", and \"Settings\".\n\n**(2) Main Transcript Area Content**\nThe main area displays a welcome screen with the text:\n*   **\"What should we work on?\"**\n*   **\"Start a new chat or open one from the sidebar.\"**\n\nBelow this is a **\"Sign in to get started\"** card containing:\n*   **\"Sign in to start using Codex.\"**\n*   Button: **\"Sign in with ChatGPT\"**\n*   Button: **\"Use device code\"**\n*   Button: **\"Use API key\"**\n*   Button: **\"Use Amazon Bedrock (Experimental)\"**\n\nThere are no user message transcripts visible.\n\n**(3) Status Bar / Toast Message**\nAt the very bottom left of the sidebar, the status text reads:\n*   **\"App-server online\"** (preceded by a green dot icon).\n\n**(4) Composer State**\nThe input area at the bottom shows:\n*   **Agent:** A card labeled **\"Review Agent\"** with the description **\"Find actionable bugs in code changes\"** and a **\"Built-in\"** tag.\n*   **Input Field:** Contains the text **\"/review\"** followed by a cursor.\n*   **Mode Dropdown:** Set to **\"Ask for approval\"**.\n*   **Model Selector:** Set to **\"GPT-5.6-Sol\"**.\n*   **Settings:** Dropdowns set to **\"Low\"** and **\"Standard\"**.\n*   **Action:** A blue circular submit button with an upward arrow icon.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789860268,
+  "id": "202609200724166543b82c5fb54d06",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609200724166543b82c5fb54d06",
+  "usage": {
+    "completion_tokens": 407,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1731,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 2138
+  }
+}

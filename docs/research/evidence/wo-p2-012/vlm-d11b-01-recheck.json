@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) No, there is no central sign-in card or modal with buttons like 'Sign in with ChatGPT'. Instead, there is a warning box about a connection failure to the Codex app-server.\n\n(2) The main area content consists of the heading \"What should we work on?\", the subtext \"Start a new chat or open one from the sidebar.\", and a yellow warning box that states: \"Couldn't connect to the Codex app-server. Install and sign in to the official Codex CLI. If it isn't on PATH, set CODEX_RS_CODEX_BIN, then retry.\" This box includes a \"Retry\" button. At the bottom of the main area is an input field with the placeholder \"Ask Codex to change, inspect, or explain...\".\n\n(3) The bottom-left status says: \"Connection failed\".",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789861136,
+  "id": "2026092007385286285d6c9aa24a0f",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026092007385286285d6c9aa24a0f",
+  "usage": {
+    "completion_tokens": 174,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1725,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1899
+  }
+}

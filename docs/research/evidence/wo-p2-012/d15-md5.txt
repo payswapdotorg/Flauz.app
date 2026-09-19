@@ -1,0 +1,9 @@
+d15-01-entry:              2f5b4a6dc4a0a4a1a732a31be85090ac
+d15-02a-pre:               2f5b4a6dc4a0a4a1a732a31be85090ac
+d15-02b-ctrl+shift+a:      2f5b4a6dc4a0a4a1a732a31be85090ac   (F-A1: expect status bar change vs pre + VLM 'archiving' text)
+d15-03-ctrl+alt+p:         2f5b4a6dc4a0a4a1a732a31be85090ac   (F-A2: expect 'pinning or unpinning' status)
+d15-04-ctrl+alt+r:         2f5b4a6dc4a0a4a1a732a31be85090ac   (F-A3: expect 'renaming' status; NO dialog must open)
+d15-05-palette-commit:     a333371c2ac147a2f089304aabac6e13   (F-A6 record; guard unit-covered — NOT RUN offline)
+d15-06-review-fallthrough: 175862303663bbfbe0a2c3a33e33a0e4   (F-D1: expect thread row + literal '/review' in transcript)
+d15-07-compact-guard:      4d5368a3cc4ada01f93c584319ce0628   (F-D2: expect 'Wait for the chat to finish loading...' composer error)
+d15-08-settle:             5d14775691a0bf105a1e052fb1aebc94   (post-state record)
