@@ -222,6 +222,8 @@ primitives:
 
 The detailed contracts are recorded in
 [docs/CONTEXT-HARNESS-ARCHITECTURE.md](CONTEXT-HARNESS-ARCHITECTURE.md).
+The architecture amendment is recorded in
+[ADR-001](adr/ADR-001-context-harness-world-state-ux.md).
 
 ### GUI discoverability is part of product correctness
 
