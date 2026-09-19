@@ -22,12 +22,12 @@ use codex_core::{
     BrowserMouseButton as CoreBrowserMouseButton, BrowserOriginElicitationDecision,
     BrowserPermissionResource, BrowserPermissionValue, BrowserPermissionsState,
     BrowserResourceElicitationDecision, BrowserSitePermission, BrowserTabState,
-    CommandApprovalContext, ComposerAttachment, ComposerAttachmentKind, ComputerApplicationState,
-    ComputerWindowState, DiffMarkerStyle, Effect, FileChangeApprovalContext, FuzzyFileMatchType,
-    FuzzyFileResult, GitBranchState, GitCommitNextStep, GitDiffScope,
-    GitFileKind as CoreGitFileKind, GitFileState, GitPreferences, GitPullRequestNextStep,
-    GitPullRequestProvider, GitPullRequestState, GitReviewCommitState, GitReviewMode, GitState,
-    GitWorktreeState, HookCard, HookEventName as CoreHookEventName,
+    BrowsingHistoryEntry, CommandApprovalContext, ComposerAttachment, ComposerAttachmentKind,
+    ComputerApplicationState, ComputerWindowState, DiffMarkerStyle, Effect,
+    FileChangeApprovalContext, FuzzyFileMatchType, FuzzyFileResult, GitBranchState,
+    GitCommitNextStep, GitDiffScope, GitFileKind as CoreGitFileKind, GitFileState, GitPreferences,
+    GitPullRequestNextStep, GitPullRequestProvider, GitPullRequestState, GitReviewCommitState,
+    GitReviewMode, GitState, GitWorktreeState, HookCard, HookEventName as CoreHookEventName,
     HookHandlerType as CoreHookHandlerType, HookIssue, HookProjectEntry,
     HookSource as CoreHookSource, HookTrustStatus as CoreHookTrustStatus, ImportHistory,
     ImportItemFailure, ImportItemSuccess, ImportItemType, ImportMigrationDetails,
@@ -207,7 +207,8 @@ use codex_protocol::{
     WorkflowTeachStartParams, WorkflowValidationSeverity as ProtocolWorkflowValidationSeverity,
 };
 use codex_storage::{
-    BrowserDownloadRecordStatus, MAX_BROWSER_DOWNLOAD_RECORDS, Store, StoredBrowserDownload,
+    BrowserDownloadRecordStatus, MAX_BROWSER_DOWNLOAD_RECORDS, MAX_BROWSING_HISTORY_ENTRIES, Store,
+    StoredBrowserDownload,
 };
 use crossbeam_channel::{Receiver, SendTimeoutError, Sender, TryRecvError, TrySendError};
 use serde_json::{Value, json};
@@ -3337,6 +3338,22 @@ fn run_backend(
             ),
             Err(error) => emit(&events, Action::StorageFailed(error.to_string())),
         }
+        match store.browsing_history(MAX_BROWSING_HISTORY_ENTRIES, 0) {
+            Ok(page) => emit(
+                &events,
+                Action::BrowsingHistoryLoaded(
+                    page.items
+                        .into_iter()
+                        .map(|entry| BrowsingHistoryEntry {
+                            url: entry.url,
+                            title: entry.title.unwrap_or_default(),
+                            visited_at_ms: entry.visited_at_ms,
+                        })
+                        .collect(),
+                ),
+            ),
+            Err(error) => emit(&events, Action::StorageFailed(error.to_string())),
+        }
     }
     let mut browser_download_preferences = storage
         .as_ref()
@@ -4301,6 +4318,34 @@ fn run_effect(
             let result = storage
                 .as_mut()
                 .map_or(Ok(()), |store| store.remove_browser_download(id));
+            if let Err(error) = result {
+                storage.take();
+                emit(events, Action::StorageFailed(error.to_string()));
+            }
+            return;
+        }
+        Effect::PersistBrowsingHistory {
+            url,
+            title,
+            visited_at_ms,
+        } => {
+            let result = storage.as_mut().map_or(Ok(()), |store| {
+                store.record_browsing_history(
+                    url,
+                    (!title.is_empty()).then_some(title.as_str()),
+                    *visited_at_ms,
+                )
+            });
+            if let Err(error) = result {
+                storage.take();
+                emit(events, Action::StorageFailed(error.to_string()));
+            }
+            return;
+        }
+        Effect::ClearPersistedBrowsingHistory => {
+            let result = storage
+                .as_mut()
+                .map_or(Ok(()), |store| store.clear_browsing_history());
             if let Err(error) = result {
                 storage.take();
                 emit(events, Action::StorageFailed(error.to_string()));
@@ -8771,6 +8816,8 @@ fn run_effect(
         | Effect::PersistBrowserPermissions(_)
         | Effect::PersistBrowserDownload(_)
         | Effect::DeletePersistedBrowserDownload { .. }
+        | Effect::PersistBrowsingHistory { .. }
+        | Effect::ClearPersistedBrowsingHistory
         | Effect::PersistKeyboardShortcutPreferences { .. }
         | Effect::PersistTerminalDockSize { .. }
         | Effect::PersistIntegratedTerminalShell(_)
@@ -10441,6 +10488,21 @@ fn drain_browser(browser: &mut Option<BrowserRuntime>, events: &UiEventSender) -
             ),
             Ok(Some(BrowserEvent::DownloadRemoved { id })) => {
                 emit(events, Action::BrowserDownloadRemoved { id });
+            }
+            Ok(Some(BrowserEvent::Navigated {
+                url,
+                title,
+                visited_at_ms,
+                ..
+            })) => {
+                emit(
+                    events,
+                    Action::BrowserNavigated {
+                        url,
+                        title,
+                        visited_at_ms,
+                    },
+                );
             }
             Ok(Some(BrowserEvent::OperationFailed(message))) => {
                 emit(events, Action::BrowserOperationFailed(message));
