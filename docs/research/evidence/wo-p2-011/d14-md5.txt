@@ -1,0 +1,11 @@
+d14-01-entry:          337062f2525804b13acf075e19d4083f
+d14-02a-pre:           337062f2525804b13acf075e19d4083f
+d14-02b-post(ctrl+R):  337062f2525804b13acf075e19d4083f   (hijack if != pre AND visible change)
+d14-03-post(c+s+r):    337062f2525804b13acf075e19d4083f   (vs 02b: expect unchanged entry)
+d14-04-palette:        0b441df107300b8a4499f1a1699883d8
+d14-05-copywd-row:     d0f44649e5f3d717bf1b032b163a85ef
+d14-06-workspace:      8c55c15fd91343d64bce2ba803e6a8af
+d14-07-copied-wd:      6a3ff8b73460feb73095fab9306c2b0e   (VLM-read for 'Copied working directory')
+d14-08a-pre:           e4196b790e41abd9b7a2664c90a70d67
+d14-08b-post(ctrl+R):  e4196b790e41abd9b7a2664c90a70d67   (hijack if != pre AND visible change)
+d14-09-post(c+s+r):    e4196b790e41abd9b7a2664c90a70d67   (vs 08b: expect unchanged workspace)

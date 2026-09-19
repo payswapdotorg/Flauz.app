@@ -1,0 +1,5 @@
+d14b-01-workspace:        9dfa9daf8ef10753c63b30132f7842a4
+d14b-02-palette-row:      d059e6813bb0253114584ff35d537a38   (VLM-read: row + Ctrl+Shift+C binding)
+d14b-03-pre-chord:        692c7dd5d08f2de5968a19fd1d5bfa87
+d14b-04-post-early(1.2s): 692c7dd5d08f2de5968a19fd1d5bfa87   (delta vs B3 = toast?)
+d14b-05-post-late(2.5s):  edb4feb152a8e3b8dd1d9aff11ea3b92
