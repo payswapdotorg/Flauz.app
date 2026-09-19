@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**1) Page/Section Title**\nKeyboard shortcuts\n\n**2) Banners, Toasts, or Notices (Verbatim Text)**\n*   **Toast/Notice (Bottom Center):** \"Connection lost. Reconnecting...\" with a \"Dismiss\" button.\n\n**3) Main Content**\n*   **Search Bar:** Contains placeholder text \"Search shortcuts\" and a \"Keys\" button to the right.\n*   **List of Shortcuts (Rows):** Each row displays an action title, a description, and the corresponding keyboard shortcut keys.\n    *   **Row 1:**\n        *   Title: New chat\n        *   Description: Start a new Codex chat\n        *   Keys: `Ctrl` `N` (and fn/modifier icons)\n    *   **Row 2:**\n        *   Title: Archive chat\n        *   Description: Archive the current chat\n        *   Keys: `Ctrl` `Shift` `A`\n    *   **Row 3:**\n        *   Title: New standalone chat\n        *   Description: Start a new chat outside of any project\n        *   Keys: `Ctrl` `Alt` `O`\n    *   **Row 4:**\n        *   Title: Open side chat\n        *   Description: Start a temporary side conversation without leaving this chat\n        *   Keys: `Ctrl` `Alt` `S`\n    *   **Row 5:**\n        *   Title: Toggle pin\n        *   Description: Pin or unpin the current chat\n        *   Keys: `Ctrl` `Alt` `P`\n    *   **Row 6:**\n        *   Title: Mark chat unread\n        *   Description: Toggle the unread indicator for the current chat\n        *   Keys: `Ctrl` `Shift` `U`\n    *   **Row 7 (Partially Visible):**\n        *   Title: Clear all unread indicators\n\n**4) Left Sidebar Selected Item**\n*   **Selected Item:** Keyboard shortcuts (located under the \"Personal\" section).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811298,
+  "id": "202609191748098a3912d8fe7247ed",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191748098a3912d8fe7247ed",
+  "usage": {
+    "completion_tokens": 430,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2075,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2505
+  }
+}

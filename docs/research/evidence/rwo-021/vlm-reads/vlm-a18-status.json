@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Status Message (Bottom):**\n\"No chats need attention.\"\n\n**Rest of Screen:**\nThe application displays the \"General\" settings page, featuring sections for \"Build and compatibility,\" \"Official Codex runtime,\" \"Default terminal location,\" and other configuration options.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789812466,
+  "id": "202609191807423f0438d94c6845ea",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191807423f0438d94c6845ea",
+  "usage": {
+    "completion_tokens": 53,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2056,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 2109
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the 1600x1000 screenshot, here are the approximate pixel bounding boxes for the requested elements:\n\n1) **Message composer input field**: (288, 736, 891, 803)\n2) **'New chat' button**: (111, 137, 169, 160)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789810971,
+  "id": "20260919174248e43ba1d673654f5c",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919174248e43ba1d673654f5c",
+  "usage": {
+    "completion_tokens": 69,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2102,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2171
+  }
+}

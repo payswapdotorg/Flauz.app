@@ -1,0 +1,17 @@
+c01-restored.png: c0ecf6f4fa66b9649aa134c6433afbaf
+c02-main-surface.png: 13edbe19727421a63a11156ed42e034f
+c03-composer-feedback-typed.png: e26a8368edfe518c95740315790d158d
+c04-feedback-dialog-slash.png: e26a8368edfe518c95740315790d158d
+c05-sidebar-pullrequests.png: 457b1be0bcf8b2c4f813729fe49de8c7
+c06-sidebar-plugins.png: bfdc3dedca203f0b8184aa47474156d9
+c07-settings.png: bfdc3dedca203f0b8184aa47474156d9
+c08-settings-search-import.png: 296c6d91ade3fb96029dd7b3cf6afe97
+c09-settings-kbshortcuts.png: e3340517e011600f107a6d2f5e9e4924
+c10-kbshortcuts-filtered.png: 8f5abc740496e7c663dc27e3e27e92e0
+crop-b04-nav.png: 9c6dca4291889aff572e9768ce01cfb7
+crop-b05-top.png: 3770cf70a97e7effb68d3a29648f5941
+crop-b09-tl.png: 6ab58b9be5d327217519cf9ea8c70b36
+crop-composer.png: be01dcbeabf235ef89ae86e720810865
+crop-kbs.png: eda10b5e864a7cefbb6a167da80373d7
+crop-kbs2.png: 9e131b03a14e7e734f42c80cc6099033
+crop-settings.png: 68d6121688528e1be5e8107f5e9bb117

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the provided image, here is the description of the state after the search action:\n\n*   **Search Box Content:** **Yes**, the search box contains the text **\"import\"**.\n*   **Visible Nav Rows/Groups:** The following navigation rows and group headers remain visible (verbatim):\n    *   **Personal** (Group Header)\n    *   **General**\n    *   **Appearance**\n    *   **Personalization**\n    *   **Keyboard shortcuts**\n    *   **Profile**\n    *   **Usage & billing**\n    *   **Import**\n    *   **Integrations** (Group Header)\n    *   **Plugins**\n    *   **MCP servers**\n    *   **Browser**\n    *   **Computer use**\n    *   **Connections**\n    *   **Coding** (Group Header)\n    *   **Configuration**\n    *   **Hooks**\n    *   **Git**\n*   **Main Pane Content:** The main pane displays the **General** settings page. It contains sections for:\n    *   **Build and compatibility** (showing version info: codexRS 0.1.0-rc.13).\n    *   **Official Codex runtime** (showing \"Resolving...\" status).\n    *   **Default terminal location** (with options \"Bottom\" and \"Right\").\n    *   **codexRS state** (showing a file path).\n    *   **Native runtime and safety** (describing GPU renderer and process supervision).\n    *   **Platforms** (header visible at the bottom).\n    *   A toast notification at the bottom reads: **\"Connection lost. Reconnecting...\"** with a **Dismiss** button.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811188,
+  "id": "20260919174611e1544ae564454909",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919174611e1544ae564454909",
+  "usage": {
+    "completion_tokens": 352,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2062,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2414
+  }
+}

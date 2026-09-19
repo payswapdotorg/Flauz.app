@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the factual description of the UI elements:\n\n1.  **Dialog Visibility and Title:** Yes, a 'Share feedback' dialog/modal is visible in the center of the screen. The title is **\"Share feedback\"**.\n2.  **Category Buttons (verbatim):** The buttons are labeled **\"+ Bug\"**, **\"+ Bad result\"**, **\"+ Good result\"**, **\"+ Safety check\"**, and **\"+ Other\"**.\n3.  **Session Logs Checkbox:** The label is **\"Include current ChatGPT session logs\"**. The checkbox is currently **checked** (indicated by a blue checkmark).\n4.  **Details Field Placeholder:** The placeholder text inside the text area is **\"Share details (required)\"**.\n5.  **Submit Button State:** The button labeled **\"Submit\"** appears to be in a **disabled state** (it has a light grey background and faded text).\n6.  **Composer Background Text:** No, the composer behind the modal does not show any user-typed text; it only displays its default placeholder: **\"Ask Codex to change, inspect, or explain...\"**.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789812436,
+  "id": "20260919180709b47b941bffae472f",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919180709b47b941bffae472f",
+  "usage": {
+    "completion_tokens": 244,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2092,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 2336
+  }
+}

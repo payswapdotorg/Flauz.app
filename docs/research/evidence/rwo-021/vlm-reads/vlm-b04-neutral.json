@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the factual description of the settings screen:\n\n1.  **Search Input Content:** The search input is **empty**. It contains only the placeholder text: **\"Search settings...\"**.\n2.  **Navigation Rows (Left Column):** There are **15** navigation rows visible in total (including section headers). Listed verbatim from top to bottom:\n    *   **Personal** (Header)\n    *   General\n    *   Appearance\n    *   Personalization\n    *   Keyboard shortcuts\n    *   Profile\n    *   Usage & billing\n    *   Import\n    *   **Integrations** (Header)\n    *   Plugins\n    *   MCP servers\n    *   Browser\n    *   Computer use\n    *   Connections\n    *   **Coding** (Header)\n    *   Configuration\n    *   Hooks\n    *   Git\n3.  **Highlighted Nav Row:** The row labeled **\"General\"** is highlighted with a light gray background.\n4.  **Main Pane Content:** The main pane displays the title **\"General\"** at the top. The first visible elements below it are a series of setting cards, starting with:\n    *   **Title:** \"Build and compatibility\"\n    *   **Content:** \"codexRS 0.1.0-rc.13\", followed by \"Behavioral reference: Codex Desktop 26.721.3996.0 / CLI 0.146.0-alpha.3.1\".",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811284,
+  "id": "202609191747589146c60effd84a1d",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191747589146c60effd84a1d",
+  "usage": {
+    "completion_tokens": 321,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2087,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2408
+  }
+}

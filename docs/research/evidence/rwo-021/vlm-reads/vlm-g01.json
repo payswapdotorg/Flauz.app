@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided:\n\n1.  **Typed text:** Yes, the message composer contains the typed text: **`/feedback`**\n2.  **Slash-command dropdown:** No, there is no slash-command dropdown menu visible.\n3.  **Visible change near the bottom:** Yes, there is a distinct input area at the bottom of the window featuring a rounded rectangular container with a text field, a \"Permissions\" dropdown, a \"Model\" dropdown, an \"Effort\" dropdown, and a blue circular submit button with an upward arrow icon.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789812116,
+  "id": "20260919180151344dda789656489d",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919180151344dda789656489d",
+  "usage": {
+    "completion_tokens": 114,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2075,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 2189
+  }
+}

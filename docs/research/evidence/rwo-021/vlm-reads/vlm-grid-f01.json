@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the provided grid and window coordinates (window origin at screen x=163, y=91):\n\n1)  **Message composer input box** (placeholder 'Ask Codex to change...'):\n    [285, 736, 886, 786]\n\n2)  **'+ New chat' button in the sidebar**:\n    [107, 134, 257, 162]\n\n3)  **'Pull requests' sidebar row**:\n    [107, 207, 257, 235]",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789812030,
+  "id": "2026091918002623984b7267ed49a1",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091918002623984b7267ed49a1",
+  "usage": {
+    "completion_tokens": 112,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2224,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2336
+  }
+}

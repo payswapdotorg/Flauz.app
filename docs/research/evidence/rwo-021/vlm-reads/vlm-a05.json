@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the factual description of the command palette:\n\n**1) Input Placeholder**\n\"Search chats or run a command\"\n\n**2) Group Headings/Sections**\n*   Suggested\n*   Settings\n\n**3) Settings Group Row Titles (All Visible)**\n*   General\n*   Appearance\n*   Keyboard shortcuts\n*   Usage & billing\n*   Computer use\n*   Profile\n*   Import\n*   Browser\n\n**4) First Rows of Other Groups**\n*   **Suggested:**\n    *   New chat\n    *   Open folder\n    *   Search files",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789812555,
+  "id": "20260919180911ae5c2c997b274942",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919180911ae5c2c997b274942",
+  "usage": {
+    "completion_tokens": 130,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2090,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2220
+  }
+}

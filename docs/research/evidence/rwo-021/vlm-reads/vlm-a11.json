@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the description of the Settings screen:\n\n1.  **'Back to app' affordance:** Yes, the text is **\"Back to app\"**.\n2.  **Search input:** Yes, the placeholder text is **\"Search settings...\"**.\n3.  **Navigation groups and rows:**\n    *   **Personal**\n        *   General\n        *   Appearance\n        *   Personalization\n        *   Keyboard shortcuts\n        *   Profile\n        *   Usage & billing\n        *   Import\n    *   **Integrations**\n        *   Plugins\n        *   MCP servers\n        *   Browser\n        *   Computer use\n        *   Connections\n    *   **Coding**\n        *   Configuration\n        *   Hooks\n        *   Git\n4.  **Currently shown section:** The main pane is currently showing the **General** settings (indicated by the header \"General\" and the \"General\" item being highlighted in the sidebar).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789810717,
+  "id": "2026091917383202269a1c1f544dd1",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091917383202269a1c1f544dd1",
+  "usage": {
+    "completion_tokens": 212,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2090,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2302
+  }
+}

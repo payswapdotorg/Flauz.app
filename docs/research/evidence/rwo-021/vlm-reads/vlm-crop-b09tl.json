@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the provided 520x360 crop of the settings screen, here are the identified elements and their positions:\n\n1.  **Menu Bar Text (Top):**\n    *   **Text:** `File`, `Edit`, `View`, `Help`\n    *   **Position Range:** Approximately **y: 60–130**, spanning the top width.\n\n2.  **'Back to app' Control:**\n    *   **Text:** `<- Back to app` (or similar navigation link)\n    *   **Position in Crop:** **x: 0–110, y: 220–290**\n\n3.  **Search Input:**\n    *   **Placeholder Text:** `Search settings...`\n    *   **Position in Crop:** **x: 0–350, y: 330–410**\n\n4.  **First Nav Group Header & Rows:**\n    *   **Header Text:** (Implicitly \"General\" or just the start of the list)\n        *   **Position:** **x: 0–350, y: 540–610** (This area contains the first selected item acting as a header or top-level category).\n    *   **First 3 Nav Rows:**\n        1.  **Row 1 (Selected):** `General` (with 'X' close icon) — **Position: x: 0–350, y: 540–610**\n        2.  **Row 2:** `Appearance` — **Position: x: 0–350, y: 650–720**\n        3.  **Row 3:** `Localization` — **Position: x: 0–350, y: 760–830**",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811334,
+  "id": "202609191748477c77852abc9c4dbc",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191748477c77852abc9c4dbc",
+  "usage": {
+    "completion_tokens": 363,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 343,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 706
+  }
+}

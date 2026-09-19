@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the exact state of the screen:\n\n*   **Message Composer:** Yes, there is a message composer at the bottom of the main area. It contains **no typed text**. The placeholder text reads: \"Ask Codex to change, inspect, or explain...\".\n*   **Slash-command Dropdown:** No, a slash-command dropdown is not visible.\n*   **Modal/Notification:** There is a small notification banner (toast) open at the bottom right, just above the bottom edge of the window. It displays the text: \"**Connection lost. Reconnecting...**\" with a \"**Dismiss**\" button on its right side.\n\n**Additional Context:**\nThe main screen shows \"What should we work on?\" and indicates \"No chats\". In the left sidebar, under \"Projects\", an item named \"**fixture**\" is selected (highlighted in light blue). At the very bottom left, there is a status message: \"⚠️ Retry 4 in 8s\".",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789810682,
+  "id": "20260919173755a021085f991a45eb",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919173755a021085f991a45eb",
+  "usage": {
+    "completion_tokens": 209,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2060,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2269
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided:\n\n1.  **Exact text in the 'Search shortcuts' input:** \"Search shortcuts\"\n2.  **Number of visible shortcut rows and their titles:** There are **7** fully or partially visible shortcut rows. Their titles are:\n    *   \"New chat\"\n    *   \"Archive chat\"\n    *   \"New standalone chat\"\n    *   \"Open side chat\"\n    *   \"Toggle pin\"\n    *   \"Mark chat unread\"\n    *   \"Clear all unread indicators\"\n3.  **Rows containing the word 'Search':** None of the visible rows contain the word 'Search' in their title.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811558,
+  "id": "20260919175234443a5fbffe934cbf",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919175234443a5fbffe934cbf",
+  "usage": {
+    "completion_tokens": 135,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2079,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2214
+  }
+}

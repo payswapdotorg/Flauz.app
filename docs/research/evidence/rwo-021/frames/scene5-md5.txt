@@ -1,0 +1,10 @@
+e00-restored.png: 533b2b809b530e7300dd6b2150ceca95
+e01-main-surface.png: c8ce4b9e4e3c69d6dd08ef115aa46e2f
+e02-composer-feedback-typed.png: d1ad7df32c74b9f01b93a667d9d099f0
+e03-feedback-dialog-slash.png: d1ad7df32c74b9f01b93a667d9d099f0
+e04-sidebar-pullrequests.png: 51c3f0d6eaaf890838d98abf10ab95f7
+e05-sidebar-plugins.png: bfdc3dedca203f0b8184aa47474156d9
+e06-settings.png: bfdc3dedca203f0b8184aa47474156d9
+e07-settings-search-import.png: ed72ff2970d24d671351311899d94a0c
+e08-settings-kbshortcuts.png: d02f9e52502188f70c337c104cf006fa
+e09-kbshortcuts-filtered.png: a1438b824607372a8900d46b3545bdaf

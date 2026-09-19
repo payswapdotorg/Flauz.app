@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the provided screenshot and the 100x50 grid, here are the locations for the requested elements:\n\n1) **'+ New chat' button**: Not visible in this screenshot (the sidebar shows Settings options).\n2) **'Repository' sidebar row**: Not visible in this screenshot.\n3) **'Pull requests' sidebar row**: Not visible in this screenshot.\n4) **'Plugins' sidebar row**: x 100-200, y 570-600\n5) **'Workflows' sidebar row**: Not visible in this screenshot.\n6) **Message composer input box**: Not visible in this screenshot.\n7) **'Settings' row at the sidebar bottom**: Not visible in this screenshot.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811607,
+  "id": "202609191753241eb37c7bd2ff4b6a",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191753241eb37c7bd2ff4b6a",
+  "usage": {
+    "completion_tokens": 145,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2172,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2317
+  }
+}

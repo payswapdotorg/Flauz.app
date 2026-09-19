@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the factual description of the app window:\n\n**1) Left Sidebar Rows (Top-to-Bottom with Position):**\n*   **← Back to app** (UPPER THIRD)\n*   **[Search settings...]** (UPPER THIRD)\n*   **Personal** (UPPER THIRD)\n*   **⚙ General** (UPPER THIRD)\n*   **✱ Appearance ✖** (UPPER THIRD)\n*   **🛡 Personalization** (MIDDLE)\n*   **✱ Keyboard shortcuts** (MIDDLE)\n*   **👤 Profile** (MIDDLE)\n*   **⏱ Usage & billing** (MIDDLE)\n*   **↓ Import** (MIDDLE)\n*   **Integrations** (MIDDLE)\n*   **🧩 Plugins** (LOWER PART)\n*   **💻 MCP servers** (LOWER PART)\n*   **🌐 Browser** (LOWER PART)\n*   **📊 Computer use** (LOWER PART)\n*   **🌐 Connections** (LOWER PART)\n*   **Coding** (LOWER PART)\n*   **⚙ Configuration** (LOWER PART)\n*   **🔔 Hooks** (LOWER PART)\n*   **🔄 Git** (LOWER PART)\n\n**2) Main Surface Content:**\nThe main area displays the **Appearance** settings. It features a \"Theme\" section with three visual preview options: **System**, **Light**, and **Dark**. Below the previews are two code blocks showing theme configuration objects (one for a light sidebar, one for an elevated/dark sidebar). Further down is a customization section labeled \"**Light theme**\" containing fields for **Accent** (set to `#339CFF`), **Background** (`#FFFFFF`), and **Foreground** (`#1A1C1F`), along with buttons for \"Import\", \"Copy theme\", and \"Codex\".\n\n**3) Selected Project/Item in Sidebar:**\n**Appearance** (It is highlighted with a light grey background and has an 'x' icon next to it).\n\n**4) Footer/Status Text (Verbatim):**\n**Connection lost. Reconnecting...** (with a \"Dismiss\" button on the right).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811466,
+  "id": "2026091917505442c82b5956cb4a6f",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091917505442c82b5956cb4a6f",
+  "usage": {
+    "completion_tokens": 472,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2092,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2564
+  }
+}

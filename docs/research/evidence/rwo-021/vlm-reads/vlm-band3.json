@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "NO\n\n**Headings / List Rows:**\n*   **New standalone chat** (Start a new chat outside of any project)\n*   **Open side chat** (Start a temporary side conversation without leaving this chat)\n*   **Toggle pin** (Pin or unpin the current chat)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811359,
+  "id": "202609191749173e1f405683bf4999",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191749173e1f405683bf4999",
+  "usage": {
+    "completion_tokens": 61,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 311,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 372
+  }
+}

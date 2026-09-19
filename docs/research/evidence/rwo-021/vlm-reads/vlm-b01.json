@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the exact description of the frame:\n\n1)  **Composer input:** **No**, there is no composer input or text box visible at the bottom of the window.\n2)  **Slash-command dropdown:** **No**, there is no slash-command dropdown menu visible.\n3)  **Modal:** **No**, there is no modal dialog overlaying the screen. The view is the main application settings page.\n4)  **Bottom-left status text:** There is no status text visible in the bottom-left corner of the window (the area is empty/black).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811171,
+  "id": "20260919174607adf445cc9e3840d3",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919174607adf445cc9e3840d3",
+  "usage": {
+    "completion_tokens": 120,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2077,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2197
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the factual description:\n\n1.  **Page Type:** This is a **settings page**. This is indicated by the presence of a \"Back to app\" link with a left arrow in the top-left corner of the sidebar, as well as the \"Search settings...\" input field.\n2.  **Main Heading Text (verbatim):** General\n3.  **Composer Input:** There is **no** composer input visible at the bottom of this page.\n4.  **Sidebar Rows Visible (verbatim):**\n    *   Back to app\n    *   Search settings...\n    *   Personal\n    *   General\n    *   Appearance\n    *   Personalization\n    *   Keyboard shortcuts\n    *   Profile\n    *   Usage & billing\n    *   Import\n    *   Integrations\n    *   Plugins\n    *   MCP servers\n    *   Browser\n    *   Computer use\n    *   Connections\n    *   Coding\n    *   Configuration\n    *   Hooks\n    *   Git",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811761,
+  "id": "20260919175556d2f5f3ae64a54b86",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919175556d2f5f3ae64a54b86",
+  "usage": {
+    "completion_tokens": 221,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2094,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2315
+  }
+}

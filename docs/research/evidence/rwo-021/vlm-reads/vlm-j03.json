@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the factual description of the Keyboard shortcuts overlay:\n\n**1) Search Input Content**\nThe text typed in the search input field is: **\"search\"**\n\n**2) Rows Listed and Titles**\nThere are **6 rows** listed in the results. Their titles verbatim are:\n1.  **Open side chat**\n2.  **Find**\n3.  **Search chats**\n4.  **Toggle Activity view**\n5.  **Process Manager**\n6.  **Open command menu**\n7.  **Search files**\n\n*(Note: There are actually 7 distinct shortcut rows visible in the list.)*\n\n**3) Group Headings Visible**\nThe group headings displayed above the rows are:\n*   **Chat**\n*   **Navigation**\n*   **App**\n*   **General**",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789812440,
+  "id": "20260919180716554b02da6c204907",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919180716554b02da6c204907",
+  "usage": {
+    "completion_tokens": 171,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2070,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 2241
+  }
+}

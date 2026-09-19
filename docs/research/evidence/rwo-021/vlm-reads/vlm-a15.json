@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Page Title:** Keyboard shortcuts\n\n**Banner/Toast (Verbatim Text):**\n*   **Toast Message:** \"Connection lost. Reconnecting...\"\n*   **Button on Toast:** \"Dismiss\"\n\n**Empty States:**\n*   There are no empty states visible. The main content area is populated with a list of keyboard shortcut commands and their corresponding key bindings.\n\n**Buttons:**\n*   **\"Back to app\"**: Located at the top left, above the sidebar.\n*   **\"Keys\"**: A button/tag located to the right of the \"Search shortcuts\" input field.\n*   **\"Dismiss\"**: Located inside the toast notification at the bottom of the screen.\n\n**Is there a banner about GitHub/gh CLI being required or missing?**\nNo, there is no banner regarding GitHub or the `gh` CLI. The only notification present is the \"Connection lost. Reconnecting...\" toast at the bottom.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789810797,
+  "id": "20260919173952e7749b8b6e3f4bca",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919173952e7749b8b6e3f4bca",
+  "usage": {
+    "completion_tokens": 188,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2056,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2244
+  }
+}

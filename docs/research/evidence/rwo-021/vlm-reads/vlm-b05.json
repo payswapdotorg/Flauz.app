@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is a detailed description of the **Keyboard shortcuts** settings page:\n\n**Search Input:**\n*   **Placeholder/Content:** The search bar contains the placeholder text **\"Search shortcuts\"**.\n*   **Location:** It is located directly below the \"Keyboard shortcuts\" heading and to the left of a pill-shaped button labeled **\"Keys\"**.\n\n**Visible Rows & Content:**\nThere are **7 fully or partially visible rows** in the list. The verbatim text for each row (Title, Description, and Key combination) is as follows:\n\n1.  **New chat**\n    *   *Description:* Start a new Codex chat\n    *   *Keys:* `Ctrl` `N` ⌘⌥ `↵`\n2.  **Archive chat**\n    *   *Description:* Archive the current chat\n    *   *Keys:* `Ctrl` `Shift` `A` ⌘⌥ `↵`\n3.  **New standalone chat**\n    *   *Description:* Start a new chat outside of any project\n    *   *Keys:* `Ctrl` `Alt` `O` ⌘ `↵`\n4.  **Open side chat**\n    *   *Description:* Start a temporary side conversation without leaving this chat\n    *   *Keys:* `Ctrl` `Alt` `S` ⌘ `↵`\n5.  **Toggle pin**\n    *   *Description:* Pin or unpin the current chat\n    *   *Keys:* `Ctrl` `Alt` `P` ⌘ `↵`\n6.  **Mark chat unread**\n    *   *Description:* Toggle the unread indicator for the current chat\n    *   *Keys:* `Ctrl` `Shift` `U` ⌘⌥ `↵`\n7.  **Clear all unread indicators**\n    *   *(The keys for this row are partially obscured by a notification toast at the bottom)*\n\n**Edit Affordances:**\n*   The key combinations on the right side of each row are displayed inside individual, rounded rectangular badges (e.g., separate boxes for \"Ctrl\", \"Shift\", \"N\").\n*   While there are no explicit \"Edit\" or \"Pencil\" icons visible in this static view, the structured layout of the keys suggests they are interactive elements designed to be clicked to initiate a key remapping process.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811198,
+  "id": "2026091917462804f7446731684d32",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091917462804f7446731684d32",
+  "usage": {
+    "completion_tokens": 505,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2050,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2555
+  }
+}

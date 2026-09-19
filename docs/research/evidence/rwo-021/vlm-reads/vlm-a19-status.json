@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Status Message (Bottom):**\n\"Activity view is not available yet. Use \"Next chat needing attention\" to jump to unread chats.\"\n\n**One Line (Rest of Screen):**\nThe main content area displays the \"General\" settings page, which includes sections for \"Build and compatibility,\" \"Official Codex runtime,\" and \"Default terminal location.\"",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789812468,
+  "id": "202609191807468d7ab76d77a94010",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191807468d7ab76d77a94010",
+  "usage": {
+    "completion_tokens": 71,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2056,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2127
+  }
+}

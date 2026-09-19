@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the factual description:\n\n1.  **Exact text in the 'Search shortcuts' input:** The text is **\"Search shortcuts\"** (this appears to be the placeholder text).\n2.  **Number of shortcut rows and titles:** There are **7** visible shortcut rows. Their titles are:\n    *   New chat\n    *   Archive chat\n    *   New standalone chat\n    *   Open side chat\n    *   Toggle pin\n    *   Mark chat unread\n    *   Clear all unread indicators\n3.  **'No results' or count indicator:** There is a **\"No results found\"** message visible in the left sidebar (below the \"search\" input), but there is **no** \"no results\" message or count indicator within the main \"Keyboard shortcuts\" panel itself.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811969,
+  "id": "20260919175924270bb64f4e8a431b",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919175924270bb64f4e8a431b",
+  "usage": {
+    "completion_tokens": 176,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2071,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2247
+  }
+}
