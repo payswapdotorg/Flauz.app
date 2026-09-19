@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided:\n\n1)  **Composer/Message Input:** There is **no** composer or message input field visible at the bottom of the main surface. The bottom area displays a status notification banner instead.\n2)  **Slash-command dropdown/menu:** **No**, a slash-command dropdown or menu is not visible in the image.\n3)  **Other changes vs a plain empty main surface:**\n    *   The main surface is populated with the **\"Appearance\" settings page**, including theme selection options (System, Light, Dark), code preview blocks, and color configuration fields (Accent, Background, Foreground).\n    *   A **toast notification banner** is overlaid at the very bottom center of the window containing the text: **\"Connection lost. Reconnecting...\"** with a **\"Dismiss\"** button on the right side.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811471,
+  "id": "20260919175106de75dd7b349d465b",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919175106de75dd7b349d465b",
+  "usage": {
+    "completion_tokens": 174,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2080,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 2254
+  }
+}

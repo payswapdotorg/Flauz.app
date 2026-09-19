@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the provided grid (100px horizontal, 50px vertical) and window offset (x=163, y=91):\n\n1) **'Search shortcuts' input**: [[343,299,782,334]]\n2) **'Keyboard shortcuts' page heading**: [[338,246,495,281]]\n3) **First shortcut row 'New chat'**: [[343,381,820,430]]\n4) **'Keys' pill button**: [[790,304,822,331]]",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789812009,
+  "id": "2026091918000413a15fe97ba14975",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091918000413a15fe97ba14975",
+  "usage": {
+    "completion_tokens": 117,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2150,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 2267
+  }
+}

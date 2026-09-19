@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here are the elements in the settings sidebar listed top-to-bottom with their vertical (y) position ranges within the 300px crop:\n\n*   **'Back to app' row:** y = **150 – 260**\n*   **Search input:** y = **310 – 420**\n*   **Group header ('Personal'):** y = **470 – 540**\n*   **Nav row ('General'):** y = **570 – 680**\n*   **Nav row ('Appearance'):** y = **710 – 820**\n*   **Nav row ('Personalization'):** y = **830 – 940**\n*   **Nav row ('Keyboard shortcuts'):** y = **950 – 1060**",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811810,
+  "id": "20260919175647c781e5b8e12b4b35",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919175647c781e5b8e12b4b35",
+  "usage": {
+    "completion_tokens": 163,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 231,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 394
+  }
+}

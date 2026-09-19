@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the factual description:\n\n**1) Page Title/Heading**\n*   **Main Heading:** \"Pull requests\" (located at the top of the center panel, accompanied by a refresh icon).\n\n**2) All Banners/Toasts/Notices (Verbatim)**\n*   **Bottom Banner (Toast):**\n    *   Text: \"**GitHub CLI (gh) is not installed**\"\n    *   Button: \"**Dismiss**\"\n*   **Center Panel Notice (Empty State):**\n    *   Heading: \"**GitHub CLI setup required**\"\n    *   Subtext: \"**GitHub CLI (gh) is not installed**\"\n    *   Buttons: \"**Install GitHub CLI**\", \"**Check again**\"\n*   **Sidebar Status (Bottom Left):**\n    *   Text: \"**Connection failed**\" (preceded by a red dot icon and followed by a refresh icon).\n\n**3) Main Content and Empty States (Verbatim)**\n*   **Search Bar:** Placeholder text reads \"**Search pull requests**\".\n*   **Filter Tabs (Row 1):** \"Reviewing\", \"Review requested\", \"Previously reviewed\".\n*   **Filter Tabs (Row 2 - Authored):** \"Authored\", \"Authored\", \"All\".\n*   **Filter Tabs (Row 3 - State):** \"State\", \"Open\", \"Merged\", \"Closed\", \"All states\".\n*   **Results Header:** \"Results · 0 results\" with a link to \"**GitHub**\" on the right.\n*   **Main Empty State (Center):**\n    *   Icon: A pull request icon.\n    *   Primary Text: \"**Select pull request to view**\"\n    *   Secondary Text: \"**Choose a pull request from the list to open its summary.**\"\n    *   (Followed by the \"GitHub CLI setup required\" notice detailed above).\n*   **Sidebar Empty State (under Chats):** Text reads \"**No chats**\".\n\n**4) Highlighted Sidebar Row**\n*   The row \"**Pull requests**\" is highlighted in light blue, indicating it is the currently active selection. A tooltip labeled \"**Open pull requests**\" is visible near the mouse cursor hovering over this item.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811948,
+  "id": "202609191758585a532b9f46a14897",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191758585a532b9f46a14897",
+  "usage": {
+    "completion_tokens": 463,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2073,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2536
+  }
+}

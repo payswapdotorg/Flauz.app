@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Status Message (Bottom):**\n\"No unread chats\" (with a \"Dismiss\" button to the right)\n\n**One Line on Screen:**\nThe main content area displays the \"General\" settings page, featuring sections for \"Build and compatibility,\" \"Official Codex runtime,\" and \"Default terminal location.\"",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789812472,
+  "id": "2026091918074833c2b69211604bfa",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091918074833c2b69211604bfa",
+  "usage": {
+    "completion_tokens": 62,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2056,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2118
+  }
+}

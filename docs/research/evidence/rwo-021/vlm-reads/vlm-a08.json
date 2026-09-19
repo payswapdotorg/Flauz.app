@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Yes, a **'Share feedback'** dialog is visible.\n\nHere are the details:\n\n*   **Title:** Share feedback\n*   **Category buttons/labels:** + Bug, + Bad result, + Good result, + Safety check, + Other\n*   **Checkbox for logs:** \"Include current ChatGPT session logs\" (State: **Checked**)\n*   **Details text field:** Placeholder text is \"**Share details (required)**\"\n*   **Validation hints:** The word \"(required)\" is included in the placeholder of the details field.\n*   **Submit button:** Submit (currently appears disabled/light blue)",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789810675,
+  "id": "20260919173751499586b31dd74d58",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919173751499586b31dd74d58",
+  "usage": {
+    "completion_tokens": 128,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2063,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2191
+  }
+}

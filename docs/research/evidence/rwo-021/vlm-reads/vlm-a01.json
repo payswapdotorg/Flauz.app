@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is a precise description of the desktop application window:\n\n**1) Left Sidebar Contents**\nThe sidebar contains the following items (from top to bottom):\n*   **+ New chat** (button)\n*   **Repository** (row with folder icon)\n*   **Pull requests** (row with git-branch icon)\n*   **Plugins** (row with puzzle-piece icon)\n*   **Workflows** (row with workflow icon)\n*   **Projects** (section header with a \"+\" button)\n    *   **fixture** (selected project row, highlighted in light blue, with a folder icon, and action icons for add, sort, and more options)\n        *   *Sub-text:* \"No chats\"\n*   **Chats** (section header with search and refresh icons)\n    *   *Text:* \"No chats\"\n*   **Terminal** (row with terminal icon)\n*   **Browser** (row with globe icon)\n*   **Settings** (row with gear icon)\n\n**2) Main Surface**\nThe central area displays an empty state with the following text:\n*   **Heading:** \"What should we work on?\"\n*   **Sub-heading:** \"Start a new chat or open one from the sidebar.\"\n*   **Error Toast/Alert:** A yellow-bordered box is visible in the center containing:\n    *   **Header:** \"⚠ Couldn't connect to the Codex app-server\"\n    *   **Body:** \"Install and sign in to the official Codex CLI. If it isn't on PATH, set CODEX_RS_CODEX_BIN, then retry.\"\n    *   **Actions:** An \"X\" icon to close and a \"**Retry**\" button.\n*   **Context Tag:** Below the error box, there is a grey pill-shaped tag reading: \"Local /tmp/rwo021-fixture\"\n*   **Input Area (Bottom):** A large text input box with the placeholder text: \"Ask Codex to change, inspect, or explain...\"\n\n**3) Bottom Footer Status Area**\nLocated at the very bottom left of the sidebar:\n*   **Status Text:** \"Connection failed\"\n*   **Icon:** A red dot indicating an error state, followed by a refresh/retry arrow icon.\n\n**4) Open Workspace/Project Indication**\nThere is a clear indication of an active workspace:\n*   The project named **\"fixture\"** is currently selected (highlighted) under the **Projects** section in the sidebar.\n*   The main surface context tag explicitly identifies the working directory as **\"Local /tmp/rwo021-fixture\"**.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789810654,
+  "id": "20260919173724a7f34439e47c4f40",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919173724a7f34439e47c4f40",
+  "usage": {
+    "completion_tokens": 541,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2086,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2627
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the provided 900x250 cropped image, here is the exact location of the requested elements and the visible content:\n\n*   **'Search shortcuts' input field:** Located at the bottom of the crop, spanning from approximately **(50, 970)** to **(830, 1000)**. It appears as a white rectangular box with a faint border.\n*   **'Keys' button:** Located to the right of the search field, partially cut off by the right edge of the crop, at approximately **(840, 970)** to **(900, 1000)**.\n*   **Visible rows/headings below:**\n    *   The main heading **\"Keyboard shortcuts\"** is clearly visible in large text at roughly **y = 200-240**.\n    *   There are no other rows or headings visible below this heading within the bounds of this specific crop; the area between the heading and the search bar (roughly y = 250 to y = 970) is empty white space.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811043,
+  "id": "2026091917435805cffeab6d354426",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091917435805cffeab6d354426",
+  "usage": {
+    "completion_tokens": 216,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 331,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 547
+  }
+}

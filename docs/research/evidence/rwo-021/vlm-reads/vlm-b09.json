@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is a factual description of the page:\n\n**1) Page/Section Title**\n*   **Main Header:** General\n*   **Context:** This is located within a settings menu, indicated by the \"Back to app\" link and the sidebar navigation.\n\n**2) Banners/Toasts/Notices (Verbatim Text)**\n*   **Toast Notification (Bottom Right):**\n    *   **Text:** \"Connection lost. Reconnecting...\"\n    *   **Action Button:** \"Dismiss\"\n\n**3) Main Content Rows/Cards**\nThe main content area displays several informational cards under the \"General\" section:\n\n*   **Card 1: Build and compatibility**\n    *   **Content:**\n        *   \"codexRS 0.1.0-rc.13\"\n        *   \"Behavioral reference: Codex Desktop 26.721.3996.0 / CLI 0.146.0-alpha.3.1\"\n*   **Card 2: Official Codex runtime**\n    *   **Content:**\n        *   \"Executable: Resolving...\"\n        *   \"CODEX_HOME (configured): Resolving...\"\n        *   \"Live runtime data is accessed only through the supervised official app-server.\"\n*   **Card 3: Default terminal location**\n    *   **Content:**\n        *   \"Choose where the terminal shortcut and environment actions open terminal tabs.\"\n    *   **Controls:** Two toggle buttons labeled \"**Bottom**\" and \"**Right**\".\n*   **Card 4: codexRS state**\n    *   **Content:**\n        *   \"/tmp/rwo021-data/state.sqlite3\"\n        *   \"Contains UI preferences, pinned chat IDs, and recent workspaces only; it never mirrors live Codex history.\"\n*   **Card 5: Native runtime and safety**\n    *   **Content:**\n        *   \"GPU renderer, Rust process supervision, bounded frames and queues, and explicit approvals. No Electron, Tauri, Wry, WebView, Node.js, or embedded browser.\"\n*   **Card 6: Platforms**\n    *   **Content:** (The card header is visible, but the specific content is cut off at the bottom of the view).\n\n**4) Marketplace Elements**\n*   There are **no marketplace elements** visible on this page. The page consists entirely of system configuration settings and status information.\n\n**Sidebar Navigation Elements (for context):**\n*   Search bar: \"Search settings...\"\n*   **Personal Section:** General (Selected), Appearance, Personalization, Keyboard shortcuts, Profile, Usage & billing, Import.\n*   **Integrations Section:** Plugins, MCP servers, Browser, Computer use, Connections.\n*   **Coding Section:** Configuration, Hooks, Git.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811308,
+  "id": "202609191748184e122ed0d0a64999",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191748184e122ed0d0a64999",
+  "usage": {
+    "completion_tokens": 577,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2066,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2643
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the factual description:\n\n1.  **Exact text in settings search input:** `import`\n2.  **Visible nav rows (2):**\n    *   **Personal** (Group Header)\n    *   `Import` (Expanded/Selected)\n3.  **Main pane content:** The main pane displays the \"General\" settings page, containing the following sections:\n    *   **Build and compatibility:** Lists version `codexRS 0.1.0-rc.13` and a behavioral reference for Codex Desktop and CLI.\n    *   **Official Codex runtime:** Shows status as \"Resolving...\" for both Executable and CODEX_HOME, with a note about live runtime data.\n    *   **Default terminal location:** Offers a choice between \"Bottom\" and \"Right\" (with \"Bottom\" appearing selected).\n    *   **codexRS state:** Displays the path `/tmp/rwo021-data/state.sqlite3` and a description of its contents.\n    *   **Native runtime and safety:** Describes security features like GPU renderer and Rust process supervision.\n    *   **Platforms:** Contains a notification banner at the bottom stating \"Connection lost. Reconnecting...\" with a \"Dismiss\" button.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811963,
+  "id": "20260919175915fd0f97f7a0f14db3",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919175915fd0f97f7a0f14db3",
+  "usage": {
+    "completion_tokens": 258,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2067,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2325
+  }
+}

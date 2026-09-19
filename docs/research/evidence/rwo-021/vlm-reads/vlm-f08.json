@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the factual description:\n\n1.  **Settings Page Title:** The title shown in the main pane is **\"Keyboard shortcuts\"**.\n2.  **'Search shortcuts' Input:** Yes, there is a **'Search shortcuts'** input field in the main pane. It is located at the **top** of the content area, directly below the page title.\n3.  **Left Sidebar Nav Rows:** The visible navigation rows are:\n    *   General\n    *   Appearance\n    *   Personalization\n    *   Keyboard shortcuts (currently selected)\n    *   Profile\n    *   Usage & billing\n    *   Import\n    *   Plugins\n    *   MCP servers\n    *   Browser\n    *   Computer use\n    *   Connections\n    *   Configuration\n    *   Hooks\n    *   Git\n4.  **Left Sidebar Search Text:** The text inside the left sidebar search input is the placeholder text: **\"Search settings...\"**.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789812004,
+  "id": "20260919175957779c6dfdbe1d40a3",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919175957779c6dfdbe1d40a3",
+  "usage": {
+    "completion_tokens": 211,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2094,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2305
+  }
+}

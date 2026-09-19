@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1) **Search Input Content:**\n   - **Left Sidebar:** The search input contains the placeholder text: \"Search settings...\" (it is empty of user input).\n   - **Main Panel:** The search input under \"Keyboard shortcuts\" contains the placeholder text: \"Search shortcuts\" (it is empty of user input).\n\n2) **List Rows and Titles:**\n   There are **7** fully or partially visible list rows in the main panel. Their titles are:\n   - \"New chat\"\n   - \"Archive chat\"\n   - \"New standalone chat\"\n   - \"Open side chat\"\n   - \"Toggle pin\"\n   - \"Mark chat unread\"\n   - \"Clear all unread indicators\"\n\n3) **Highlighted/Focused Element:**\n   - In the left sidebar, the **\"Keyboard shortcuts\"** menu item is highlighted (indicated by a light grey background).\n   - A **toast notification** is visible at the bottom center of the screen with the text: \"Connection lost. Reconnecting...\" and a \"Dismiss\" button.\n   - An **'X' icon** is visible on the \"Archive chat\" row, likely indicating a hover state or active interaction for that specific item.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811289,
+  "id": "20260919174804cb270a033e184a46",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919174804cb270a033e184a46",
+  "usage": {
+    "completion_tokens": 245,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2072,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2317
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the provided image, the search bar is **empty** (it displays the placeholder text \"Search settings...\"). The image does **not** show a state where the settings have been filtered with 'import'.\n\nHowever, based on the current visible state of the application:\n\n**Visible Navigation Rows/Groups:**\n*   **Personal**\n    *   General (Selected)\n    *   Appearance\n    *   Personalization\n    *   Keyboard shortcuts\n    *   Profile\n    *   Usage & billing\n    *   Import\n*   **Integrations**\n    *   Plugins\n    *   MCP servers\n    *   Browser\n    *   Computer use\n    *   Connections\n*   **Coding**\n    *   Configuration\n    *   Hooks\n    *   Git\n\n**Main Pane Content:**\nThe main pane shows the **General** settings page. It contains the following sections:\n*   **Build and compatibility**: Displays version info (`codexRS 0.1.0-rc.13`) and behavioral reference.\n*   **Official Codex runtime**: Shows executable status (\"Resolving...\") and CODEX_HOME status.\n*   **Default terminal location**: Options for \"Bottom\" or \"Right\".\n*   **codexRS state**: File path (`/tmp/rwo021-data/state.sqlite3`) and description.\n*   **Native runtime and safety**: Description of GPU renderer and process supervision.\n*   **Platforms**: (Header visible at bottom).\n*   **Toast Notification**: A \"Connection lost. Reconnecting...\" message is visible at the bottom right of the pane.\n\n**'No results' state?**\n**No**, there is no 'no results' state. All navigation items are visible, and the main pane is fully populated with content.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789810727,
+  "id": "20260919173837b1d8920a65b64040",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919173837b1d8920a65b64040",
+  "usage": {
+    "completion_tokens": 367,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2055,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2422
+  }
+}

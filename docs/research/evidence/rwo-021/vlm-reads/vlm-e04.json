@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the factual description of the interface:\n\n**1) Page Title/Heading**\n*   **Main Heading:** \"General\"\n*   **Window Title Bar:** (Standard window controls visible: Minimize, Maximize, Close). The menu bar contains \"File\", \"Edit\", \"View\", \"Help\".\n\n**2) ALL Banners/Toasts Verbatim**\n*   There are **no** banners, toasts, or notification bars (including GitHub/gh-required ones) visible in this view.\n\n**3) Main Content and Empty States Verbatim**\nThe main content area displays the \"General\" settings page with the following sections and text verbatim:\n\n*   **Section Header:** Build and compatibility\n    *   **Text:** `codexRS 0.1.0-rc.13`\n    *   **Text:** `Behavioral reference: Codex Desktop 26.721.3996.0 / CLI 0.146.0-alpha.3.1`\n\n*   **Section Header:** Official Codex runtime\n    *   **Text:** `Executable: Resolving...`\n    *   **Text:** `CODEX_HOME (configured): Resolving...`\n    *   **Text:** `Live runtime data is accessed only through the supervised official app-server.`\n\n*   **Section Header:** Default terminal location\n    *   **Text:** `Choose where the terminal shortcut and environment actions open terminal tabs.`\n    *   **Buttons/Toggles:** `Bottom` | `Right`\n\n*   **Section Header:** codexRS state\n    *   **Text:** `/tmp/rwo021-data/state.sqlite3`\n    *   **Text:** `Contains UI preferences, pinned chat IDs, and recent workspaces only; it never mirrors live Codex history.`\n\n*   **Section Header:** Native runtime and safety\n    *   **Text:** `GPU renderer, Rust process supervision, bounded frames and queues, and explicit approvals. No Electron, Tauri, Wry, WebView, Node.js, or embedded browser.`\n\n*   **Section Header:** Platforms\n    *   **Text:** `Current build: linux / x86_64. Windows is smoke-tested; Linux is validated in native CI and requires X11/Wayland for PC Computer Use`\n\n**4) Highlighted Sidebar Row**\n*   The sidebar row for **\"General\"** (under the \"Personal\" category) is highlighted with a light grey background, indicating it is the currently selected active page.\n*   Other visible sidebar items include: Appearance, Personalization, Keyboard shortcuts, Profile, Usage & billing, Import, Plugins, MCP servers, Browser, Computer use, Connections, Configuration, Hooks, Git.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811778,
+  "id": "2026091917560737ac90a7eb36494c",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091917560737ac90a7eb36494c",
+  "usage": {
+    "completion_tokens": 564,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2070,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2634
+  }
+}

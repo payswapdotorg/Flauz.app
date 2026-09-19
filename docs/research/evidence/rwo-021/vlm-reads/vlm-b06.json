@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided:\n\n1.  **Does the search input contain 'search'?**\n    **No**. The search input field displays the placeholder text **\"Search shortcuts\"**, but it does not contain the typed text \"search\". The field appears empty.\n\n2.  **How many rows remain?**\n    There are **8** visible rows in the list.\n\n3.  **List their titles verbatim:**\n    *   New chat\n    *   Archive chat\n    *   New standalone chat\n    *   Open side chat\n    *   Toggle pin\n    *   Mark chat unread\n    *   Clear all unread indicators\n    *   Connection lost. Reconnecting...",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811205,
+  "id": "20260919174638f66b8623fe4b447d",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919174638f66b8623fe4b447d",
+  "usage": {
+    "completion_tokens": 144,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2056,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 2200
+  }
+}

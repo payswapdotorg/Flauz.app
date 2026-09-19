@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Status Message (Bottom):**\n\"Select a chat before marking it unread.\"\n\n**One Line (Rest of Screen):**\nThe main content area displays the \"General\" settings page, which includes a section titled \"Build and compatibility\" showing the version \"codexRS 0.1.0-rc.13\".",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789812462,
+  "id": "20260919180740c753a7ddf99f491e",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919180740c753a7ddf99f491e",
+  "usage": {
+    "completion_tokens": 66,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2056,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2122
+  }
+}

@@ -1,0 +1,9 @@
+b01-composer-feedback-typed.png: efe7b252cd95c07a1f00f39ef589e782
+b02-feedback-dialog-slash.png: efe7b252cd95c07a1f00f39ef589e782
+b03-settings.png: 83a64aa1d1b65883a97739cecca56746
+b04-settings-search-import.png: 9089e31dde467e872e20053db86c9481
+b05-settings-kbshortcuts.png: dde590ec753aec877136ab8509fb7bda
+b06-kbshortcuts-filtered.png: 3c49fc11d885c0474764cc013dcd2356
+b07-back-to-app.png: 6aca084114050a020faad60c32e232b7
+b08-sidebar-pullrequests.png: 46224d60a7bb3543f3cfeb66b9038a10
+b09-sidebar-plugins.png: bfdc3dedca203f0b8184aa47474156d9

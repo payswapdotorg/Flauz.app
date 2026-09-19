@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here are the details of the 'Keyboard shortcuts' overlay:\n\n1.  **Overlay Title/Search Placeholder:**\n    *   **Title:** Keyboard shortcuts\n    *   **Search Placeholder:** Search shortcuts\n\n2.  **Section/Group Headings (in order):**\n    1.  Chat\n    2.  Navigation\n\n3.  **Number of Rows per Group and Total:**\n    *   **Chat:** 6 rows\n    *   **Navigation:** 7 rows\n    *   **Total:** 13 rows visible in the list.\n\n4.  **First and Last Row Text Verbatim:**\n    *   **First Row:** New chat\n    *   **Last Row:** Browser forward",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789810662,
+  "id": "2026091917373804382a4236464fb8",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026091917373804382a4236464fb8",
+  "usage": {
+    "completion_tokens": 155,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2083,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 2238
+  }
+}

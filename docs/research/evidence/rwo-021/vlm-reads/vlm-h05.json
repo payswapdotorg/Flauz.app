@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the factual description:\n\n1.  **Search Input Text:** The text inside the 'Search shortcuts' input field is the placeholder **\"Search shortcuts\"**.\n2.  **Shortcut Rows:** There are **7** fully or partially visible shortcut rows. Their titles are:\n    *   \"New chat\"\n    *   \"Archive chat\"\n    *   \"New standalone chat\"\n    *   \"Open side chat\"\n    *   \"Toggle pin\"\n    *   \"Mark chat unread\"\n    *   \"Clear all unread indicators\"\n3.  **'No Results' Indicator:** Yes, there is a **\"No results found\"** indicator visible in the left sidebar (below the main search bar), and a toast notification at the bottom stating **\"Connection lost. Reconnecting...\"**.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789812285,
+  "id": "202609191804418c870d7a1b6f4caf",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191804418c870d7a1b6f4caf",
+  "usage": {
+    "completion_tokens": 171,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2075,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2246
+  }
+}

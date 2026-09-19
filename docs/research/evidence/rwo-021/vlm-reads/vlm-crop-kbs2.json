@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the list of elements with their positions relative to the 900x260 crop:\n\n**Input Fields:**\n*   **Search Input:** [55, 130, 830, 240] (Placeholder text: \"Search shortcuts\")\n\n**Buttons:**\n*   **Keys Button:** [840, 130, 905, 230] (Label: \"Keys\")\n\n**List Rows:**\n*   **Row 1 (New chat):** [50, 320, 895, 640]\n*   **Row 2 (Archive chat):** [50, 650, 895, 970]\n\n**Group Headings / Text Content within Rows:**\n*   **\"New chat\":** [65, 430, 155, 500]\n*   **\"Start a new Codex chat\":** [68, 540, 235, 600]\n*   **\"Archive chat\":** [65, 760, 175, 820]\n*   **\"Archive the current chat\":** [68, 870, 235, 930]\n\n**Sub-elements (Key Badges) inside Row 1:**\n*   **Badge \"Ctrl\":** [755, 390, 800, 470]\n*   **Badge \"N\":** [810, 390, 835, 470]\n*   **Badge \"f9\":** [850, 385, 885, 470]\n*   **Icon (Apple/Command):** [895, 395, 920, 465]\n*   **Badge \"Ctrl\":** [715, 560, 760, 640]\n*   **Badge \"Shift\":** [765, 560, 825, 640]\n*   **Badge \"O\":** [835, 560, 860, 640]\n*   **Badge \"f12\":** [875, 555, 910, 640]\n*   **Icon (Apple/Command):** [920, 565, 945, 635]\n\n**Sub-elements (Key Badges) inside Row 2:**\n*   **Badge \"Ctrl\":** [715, 790, 760, 870]\n*   **Badge \"Shift\":** [765, 790, 825, 870]\n*   **Badge \"A\":** [835, 790, 858, 870]\n*   **Badge \"f9\":** [875, 785, 910, 870]\n*   **Icon (Apple/Command):** [920, 795, 945, 865]",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811073,
+  "id": "20260919174410d617468333f249a5",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919174410d617468333f249a5",
+  "usage": {
+    "completion_tokens": 615,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 317,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 932
+  }
+}

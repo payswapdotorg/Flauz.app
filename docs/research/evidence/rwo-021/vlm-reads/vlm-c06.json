@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the factual description of the page:\n\n**1) Title/Heading**\n*   **Main Heading:** \"General\" (located at the top center of the content area).\n\n**2) ALL Banners/Toasts (Verbatim)**\n*   **Toast Notification (Bottom):** \"Connection lost. Reconnecting...\" with a **Dismiss** button on the right.\n\n**3) Main Content**\nThe page displays a settings interface divided into a sidebar and a main content panel:\n\n*   **Sidebar Navigation:**\n    *   **Top:** A link labeled **\"< Back to app\"** and a search bar placeholder reading **\"Search settings...\"**.\n    *   **Categories:**\n        *   **Personal:** General, Appearance, Personalization, Keyboard shortcuts, Profile, Usage & billing, Import.\n        *   **Integrations:** Plugins, MCP servers, Browser, Computer use, Connections.\n        *   **Coding:** Configuration, Hooks, Git.\n*   **Main Content Panel (General Settings):**\n    *   **Section: Build and compatibility**\n        *   Text: `codexRS 0.1.0-rc.13`\n        *   Text: `Behavioral reference: Codex Desktop 26.721.3996.0 / CLI 0.146.0-alpha.3.1`\n    *   **Section: Official Codex runtime**\n        *   Text: `Executable: Resolving...`\n        *   Text: `CODEX_HOME (configured): Resolving...`\n        *   Text: `Live runtime data is accessed only through the supervised official app-server.`\n    *   **Section: Default terminal location**\n        *   Text: `Choose where the terminal shortcut and environment actions open terminal tabs.`\n        *   **Buttons/Toggles:** \"Bottom\", \"Right\"\n    *   **Section: codexRS state**\n        *   Text: `/tmp/rwo021-data/state.sqlite3`\n        *   Text: `Contains UI preferences, pinned chat IDs, and recent workspaces only; it never mirrors live Codex history.`\n    *   **Section: Native runtime and safety**\n        *   Text: `GPU renderer, Rust process supervision, bounded frames and queues, and explicit approvals. No Electron, Tauri, Wry, WebView, Node.js, or embedded browser.`\n    *   **Section: Platforms** (Heading visible at bottom)\n\n**4) Page Type**\nThis is a **Settings page**. It features the **\"< Back to app\"** link in the top-left corner and lacks the standard application sidebar containing \"New chat,\" \"Repository,\" or \"Pull requests.\"",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811493,
+  "id": "202609191751202e0464ebeee843b3",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609191751202e0464ebeee843b3",
+  "usage": {
+    "completion_tokens": 557,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2093,
+    "prompt_tokens_details": {
+      "cached_tokens": 3
+    },
+    "total_tokens": 2650
+  }
+}

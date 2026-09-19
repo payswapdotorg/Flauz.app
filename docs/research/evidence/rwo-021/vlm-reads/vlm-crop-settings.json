@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the provided 500x400 pixel crop of the settings screen, here is a description of the elements from top to bottom:\n\n*   **Top Menu Bar (y: 0–80):** At the very top, there is a standard application menu bar containing the text labels \"File\", \"Edit\", \"View\", and \"Help\" arranged horizontally.\n*   **'Back to app' Row (x: 0–330, y: ~150–210):** On the left side, below the menu bar, is a navigation row containing the text \"app\". This appears to be a link or button to return to the main application interface.\n*   **Search Input (x: 0–330, y: ~250–330):** Directly below the 'Back to app' row on the left is a text input field. It currently contains the placeholder or typed text \"settings...\".\n*   **Sidebar Navigation List (x: 0–330, y: ~430–990):** Below the search input is a vertical list of navigation options. Visible items include \"Appearance\", \"Localization\", \"Keyboard shortcuts\", and \"Usage & billing\".\n*   **Main Content Header (x: 390–550, y: ~140–210):** In the upper portion of the right pane, there is a large header titled \"General\".\n*   **Group Header: Build and compatibility (x: 440–810, y: ~350–420):** The first section in the main content area is headed by the bold text \"Build and compatibility\".\n*   **Detail Text (x: 440–990, y: ~450–560):** Under the first group header, there are lines of text displaying version information: \"codexRS 0.1.0-rc.13\" and \"Behavioral reference: Codex Desktop 26...\".\n*   **Group Header: Official Codex runtime (x: 440–800, y: ~650–720):** Further down, a second section is headed by the bold text \"Official Codex runtime\".\n*   **Detail Text (x: 440–990, y: ~760–930):** Under this header, several lines describe the runtime status, including \"Executable: Resolving...\", \"CODEX_HOME (configured): Resolving...\", and \"Live runtime data is accessed only throu...\".",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811023,
+  "id": "20260919174327bbb1fb27b9b147e3",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919174327bbb1fb27b9b147e3",
+  "usage": {
+    "completion_tokens": 506,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 322,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 828
+  }
+}

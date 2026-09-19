@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is a factual description of the page:\n\n**1) Title/Heading**\n*   **Appearance**\n\n**2) Banners/Toasts/Notices (Verbatim)**\n*   **Bottom Toast:** \"Connection lost. Reconnecting...\" with a **Dismiss** button on the right.\n*   *Note: There are no banners or notices regarding GitHub or `gh` being required or missing.*\n\n**3) Main Content**\n*   **Theme Selection:** Three visual preview cards labeled \"System\", \"Light\", and \"Dark\".\n*   **Code Preview:** A side-by-side code comparison block showing theme configuration objects:\n    *   *Left (Red/Pink background):* `const themePreview: ThemeConfig = { surface: \"sidebar\", accent: \"#2563eb\", contrast: 42, };`\n    *   *Right (Green background):* `const themePreview: ThemeConfig = { surface: \"sidebar-elevated\", accent: \"#0ea5e9\", contrast: 68, };`\n*   **Light Theme Configuration Panel:**\n    *   Header contains text \"**Light theme**\" and buttons for \"**Import**\" and \"**Copy theme**\". There is also a toggle/button labeled \"**Aa Codex**\".\n    *   **Row 1:** Label \"**Accent**\" with a blue button displaying the hex code \"**#339CFF**\".\n    *   **Row 2:** Label \"**Background**\" with an unchecked checkbox and the hex code \"**#FFFFFF**\".\n    *   **Row 3:** Label \"**Foreground**\" with a dark grey/black button displaying the hex code \"**#1A1C1F**\".\n\n**4) Sidebar Highlighted Item**\n*   The item **Appearance** (under the **Personal** section) is highlighted with a light grey background.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789811480,
+  "id": "20260919175111e32422845a2a4620",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260919175111e32422845a2a4620",
+  "usage": {
+    "completion_tokens": 383,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2083,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2466
+  }
+}
