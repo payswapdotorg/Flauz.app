@@ -476,7 +476,7 @@ Critical state changes should have:
 - accessible names for major controls.
 
 
-## 9. Cold-start discoverability validation
+## 8. Cold-start discoverability validation
 
 A major capability must be discoverable by a user who has not read Flauz's
 architecture documentation and does not know internal implementation terms.
@@ -519,14 +519,14 @@ what the object is in plain language.
 A Procedure should remain visible after restart and should be discoverable from
 both the library and relevant task contexts.
 
-## 10. Domain-neutral journey validation
+## 9. Domain-neutral journey validation
 
 The journey battery must eventually contain at least one non-code workflow,
 for example a research, operations, finance, administrative, creative or
 analysis task. This prevents the GUI information architecture from silently
 reverting to coding-specific assumptions.
 
-## 11. Product-completeness gate
+## 10. Product-completeness gate
 
 For each new platform capability, the implementation work order must identify:
 
