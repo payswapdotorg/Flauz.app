@@ -93,6 +93,56 @@ A discoverable view of:
 It should answer "what needs my attention?" without requiring users to inspect
 every task.
 
+
+## 2.1 Target GUI information architecture
+
+The product should expose capabilities through a small number of stable surfaces,
+with contextual inspectors rather than a growing list of unrelated top-level
+screens.
+
+### Workspace navigation
+
+The persistent navigation should make these concepts discoverable:
+
+- Projects / Tasks;
+- Procedures;
+- Artifacts;
+- Activity / attention;
+- shared work where applicable.
+
+### Task control rail
+
+A task should expose visible, labeled controls for the most important cross-cutting
+state:
+
+- **Context** — what the agent currently knows and why;
+- **Agents** — participating agents, roles and assignments;
+- **Environments** — browser sites, terminals, sandboxes, desktops and other
+  execution surfaces;
+- **Evidence** — observations, claims, verification and provenance;
+- **More / Inspect** — Resources, Artifacts, approvals, leases/conflicts and
+  detailed activity when these are not appropriate for the primary rail.
+
+These controls should remain available while work is active. They are not
+hidden behind developer settings.
+
+### Composer and timeline contextual actions
+
+The task composer/timeline should surface context-sensitive actions such as:
+
+- Use a reusable workflow;
+- Add environment/site;
+- Delegate to another agent;
+- Inspect context;
+- Take over;
+- Approve/reject;
+- Save as a reusable workflow;
+- Retry / recover / switch environment;
+- Inspect evidence.
+
+The exact controls shown depend on task state, permissions and capability
+availability.
+
 ## 3. Required major journeys
 
 ### J-01 Start any project
@@ -425,7 +475,58 @@ Critical state changes should have:
 - readable empty states;
 - accessible names for major controls.
 
-## 8. Product-completeness gate
+
+## 9. Cold-start discoverability validation
+
+A major capability must be discoverable by a user who has not read Flauz's
+architecture documentation and does not know internal implementation terms.
+
+For each journey, validation should include:
+
+1. **Cold start:** begin from the normal Workspace/Task surface with no search.
+2. **Primary path:** confirm the user can identify the main entry and understand
+   what it does from the UI label/description.
+3. **Context path:** repeat while the capability becomes relevant during work;
+   the contextual affordance should appear at the correct moment.
+4. **Recovery path:** verify the capability remains discoverable after an error,
+   reconnect, interruption or empty state.
+5. **Search fallback:** verify the command palette/global search can locate it.
+6. **Success path:** verify the resulting state exposes the next relevant
+   action without forcing the user to rediscover the feature.
+
+For the first implementation wave after F1, the Tech Lead should maintain a
+GUI journey battery covering at least:
+
+- Context Inspector;
+- multi-environment task topology;
+- agent delegation/parallel work;
+- Evidence/Verification;
+- human takeover;
+- Procedures: learn -> save -> find -> run -> deviation -> improve;
+- collaboration/presence;
+- model/environment switching with continuity.
+
+### Procedure-specific cold-start test
+
+A new user completing a successful repeatable task must encounter a visible
+post-success option such as **Save as a reusable workflow**. The user must not
+need to know the word "Procedure" to use it.
+
+After saving, a later blank task must provide at least one non-search discovery
+route to **Use a reusable workflow**, and the Procedures library must explain
+what the object is in plain language.
+
+A Procedure should remain visible after restart and should be discoverable from
+both the library and relevant task contexts.
+
+## 10. Domain-neutral journey validation
+
+The journey battery must eventually contain at least one non-code workflow,
+for example a research, operations, finance, administrative, creative or
+analysis task. This prevents the GUI information architecture from silently
+reverting to coding-specific assumptions.
+
+## 11. Product-completeness gate
 
 For each new platform capability, the implementation work order must identify:
 
