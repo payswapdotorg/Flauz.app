@@ -14,7 +14,9 @@ Read, in order:
 3. `docs/IMPLEMENTATION-ROADMAP.md`
 4. `docs/WORK-ORDER-TEMPLATE.md`
 5. `docs/architecture.md`
-6. `docs/parity-matrix.md`
+6. `docs/CONTEXT-HARNESS-ARCHITECTURE.md`
+7. `docs/PRODUCT-UX-JOURNEYS.md`
+8. `docs/parity-matrix.md`
 
 ## Immediate instruction
 
@@ -29,11 +31,11 @@ Workflow/Pack development remains frozen.
 ## Then execute
 
 ```
-F2 canonical contracts
+F2 canonical contracts + Context/Resource/Execution/Evidence/Procedure contracts
 → F3 environment/provider fabric
 → F4 model/provider + agent runtimes
 → F5 capability/skill resolver
-→ F6 multi-model/multi-agent orchestration
+→ F6 context-aware harness + multi-model/multi-agent orchestration
 → F7 user-owned providers + free-tier routing
 → F8 provider-neutral parity lab
 → F9 collaboration
