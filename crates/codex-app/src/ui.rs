@@ -444,6 +444,42 @@ impl TitleBarControl {
     }
 }
 
+/// Chrome quick-access entries (WO-P2-018): visible title-bar buttons for
+/// the two global discovery surfaces — the command palette and the
+/// Activity view — so neither depends on knowing its keyboard chord (the
+/// discoverability contract's layer-1 visible entry). Mirrors the
+/// `TitleBarControl` metadata pattern and the `render_navigation_controls`
+/// house chrome button: icon-only ghost button whose "label · chord"
+/// tooltip advertises the registry binding the entry dispatches.
+#[derive(Clone, Copy)]
+enum TitleBarQuickAccess {
+    CommandPalette,
+    ActivityView,
+}
+
+impl TitleBarQuickAccess {
+    const fn id(self) -> &'static str {
+        match self {
+            Self::CommandPalette => "open-command-palette",
+            Self::ActivityView => "toggle-activity-view",
+        }
+    }
+
+    const fn icon(self) -> IconName {
+        match self {
+            Self::CommandPalette => IconName::Search,
+            Self::ActivityView => IconName::Bell,
+        }
+    }
+
+    const fn tooltip(self) -> &'static str {
+        match self {
+            Self::CommandPalette => "Command palette · Ctrl+K",
+            Self::ActivityView => "Toggle Activity view · Ctrl+Alt+U",
+        }
+    }
+}
+
 fn window_bounds_from_placement(placement: PrimaryWindowPlacement) -> WindowBounds {
     let bounds = Bounds {
         origin: point(px(placement.x() as f32), px(placement.y() as f32)),
@@ -1672,6 +1708,12 @@ fn activity_view_rows(state: &AppState) -> Vec<TaskSummary> {
 const ACTIVITY_VIEW_EMPTY_TITLE: &str = "No chats need attention";
 const ACTIVITY_VIEW_EMPTY_GUIDANCE: &str = "Chats that finish or ask for your approval while you work elsewhere appear here. Use \"Mark chat unread\" to keep a chat on this list.";
 
+/// Tooltip for the sidebar unread-attention dot (WO-P2-018): the dot
+/// keeps its 6 px shape and the tooltip carries the text alternative —
+/// plain language from the registry's unread vocabulary, no
+/// implementation terms.
+const ATTENTION_DOT_TOOLTIP: &str = "Needs attention";
+
 fn activity_view_count_label(row_count: usize) -> String {
     if row_count == 1 {
         "1 chat needs attention".to_owned()
@@ -2755,6 +2797,12 @@ impl ArchivedChatDeleteScope {
         }
     }
 }
+
+/// Visible label for the archived-chats single-item deletion
+/// (WO-P2-018): the destructive control is no longer icon-only — it
+/// carries the same kind of visible label as the adjacent `Unarchive`
+/// action, consistent with its tooltip and confirmation copy.
+const ARCHIVED_CHAT_DELETE_LABEL: &str = "Delete";
 
 fn archived_delete_confirmation_copy(
     scope: ArchivedChatDeleteScope,
@@ -14328,6 +14376,7 @@ impl WorkspaceView {
                     ),
             )
             .child(drag_region)
+            .child(self.render_title_bar_quick_access(cx))
             .when(!cfg!(target_os = "macos"), |title_bar| {
                 title_bar
                     .child(Self::render_title_bar_control(
@@ -14337,6 +14386,46 @@ impl WorkspaceView {
                     .child(Self::render_title_bar_control(maximize_control, cx))
                     .child(Self::render_title_bar_control(TitleBarControl::Close, cx))
             })
+            .into_any_element()
+    }
+
+    fn render_title_bar_quick_access(&self, cx: &mut Context<Self>) -> AnyElement {
+        h_flex()
+            .gap_1()
+            .items_center()
+            .pr_1()
+            .child(
+                Button::new(TitleBarQuickAccess::CommandPalette.id())
+                    .icon(TitleBarQuickAccess::CommandPalette.icon())
+                    .tooltip(TitleBarQuickAccess::CommandPalette.tooltip())
+                    .xsmall()
+                    .w(px(28.0))
+                    .h(px(28.0))
+                    .ghost()
+                    .on_click(cx.listener(|this, _, window, cx| {
+                        // The same Unified palette the Ctrl+K
+                        // `openCommandMenu` binding opens — the visible
+                        // entry the discoverability contract's layer 1
+                        // requires (WO-P2-018).
+                        this.open_command_palette(PaletteMode::Unified, window, cx);
+                    })),
+            )
+            .child(
+                Button::new(TitleBarQuickAccess::ActivityView.id())
+                    .icon(TitleBarQuickAccess::ActivityView.icon())
+                    .tooltip(TitleBarQuickAccess::ActivityView.tooltip())
+                    .xsmall()
+                    .w(px(28.0))
+                    .h(px(28.0))
+                    .ghost()
+                    .on_click(cx.listener(|this, _, _, cx| {
+                        // The existing surface toggle the Ctrl+Alt+U
+                        // binding and the palette row dispatch — the
+                        // bell chrome icon recorded as WO-P2-013
+                        // follow-up material (WO-P2-018).
+                        this.dispatch(Action::ToggleActivityView, cx);
+                    })),
+            )
             .into_any_element()
     }
 
@@ -14900,14 +14989,19 @@ impl WorkspaceView {
                     )
                     // Unread-attention badge (WO-P2-008): a dot on chats
                     // with finished background activity the user has not
-                    // visited yet.
+                    // visited yet. The dot carries a plain-language
+                    // tooltip as its text alternative (WO-P2-018).
                     .when(needs_attention, |row| {
                         row.child(
                             div()
+                                .id(SharedString::from(format!("unread-attention-{}", task.id)))
                                 .flex_none()
                                 .size(px(6.0))
                                 .rounded_full()
-                                .bg(cx.theme().primary),
+                                .bg(cx.theme().primary)
+                                .tooltip(|window, cx| {
+                                    Tooltip::new(ATTENTION_DOT_TOOLTIP).build(window, cx)
+                                }),
                         )
                     })
                     .when(forked, |row| {
@@ -32638,6 +32732,7 @@ impl WorkspaceView {
             .child(
                 Button::new(SharedString::from(format!("delete-archived-chat-{index}")))
                     .icon(IconName::Delete)
+                    .label(ARCHIVED_CHAT_DELETE_LABEL)
                     .tooltip("Delete archived chat")
                     .small()
                     .custom(
@@ -48300,6 +48395,7 @@ mod tests {
         usage_settings_requires_sign_in, validate_plugin_logo_dimensions, worktree_fork_queue_full,
         worktree_use_disabled,
     };
+    use super::{ARCHIVED_CHAT_DELETE_LABEL, ATTENTION_DOT_TOOLTIP, TitleBarQuickAccess};
     use codex_core::{
         AccountAuthOperation, AccountDailyUsageBucket, AccountKind, AccountProfile, AccountState,
         Action, AppCard, AppState, AppearancePalette, AppearanceVariant, ApprovalContext,
@@ -52825,6 +52921,106 @@ mod tests {
         assert_eq!(command.group(), PaletteGroup::Navigation);
         // The palette advertises the registry's effective binding.
         assert_eq!(registry.shortcuts, &["CmdOrCtrl+Alt+U"][..]);
+    }
+
+    #[test]
+    fn title_bar_quick_access_entries_expose_the_registry_bindings() {
+        // WO-P2-018: the chrome carries visible entries for the command
+        // palette and the Activity view — the discoverability contract's
+        // layer-1 visible entry, so neither surface depends on knowing
+        // its keyboard chord. Both entries follow the house chrome button
+        // contract (the `render_navigation_controls` pattern): an
+        // icon-only ghost button whose "label · chord" tooltip
+        // advertises the registry binding the entry dispatches.
+        let palette_entry = TitleBarQuickAccess::CommandPalette;
+        let activity_entry = TitleBarQuickAccess::ActivityView;
+
+        // The two chrome entries are distinct controls in the title bar.
+        assert_ne!(palette_entry.id(), activity_entry.id());
+
+        // The Activity entry reuses the registry row's title verbatim in
+        // its tooltip (the WO-P2-010 row-copy contract) and carries the
+        // same Bell icon as the palette row, so the bell reads as one
+        // surface everywhere it appears.
+        assert_eq!(
+            ACTIVE_KEYBOARD_SHORTCUTS
+                .iter()
+                .find(|item| item.id == "toggleActivityView")
+                .map(|item| item.title),
+            Some("Toggle Activity view")
+        );
+        assert_eq!(
+            activity_entry.tooltip(),
+            "Toggle Activity view · Ctrl+Alt+U"
+        );
+        assert!(matches!(
+            TitleBarQuickAccess::ActivityView.icon(),
+            gpui_component::IconName::Bell
+        ));
+        assert!(matches!(
+            PaletteCommand::ToggleActivityView.icon(),
+            gpui_component::IconName::Bell
+        ));
+
+        // The advertised chords are the registry's own defaults: Ctrl+K
+        // is owned by exactly openCommandMenu, Ctrl+Alt+U by exactly
+        // toggleActivityView — a tooltip never advertises a chord the
+        // registry does not own.
+        let chord_owners = |binding: &str| {
+            ACTIVE_KEYBOARD_SHORTCUTS
+                .iter()
+                .filter(|item| {
+                    item.shortcuts
+                        .iter()
+                        .any(|b| normalized_accelerator(b) == normalized_accelerator(binding))
+                })
+                .map(|item| item.id)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(chord_owners("CmdOrCtrl+K"), ["openCommandMenu"]);
+        assert_eq!(chord_owners("CmdOrCtrl+Alt+U"), ["toggleActivityView"]);
+        assert_eq!(
+            palette_entry.tooltip(),
+            "Command palette · Ctrl+K",
+            "the palette entry names the surface with the product term and the house tooltip chord form"
+        );
+    }
+
+    #[test]
+    fn title_bar_activity_entry_toggles_the_activity_surface_state() {
+        // WO-P2-018: the chrome bell dispatches the existing
+        // Action::ToggleActivityView — the same reducer action the
+        // Ctrl+Alt+U binding and the palette row dispatch — so the
+        // button's click path toggles the real surface state.
+        let mut state = AppState::default();
+        assert!(!state.activity_view_visible);
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(state.activity_view_visible);
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(!state.activity_view_visible);
+    }
+
+    #[test]
+    fn unread_attention_dot_tooltip_uses_plain_registry_vocabulary() {
+        // WO-P2-018: the sidebar dot's text alternative is plain language
+        // from the registry's unread vocabulary — "attention" — with no
+        // implementation terms, so the label reads like the surrounding
+        // attention copy (count label, empty state, binding titles).
+        assert_eq!(ATTENTION_DOT_TOOLTIP, "Needs attention");
+        assert!(ATTENTION_DOT_TOOLTIP.contains("attention"));
+        assert!(ACTIVITY_VIEW_EMPTY_TITLE.contains("attention"));
+        assert!(activity_view_count_label(2).contains("attention"));
+    }
+
+    #[test]
+    fn archived_chat_single_deletion_exposes_a_visible_label() {
+        // WO-P2-018: the archived-chats single-item deletion is no longer
+        // icon-only — the visible label mirrors the adjacent labeled
+        // `Unarchive` action and stays consistent with the confirmation
+        // copy the existing tests pin.
+        assert_eq!(ARCHIVED_CHAT_DELETE_LABEL, "Delete");
+        let (title, _body) = archived_delete_confirmation_copy(ArchivedChatDeleteScope::Single, 1);
+        assert!(title.starts_with(ARCHIVED_CHAT_DELETE_LABEL));
     }
 
     #[test]
