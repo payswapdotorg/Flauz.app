@@ -8487,18 +8487,7 @@ impl WorkspaceView {
     }
 
     fn local_workspace_cwd(&self) -> Option<&Path> {
-        self.state
-            .selected_task_id
-            .as_deref()
-            .and_then(|task_id| self.state.tasks.iter().find(|task| task.id == task_id))
-            .map(|task| task.cwd.as_path())
-            .filter(|cwd| cwd.is_absolute())
-            .or_else(|| {
-                self.state
-                    .new_chat_cwd
-                    .as_deref()
-                    .filter(|cwd| cwd.is_absolute())
-            })
+        state_local_workspace_cwd(&self.state)
     }
 
     fn composer_slash_availability(&self) -> ComposerSlashAvailability {
@@ -9088,6 +9077,12 @@ impl WorkspaceView {
         cx: &mut Context<Self>,
     ) {
         if mode == PaletteMode::Files && !self.has_local_workspace() {
+            // Honest guidance instead of a silent no-op when no workspace
+            // is open (WO-P2-020 F-A4; the WO-P2-012 guard-honesty
+            // family): the palette Files-mode row honestly hides in this
+            // state, but the keyboard path went silent — Ctrl+P now says
+            // what it needs through the house status path.
+            self.dispatch_command_status(files_palette_command_status(&self.state), cx);
             return;
         }
         if mode == PaletteMode::Files {
@@ -46473,6 +46468,42 @@ fn commit_or_push_pending_status(state: &AppState) -> Option<&'static str> {
     None
 }
 
+/// The effective local workspace directory for workspace-scoped
+/// surfaces: the selected chat's absolute cwd, or the absolute
+/// new-chat cwd. Extracted from `WorkspaceView::local_workspace_cwd`
+/// (WO-P2-020) so the guard helpers below share the view layer's
+/// single workspace definition.
+fn state_local_workspace_cwd(state: &AppState) -> Option<&Path> {
+    state
+        .selected_task_id
+        .as_deref()
+        .and_then(|task_id| state.tasks.iter().find(|task| task.id == task_id))
+        .map(|task| task.cwd.as_path())
+        .filter(|cwd| cwd.is_absolute())
+        .or_else(|| {
+            state
+                .new_chat_cwd
+                .as_deref()
+                .filter(|cwd| cwd.is_absolute())
+        })
+}
+
+/// Honest status for the Files palette attempted with no workspace open
+/// (WO-P2-020 F-A4): Ctrl+P previously early-returned silently on the
+/// bare entry surface while every other guarded chord reported through
+/// `Action::SetStatus` (WO-P2-008/012), so the Files palette now says
+/// what it needs. With a workspace open the guard stays clear and the
+/// palette opens unchanged.
+fn files_palette_command_status(state: &AppState) -> Option<&'static str> {
+    // F-A4: the Files palette searches the open workspace's files, so
+    // it requires a workspace — the same check as
+    // `WorkspaceView::has_local_workspace`.
+    if state_local_workspace_cwd(state).is_none() {
+        return Some("Select a workspace before searching files.");
+    }
+    None
+}
+
 fn project_trigger_matches(query: &str) -> bool {
     let query = query.trim().to_ascii_lowercase();
     query.is_empty()
@@ -48346,6 +48377,7 @@ mod tests {
     use super::composer_keeps_fork_picker;
     use super::composer_review_unavailable_status;
     use super::edit_project_surface;
+    use super::files_palette_command_status;
     use super::rename_thread_command_status;
     use super::review_slash_command_action;
     use super::toggle_thread_pin_command_status;
@@ -53542,6 +53574,49 @@ mod tests {
         assert_eq!(
             state.status_message.as_deref(),
             Some("Select a chat before archiving it.")
+        );
+    }
+
+    #[test]
+    fn files_palette_command_reports_when_no_workspace_is_open() {
+        // F-A4 (WO-P2-020): Ctrl+P with no workspace open must surface
+        // guidance instead of silently no-oping (the WO-P2-012
+        // guard-honesty pattern); with a workspace open the guard is
+        // clear, so the Files palette opens unchanged.
+        let mut state = AppState::default();
+        assert_eq!(
+            files_palette_command_status(&state),
+            Some("Select a workspace before searching files.")
+        );
+        // A relative cwd does not count as a workspace.
+        state.new_chat_cwd = Some(PathBuf::from("relative"));
+        assert_eq!(
+            files_palette_command_status(&state),
+            Some("Select a workspace before searching files.")
+        );
+        // An absolute new-chat cwd does: the guard clears.
+        let absolute_cwd = if cfg!(windows) { "C:\\repo" } else { "/repo" };
+        state.new_chat_cwd = Some(PathBuf::from(absolute_cwd));
+        assert_eq!(files_palette_command_status(&state), None);
+        // So does a selected chat with an absolute cwd.
+        state.new_chat_cwd = None;
+        state.selected_task_id = Some("t1".to_owned());
+        state.tasks = vec![task("t1", absolute_cwd)];
+        assert_eq!(files_palette_command_status(&state), None);
+        // Back to no workspace: the status surfaces through the house
+        // Action::SetStatus path (bounded 16 KiB in core), so the
+        // feedback is observable rather than silence.
+        state.tasks.clear();
+        state.selected_task_id = None;
+        let status = files_palette_command_status(&state);
+        assert_eq!(status, Some("Select a workspace before searching files."));
+        reduce(
+            &mut state,
+            Action::SetStatus(status.unwrap_or_default().to_owned()),
+        );
+        assert_eq!(
+            state.status_message.as_deref(),
+            Some("Select a workspace before searching files.")
         );
     }
 }
