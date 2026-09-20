@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1) **No-workspace state.** The sidebar shows \"No projects\" and a toast message at the bottom explicitly states that no workspace is selected.\n2) **Yes.** The exact text of the status/toast message is: **\"Select a workspace before searching files.\"**\n3) **No**, there is no command palette or file-search overlay open.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789907856,
+  "id": "2026092020373382f29f9cf2b14591",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026092020373382f29f9cf2b14591",
+  "usage": {
+    "completion_tokens": 75,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1754,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1829
+  }
+}
