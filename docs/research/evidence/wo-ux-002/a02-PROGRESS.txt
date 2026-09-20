@@ -1,0 +1,16 @@
+[19:58:49] boot APP_PID=16187 (focus probes)
+[19:59:00] UI rendered after 10s
+[19:59:08] P1a PALETTE-CLOSE focus landing
+[19:59:16] P1a 0c88c19f8edff62009fb399529be4a53
+[19:59:17] P1b OVERLAY-CLOSE focus landing
+[19:59:25] P1b 0c88c19f8edff62009fb399529be4a53
+[19:59:26] P2 FIND active occurrence (seeded multi-match chat selected)
+[19:59:32] P2a df3f0b6bdd845e916cd039fcc014d44d
+[19:59:34] P2b df3f0b6bdd845e916cd039fcc014d44d
+[19:59:36] P2c df3f0b6bdd845e916cd039fcc014d44d
+[19:59:37] P3 TERMINAL PTY focus transfer (type immediately, no click)
+[19:59:44] P3 cbe0fb11520d3c34db9742742523924e
+[19:59:46] P4 CONFIRMATION-MODAL traps (Settings-reachable, current-tree record)
+[19:59:53] P4a 69d54590b7164c7c983a3083efbd3b58
+[19:59:56] P4 NOTE: the four WO-P2-019 modals (remote pairing / remote confirmation / account logout / plugin install) are flow-gated; their trap verification is 019's D-scene at the merged tree.
+[19:59:56] RG-A11Y-02 COMPLETE

@@ -68,6 +68,7 @@ Already merged:
 - ✅ WO-P2-013 Activity view surface (J-17)
 - ✅ WO-P2-018 visible-entry + label parity (title-bar palette entry, Activity bell, archived-deletion label, unread-dot tooltip)
 - ✅ WO-P2-020 F-A4 honest status for Ctrl+P without a workspace
+- ✅ WO-UX-002 begin_new_chat composer focus (keyboard-only chat creation, RG-A11Y N1)
 - ✅ RWO-020/RWO-021/RWO-022 reference/review/adversarial verification waves
 - ✅ Release-critical parity scope is green for the selected public/runtime-owned rows;
   bounded proprietary/platform rows remain explicitly classified.

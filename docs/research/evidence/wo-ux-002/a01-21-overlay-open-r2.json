@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) **Yes**, a keyboard shortcuts overlay (modal dialog) is open.\n*   **Title:** \"Keyboard shortcuts\"\n*   **Content/Entries:**\n    *   **Chat:**\n        *   New chat: `Ctrl N`, `Ctrl Shift O`\n        *   Archive chat: `Ctrl Shift A`\n        *   New standalone chat: `Ctrl Alt O`\n        *   Open side chat: `Ctrl Alt S`\n        *   Toggle pin: `Ctrl Alt P`\n        *   Mark chat unread: `Ctrl Shift U`\n    *   **Navigation:**\n        *   Clear all unread indicators: `Shift Escape`\n        *   Find: `Ctrl F`\n        *   Focus browser address bar: `Ctrl L`\n        *   Back: `Ctrl I`\n        *   Browser back: `Alt Left`\n        *   Browser forward: `Alt Right`\n\n(2) N/A (The overlay is open).\n\n(3) **Yes**, there is a toast notification at the bottom. The exact text is: **\"No C...\"** (the rest of the text is obscured by the overlay, but it starts with \"No C\"). The toast also has a \"Dismiss\" button on the right side.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789936725,
+  "id": "20260921043836cfc2a8ad5faf4daa",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260921043836cfc2a8ad5faf4daa",
+  "usage": {
+    "completion_tokens": 255,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1730,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1985
+  }
+}

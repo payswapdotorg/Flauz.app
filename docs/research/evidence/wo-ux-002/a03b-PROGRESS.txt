@@ -1,0 +1,24 @@
+[20:45:03] boot APP_PID=25274 (fresh data dir — default route)
+[20:45:14] UI rendered after 10s
+[20:45:23] LEG-A LIVE CHAT (boot-default composer focus, default route)
+[20:45:23] A0 36b6dae58033f306d53db3a7cc4e4ea5
+[20:45:26] A1 36b6dae58033f306d53db3a7cc4e4ea5
+[20:45:41] A2 36b6dae58033f306d53db3a7cc4e4ea5
+[20:45:41] LEG-B FIND IN THREAD (live task workspace)
+[20:45:43] B1 36b6dae58033f306d53db3a7cc4e4ea5
+[20:45:45] B2 36b6dae58033f306d53db3a7cc4e4ea5
+[20:45:47] B3 36b6dae58033f306d53db3a7cc4e4ea5
+[20:45:50] B4 9897a037bec92e34d805632aefd9c591
+[20:45:50] LEG-C TERMINAL PTY (live task workspace)
+[20:45:53] C1 77089d23a4907c094f317a0eaa88470a
+[20:45:57] C2 77089d23a4907c094f317a0eaa88470a
+[20:46:00] C3 77089d23a4907c094f317a0eaa88470a
+[20:46:00] LEG-D ATTENTION (with selection)
+[20:46:03] D1 cf30b41e38ccc484e157c1df6d255c9c
+[20:46:05] D2 c4a0016c5afb1a797eb76a5d77f627dc
+[20:46:08] D3 97bccbc97efc3ed58adb262e09c5cad4
+[20:46:08] LEG-E CHAT SWAP (live at index 0, seeded after)
+[20:46:11] E1 97bccbc97efc3ed58adb262e09c5cad4
+[20:46:14] E2 97bccbc97efc3ed58adb262e09c5cad4
+[20:46:16] E3 97bccbc97efc3ed58adb262e09c5cad4
+[20:46:16] RG-A11Y-03B COMPLETE — 16 frames

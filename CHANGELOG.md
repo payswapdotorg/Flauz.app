@@ -5,6 +5,13 @@ All notable changes are documented here. The project follows
 
 ## [Unreleased]
 
+### Added
+
+- Keyboard-only chat creation: `begin_new_chat` (Ctrl+N, the palette
+  "New chat" row, the sidebar new-chat rows) now focuses the composer
+  after the chat-creation dispatch, so a keyboard-only user can type and
+  submit immediately (RG-A11Y finding N1; WO-UX-002).
+
 ## [0.1.0-rc.13] - 2026-09-16
 
 First Flauz.app release: the Codex Universal native desktop GUI on the

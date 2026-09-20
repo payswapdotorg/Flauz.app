@@ -1,0 +1,29 @@
+[20:41:58] boot APP_PID=24134 (precondition-correct re-probes)
+[20:42:09] UI rendered after 10s
+[20:42:17] LEG-A LIVE CHAT (boot-default composer focus)
+[20:42:19] A1 041292299b7928ed098723684993c60a
+[20:42:35] A2 041292299b7928ed098723684993c60a
+[20:42:35] LEG-B FIND IN THREAD (live task workspace)
+[20:42:37] B1 bbaa3275e95e8e92fdd7ef9e2016103e
+[20:42:40] B2 a7c619719cfc2f96dadf9e72a55f0692
+[20:42:41] B3 a7c619719cfc2f96dadf9e72a55f0692
+[20:42:43] B4 a7c619719cfc2f96dadf9e72a55f0692
+[20:42:43] LEG-C TERMINAL PTY (live task workspace)
+[20:42:46] C1 a7c619719cfc2f96dadf9e72a55f0692
+[20:42:51] C2 31c4f4e18f50eba36f4574e6e0ae54d6
+[20:42:53] C3 31c4f4e18f50eba36f4574e6e0ae54d6
+[20:42:53] LEG-D ATTENTION (with selection)
+[20:42:56] D1 8bf78ef619313274fc1b213d4791809f
+[20:42:58] D2 b725bbf8dd71440f65a90d7b34970b88
+[20:43:01] D3 47e282d00d5dd100beb6f8e29656d700
+[20:43:01] LEG-E CHAT SWAP (2 chats: live + seeded)
+[20:43:04] E1 47e282d00d5dd100beb6f8e29656d700
+[20:43:07] E2 47e282d00d5dd100beb6f8e29656d700
+[20:43:10] E3 62afc62cfd00dab44ebf281745363bb3
+[20:43:10] LEG-F ctrl+n FOCUS GAP (finding documentation)
+[20:43:16] F1 4583c177893bd8a79f1801ad4a94c2d2
+[20:43:17] LEG-G SETTINGS EXCURSION (exit-path truth)
+[20:43:20] G1 cf9ee53fc9b491ec0bb8bbfabc3ce60d
+[20:43:24] G2 cf9ee53fc9b491ec0bb8bbfabc3ce60d
+[20:43:30] G3 4583c177893bd8a79f1801ad4a94c2d2
+[20:43:30] RG-A11Y-03 COMPLETE — 19 frames, keyboard-only after window placement

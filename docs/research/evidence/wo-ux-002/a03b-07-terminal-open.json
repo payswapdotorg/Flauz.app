@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot of the codexRS desktop app:\n\n(1) **Yes**, a terminal dock/panel is open at the bottom. It shows the message: **\"Select a task before opening a terminal.\"** (with a \"Dismiss\" button on the right).\n\n(2) **No**, there is no chat selected in the sidebar. The **\"seed-ws\" project row is highlighted** (under the Projects section), but the Chats section below it explicitly states **\"No chats\"**.\n\n(3) **Yes**, a toast notification is visible at the bottom with the exact text: **\"Select a task before opening a terminal.\"** (This appears to be the same message displayed in the terminal panel itself).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789937256,
+  "id": "202609210447318ef90060a8e14486",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609210447318ef90060a8e14486",
+  "usage": {
+    "completion_tokens": 151,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1731,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1882
+  }
+}
