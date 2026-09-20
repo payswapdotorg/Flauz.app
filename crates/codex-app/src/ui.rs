@@ -328,6 +328,40 @@ fn sidebar_browser_affordance(state: &AppState) -> Option<SidebarSurfaceAffordan
     })
 }
 
+/// Model of a visible title-bar discovery entry (WO-P2-018). The title bar
+/// renders one native icon Button per entry so the command palette and the
+/// Activity view have visible chrome entry points instead of chord-only
+/// discovery (PRODUCT-UX-JOURNEYS §1 layer 1).
+struct TitleBarDiscoveryEntry {
+    id: &'static str,
+    icon: IconName,
+    tooltip: &'static str,
+}
+
+/// The visible command-palette entry (WO-P2-018): the chrome counterpart of
+/// the `openCommandMenu` registry command. The tooltip reuses the registry
+/// title and primary chord in the navigate-back/forward tooltip style, and
+/// the button opens the same Unified palette the Ctrl+K chord opens.
+fn command_palette_entry() -> TitleBarDiscoveryEntry {
+    TitleBarDiscoveryEntry {
+        id: "open-command-palette",
+        icon: IconName::Search,
+        tooltip: "Open command menu · Ctrl+K",
+    }
+}
+
+/// The Activity bell (WO-P2-018, J-17): the reference's primary discovery
+/// for the Activity view — a title-bar bell that dispatches the existing
+/// `Action::ToggleActivityView` (the `toggleActivityView` registry
+/// command's Ctrl+Alt+U path) and reuses that registry row's copy.
+fn activity_view_bell_entry() -> TitleBarDiscoveryEntry {
+    TitleBarDiscoveryEntry {
+        id: "toggle-activity-view",
+        icon: IconName::Bell,
+        tooltip: "Toggle Activity view · Ctrl+Alt+U",
+    }
+}
+
 /// Model of the Edit project surface (WO-P1-003). The surface renders the
 /// project name, one row for the primary folder (marked Primary), one row
 /// per related folder with Make-primary and Remove affordances, an
@@ -1672,6 +1706,12 @@ fn activity_view_rows(state: &AppState) -> Vec<TaskSummary> {
 const ACTIVITY_VIEW_EMPTY_TITLE: &str = "No chats need attention";
 const ACTIVITY_VIEW_EMPTY_GUIDANCE: &str = "Chats that finish or ask for your approval while you work elsewhere appear here. Use \"Mark chat unread\" to keep a chat on this list.";
 
+/// Tooltip text for the unread-attention dot (WO-P2-008) that the sidebar
+/// and Activity view rows render (WO-P2-018): plain language from the
+/// registry's unread vocabulary (`nextUnreadChat`: "Switch to the next
+/// chat with unread activity") — no implementation terms.
+const UNREAD_ATTENTION_DOT_TOOLTIP: &str = "Unread activity";
+
 fn activity_view_count_label(row_count: usize) -> String {
     if row_count == 1 {
         "1 chat needs attention".to_owned()
@@ -2755,6 +2795,13 @@ impl ArchivedChatDeleteScope {
         }
     }
 }
+
+/// The archived-chats single-item deletion (WO-P2-018): the destructive
+/// row action gains the visible label the other labeled row actions use
+/// ("Unarchive", header "Delete all") while keeping its tooltip, which
+/// matches the single-scope confirmation title it leads into.
+const ARCHIVED_CHAT_DELETE_LABEL: &str = "Delete";
+const ARCHIVED_CHAT_DELETE_TOOLTIP: &str = "Delete archived chat";
 
 fn archived_delete_confirmation_copy(
     scope: ArchivedChatDeleteScope,
@@ -14323,6 +14370,19 @@ impl WorkspaceView {
                     ),
             )
             .child(drag_region)
+            // Visible discovery entries in the chrome (WO-P2-018): the
+            // command palette and the Activity view keep their chords but
+            // gain the visible title-bar buttons the discoverability
+            // contract's layer 1 requires.
+            .child(
+                h_flex()
+                    .h_full()
+                    .items_center()
+                    .gap_1()
+                    .pr_2()
+                    .child(self.render_command_palette_entry_button(cx))
+                    .child(self.render_activity_view_bell_button(cx)),
+            )
             .when(!cfg!(target_os = "macos"), |title_bar| {
                 title_bar
                     .child(Self::render_title_bar_control(
@@ -14332,6 +14392,44 @@ impl WorkspaceView {
                     .child(Self::render_title_bar_control(maximize_control, cx))
                     .child(Self::render_title_bar_control(TitleBarControl::Close, cx))
             })
+            .into_any_element()
+    }
+
+    /// The visible command-palette entry in the title bar (WO-P2-018): a
+    /// native chrome button that opens the same Unified palette as the
+    /// `openCommandMenu` chord, mirroring the navigate-back/forward icon
+    /// button house style.
+    fn render_command_palette_entry_button(&self, cx: &mut Context<Self>) -> AnyElement {
+        let entry = command_palette_entry();
+        Button::new(entry.id)
+            .icon(entry.icon)
+            .tooltip(entry.tooltip)
+            .xsmall()
+            .w(px(28.0))
+            .h(px(28.0))
+            .ghost()
+            .on_click(cx.listener(|this, _, window, cx| {
+                this.open_command_palette(PaletteMode::Unified, window, cx);
+            }))
+            .into_any_element()
+    }
+
+    /// The Activity bell in the title bar (WO-P2-018, J-17): toggles the
+    /// existing Activity view surface by dispatching the existing
+    /// `Action::ToggleActivityView` — the same reducer action as the
+    /// `toggleActivityView` chord and palette row, not a second store.
+    fn render_activity_view_bell_button(&self, cx: &mut Context<Self>) -> AnyElement {
+        let entry = activity_view_bell_entry();
+        Button::new(entry.id)
+            .icon(entry.icon)
+            .tooltip(entry.tooltip)
+            .xsmall()
+            .w(px(28.0))
+            .h(px(28.0))
+            .ghost()
+            .on_click(cx.listener(|this, _, _, cx| {
+                this.dispatch(Action::ToggleActivityView, cx);
+            }))
             .into_any_element()
     }
 
@@ -14872,6 +14970,13 @@ impl WorkspaceView {
                     .active(cx.theme().sidebar_accent),
             )
             .selected(selected)
+            // Unread-attention text alternative (WO-P2-018): the dot's
+            // plain-language tooltip rides on the row that contains it —
+            // the same container-level pattern the sidebar footer's
+            // connection-status dot uses.
+            .when(needs_attention, |button| {
+                button.tooltip(UNREAD_ATTENTION_DOT_TOOLTIP)
+            })
             .on_click(cx.listener(move |this, _, _, cx| {
                 this.navigate(MainRoute::Tasks, cx);
                 this.dispatch(Action::SelectTask(task_id.clone()), cx);
@@ -32633,7 +32738,8 @@ impl WorkspaceView {
             .child(
                 Button::new(SharedString::from(format!("delete-archived-chat-{index}")))
                     .icon(IconName::Delete)
-                    .tooltip("Delete archived chat")
+                    .label(ARCHIVED_CHAT_DELETE_LABEL)
+                    .tooltip(ARCHIVED_CHAT_DELETE_TOOLTIP)
                     .small()
                     .custom(
                         ButtonCustomVariant::new(cx)
@@ -40159,6 +40265,10 @@ impl WorkspaceView {
             })
             .when(selected, |row| row.bg(cx.theme().list_active))
             .hover(|style| style.bg(cx.theme().list_hover))
+            // The same unread-attention text alternative the sidebar rows
+            // expose (WO-P2-018) — every row in this surface carries the
+            // dot.
+            .tooltip(|window, cx| Tooltip::new(UNREAD_ATTENTION_DOT_TOOLTIP).build(window, cx))
             .child(Icon::new(status_icon).xsmall().text_color(status_color))
             .child(
                 div()
@@ -48273,17 +48383,18 @@ mod tests {
     use super::toggle_thread_pin_command_status;
     use super::{
         ACTIVE_KEYBOARD_SHORTCUTS, ACTIVITY_VIEW_EMPTY_GUIDANCE, ACTIVITY_VIEW_EMPTY_TITLE,
-        APPEARANCE_THEME_SHARE_PREFIX, ArchivedChatDeleteScope, ArchivedChatKindFilter,
-        ArchivedChatProjectFilter, ArchivedChatSortKey, AssistantFinding, BedrockWorkspaceNotice,
-        BrowserPaneChord, CONVERSATION_MARKDOWN_TRUNCATED_NOTICE, ComposerSlashAvailability,
-        DiffLineKind, DiffReviewRow, INIT_AGENTS_PROMPT, KeyboardShortcutGroup,
-        MAX_CONVERSATION_MARKDOWN_BYTES, MAX_NAVIGATION_HISTORY_ENTRIES,
-        MAX_THREAD_FIND_HISTORY_PAGES, MAX_THREAD_FIND_MATCHES, MODEL_AVAILABILITY_NUX_SOL_COPY,
-        NavigationHistory, NavigationLocation, PaletteCommand, PaletteGroup, ReasoningEffortStep,
-        SettingsSection, ShellWidthClass, TaskCopyKind, ThreadFindSurface, accelerators_conflict,
+        APPEARANCE_THEME_SHARE_PREFIX, ARCHIVED_CHAT_DELETE_LABEL, ARCHIVED_CHAT_DELETE_TOOLTIP,
+        ArchivedChatDeleteScope, ArchivedChatKindFilter, ArchivedChatProjectFilter,
+        ArchivedChatSortKey, AssistantFinding, BedrockWorkspaceNotice, BrowserPaneChord,
+        CONVERSATION_MARKDOWN_TRUNCATED_NOTICE, ComposerSlashAvailability, DiffLineKind,
+        DiffReviewRow, INIT_AGENTS_PROMPT, KeyboardShortcutGroup, MAX_CONVERSATION_MARKDOWN_BYTES,
+        MAX_NAVIGATION_HISTORY_ENTRIES, MAX_THREAD_FIND_HISTORY_PAGES, MAX_THREAD_FIND_MATCHES,
+        MODEL_AVAILABILITY_NUX_SOL_COPY, NavigationHistory, NavigationLocation, PaletteCommand,
+        PaletteGroup, ReasoningEffortStep, SettingsSection, ShellWidthClass, TaskCopyKind,
+        ThreadFindSurface, UNREAD_ATTENTION_DOT_TOOLTIP, accelerators_conflict,
         account_daily_usage_rows, account_device_code, account_refresh_disabled,
-        activity_view_count_label, activity_view_rows, adjacent_task_id, app_chatgpt_url,
-        app_mention_prompt, appearance_color, appearance_color_value,
+        activity_view_bell_entry, activity_view_count_label, activity_view_rows, adjacent_task_id,
+        app_chatgpt_url, app_mention_prompt, appearance_color, appearance_color_value,
         appearance_theme_share_string, archived_chat_groups, archived_chat_projects,
         archived_delete_confirmation_copy, background_chat_running_count,
         background_chat_window_title, background_completion_notification_transition,
@@ -48292,10 +48403,10 @@ mod tests {
         bounded_settings_search_query, bounded_thread_find_query, browser_display_url,
         browser_navigation_url, browser_pane_chord_action, browser_pane_focused,
         browser_surface_coordinates, browser_url_copy_value, build_plugin_catalog_sections,
-        case_insensitive_match_ranges, command_task_slot, composer_app_commands,
-        composer_at_skill_commands, composer_desktop_app_commands, composer_file_query,
-        composer_file_search_max_height, composer_model_picker_items, composer_model_placeholder,
-        composer_model_retry_visible, composer_plugin_commands,
+        case_insensitive_match_ranges, command_palette_entry, command_task_slot,
+        composer_app_commands, composer_at_skill_commands, composer_desktop_app_commands,
+        composer_file_query, composer_file_search_max_height, composer_model_picker_items,
+        composer_model_placeholder, composer_model_retry_visible, composer_plugin_commands,
         composer_service_tier_command_for_query, composer_service_tier_commands,
         composer_skill_command_for_query, composer_skill_commands,
         composer_slash_command_for_prefix, connection_send_failure, decode_mcp_form_image_data_url,
@@ -48350,6 +48461,7 @@ mod tests {
     use codex_core::{GitPullRequestPhase, GitState};
     use codex_core::{LocalProjectSummary, MAX_LOCAL_PROJECT_FOLDERS};
     use codex_core::{PendingReviewStart, ReviewDelivery, ReviewTarget};
+    use gpui_component::IconName;
 
     fn task(id: &str, cwd: &str) -> TaskSummary {
         TaskSummary {
@@ -52857,6 +52969,120 @@ mod tests {
         assert_eq!(command.group(), PaletteGroup::Navigation);
         // The palette advertises the registry's effective binding.
         assert_eq!(registry.shortcuts, &["CmdOrCtrl+Alt+U"][..]);
+    }
+
+    #[test]
+    fn chrome_command_palette_entry_reuses_the_registry_copy() {
+        // WO-P2-018: the title bar carries a visible command-palette entry
+        // — the chrome counterpart of the `openCommandMenu` registry
+        // command (PRODUCT-UX-JOURNEYS §1 layer 1; the f1-sweep palette
+        // row). The button reuses the registry title, advertises the
+        // primary chord in the navigate-back/forward tooltip style, and
+        // opens the same Unified palette the chord opens
+        // (open_command_palette(PaletteMode::Unified)).
+        let entry = command_palette_entry();
+        assert_eq!(entry.id, "open-command-palette");
+        assert!(matches!(entry.icon, IconName::Search));
+        let registry = ACTIVE_KEYBOARD_SHORTCUTS
+            .iter()
+            .find(|item| item.id == "openCommandMenu")
+            .unwrap_or_else(|| panic!("openCommandMenu missing from the shortcut registry"));
+        assert!(
+            entry.tooltip.starts_with(registry.title),
+            "the chrome entry must reuse the registry title: {}",
+            entry.tooltip
+        );
+        assert!(
+            entry.tooltip.ends_with("Ctrl+K"),
+            "the chrome entry must advertise the primary chord: {}",
+            entry.tooltip
+        );
+        // Ctrl+K stays owned by exactly the one registry command — the
+        // button is a second visible entry to it, not a competing command.
+        let owners = ACTIVE_KEYBOARD_SHORTCUTS
+            .iter()
+            .filter(|item| {
+                item.shortcuts.iter().any(|binding| {
+                    normalized_accelerator(binding) == normalized_accelerator("CmdOrCtrl+K")
+                })
+            })
+            .map(|item| item.id)
+            .collect::<Vec<_>>();
+        assert_eq!(owners, ["openCommandMenu"]);
+    }
+
+    #[test]
+    fn activity_bell_entry_toggles_the_activity_view_surface() {
+        // WO-P2-018 (J-17): the Activity bell is the reference's primary
+        // discovery for the Activity view, as a title-bar button. It reuses
+        // the `toggleActivityView` registry row's copy, carries the same
+        // Bell icon as the palette row (PaletteCommand::ToggleActivityView),
+        // and dispatches the existing Action::ToggleActivityView — the
+        // bell is a second entry point, not a second activity store.
+        let entry = activity_view_bell_entry();
+        assert_eq!(entry.id, "toggle-activity-view");
+        assert!(matches!(entry.icon, IconName::Bell));
+        assert!(matches!(
+            PaletteCommand::ToggleActivityView.icon(),
+            IconName::Bell
+        ));
+        let registry = ACTIVE_KEYBOARD_SHORTCUTS
+            .iter()
+            .find(|item| item.id == "toggleActivityView")
+            .unwrap_or_else(|| panic!("toggleActivityView missing from the shortcut registry"));
+        assert!(
+            entry.tooltip.starts_with(registry.title),
+            "the bell tooltip must reuse the registry title: {}",
+            entry.tooltip
+        );
+        assert!(
+            entry.tooltip.ends_with("Ctrl+Alt+U"),
+            "the bell tooltip must advertise the chord: {}",
+            entry.tooltip
+        );
+        // The dispatched action toggles the existing surface state
+        // (WO-P2-013's reducer) without touching the attention flags.
+        let mut state = AppState::default();
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(state.activity_view_visible);
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(!state.activity_view_visible);
+        assert!(state.needs_attention_task_ids.is_empty());
+    }
+
+    #[test]
+    fn unread_attention_dot_exposes_its_tooltip_text() {
+        // WO-P2-018: the unread-attention dot (WO-P2-008) on sidebar and
+        // Activity view rows gains a plain-language text alternative from
+        // the registry's unread vocabulary — no implementation terms.
+        assert_eq!(UNREAD_ATTENTION_DOT_TOOLTIP, "Unread activity");
+        let registry = ACTIVE_KEYBOARD_SHORTCUTS
+            .iter()
+            .find(|item| item.id == "nextUnreadChat")
+            .unwrap_or_else(|| panic!("nextUnreadChat missing from the shortcut registry"));
+        assert!(
+            registry.description.contains("unread activity"),
+            "the dot tooltip must reuse the registry's unread vocabulary"
+        );
+        assert!(!UNREAD_ATTENTION_DOT_TOOLTIP.contains("task"));
+    }
+
+    #[test]
+    fn archived_chat_single_deletion_exposes_its_accessible_label() {
+        // WO-P2-018: the archived-chats single-item deletion is a
+        // destructive row action — it gains the visible label the other
+        // labeled row actions use ("Unarchive", header "Delete all") and
+        // keeps a tooltip that matches the single-scope confirmation title
+        // it leads into.
+        assert_eq!(ARCHIVED_CHAT_DELETE_LABEL, "Delete");
+        assert_eq!(ARCHIVED_CHAT_DELETE_TOOLTIP, "Delete archived chat");
+        let (confirmation_title, _) =
+            archived_delete_confirmation_copy(ArchivedChatDeleteScope::Single, 1);
+        assert_eq!(
+            ARCHIVED_CHAT_DELETE_TOOLTIP,
+            confirmation_title.trim_end_matches('?'),
+            "the tooltip must match the confirmation title it leads into"
+        );
     }
 
     #[test]
