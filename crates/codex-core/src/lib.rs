@@ -4766,6 +4766,12 @@ pub struct AppState {
     /// approval-requested) while not selected and have not been visited
     /// since (WO-P2-008 session state; not persisted).
     pub needs_attention_task_ids: Vec<String>,
+    /// Activity view surface state (WO-P2-013): the visible-surface flag
+    /// plus the keyboard-selected row. Rows are derived live from
+    /// `needs_attention_task_ids` (see `activity_view_task_ids`) — there
+    /// is deliberately no second activity/event store.
+    pub activity_view_open: bool,
+    pub activity_view_selected_index: usize,
     pub seen_model_upgrade_ids: Vec<String>,
     pub local_projects: Vec<LocalProjectSummary>,
     pub local_project_order: Vec<PathBuf>,
@@ -4842,6 +4848,8 @@ impl Default for AppState {
             archived_tasks: ArchivedTasksState::default(),
             pinned_task_ids: Vec::new(),
             needs_attention_task_ids: Vec::new(),
+            activity_view_open: false,
+            activity_view_selected_index: 0,
             seen_model_upgrade_ids: Vec::new(),
             local_projects: Vec::new(),
             local_project_order: Vec::new(),
@@ -5165,6 +5173,13 @@ pub enum Action {
     OpenBackgroundCompletion,
     DismissBackgroundCompletion,
     ToggleActivityView,
+    CloseActivityView,
+    MoveActivityViewSelection {
+        delta: isize,
+    },
+    ActivateActivityViewRow {
+        task_id: String,
+    },
     ClearUnreadIndicators,
     ToggleSelectedTaskUnread,
     TaskRuntimeLoaded {
@@ -8918,6 +8933,54 @@ fn mark_task_needing_attention(state: &mut AppState, task_id: &str) {
     state.needs_attention_task_ids.push(task_id.to_owned());
 }
 
+/// Sidebar-visible chat order shared by the sidebar, the
+/// next-chat-needing-attention jump, and the Activity view rows
+/// (WO-P2-013): pinned chats first, then the remaining chats grouped by
+/// project cwd in list order. Single-sourced here so every consumer of
+/// the order derives from one implementation.
+pub fn visible_task_ids(tasks: &[TaskSummary], pinned_task_ids: &[String]) -> Vec<String> {
+    let mut ordered = pinned_task_ids
+        .iter()
+        .filter_map(|task_id| tasks.iter().find(|task| task.id == *task_id))
+        .collect::<Vec<_>>();
+    let recent = tasks
+        .iter()
+        .filter(|task| !pinned_task_ids.iter().any(|task_id| task_id == &task.id))
+        .collect::<Vec<_>>();
+    let mut project_cwds = Vec::<&Path>::new();
+    for task in &recent {
+        if !project_cwds.contains(&task.cwd.as_path()) {
+            project_cwds.push(task.cwd.as_path());
+        }
+    }
+    for cwd in project_cwds {
+        ordered.extend(
+            recent
+                .iter()
+                .copied()
+                .filter(|task| task.cwd.as_path() == cwd),
+        );
+    }
+    ordered.into_iter().map(|task| task.id.clone()).collect()
+}
+
+/// Activity view rows (WO-P2-013): the chats currently flagged as
+/// needing attention, in the shared sidebar order. Derived live from the
+/// bounded `needs_attention_task_ids` session state and the visible task
+/// list — flags for chats no longer visible simply have no row, exactly
+/// like the sidebar dot and the Ctrl+Alt+A jump. Not a second store.
+pub fn activity_view_task_ids(state: &AppState) -> Vec<String> {
+    visible_task_ids(&state.tasks, &state.pinned_task_ids)
+        .into_iter()
+        .filter(|task_id| {
+            state
+                .needs_attention_task_ids
+                .iter()
+                .any(|unread_task_id| unread_task_id == task_id)
+        })
+        .collect()
+}
+
 pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
     match action {
         Action::Connect | Action::RetryConnection => {
@@ -10668,14 +10731,59 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             }]
         }
         Action::ToggleActivityView => {
-            // The Activity view surface is a separate future work order;
-            // the binding still resolves visibly instead of a silent
-            // no-op (WO-P2-008, the WO-P2-007 input-quality doctrine).
-            state.status_message = Some(
-                "Activity view is not available yet. Use \"Next chat needing attention\" to jump to unread chats."
-                    .to_owned(),
-            );
+            // Toggles the Activity view surface (WO-P2-013). Rows are
+            // derived live from the existing needs-attention state, so
+            // opening only resets the keyboard selection; the surface
+            // never resolves silently — open and closed are both visible.
+            state.activity_view_open = !state.activity_view_open;
+            state.activity_view_selected_index = 0;
             Vec::new()
+        }
+        Action::CloseActivityView => {
+            // The Escape/scrim close path. Idempotent by design so the
+            // global Escape observer and the focused surface's own
+            // handler cannot conflict.
+            state.activity_view_open = false;
+            state.activity_view_selected_index = 0;
+            Vec::new()
+        }
+        Action::MoveActivityViewSelection { delta } => {
+            // Arrow-key row navigation, wrapping like the command
+            // palette's cyclic selection and bounded by the live row
+            // count (rows = flagged chats in sidebar order).
+            let row_count = activity_view_task_ids(state).len();
+            state.activity_view_selected_index = if row_count == 0 {
+                0
+            } else {
+                let index = (state.activity_view_selected_index as isize + delta)
+                    .rem_euclid(row_count as isize);
+                index as usize
+            };
+            Vec::new()
+        }
+        Action::ActivateActivityViewRow { task_id } => {
+            // Jump to the exact chat (WO-P2-013): the same selection path
+            // Ctrl+Alt+A uses, so the visit-clear semantics are the
+            // existing SelectTask behavior — nothing here redefines
+            // attention semantics.
+            let is_activity_row = activity_view_task_ids(state)
+                .iter()
+                .any(|row_task_id| row_task_id == &task_id);
+            if !is_activity_row {
+                // The confirmed row is no longer a live activity row (the
+                // attention state changed underneath the surface); the
+                // surface re-renders from live state, so there is nothing
+                // left to jump to.
+                return Vec::new();
+            }
+            state.activity_view_open = false;
+            state.activity_view_selected_index = 0;
+            let mut effects = Vec::new();
+            if state.route != MainRoute::Tasks {
+                effects.extend(reduce(state, Action::Navigate(MainRoute::Tasks)));
+            }
+            effects.extend(reduce(state, Action::SelectTask(task_id)));
+            effects
         }
         Action::ClearUnreadIndicators => {
             let cleared = state.needs_attention_task_ids.len();
@@ -21358,9 +21466,10 @@ mod tests {
         WorkflowInstanceDetail, WorkflowInstanceStatus, WorkflowPublishedVersion, WorkflowRequest,
         WorkflowStepCard, WorkflowStepOrigin, WorkflowTeachMode, WorkflowTeachSessionState,
         WorkflowTeachSessionStatus, WorkflowValidationCard, WorkflowValidationSeverity,
-        WorkflowValidationStageCard, appearance_code_theme_supports_variant,
-        clear_git_for_context_change, computer_app_id_matches, permission_mode_options, reduce,
-        stable_reference, validate_mcp_form_content, workflow_evidence_environment,
+        WorkflowValidationStageCard, activity_view_task_ids,
+        appearance_code_theme_supports_variant, clear_git_for_context_change,
+        computer_app_id_matches, permission_mode_options, reduce, stable_reference,
+        validate_mcp_form_content, workflow_evidence_environment,
     };
 
     fn task(id: &str) -> TaskSummary {
@@ -37801,12 +37910,136 @@ mod tests {
     }
 
     #[test]
-    fn toggle_activity_view_surfaces_honest_guidance() {
-        // The Activity view surface is out of scope for WO-P2-008; the
-        // binding must still resolve visibly (never a silent no-op).
+    fn activity_view_toggles_open_and_closed() {
+        // The Ctrl+Alt+U binding's action now drives the real surface
+        // (WO-P2-013) instead of the WO-P2-008 honest-guidance placeholder.
         let mut state = AppState::default();
+        assert!(!state.activity_view_open);
         assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
-        let message = state.status_message.clone();
-        assert!(message.is_some_and(|message| !message.is_empty()));
+        assert!(state.activity_view_open);
+        // Opening again via the same binding closes it (toggle semantics).
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(!state.activity_view_open);
+        // The Escape path closes and stays closed (idempotent).
+        assert!(reduce(&mut state, Action::CloseActivityView).is_empty());
+        assert!(!state.activity_view_open);
+        assert!(reduce(&mut state, Action::CloseActivityView).is_empty());
+        assert!(!state.activity_view_open);
+    }
+
+    #[test]
+    fn activity_view_rows_compose_with_attention_state() {
+        // Rows mirror the shared sidebar order (pinned first) and include
+        // only chats currently flagged as needing attention.
+        let mut state = AppState {
+            tasks: vec![task("a"), task("b"), task("c"), task("pinned")],
+            pinned_task_ids: vec!["pinned".to_owned()],
+            needs_attention_task_ids: vec![
+                "b".to_owned(),
+                "pinned".to_owned(),
+                "a".to_owned(),
+                "gone".to_owned(),
+            ],
+            ..AppState::default()
+        };
+        assert_eq!(activity_view_task_ids(&state), ["pinned", "a", "b"]);
+
+        // Rows stay live against the existing attention semantics:
+        // visiting clears a flag and the row disappears.
+        assert!(!reduce(&mut state, Action::SelectTask("b".to_owned())).is_empty());
+        assert_eq!(activity_view_task_ids(&state), ["pinned", "a"]);
+
+        // Archiving drops the flag and the row (the archived chat was
+        // pinned, so the pinned list persists its removal too).
+        assert_eq!(
+            reduce(&mut state, Action::ArchiveTask("pinned".to_owned())),
+            vec![Effect::ArchiveTask {
+                task_id: "pinned".to_owned()
+            }]
+        );
+        assert_eq!(
+            reduce(&mut state, Action::TaskArchived("pinned".to_owned())),
+            vec![Effect::PersistPinnedTasks {
+                task_ids: Vec::new()
+            }]
+        );
+        assert_eq!(activity_view_task_ids(&state), ["a"]);
+
+        // With nothing flagged the surface renders the honest empty state.
+        assert!(reduce(&mut state, Action::ClearUnreadIndicators).is_empty());
+        assert!(activity_view_task_ids(&state).is_empty());
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(state.activity_view_open);
+        assert!(activity_view_task_ids(&state).is_empty());
+    }
+
+    #[test]
+    fn activity_view_selection_moves_and_wraps_within_rows() {
+        let mut state = AppState {
+            tasks: vec![task("a"), task("b")],
+            needs_attention_task_ids: vec!["a".to_owned(), "b".to_owned()],
+            ..AppState::default()
+        };
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert_eq!(state.activity_view_selected_index, 0);
+
+        assert!(reduce(&mut state, Action::MoveActivityViewSelection { delta: 1 }).is_empty());
+        assert_eq!(state.activity_view_selected_index, 1);
+        // Wraps like the command palette's cyclic selection.
+        assert!(reduce(&mut state, Action::MoveActivityViewSelection { delta: 1 }).is_empty());
+        assert_eq!(state.activity_view_selected_index, 0);
+        assert!(reduce(&mut state, Action::MoveActivityViewSelection { delta: -1 }).is_empty());
+        assert_eq!(state.activity_view_selected_index, 1);
+
+        // With no rows the selection stays clamped to zero.
+        assert!(reduce(&mut state, Action::ClearUnreadIndicators).is_empty());
+        assert!(reduce(&mut state, Action::MoveActivityViewSelection { delta: 1 }).is_empty());
+        assert_eq!(state.activity_view_selected_index, 0);
+    }
+
+    #[test]
+    fn activity_view_activation_jumps_and_resolves_attention() {
+        // Enter on a row jumps to the exact chat through the existing
+        // selection path: the surface closes, the chat is selected, and
+        // the visit-clear semantics resolve its attention flag.
+        let mut state = AppState {
+            route: MainRoute::Settings,
+            tasks: vec![task("a"), task("b")],
+            selected_task_id: Some("a".to_owned()),
+            needs_attention_task_ids: vec!["b".to_owned()],
+            ..AppState::default()
+        };
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(state.activity_view_open);
+
+        let effects = reduce(
+            &mut state,
+            Action::ActivateActivityViewRow {
+                task_id: "b".to_owned(),
+            },
+        );
+        assert!(!state.activity_view_open);
+        assert_eq!(state.activity_view_selected_index, 0);
+        assert_eq!(state.route, MainRoute::Tasks);
+        assert_eq!(state.selected_task_id.as_deref(), Some("b"));
+        assert!(state.needs_attention_task_ids.is_empty());
+        // The jump reused the existing selection path (resume + timeline
+        // load effects come from SelectTask; the route change persists
+        // UI state) — no new effect kinds are introduced.
+        assert!(!effects.is_empty());
+
+        // Activating a chat that is not a current activity row resolves
+        // as a no-op instead of jumping off-surface.
+        state.needs_attention_task_ids.push("a".to_owned());
+        assert_eq!(activity_view_task_ids(&state), ["a"]);
+        let stale_row_effects = reduce(
+            &mut state,
+            Action::ActivateActivityViewRow {
+                task_id: "b".to_owned(),
+            },
+        );
+        assert!(stale_row_effects.is_empty());
+        assert_eq!(state.selected_task_id.as_deref(), Some("b"));
+        assert_eq!(activity_view_task_ids(&state), ["a"]);
     }
 }
