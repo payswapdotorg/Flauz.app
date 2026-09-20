@@ -308,7 +308,7 @@ parity tracking.
 | Row | Release verdict | Remaining delta class |
 | --- | --- | --- |
 | App-server supervision | green | network-aware diagnostics; remaining experimental methods (enhancement) |
-| Projects and chats | green | multi-root sources, unread state, richer metadata (polish); manual ordering closed in GUI-002 |
+| Projects and chats | green | multi-root sources, richer metadata (polish); manual ordering closed in GUI-002; unread-attention state closed via WO-P2-008 and the Activity-view surface via WO-P2-013 (PR #36 → `c10b426`) |
 | Thread execution | green | compaction provenance, richer edit metadata (polish) |
 | Composer | green | cloud projects/voice (proprietary, unavailable); remaining slash commands (polish) |
 | Model, effort, and speed picker | green | none listed |

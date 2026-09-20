@@ -22,8 +22,19 @@
 classified (5 closed / 1 in-flight / 17 bounded / 10 P2 / 8 P3; 41 = 5+1+17+10+8)
 plus the PR finding-16 shortcut delta (9 closed, 2 P3).
 
-**Lead decisions still required to freeze the classification** (not new work —
-triage):
+> **Lead decision record (2026-09-20, Task 60) — D-1 and D-2 FROZEN:**
+> - **D-1:** the **pinned-baseline rule is frozen for F1** (the parity-matrix
+>   is the F1 spine); the re-sliced items (multi-repository projects,
+>   artifacts renderers/canvas, first-run welcome set) carry forward as the
+>   explicit "current-target backlog" annex for F2 — they are NOT F1
+>   blockers. The classification in parity-inventory.md is final for F1.
+> - **D-2:** the PM Projects-and-chats release-verdict row no longer lists
+>   "unread state" as a remainder — closed via WO-P2-008 (unread attention)
+>   and WO-P2-013 (the Activity-view surface, PR #36 → `c10b426`); the row
+>   text was edited by the Lead (docs commit on main, 2026-09-20).
+
+**Lead decisions (frozen above, 2026-09-20 — the original triage table,
+retained for the record):**
 
 | Decision | Options | Recommendation |
 | --- | --- | --- |
