@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot provided, here are the precise answers:\n\n1) **WORKSPACE context:** Yes. The app shows a workspace context named **\"seed-ws\"** in the sidebar under the \"Projects\" section.\n2) **Message composer/input box:** Yes. There is an input box at the bottom with the placeholder text \"Ask Codex to change, inspect, or explain...\".\n3) **Footer status line:** It says **\"App-server online\"** (preceded by a green dot).\n4) **Sidebar sections visible:**\n    *   **Top Navigation:** New chat, Repository, Pull requests, Plugins, Workflows\n    *   **Projects:** (containing \"seed-ws\")\n    *   **Chats:** (showing \"No chats\")\n    *   **Bottom Tools:** Terminal, Browser, Settings",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789906798,
+  "id": "202609202019514d7876a00a364b7a",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609202019514d7876a00a364b7a",
+  "usage": {
+    "completion_tokens": 173,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1764,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 1937
+  }
+}

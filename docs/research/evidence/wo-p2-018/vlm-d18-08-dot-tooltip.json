@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Yes, a tooltip is visible. Its exact text is: **Unread activity**\n\nAnd yes, there is an unread dot (a blue circle) on the \"alpha visible entry chat\" row in the sidebar.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789907428,
+  "id": "20260920203026016ec794220d4f9e",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920203026016ec794220d4f9e",
+  "usage": {
+    "completion_tokens": 44,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1696,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1740
+  }
+}

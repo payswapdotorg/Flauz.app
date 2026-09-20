@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Yes. \"Chats that finish or ask for your approval while you work elsewhere appear here. Use 'Mark chat unread' to keep a chat on this list.\"",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789907426,
+  "id": "20260920203024a284ebf3b61449f5",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920203024a284ebf3b61449f5",
+  "usage": {
+    "completion_tokens": 34,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1699,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1733
+  }
+}

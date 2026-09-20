@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The **'Activity' panel is open**.\n\nIt is a centered modal overlay with the heading **\"Activity\"**, displaying the message \"No chats need attention\" and instructions for navigating chats. The background is slightly dimmed, and there's a tooltip at the top indicating this view can be toggled with `Ctrl+Alt+U`.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789907279,
+  "id": "202609202027543a1e7ac2d91a4c80",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609202027543a1e7ac2d91a4c80",
+  "usage": {
+    "completion_tokens": 70,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1733,
+    "prompt_tokens_details": {
+      "cached_tokens": 65
+    },
+    "total_tokens": 1803
+  }
+}

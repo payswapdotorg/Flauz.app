@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Command palette overlay is OPEN.**\n\nThe screenshot shows a centered modal dialog with a search input (\"Search chats or run a command\") and a list of suggested commands (New chat, Open folder, Search files, Settings, etc.) with keyboard shortcuts. The background is dimmed/grayed out, which is characteristic of an active command palette overlay (triggered by Ctrl+K as indicated by the tooltip). It is not the Activity panel or a normal view without overlays.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789907274,
+  "id": "20260920202747377f519b6bdd4639",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920202747377f519b6bdd4639",
+  "usage": {
+    "completion_tokens": 97,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1733,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 1830
+  }
+}

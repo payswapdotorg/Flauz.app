@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the provided image of the Settings UI, here is the analysis of the 'Archived chats' section:\n\n**1) Archived Chat Rows (Names):**\n*   **d10-seed-ws** (This appears to be a project or folder header)\n*   **alpha visible entry chat**\n\n**2) Action Controls on the Right:**\n*   **For 'd10-seed-ws':**\n    *   Text: \"1 chat\"\n    *   Icon-only button: A \"more options\" ellipsis icon (**...**)\n*   **For 'alpha visible entry chat':**\n    *   Visible text label: **'Delete'** (accompanied by a trash can icon)\n    *   Visible text label: **'Unarchive'**\n\n**3) 'Delete all' Header Action:**\n*   **Yes**, there is a **'Delete all'** action located in the top right corner of the main content area, next to the \"Archived chats\" title. It features a trash can icon and the text \"Delete all\".",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789907692,
+  "id": "20260920203445857e7ce5077d4dd5",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920203445857e7ce5077d4dd5",
+  "usage": {
+    "completion_tokens": 220,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1743,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1963
+  }
+}
