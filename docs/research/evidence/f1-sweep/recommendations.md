@@ -13,6 +13,8 @@
 > WO-P2-013 ID is already assigned to the in-flight Activity-view work order
 > (Wave-1 Worker B, dispatched 20:00 UTC before this packet was authored).
 > Scope text unchanged; only the IDs moved.
+>
+> **Closure status (2026-09-20):** WO-P2-018 **CLOSED** (PR #37 → `b562397ce6325f12d21f67f0549f5860b7801306`; D18 evidence wo-p2-018/) and WO-P2-020 **CLOSED** (PR #38 → `30572a43afcf3af6fa29d2b9da097467d74e7401`; D20 evidence wo-p2-020/ — D-3 resolved: separate WO, honest-status treatment). WO-P2-017 r1 REJECTED by Lead verification (deterministic palette-close panic, D17 evidence) — fix round in flight; WO-P2-019 dispatched (modal focus traps).
 
 ## 1. Gate clause 1 — "every remaining full-reference difference is explicitly classified"
 

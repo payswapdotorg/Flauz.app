@@ -64,14 +64,18 @@ Already merged:
 - ✅ WO-P2-009 persistent browsing history / revisit / Settings management
 - ✅ WO-P2-010 evidenced command-palette rows and availability guards
 - ✅ WO-P2-011 context-scoped browser reload/force-reload/copy-URL chords
+- ✅ WO-P2-012 guard honesty (six evidenced silent no-op states + executor fall-through)
+- ✅ WO-P2-013 Activity view surface (J-17)
+- ✅ WO-P2-018 visible-entry + label parity (title-bar palette entry, Activity bell, archived-deletion label, unread-dot tooltip)
+- ✅ WO-P2-020 F-A4 honest status for Ctrl+P without a workspace
 - ✅ RWO-020/RWO-021/RWO-022 reference/review/adversarial verification waves
 - ✅ Release-critical parity scope is green for the selected public/runtime-owned rows;
   bounded proprietary/platform rows remain explicitly classified.
 
 Remaining:
-- ⬜ WO-P2-012 guard-honesty follow-up (active work exists only on an unmerged
-  branch and must be rebased/reconciled with current `main` before merge)
-- ⬜ Activity-view surface corresponding to the deferred `toggleActivityView`
+- ⬜ WO-P2-017 palette/overlay close focus restoration (r1 rejected — deterministic
+  palette-close panic, D17 evidence; fix round in flight, rebases on the merged head)
+- ⬜ WO-P2-019 confirmation-modal focus-trap completion (worker in flight)
 - ⬜ remaining full-reference P2/P3 parity differences
 - ⬜ final parity journeys across the remaining partial/platform rows
 - ⬜ accessibility/keyboard-only/reduced-motion/screen-reader/contrast pass
