@@ -1662,13 +1662,7 @@ fn activity_view_rows(state: &AppState) -> Vec<TaskSummary> {
                 .iter()
                 .any(|unread_task_id| unread_task_id == task_id)
         })
-        .filter_map(|task_id| {
-            state
-                .tasks
-                .iter()
-                .find(|task| task.id == task_id)
-                .cloned()
-        })
+        .filter_map(|task_id| state.tasks.iter().find(|task| task.id == task_id).cloned())
         .collect()
 }
 
@@ -1676,8 +1670,7 @@ fn activity_view_rows(state: &AppState) -> Vec<TaskSummary> {
 /// domain-neutral, and guidance toward the existing mark-unread command
 /// title instead of an implementation term.
 const ACTIVITY_VIEW_EMPTY_TITLE: &str = "No chats need attention";
-const ACTIVITY_VIEW_EMPTY_GUIDANCE: &str =
-    "Chats that finish or ask for your approval while you work elsewhere appear here. Use \"Mark chat unread\" to keep a chat on this list.";
+const ACTIVITY_VIEW_EMPTY_GUIDANCE: &str = "Chats that finish or ask for your approval while you work elsewhere appear here. Use \"Mark chat unread\" to keep a chat on this list.";
 
 fn activity_view_count_label(row_count: usize) -> String {
     if row_count == 1 {
@@ -3758,9 +3751,7 @@ impl PaletteCommand {
             Self::NavigateForward => "Go forward in navigation history",
             Self::PreviousChat => "Switch to the previous chat",
             Self::NextChat => "Switch to the next chat",
-            Self::ToggleActivityView => {
-                "Show chats you engaged with recently that need attention"
-            }
+            Self::ToggleActivityView => "Show chats you engaged with recently that need attention",
             Self::FindInThread => "Search the current chat",
             Self::ToggleSidebar => "Show or hide the sidebar",
             Self::ToggleBottomPanel => "Show or hide the bottom panel",
@@ -39979,7 +39970,9 @@ impl WorkspaceView {
     fn render_activity_view_panel(&mut self, cx: &mut Context<Self>) -> AnyElement {
         let rows = activity_view_rows(&self.state);
         let row_count = rows.len();
-        let selected_index = self.activity_view_selected_index.min(row_count.saturating_sub(1));
+        let selected_index = self
+            .activity_view_selected_index
+            .min(row_count.saturating_sub(1));
         let row_elements = rows
             .into_iter()
             .enumerate()
