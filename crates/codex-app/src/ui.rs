@@ -8828,6 +8828,12 @@ impl WorkspaceView {
             input.set_value("", window, cx);
         });
         self.dispatch(Action::BeginNewChat, cx);
+        // Chat creation must land keyboard focus on the composer AFTER the
+        // dispatch so the route change cannot steal it back (RG-A11Y N1,
+        // with_prompt parity): a keyboard-only user can type immediately.
+        self.composer.update(cx, |input, cx| {
+            input.focus(window, cx);
+        });
         self.close_narrow_sidebar();
         self.sync_composer_placeholder(window, cx);
     }
@@ -53210,6 +53216,102 @@ mod tests {
         assert!(reduce(&mut state, Action::ToggleSelectedTaskUnread).is_empty());
         assert!(state.needs_attention_task_ids.is_empty());
         assert_eq!(state.status_message.as_deref(), Some("Chat marked read"));
+    }
+
+    fn impl_method_body<'a>(source: &'a str, signature: &str) -> &'a str {
+        // Returns the brace-balanced body of the first method whose source
+        // contains `signature`. The new-chat focus tests below pin WHERE the
+        // view wires focus: focus is window state, which no pure reducer
+        // test can observe, so the wiring is asserted against this file's
+        // own source (the WO-P2-011 pattern of testing the focus gate
+        // purely; the lab probe re-verifies the behavior). Any refactor
+        // that moves or removes a pinned call re-trips these tests loudly
+        // by design.
+        let start = match source.find(signature) {
+            Some(start) => start,
+            None => panic!("{signature:?} exists in this file's source"),
+        };
+        let opens = match source[start..].find('{') {
+            Some(offset) => start + offset,
+            None => panic!("{signature:?} opens a body"),
+        };
+        let mut depth = 0usize;
+        for (offset, byte) in source[opens..].bytes().enumerate() {
+            match byte {
+                b'{' => depth += 1,
+                b'}' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return &source[opens..opens + offset + 1];
+                    }
+                }
+                _ => {}
+            }
+        }
+        panic!("{signature:?} closes a brace-balanced body");
+    }
+
+    #[test]
+    fn begin_new_chat_focuses_composer_after_dispatch() {
+        // RG-A11Y N1 (WO-UX-002): a keyboard-only user must be able to
+        // create a chat. begin_new_chat — the Ctrl+N chord, the palette's
+        // "New chat" row, and the sidebar's new-chat row all route here —
+        // focuses the composer, and the focus call sits AFTER the
+        // Action::BeginNewChat dispatch so the route change cannot steal
+        // focus back (the with_prompt parity).
+        let source = include_str!("ui.rs");
+        let body = impl_method_body(source, "fn begin_new_chat(");
+
+        // The focus call exists and targets the composer input...
+        let focus_at = match body.find("input.focus(window, cx);") {
+            Some(at) => at,
+            None => panic!("begin_new_chat focuses the composer input"),
+        };
+        assert!(body.contains("self.composer.update"));
+        // ...and it runs after the dispatch it must survive.
+        let dispatch_at = match body.find("self.dispatch(Action::BeginNewChat, cx);") {
+            Some(at) => at,
+            None => panic!("begin_new_chat dispatches Action::BeginNewChat"),
+        };
+        assert!(focus_at > dispatch_at);
+        // The scanned body is bounded: it ends before the next method.
+        assert!(!body.contains("fn begin_projectless_chat"));
+
+        // The dispatch the focus follows is real chat creation: it clears
+        // the selection and the draft and lands on the Tasks route.
+        let mut state = AppState {
+            tasks: vec![task("a", "C:\\repo")],
+            selected_task_id: Some("a".to_owned()),
+            route: MainRoute::Settings,
+            composer: "leftover draft".to_owned(),
+            ..AppState::default()
+        };
+        reduce(&mut state, Action::BeginNewChat);
+        assert_eq!(state.selected_task_id, None);
+        assert_eq!(state.composer, "");
+        assert_eq!(state.route, MainRoute::Tasks);
+    }
+
+    #[test]
+    fn begin_new_chat_with_prompt_still_focuses_composer() {
+        // WO-UX-002 regression guard: with_prompt keeps its own focus call
+        // (the pre-existing, lab-verified path). It delegates the dispatch
+        // to begin_new_chat and then focuses the composer after setting
+        // the prompt — focus lands on the composer either way.
+        let source = include_str!("ui.rs");
+        let body = impl_method_body(source, "fn begin_new_chat_with_prompt(");
+
+        let begins_at = match body.find("self.begin_new_chat(window, cx);") {
+            Some(at) => at,
+            None => panic!("begin_new_chat_with_prompt delegates to begin_new_chat"),
+        };
+        let focus_at = match body.find("composer.focus(window, cx);") {
+            Some(at) => at,
+            None => panic!("begin_new_chat_with_prompt focuses the composer"),
+        };
+        assert!(focus_at > begins_at);
+        // The scanned body is bounded: it ends before the next method.
+        assert!(!body.contains("fn has_local_workspace"));
     }
 
     #[test]
