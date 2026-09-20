@@ -1648,6 +1648,26 @@ fn next_unread_task_id(
     None
 }
 
+/// Chats listed by the Activity view surface (WO-P2-013): the chats
+/// flagged in `needs_attention_task_ids`, in sidebar order, bounded to the
+/// chats that are currently visible. The view reads the existing
+/// WO-P2-008 attention state directly — there is no second activity
+/// store, and the membership never diverges from the sidebar dots.
+fn activity_view_task_ids(
+    tasks: &[TaskSummary],
+    pinned_task_ids: &[String],
+    needs_attention_task_ids: &[String],
+) -> Vec<String> {
+    visible_task_ids(tasks, pinned_task_ids)
+        .into_iter()
+        .filter(|task_id| {
+            needs_attention_task_ids
+                .iter()
+                .any(|unread_task_id| unread_task_id == task_id)
+        })
+        .collect()
+}
+
 fn app_mention_prompt(app_id: &str, app_name: &str) -> String {
     let destination = format!("app://{app_id}")
         .replace('\\', "\\\\")
@@ -1776,7 +1796,10 @@ gpui::actions!(
         ResetKeyboardShortcutsFocusNext,
         ResetKeyboardShortcutsFocusPrev,
         AllowAllBrowserSitesFocusNext,
-        AllowAllBrowserSitesFocusPrev
+        AllowAllBrowserSitesFocusPrev,
+        ActivityViewSelectPrev,
+        ActivityViewSelectNext,
+        ActivityViewActivateRow
     ]
 );
 
@@ -3510,6 +3533,7 @@ enum PaletteCommand {
     FindInThread,
     ToggleSidebar,
     ToggleBottomPanel,
+    ToggleActivityView,
     OpenProcessManager,
     LogOut,
     Feedback,
@@ -3552,7 +3576,7 @@ enum PaletteCommand {
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 70] = [
+    const ALL: [Self; 71] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3595,6 +3619,7 @@ impl PaletteCommand {
         Self::FindInThread,
         Self::ToggleSidebar,
         Self::ToggleBottomPanel,
+        Self::ToggleActivityView,
         Self::LogOut,
         Self::Feedback,
         Self::OpenProcessManager,
@@ -3641,6 +3666,7 @@ impl PaletteCommand {
             Self::FindInThread => "Find",
             Self::ToggleSidebar => "Toggle sidebar",
             Self::ToggleBottomPanel => "Toggle bottom panel",
+            Self::ToggleActivityView => "Toggle Activity view",
             Self::LogOut => "Log out",
             Self::Feedback => "Feedback",
             Self::OpenProcessManager => "Process Manager",
@@ -3716,6 +3742,7 @@ impl PaletteCommand {
             Self::FindInThread => "Search the current chat",
             Self::ToggleSidebar => "Show or hide the sidebar",
             Self::ToggleBottomPanel => "Show or hide the bottom panel",
+            Self::ToggleActivityView => "Show chats you engaged with recently that need attention",
             Self::LogOut => "Sign out of ChatGPT",
             Self::Feedback => "Send product feedback to the ChatGPT team",
             Self::OpenProcessManager => "View and manage processes started by Codex chats",
@@ -3818,6 +3845,7 @@ impl PaletteCommand {
             Self::FindInThread => Some("findInThread"),
             Self::ToggleSidebar => Some("toggleSidebar"),
             Self::ToggleBottomPanel => Some("toggleBottomPanel"),
+            Self::ToggleActivityView => Some("toggleActivityView"),
             Self::LogOut => Some("logOut"),
             Self::Feedback => Some("feedback"),
             Self::OpenProcessManager => Some("openProcessManager"),
@@ -3890,6 +3918,7 @@ impl PaletteCommand {
             Self::FindInThread => IconName::Search,
             Self::ToggleSidebar => IconName::PanelLeft,
             Self::ToggleBottomPanel => IconName::PanelBottom,
+            Self::ToggleActivityView => IconName::Bell,
             Self::LogOut => IconName::ExternalLink,
             Self::Feedback => IconName::Info,
             Self::OpenProcessManager => IconName::SquareTerminal,
@@ -3977,6 +4006,7 @@ impl PaletteCommand {
             | Self::NavigateForward
             | Self::PreviousChat
             | Self::NextChat
+            | Self::ToggleActivityView
             | Self::GoToChat1
             | Self::GoToChat2
             | Self::GoToChat3
@@ -4469,6 +4499,7 @@ impl CommandPaletteView {
             PaletteCommand::NextChat => workspace.navigate_adjacent_chat(true, cx),
             PaletteCommand::FindInThread => workspace.open_thread_find(window, cx),
             PaletteCommand::ToggleSidebar => workspace.toggle_sidebar(cx),
+            PaletteCommand::ToggleActivityView => workspace.toggle_activity_view(cx),
             PaletteCommand::ToggleBottomPanel => {
                 workspace.dispatch(Action::ToggleBottomPanel, cx);
             }
@@ -5155,6 +5186,14 @@ pub fn run() {
                     AllowAllBrowserSitesFocusPrev,
                     Some("AllowAllBrowserSitesModal"),
                 ),
+                // The Activity view surface's keyboard-only path (WO-P2-013):
+                // arrows move the row selection, Enter jumps to the selected
+                // chat, Escape closes. The bindings live in the surface's own
+                // focus context, mirroring the modal focus contexts above.
+                KeyBinding::new("up", ActivityViewSelectPrev, Some("ActivityView")),
+                KeyBinding::new("down", ActivityViewSelectNext, Some("ActivityView")),
+                KeyBinding::new("enter", ActivityViewActivateRow, Some("ActivityView")),
+                KeyBinding::new("escape", Escape, Some("ActivityView")),
             ]);
             let default_bounds =
                 Bounds::centered(None, size(px(WINDOW_WIDTH), px(WINDOW_HEIGHT)), cx);
@@ -5784,6 +5823,9 @@ struct WorkspaceView {
     user_input_auto_resolution_states: HashMap<String, UserInputAutoResolutionState>,
     user_input_auto_resolution_generations: HashMap<String, u64>,
     user_input_foregrounded: HashMap<String, bool>,
+    activity_view_focus: FocusHandle,
+    activity_view_focus_requested: bool,
+    activity_view_selected_index: usize,
     mcp_elicitation_focus: FocusHandle,
     focused_mcp_elicitation_request_id: Option<String>,
     mcp_form_inputs: HashMap<(String, String), Entity<InputState>>,
@@ -5812,6 +5854,7 @@ impl WorkspaceView {
         let allow_all_browser_sites_focus = cx.focus_handle();
         let account_logout_focus = cx.focus_handle();
         let plugin_install_confirmation_focus = cx.focus_handle();
+        let activity_view_focus = cx.focus_handle();
         let initial_appearance_preferences = AppearancePreferences::default();
         let initial_appearance_variant = active_appearance_variant(cx);
         let initial_appearance_palette = initial_appearance_preferences
@@ -6715,6 +6758,17 @@ impl WorkspaceView {
                 this.close_workspace_modal(cx);
                 return;
             }
+            // Escape closes the Activity view surface (WO-P2-013). Shift
+            // must stay unmodified so the WO-P2-008 clear-all-unread
+            // binding (Shift+Escape) keeps its meaning while the view is
+            // open.
+            if key.eq_ignore_ascii_case("escape")
+                && !modifiers.shift
+                && this.state.activity_view_open
+            {
+                this.close_activity_view(cx);
+                return;
+            }
             if key.eq_ignore_ascii_case("escape")
                 && this.state.marketplace.selected_app_id.is_some()
             {
@@ -6933,6 +6987,9 @@ impl WorkspaceView {
             account_logout_focus_requested: false,
             plugin_install_confirmation_focus,
             plugin_install_confirmation_focus_requested: false,
+            activity_view_focus,
+            activity_view_focus_requested: false,
+            activity_view_selected_index: 0,
             remote_pairing_not_claimed: false,
             command_palette: None,
             workspace_modal: None,
@@ -9048,6 +9105,62 @@ impl WorkspaceView {
         );
     }
 
+    fn toggle_activity_view(&mut self, cx: &mut Context<Self>) {
+        self.dispatch(Action::ToggleActivityView, cx);
+        if self.state.activity_view_open {
+            // A fresh selection at the top of the list every time the view
+            // opens (the command palette resets its selection the same way);
+            // the render pass moves focus onto the surface.
+            self.activity_view_selected_index = 0;
+        }
+    }
+
+    fn close_activity_view(&mut self, cx: &mut Context<Self>) {
+        // Idempotent close: the global Escape observer and the surface's
+        // own Escape binding can both resolve the same keypress.
+        if self.state.activity_view_open {
+            self.dispatch(Action::ToggleActivityView, cx);
+        }
+    }
+
+    fn activity_view_rows(&self) -> Vec<String> {
+        activity_view_task_ids(
+            &self.state.tasks,
+            &self.state.pinned_task_ids,
+            &self.state.needs_attention_task_ids,
+        )
+    }
+
+    fn move_activity_view_selection(&mut self, offset: isize, cx: &mut Context<Self>) {
+        let count = self.activity_view_rows().len();
+        if count == 0 {
+            self.activity_view_selected_index = 0;
+            return;
+        }
+        self.activity_view_selected_index = (self.activity_view_selected_index as isize + offset)
+            .rem_euclid(count as isize) as usize;
+        cx.notify();
+    }
+
+    fn activate_activity_view_row(&mut self, cx: &mut Context<Self>) {
+        let Some(task_id) = self
+            .activity_view_rows()
+            .get(self.activity_view_selected_index)
+            .cloned()
+        else {
+            // Nothing to open: the honest empty state is already the
+            // surface's visible content (Enter with no matches behaves
+            // the same way in the command palette).
+            return;
+        };
+        // Jump: close the view, then select the chat. Selecting visits the
+        // chat, which clears its attention flag through the unchanged
+        // WO-P2-008 visit-clear semantics.
+        self.close_activity_view(cx);
+        self.navigate(MainRoute::Tasks, cx);
+        self.dispatch(Action::SelectTask(task_id), cx);
+    }
+
     fn toggle_sidebar(&mut self, cx: &mut Context<Self>) {
         self.sidebar_responsive = false;
         self.sidebar_visible = !self.sidebar_visible;
@@ -10963,7 +11076,7 @@ impl WorkspaceView {
             "navigateForward" => self.navigate_history(true, cx),
             "previousThread" => self.navigate_adjacent_chat(false, cx),
             "nextThread" => self.navigate_adjacent_chat(true, cx),
-            "toggleActivityView" => self.dispatch(Action::ToggleActivityView, cx),
+            "toggleActivityView" => self.toggle_activity_view(cx),
             "nextUnreadChat" => self.select_next_chat_needing_attention(cx),
             "clearAllUnread" => self.dispatch(Action::ClearUnreadIndicators, cx),
             "toggleThreadUnread" => self.dispatch(Action::ToggleSelectedTaskUnread, cx),
@@ -39837,6 +39950,235 @@ impl WorkspaceView {
             .into_any_element()
     }
 
+    /// The Activity view surface (WO-P2-013): a bounded modal listing the
+    /// chats that currently need attention, built directly on the existing
+    /// WO-P2-008 attention state (`needs_attention_task_ids`) — there is no
+    /// second activity store. The surface mirrors the house modal pattern
+    /// (scrim + occlude + Escape, like the Process Manager modal) and the
+    /// command palette's list selection model (arrows + Enter + click).
+    fn render_activity_view(&mut self, cx: &mut Context<Self>) -> AnyElement {
+        let task_ids = self.activity_view_rows();
+        let task_count = task_ids.len();
+        // The stored selection can point past the end when attention flags
+        // resolve underneath an open view; render with the clamped value.
+        let selected_index = self
+            .activity_view_selected_index
+            .min(task_count.saturating_sub(1));
+        let rows = task_ids
+            .iter()
+            .enumerate()
+            .map(|(index, task_id)| {
+                self.render_activity_view_row(index, task_id, index == selected_index, cx)
+            })
+            .collect::<Vec<_>>();
+        let header = h_flex()
+            .h(px(52.0))
+            .px_4()
+            .items_center()
+            .justify_between()
+            .border_b_1()
+            .border_color(cx.theme().border)
+            .child(
+                div()
+                    .text_lg()
+                    .font_weight(gpui::FontWeight::SEMIBOLD)
+                    .child("Activity"),
+            )
+            .child(
+                Button::new("close-activity-view")
+                    .icon(IconName::Close)
+                    .ghost()
+                    .small()
+                    .on_click(cx.listener(|this, _, _, cx| {
+                        this.close_activity_view(cx);
+                    })),
+            );
+        let intro = v_flex().px_4().pt_3().gap_3().child(
+            div()
+                .text_sm()
+                .text_color(cx.theme().muted_foreground)
+                .child("Chats you engaged with recently that need attention"),
+        );
+        let list = if task_count == 0 {
+            // Honest empty state (WO-P2-013): plain language plus guidance
+            // to the mark-unread command that feeds this view (the palette
+            // renders its "No matches" state the same way).
+            v_flex()
+                .px_4()
+                .h(px(112.0))
+                .items_center()
+                .justify_center()
+                .gap_1()
+                .child(
+                    div()
+                        .text_sm()
+                        .text_color(cx.theme().muted_foreground)
+                        .child("No chats need attention"),
+                )
+                .child(
+                    div()
+                        .text_xs()
+                        .text_color(cx.theme().muted_foreground)
+                        .child("Use \"Mark chat unread\" on a chat to track it here."),
+                )
+                .into_any_element()
+        } else {
+            // Bounded list: the attention store is capped at
+            // MAX_VISIBLE_THREADS and the rows scroll inside a fixed
+            // maximum height (the long-list house pattern).
+            v_flex()
+                .max_h(px(360.0))
+                .min_h_0()
+                .overflow_y_scrollbar()
+                .p_1()
+                .gap_0p5()
+                .children(rows)
+                .into_any_element()
+        };
+        let footer = h_flex()
+            .px_4()
+            .py_3()
+            .gap_2()
+            .items_center()
+            .justify_between()
+            .when(task_count > 0, |footer| {
+                footer.child(
+                    div()
+                        .text_xs()
+                        .text_color(cx.theme().muted_foreground)
+                        .child(if task_count == 1 {
+                            "1 chat needs attention".to_owned()
+                        } else {
+                            format!("{task_count} chats need attention")
+                        }),
+                )
+            })
+            .child(
+                div()
+                    .text_xs()
+                    .text_color(cx.theme().muted_foreground)
+                    .child("Enter opens · Esc closes"),
+            );
+        let panel = v_flex()
+            .w(px(modal_surface_width(self.shell_viewport_width, 480.0)))
+            .max_h(px(modal_surface_max_height(
+                self.shell_viewport_height,
+                560.0,
+            )))
+            .rounded(px(16.0))
+            .bg(cx.theme().popover)
+            .shadow_xl()
+            .overflow_hidden()
+            .occlude()
+            .key_context("ActivityView")
+            .track_focus(&self.activity_view_focus)
+            .tab_group()
+            .tab_stop(true)
+            .on_action(cx.listener(|this, _: &Escape, _, cx| {
+                this.close_activity_view(cx);
+            }))
+            .on_action(cx.listener(|this, _: &ActivityViewSelectPrev, _, cx| {
+                this.move_activity_view_selection(-1, cx);
+            }))
+            .on_action(cx.listener(|this, _: &ActivityViewSelectNext, _, cx| {
+                this.move_activity_view_selection(1, cx);
+            }))
+            .on_action(cx.listener(|this, _: &ActivityViewActivateRow, _, cx| {
+                this.activate_activity_view_row(cx);
+            }))
+            .on_any_mouse_down(|_, _, cx| cx.stop_propagation())
+            .child(header)
+            .child(intro)
+            .child(list)
+            .child(footer)
+            .into_any_element();
+        // Scrim + centered panel, mirroring the workspace modal overlay:
+        // a left click outside closes, and the panel stops propagation.
+        div()
+            .absolute()
+            .top_0()
+            .right_0()
+            .bottom_0()
+            .left_0()
+            .flex()
+            .items_center()
+            .justify_center()
+            .occlude()
+            .bg(hsla(0.0, 0.0, 0.0, 0.133))
+            .on_action(cx.listener(|this, _: &Escape, _, cx| {
+                this.close_activity_view(cx);
+            }))
+            .on_any_mouse_down(
+                cx.listener(move |this, event: &gpui::MouseDownEvent, _, cx| {
+                    cx.stop_propagation();
+                    if event.button == gpui::MouseButton::Left {
+                        this.close_activity_view(cx);
+                    }
+                }),
+            )
+            .child(panel)
+            .into_any_element()
+    }
+
+    fn render_activity_view_row(
+        &mut self,
+        index: usize,
+        task_id: &str,
+        selected: bool,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        // Every listed chat needs attention by construction, so the row
+        // keeps the sidebar's unread treatment (WO-P2-008): the 6px dot
+        // and the medium-weight title.
+        let task = self.state.tasks.iter().find(|task| task.id == task_id);
+        let title = task.map_or_else(|| task_id.to_owned(), |task| task.title.clone());
+        let updated_at = task
+            .map(|task| relative_time(task.updated_at))
+            .unwrap_or_default();
+        h_flex()
+            .id(SharedString::from(format!("activity-view-{task_id}")))
+            .min_h(px(38.0))
+            .px_3()
+            .gap_2()
+            .items_center()
+            .rounded_md()
+            .when(pointer_cursors_enabled(cx), |element| {
+                element.cursor_pointer()
+            })
+            .when(selected, |row| row.bg(cx.theme().list_active))
+            .hover(|style| style.bg(cx.theme().list_hover))
+            .child(
+                div()
+                    .flex_none()
+                    .size(px(6.0))
+                    .rounded_full()
+                    .bg(cx.theme().primary),
+            )
+            .child(
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .text_sm()
+                    .font_weight(gpui::FontWeight::MEDIUM)
+                    .truncate()
+                    .child(title),
+            )
+            .when(!updated_at.is_empty(), |row| {
+                row.child(
+                    div()
+                        .flex_none()
+                        .text_xs()
+                        .text_color(cx.theme().muted_foreground)
+                        .child(updated_at),
+                )
+            })
+            .on_click(cx.listener(move |this, _, _, cx| {
+                this.activity_view_selected_index = index;
+                this.activate_activity_view_row(cx);
+            }))
+            .into_any_element()
+    }
+
     fn render_create_git_branch_modal(
         &mut self,
         branch_pending: bool,
@@ -43535,6 +43877,17 @@ impl Render for WorkspaceView {
         self.shell_viewport_height = viewport_height;
         let shell_width_class = shell_width_class(viewport_width);
         self.sync_responsive_shell(shell_width_class);
+        // The Activity view surface takes focus while open so its
+        // keyboard-only path works (WO-P2-013); the requested-flag guard
+        // mirrors the workspace-modal focus sync above.
+        if self.state.activity_view_open {
+            if !self.activity_view_focus_requested {
+                self.activity_view_focus.focus(window);
+                self.activity_view_focus_requested = true;
+            }
+        } else {
+            self.activity_view_focus_requested = false;
+        }
         if matches!(self.workspace_modal, Some(WorkspaceModal::RemotePairing)) {
             if !self.remote_pairing_focus_requested {
                 self.remote_pairing_focus.focus(window);
@@ -43931,6 +44284,9 @@ impl Render for WorkspaceView {
             })
             .when_some(workspace_modal, |root, modal| {
                 root.child(self.render_workspace_modal(modal, cx))
+            })
+            .when(self.state.activity_view_open, |root| {
+                root.child(self.render_activity_view(cx))
             })
             .when(!apps_needing_auth.is_empty(), |root| {
                 root.child(self.render_plugin_auth_apps_modal(apps_needing_auth, cx))
@@ -47779,22 +48135,22 @@ mod tests {
         MAX_THREAD_FIND_HISTORY_PAGES, MAX_THREAD_FIND_MATCHES, MODEL_AVAILABILITY_NUX_SOL_COPY,
         NavigationHistory, NavigationLocation, PaletteCommand, PaletteGroup, ReasoningEffortStep,
         SettingsSection, ShellWidthClass, TaskCopyKind, ThreadFindSurface, accelerators_conflict,
-        account_daily_usage_rows, account_device_code, account_refresh_disabled, adjacent_task_id,
-        app_chatgpt_url, app_mention_prompt, appearance_color, appearance_color_value,
-        appearance_theme_share_string, archived_chat_groups, archived_chat_projects,
-        archived_delete_confirmation_copy, background_chat_running_count,
-        background_chat_window_title, background_completion_notification_transition,
-        background_terminal_summary, bedrock_workspace_notice,
-        bottom_terminal_panel_toggle_available, bounded_keyboard_shortcut_search_query,
-        bounded_settings_search_query, bounded_thread_find_query, browser_display_url,
-        browser_navigation_url, browser_pane_chord_action, browser_pane_focused,
-        browser_surface_coordinates, browser_url_copy_value, build_plugin_catalog_sections,
-        case_insensitive_match_ranges, command_task_slot, composer_app_commands,
-        composer_at_skill_commands, composer_desktop_app_commands, composer_file_query,
-        composer_file_search_max_height, composer_model_picker_items, composer_model_placeholder,
-        composer_model_retry_visible, composer_plugin_commands,
-        composer_service_tier_command_for_query, composer_service_tier_commands,
-        composer_skill_command_for_query, composer_skill_commands,
+        account_daily_usage_rows, account_device_code, account_refresh_disabled,
+        activity_view_task_ids, adjacent_task_id, app_chatgpt_url, app_mention_prompt,
+        appearance_color, appearance_color_value, appearance_theme_share_string,
+        archived_chat_groups, archived_chat_projects, archived_delete_confirmation_copy,
+        background_chat_running_count, background_chat_window_title,
+        background_completion_notification_transition, background_terminal_summary,
+        bedrock_workspace_notice, bottom_terminal_panel_toggle_available,
+        bounded_keyboard_shortcut_search_query, bounded_settings_search_query,
+        bounded_thread_find_query, browser_display_url, browser_navigation_url,
+        browser_pane_chord_action, browser_pane_focused, browser_surface_coordinates,
+        browser_url_copy_value, build_plugin_catalog_sections, case_insensitive_match_ranges,
+        command_task_slot, composer_app_commands, composer_at_skill_commands,
+        composer_desktop_app_commands, composer_file_query, composer_file_search_max_height,
+        composer_model_picker_items, composer_model_placeholder, composer_model_retry_visible,
+        composer_plugin_commands, composer_service_tier_command_for_query,
+        composer_service_tier_commands, composer_skill_command_for_query, composer_skill_commands,
         composer_slash_command_for_prefix, connection_send_failure, decode_mcp_form_image_data_url,
         default_branch_name, diff_file_review_rows, diff_file_sections,
         extract_assistant_file_citations, extract_code_comment_findings, fast_service_tier_id,
@@ -52238,12 +52594,13 @@ mod tests {
     }
 
     #[test]
-    fn activity_view_binding_resolves_ctrl_alt_u_to_visible_guidance() {
+    fn activity_view_binding_resolves_ctrl_alt_u_to_surface_toggle() {
         // Ctrl+Alt+U is owned by exactly one registry command:
-        // toggleActivityView (WO-P2-008). The Activity view surface itself
-        // is a separate future work order, so the arm dispatches a reducer
-        // action that surfaces honest guidance — never a silent no-op
-        // (the WO-P2-007 input-quality doctrine).
+        // toggleActivityView (WO-P2-008). WO-P2-013 wires that binding to a
+        // real bounded surface: the reducer toggles the surface flag and
+        // the surface itself is the visible resolution of the keypress —
+        // never a status message, never a silent no-op (the WO-P2-007
+        // input-quality doctrine).
         let owners = ACTIVE_KEYBOARD_SHORTCUTS
             .iter()
             .filter(|item| {
@@ -52268,15 +52625,79 @@ mod tests {
                 KeyboardShortcutGroup::Navigation
             ))
         );
-        // The action the binding dispatches resolves visibly.
+        // The action the binding dispatches opens and closes the surface.
         let mut state = AppState::default();
         assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
-        assert!(
-            state
-                .status_message
-                .as_deref()
-                .is_some_and(|message| message.contains("Activity view"))
+        assert!(state.activity_view_open);
+        assert_eq!(state.status_message, None);
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(!state.activity_view_open);
+        assert_eq!(state.status_message, None);
+    }
+
+    #[test]
+    fn activity_view_rows_list_attention_chats_in_sidebar_order() {
+        // The surface reads the existing WO-P2-008 attention state
+        // directly: only chats flagged as needing attention are listed,
+        // in sidebar order (pinned first, then project order).
+        let tasks = vec![
+            task("a", "C:\\repo"),
+            task("b", "C:\\repo"),
+            task("c", "C:\\repo"),
+            task("pinned", "C:\\repo"),
+        ];
+        let pinned_task_ids = vec!["pinned".to_owned()];
+        let unread = |ids: &[&str]| ids.iter().map(|id| (*id).to_owned()).collect::<Vec<_>>();
+
+        // Only chats flagged as needing attention are listed, in sidebar
+        // order (pinned first).
+        assert_eq!(
+            activity_view_task_ids(&tasks, &pinned_task_ids, &unread(&["b", "pinned"])),
+            ["pinned", "b"]
         );
+        // No flags: the honest empty state.
+        assert!(activity_view_task_ids(&tasks, &pinned_task_ids, &[]).is_empty());
+        // Flags for chats outside the visible list are ignored — the
+        // store and the rows stay bounded to visible chats.
+        assert!(activity_view_task_ids(&tasks, &pinned_task_ids, &unread(&["ghost"])).is_empty());
+    }
+
+    #[test]
+    fn activity_view_jump_resolves_attention_through_existing_semantics() {
+        // The full J-17 slice at the state level: open the view, jump to
+        // the listed chat, and the attention resolves through the
+        // unchanged SelectTask visit-clear semantics; the row disappears
+        // and Escape (the same toggle action the surface dispatches)
+        // closes the view.
+        let mut state = AppState {
+            tasks: vec![task("a", "C:\\repo"), task("b", "C:\\repo")],
+            selected_task_id: Some("a".to_owned()),
+            needs_attention_task_ids: vec!["b".to_owned()],
+            ..AppState::default()
+        };
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(state.activity_view_open);
+        assert_eq!(
+            activity_view_task_ids(
+                &state.tasks,
+                &state.pinned_task_ids,
+                &state.needs_attention_task_ids
+            ),
+            ["b"]
+        );
+        reduce(&mut state, Action::SelectTask("b".to_owned()));
+        assert_eq!(state.selected_task_id.as_deref(), Some("b"));
+        assert!(state.needs_attention_task_ids.is_empty());
+        assert!(
+            activity_view_task_ids(
+                &state.tasks,
+                &state.pinned_task_ids,
+                &state.needs_attention_task_ids
+            )
+            .is_empty()
+        );
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(!state.activity_view_open);
     }
 
     #[test]

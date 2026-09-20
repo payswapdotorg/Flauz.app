@@ -4766,6 +4766,10 @@ pub struct AppState {
     /// approval-requested) while not selected and have not been visited
     /// since (WO-P2-008 session state; not persisted).
     pub needs_attention_task_ids: Vec<String>,
+    /// Whether the Activity view surface is open (WO-P2-013 session
+    /// state; not persisted). The surface is pure presentation: it reads
+    /// `needs_attention_task_ids` directly and owns no second store.
+    pub activity_view_open: bool,
     pub seen_model_upgrade_ids: Vec<String>,
     pub local_projects: Vec<LocalProjectSummary>,
     pub local_project_order: Vec<PathBuf>,
@@ -4842,6 +4846,7 @@ impl Default for AppState {
             archived_tasks: ArchivedTasksState::default(),
             pinned_task_ids: Vec::new(),
             needs_attention_task_ids: Vec::new(),
+            activity_view_open: false,
             seen_model_upgrade_ids: Vec::new(),
             local_projects: Vec::new(),
             local_project_order: Vec::new(),
@@ -10668,13 +10673,16 @@ pub fn reduce(state: &mut AppState, action: Action) -> Vec<Effect> {
             }]
         }
         Action::ToggleActivityView => {
-            // The Activity view surface is a separate future work order;
-            // the binding still resolves visibly instead of a silent
-            // no-op (WO-P2-008, the WO-P2-007 input-quality doctrine).
-            state.status_message = Some(
-                "Activity view is not available yet. Use \"Next chat needing attention\" to jump to unread chats."
-                    .to_owned(),
-            );
+            // WO-P2-013: the binding now toggles a real bounded surface.
+            // Toggling is itself the visible resolution of the keypress
+            // (the WO-P2-007 input-quality doctrine) — the surface lists
+            // the chats in `needs_attention_task_ids` and shows its honest
+            // empty state when none need attention, so no status message
+            // is needed. All attention semantics stay owned by WO-P2-008:
+            // the surface only reads the flags, and visiting a listed chat
+            // still clears its flag through the unchanged `SelectTask`
+            // visit-clear semantics.
+            state.activity_view_open = !state.activity_view_open;
             Vec::new()
         }
         Action::ClearUnreadIndicators => {
@@ -37801,12 +37809,64 @@ mod tests {
     }
 
     #[test]
-    fn toggle_activity_view_surfaces_honest_guidance() {
-        // The Activity view surface is out of scope for WO-P2-008; the
-        // binding must still resolve visibly (never a silent no-op).
+    fn toggle_activity_view_opens_and_closes_the_surface() {
+        // WO-P2-013: the binding toggles a real bounded surface instead of
+        // surfacing placeholder guidance. The toggle is the visible
+        // resolution of the keypress — no status message, never a silent
+        // no-op. Escape closes through the same toggle action the UI
+        // dispatches, so toggling twice always closes.
         let mut state = AppState::default();
+        assert!(!state.activity_view_open);
         assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
-        let message = state.status_message.clone();
-        assert!(message.is_some_and(|message| !message.is_empty()));
+        assert!(state.activity_view_open);
+        assert_eq!(state.status_message, None);
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(!state.activity_view_open);
+        assert_eq!(state.status_message, None);
+    }
+
+    #[test]
+    fn activity_view_surface_composes_with_attention_state() {
+        // The surface flag is pure presentation state: opening the view
+        // never touches the attention flags, the flags may change
+        // underneath an open view, and jumping from the view resolves
+        // attention through the unchanged WO-P2-008 semantics.
+        let mut state = AppState {
+            tasks: vec![task("a"), task("b")],
+            selected_task_id: Some("a".to_owned()),
+            ..AppState::default()
+        };
+        state.needs_attention_task_ids.push("b".to_owned());
+
+        assert!(reduce(&mut state, Action::ToggleActivityView).is_empty());
+        assert!(state.activity_view_open);
+        assert_eq!(state.needs_attention_task_ids, ["b"]);
+
+        // Jumping from the view selects the flagged chat; the existing
+        // visit-clear semantics resolve the attention (unchanged).
+        reduce(&mut state, Action::SelectTask("b".to_owned()));
+        assert_eq!(state.selected_task_id.as_deref(), Some("b"));
+        assert!(state.needs_attention_task_ids.is_empty());
+        assert!(state.activity_view_open);
+
+        // Clearing every flag underneath an open view keeps the view open;
+        // the view then shows its honest empty state.
+        state.needs_attention_task_ids.push("a".to_owned());
+        assert!(reduce(&mut state, Action::ClearUnreadIndicators).is_empty());
+        assert!(state.needs_attention_task_ids.is_empty());
+        assert!(state.activity_view_open);
+
+        // Archiving a flagged chat drops its flag (existing semantics) and
+        // the open view simply stops listing it.
+        state.needs_attention_task_ids.push("b".to_owned());
+        assert_eq!(
+            reduce(&mut state, Action::ArchiveTask("b".to_owned())),
+            vec![Effect::ArchiveTask {
+                task_id: "b".to_owned()
+            }]
+        );
+        assert!(reduce(&mut state, Action::TaskArchived("b".to_owned())).is_empty());
+        assert!(state.needs_attention_task_ids.is_empty());
+        assert!(state.activity_view_open);
     }
 }
