@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) Yes, there is a small blue dot (unread indicator) on the sidebar row titled 'alpha activity chat'.\n(2) The exact text of the status/toast message is \"Chat marked unread\".\n(3) The bottom-left footer text is \"App-server online\".",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789882658,
+  "id": "20260920133731c36174500fa94560",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920133731c36174500fa94560",
+  "usage": {
+    "completion_tokens": 58,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1740,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1798
+  }
+}

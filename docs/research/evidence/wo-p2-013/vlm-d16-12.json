@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) **Activity**\n(2) **Heading:** No chats need attention\n**Explanatory text:** Chats that finish or ask for your approval while you work elsewhere appear here. Use \"Mark chat unread\" to keep a chat on this list.\n(3) **No**, there are no chat rows listed in the panel.\n(4) Up and Down select · Enter opens the chat · Escape closes",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789882699,
+  "id": "202609201338160101706a4cba40cf",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609201338160101706a4cba40cf",
+  "usage": {
+    "completion_tokens": 85,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1746,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1831
+  }
+}

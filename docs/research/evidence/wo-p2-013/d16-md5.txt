@@ -1,0 +1,15 @@
+d16-01-entry:            e7185a646877dbf50b00cec28bfb820d   (VLM: footer 'App-server online')
+d16-01b-nux-cleared:     2f5b4a6dc4a0a4a1a732a31be85090ac
+d16-02a-typed:           7074b9c90718d2d491dfbf08b69a1303
+d16-02b-chatA-created:   173d1123702e21719af334e56ac0e8b8   (VLM: sidebar row 'alpha activity chat')
+d16-03-marked-unread:    fd5829e1dd1b634448646d42f70b16a9   (VLM: dot on A + 'Chat marked unread')
+d16-04-chatB-created:    eb6730481af9f917be2d66e00f193426   (VLM: B selected, A dot stays)
+d16-05-both-flagged:     8acd97aa587b99108aaf832d93453cff   (VLM: dots on A AND B)
+d16-06-activity-open:    f7301a4fa1731e36250cf6ba32f69386   (VLM: 'Activity' panel, '2 chats need attention', rows A+B, first selected)
+d16-07-down-second-row:  9cb52f8a3feb92c2da73d70dd4a9bf50   (VLM: selection moved to second row)
+d16-08-enter-jumped:     584498b9796e8ae93200521767a38830   (VLM: panel GONE, jumped chat open, its dot cleared, other dot stays)
+d16-09-reopen-one-left:  f66f47b0bcc903cbbbda838bda1f75b0   (VLM: '1 chat needs attention', one row)
+d16-10-toggle-closed:    584498b9796e8ae93200521767a38830  (VLM: panel gone)
+d16-11-cleared-all:      fa2be68b3b323c41205aa9bd260f5fce  (VLM: no dots)
+d16-12-empty-state:      d3510eb0e00dd8e1d4449c7dc13f174c  (VLM: 'No chats need attention' + guidance)
+d16-13-escape-closed:    75eaa5a4c6dbfa2a5ae246000892c227  (VLM: panel gone)

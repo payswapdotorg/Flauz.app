@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) The sidebar rows with a small dot/unread indicator are:\n- **beta activity chat**\n- **alpha activity chat**\n\n(2) The **beta activity chat** row appears selected/highlighted (it has a light blue background).\n\n(3) Yes, the status message text visible is: \"**Chat marked unread**\" (located at the bottom of the main panel, above the \"Dismiss\" button).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789882668,
+  "id": "20260920133741d67a08daff8d4329",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920133741d67a08daff8d4329",
+  "usage": {
+    "completion_tokens": 86,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1724,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1810
+  }
+}

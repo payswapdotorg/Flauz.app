@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) \"1 chat needs attention\"\n(2) beta activity chat\n(3) Yes",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789882693,
+  "id": "202609201338126a47432587c14f30",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609201338126a47432587c14f30",
+  "usage": {
+    "completion_tokens": 21,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1722,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1743
+  }
+}

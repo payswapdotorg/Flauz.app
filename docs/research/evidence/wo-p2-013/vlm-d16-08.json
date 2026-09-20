@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) The centered 'Activity' overlay panel is gone.\n(2) The chat now open in the main pane is titled **alpha activity chat**.\n(3) The sidebar row with a dot/unread indicator is **beta activity chat**.\n(4) The selected sidebar row is **alpha activity chat**.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789882688,
+  "id": "20260920133805ce11a982178b48d0",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920133805ce11a982178b48d0",
+  "usage": {
+    "completion_tokens": 66,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1749,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1815
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "(1) **Activity**\n(2) **\"2 chats need attention\"**\n(3) The row titles in order are:\n*   **beta activity chat** (This row is highlighted/selected)\n*   **alpha activity chat**\n(4) **\"Up and Down select · Enter opens the chat · Escape closes\"**\n(5) **Yes**, each row shows a small blue dot indicator (next to the word \"now\").",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789882674,
+  "id": "20260920133751e1bf7736950d4ac3",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260920133751e1bf7736950d4ac3",
+  "usage": {
+    "completion_tokens": 91,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1774,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1865
+  }
+}
