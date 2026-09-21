@@ -291,6 +291,71 @@ fn terminal_browser_affordances_available(route: MainRoute) -> bool {
     route == MainRoute::Tasks
 }
 
+/// Where focus lands when the command palette or the keyboard-shortcuts
+/// overlay closes (WO-P2-017): the surface that held focus when the surface
+/// opened, when one was captured; otherwise the composer — the house
+/// deterministic default mirrored from `close_composer_status` — when its
+/// surface is rendered; otherwise no element focus, so window-level chords
+/// keep working instead of stranding focus on a dropped surface.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OverlayCloseFocusRestore {
+    /// The focus handle captured when the palette/overlay opened.
+    PreviousSurface,
+    /// The composer, rendered on the Tasks route in both the empty and the
+    /// task-selected states.
+    Composer,
+    /// No element focus.
+    NoFocus,
+}
+
+/// The focus-restore target for the palette/overlay close paths (WO-P2-017):
+/// the previously focused surface when captured, else the composer house
+/// default when rendered, else no focus.
+fn overlay_close_focus_restore(
+    previous_focus: bool,
+    composer_rendered: bool,
+) -> OverlayCloseFocusRestore {
+    if previous_focus {
+        OverlayCloseFocusRestore::PreviousSurface
+    } else if composer_rendered {
+        OverlayCloseFocusRestore::Composer
+    } else {
+        OverlayCloseFocusRestore::NoFocus
+    }
+}
+
+/// PM L113 two-Escape contract for the keyboard-shortcuts overlay: the first
+/// Escape clears the query and keeps the overlay open (the search keeps
+/// focus); only an empty query closes the overlay — and the close is what
+/// restores focus (WO-P2-017).
+fn keyboard_shortcuts_escape_closes_overlay(query: &str) -> bool {
+    query.is_empty()
+}
+
+/// What the workspace close path needs from the command palette
+/// (WO-P2-017-FIX): the mode, captured BEFORE entering the workspace close
+/// update and passed in as an argument. The palette-side close paths
+/// (`close_and_clear`, `open_file_result`) run inside `Context::listener`'s
+/// `palette.update(...)` lease, so a workspace-side `palette.read(cx)` there
+/// hits the entity-map double-lease panic — the r1 crash ("cannot read
+/// CommandPaletteView while it is already being updated").
+/// Parameter-passing restores the pre-017 borrow-safe shape and structurally
+/// keeps every close path free of mid-update entity reads.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct CommandPaletteCloseContext {
+    files_mode: bool,
+}
+
+impl CommandPaletteCloseContext {
+    /// Capture the close context from the palette mode the caller already
+    /// holds directly — never through an entity read mid-update.
+    fn capture(mode: PaletteMode) -> Self {
+        Self {
+            files_mode: mode == PaletteMode::Files,
+        }
+    }
+}
+
 /// Mirrors the registry's `toggleMaximizeSidePanel` enabled-guard: the side
 /// panel can be maximized only on the Tasks route with a selected chat and a
 /// visible non-terminal inspector pane (WO-P2-010 palette-row honesty).
@@ -4521,15 +4586,16 @@ impl CommandPaletteView {
         cx.notify();
     }
 
-    fn close_and_clear(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
-        let restore_composer_search = self.mode == PaletteMode::Files;
+    fn close_and_clear(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        // WO-P2-017-FIX: capture what the workspace close path needs from the
+        // palette BEFORE entering the workspace update. This runs inside
+        // `Context::listener`'s `palette.update(...)` lease (the Escape and
+        // run-command dismiss paths), so a workspace-side `palette.read(cx)`
+        // would hit the entity-map double-lease panic; the captured context
+        // keeps the close parameter-passing, the pre-017 borrow-safe shape.
+        let context = CommandPaletteCloseContext::capture(self.mode);
         let _ = self.workspace.update(cx, |workspace, cx| {
-            workspace.command_palette = None;
-            workspace.dispatch(Action::TaskSearchQueryChanged(String::new()), cx);
-            if restore_composer_search {
-                workspace.dispatch(Action::ComposerFileSearchChanged(None), cx);
-                workspace.restore_composer_file_search(cx);
-            }
+            workspace.close_command_palette(context, window, cx)
         });
     }
 
@@ -4717,13 +4783,15 @@ impl CommandPaletteView {
         });
     }
 
-    fn open_file_result(&mut self, path: PathBuf, _window: &mut Window, cx: &mut Context<Self>) {
+    fn open_file_result(&mut self, path: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
+        // WO-P2-017-FIX: the same capture-before-update shape as
+        // `close_and_clear` — the palette is mid-update in this listener
+        // (the file-result row click), so the mode must be passed into the
+        // workspace update, never re-read from the workspace side.
+        let context = CommandPaletteCloseContext::capture(self.mode);
         let _ = self.workspace.update(cx, |workspace, cx| {
             workspace.dispatch(Action::OpenFuzzyFileResult(path.clone()), cx);
-            workspace.command_palette = None;
-            workspace.dispatch(Action::TaskSearchQueryChanged(String::new()), cx);
-            workspace.dispatch(Action::ComposerFileSearchChanged(None), cx);
-            workspace.restore_composer_file_search(cx);
+            workspace.close_command_palette(context, window, cx);
         });
     }
 
@@ -5878,7 +5946,16 @@ struct WorkspaceView {
     activity_view_selected_index: usize,
     remote_pairing_not_claimed: bool,
     command_palette: Option<Entity<CommandPaletteView>>,
+    /// Focus captured when the command palette opened, restored on close
+    /// (WO-P2-017).
+    focus_before_command_palette: Option<FocusHandle>,
     workspace_modal: Option<WorkspaceModal>,
+    /// Focus captured when the keyboard-shortcuts overlay opened, restored
+    /// on close (WO-P2-017).
+    focus_before_keyboard_shortcuts: Option<FocusHandle>,
+    /// Consumed on the first render after the keyboard-shortcuts overlay
+    /// closes to restore focus (WO-P2-017) — the request-once house shape.
+    keyboard_shortcuts_close_restore: bool,
     about_window: Option<AnyWindowHandle>,
     process_manager_refresh_generation: u64,
     pending_conversation_markdown_copy: Option<PendingConversationMarkdownCopy>,
@@ -7097,7 +7174,10 @@ impl WorkspaceView {
             activity_view_selected_index: 0,
             remote_pairing_not_claimed: false,
             command_palette: None,
+            focus_before_command_palette: None,
             workspace_modal: None,
+            focus_before_keyboard_shortcuts: None,
+            keyboard_shortcuts_close_restore: false,
             about_window: None,
             process_manager_refresh_generation: 0,
             pending_conversation_markdown_copy: None,
@@ -9131,6 +9211,12 @@ impl WorkspaceView {
             self.dispatch_command_status(files_palette_command_status(&self.state), cx);
             return;
         }
+        // WO-P2-017: capture the focused surface before the palette input
+        // claims focus (the deferred focus below), so the palette close can
+        // restore it; re-opens keep the original capture.
+        if self.command_palette.is_none() {
+            self.focus_before_command_palette = window.focused(cx);
+        }
         if mode == PaletteMode::Files {
             self.dispatch(Action::ComposerFileSearchChanged(None), cx);
         }
@@ -9144,16 +9230,71 @@ impl WorkspaceView {
         });
     }
 
-    fn close_command_palette(&mut self, cx: &mut Context<Self>) {
-        let restore_composer_search = self
-            .command_palette
-            .as_ref()
-            .is_some_and(|palette| palette.read(cx).mode == PaletteMode::Files);
+    fn close_command_palette(
+        &mut self,
+        context: CommandPaletteCloseContext,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        // WO-P2-017-FIX: the palette mode arrives as a captured argument —
+        // never a `palette.read(cx)` here. The palette-side close paths
+        // (`CommandPaletteView::close_and_clear`, `open_file_result`) run
+        // inside the palette's own entity-update lease; re-reading the
+        // palette entity from this workspace update is the r1 panic
+        // ("cannot read CommandPaletteView while it is already being
+        // updated").
         self.command_palette = None;
         self.dispatch(Action::TaskSearchQueryChanged(String::new()), cx);
-        if restore_composer_search {
+        if context.files_mode {
             self.dispatch(Action::ComposerFileSearchChanged(None), cx);
             self.restore_composer_file_search(cx);
+        }
+        // WO-P2-017: land focus on a determinate surface instead of leaving
+        // it on the dropped palette input (the a11y-inventory §(a)/(d) gap).
+        let previous = self.focus_before_command_palette.take();
+        self.apply_overlay_close_focus_restore(previous, window, cx);
+    }
+
+    /// WO-P2-017-FIX: the close context for the workspace-side palette close
+    /// paths (the palette backdrop click, the `toggle_keyboard_shortcuts`
+    /// hand-off). Those paths hold a workspace listener lease while the
+    /// palette entity is idle, so reading its mode here is lease-safe. The
+    /// palette-side close paths must NOT use this helper — they run inside
+    /// the palette's own update lease and capture the context before
+    /// delegating instead — and restructuring the backdrop into a
+    /// `palette.update(...)` delegation would double-lease the workspace.
+    fn command_palette_close_context(&self, cx: &App) -> Option<CommandPaletteCloseContext> {
+        self.command_palette
+            .as_ref()
+            .map(|palette| CommandPaletteCloseContext::capture(palette.read(cx).mode))
+    }
+
+    /// WO-P2-017: land focus after a command-palette / keyboard-shortcuts
+    /// overlay close on a determinate surface: the surface focused when the
+    /// overlay opened when captured (the gpui-component `Root::focus_back`
+    /// platform pattern), otherwise the composer — the house deterministic
+    /// default mirrored from `close_composer_status` — when its surface is
+    /// rendered, otherwise no element focus so window-level chords keep
+    /// working instead of stranding focus on a dead surface.
+    fn apply_overlay_close_focus_restore(
+        &mut self,
+        previous: Option<FocusHandle>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let restore =
+            overlay_close_focus_restore(previous.is_some(), self.state.route == MainRoute::Tasks);
+        match restore {
+            OverlayCloseFocusRestore::PreviousSurface => {
+                if let Some(handle) = previous {
+                    handle.focus(window);
+                }
+            }
+            OverlayCloseFocusRestore::Composer => {
+                self.composer
+                    .update(cx, |input, cx| input.focus(window, cx));
+            }
+            OverlayCloseFocusRestore::NoFocus => window.blur(),
         }
     }
 
@@ -10767,9 +10908,18 @@ impl WorkspaceView {
         if self.workspace_modal.is_some() {
             return;
         }
-        if self.command_palette.is_some() {
-            self.close_command_palette(cx);
+        if let Some(context) = self.command_palette_close_context(cx) {
+            // WO-P2-017-FIX lease-safety: this chord path holds the
+            // workspace listener lease while the palette entity is idle, so
+            // the context capture above may read the palette; routing the
+            // close through a palette update instead would double-lease the
+            // workspace.
+            self.close_command_palette(context, window, cx);
         }
+        // WO-P2-017: capture the surface focused before the overlay opens —
+        // after the palette hand-off above, so the capture is never the
+        // dropped palette input — for the overlay close to restore.
+        self.focus_before_keyboard_shortcuts = window.focused(cx);
         self.keyboard_shortcuts_search.update(cx, |input, cx| {
             input.set_value("", window, cx);
         });
@@ -10783,7 +10933,8 @@ impl WorkspaceView {
 
     fn handle_keyboard_shortcuts_escape(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         cx.stop_propagation();
-        if self.keyboard_shortcuts_search.read(cx).value().is_empty() {
+        let query = self.keyboard_shortcuts_search.read(cx).value();
+        if keyboard_shortcuts_escape_closes_overlay(&query) {
             self.close_workspace_modal(cx);
         } else {
             self.keyboard_shortcuts_search.update(cx, |input, cx| {
@@ -11785,6 +11936,12 @@ impl WorkspaceView {
     }
 
     fn close_workspace_modal(&mut self, cx: &mut Context<Self>) {
+        // WO-P2-017: remember whether the keyboard-shortcuts overlay is the
+        // modal being closed; every close path for that overlay funnels here.
+        let closing_keyboard_shortcuts = matches!(
+            self.workspace_modal,
+            Some(WorkspaceModal::KeyboardShortcuts)
+        );
         if let Some(WorkspaceModal::ModelAvailabilityNux { model_id, .. }) =
             self.workspace_modal.as_ref()
         {
@@ -11901,6 +12058,13 @@ impl WorkspaceView {
         self.browser_site_error = None;
         self.appearance_import_error = None;
         self.mcp_editor_error = None;
+        if closing_keyboard_shortcuts {
+            // WO-P2-017: the keyboard-shortcuts overlay close restores focus
+            // on the next render (consumed in `render`), covering its own
+            // Escape handling, the Ctrl+/ toggle, the Close button, and the
+            // overlay Escape/backdrop paths.
+            self.keyboard_shortcuts_close_restore = true;
+        }
         self.maybe_open_model_availability_nux(cx);
         cx.notify();
     }
@@ -44211,6 +44375,15 @@ impl Render for WorkspaceView {
         self.shell_viewport_height = viewport_height;
         let shell_width_class = shell_width_class(viewport_width);
         self.sync_responsive_shell(shell_width_class);
+        if self.keyboard_shortcuts_close_restore {
+            // WO-P2-017: consume the keyboard-shortcuts overlay close exactly
+            // once and land focus on a determinate surface — the request-once
+            // shape used by the modal focus blocks below; a modal opened by
+            // the close itself then claims focus through its own block.
+            self.keyboard_shortcuts_close_restore = false;
+            let previous = self.focus_before_keyboard_shortcuts.take();
+            self.apply_overlay_close_focus_restore(previous, window, cx);
+        }
         if matches!(self.workspace_modal, Some(WorkspaceModal::RemotePairing)) {
             if !self.remote_pairing_focus_requested {
                 self.remote_pairing_focus.focus(window);
@@ -44592,8 +44765,15 @@ impl Render for WorkspaceView {
                         .pt(px(command_palette_top))
                         .occlude()
                         .bg(hsla(0.0, 0.0, 0.0, 0.133))
-                        .on_any_mouse_down(cx.listener(|this, _, _, cx| {
-                            this.close_command_palette(cx);
+                        .on_any_mouse_down(cx.listener(|this, _, window, cx| {
+                            // WO-P2-017-FIX lease-safety: the palette entity
+                            // is idle here (this listener holds a workspace
+                            // lease), so the capture below may read it; a
+                            // palette-update delegation would double-lease
+                            // the workspace instead.
+                            if let Some(context) = this.command_palette_close_context(cx) {
+                                this.close_command_palette(context, window, cx);
+                            }
                         }))
                         .child(
                             div()
@@ -48580,13 +48760,19 @@ mod tests {
     use std::collections::HashSet;
     use std::path::{Path, PathBuf};
 
+    use super::CommandPaletteCloseContext;
+    use super::OverlayCloseFocusRestore;
+    use super::PaletteMode;
     use super::ReviewSlashCommandAction;
+    use super::WorkspaceView;
     use super::archive_thread_command_status;
     use super::commit_or_push_pending_status;
     use super::composer_keeps_fork_picker;
     use super::composer_review_unavailable_status;
     use super::edit_project_surface;
     use super::files_palette_command_status;
+    use super::keyboard_shortcuts_escape_closes_overlay;
+    use super::overlay_close_focus_restore;
     use super::rename_thread_command_status;
     use super::review_slash_command_action;
     use super::toggle_thread_pin_command_status;
@@ -48670,6 +48856,7 @@ mod tests {
     use codex_core::{GitPullRequestPhase, GitState};
     use codex_core::{LocalProjectSummary, MAX_LOCAL_PROJECT_FOLDERS};
     use codex_core::{PendingReviewStart, ReviewDelivery, ReviewTarget};
+    use gpui::{Context, Window};
     use gpui_component::IconName;
 
     fn task(id: &str, cwd: &str) -> TaskSummary {
@@ -54151,5 +54338,94 @@ mod tests {
             state.status_message.as_deref(),
             Some("Select a workspace before searching files.")
         );
+    }
+
+    #[test]
+    fn command_palette_close_restores_previous_focus_or_composer_default() {
+        // WO-P2-017 (a11y-inventory §(a)/(d)): closing the command palette
+        // must land focus on a determinate surface. The dominant journey
+        // (composer focused -> Ctrl+K -> Escape) restores the previously
+        // focused surface, on or off the Tasks route (e.g. the settings
+        // search focused before the chord).
+        assert_eq!(
+            overlay_close_focus_restore(true, true),
+            OverlayCloseFocusRestore::PreviousSurface
+        );
+        assert_eq!(
+            overlay_close_focus_restore(true, false),
+            OverlayCloseFocusRestore::PreviousSurface
+        );
+        // No recoverable previous surface on the Tasks route: the composer —
+        // the `close_composer_status` house default, rendered on the Tasks
+        // route in both the empty and task-selected states — is the
+        // deterministic landing target.
+        assert_eq!(
+            overlay_close_focus_restore(false, true),
+            OverlayCloseFocusRestore::Composer
+        );
+        // No previous surface and no rendered composer (non-Tasks route):
+        // clear focus instead of stranding it on the dropped palette input;
+        // window-level chords keep working.
+        assert_eq!(
+            overlay_close_focus_restore(false, false),
+            OverlayCloseFocusRestore::NoFocus
+        );
+    }
+
+    #[test]
+    fn keyboard_shortcuts_overlay_close_restores_focus_after_escape_clears_query() {
+        // PM L113 two-Escape contract: the first Escape only clears the
+        // query (the overlay stays open and the search keeps focus); the
+        // close — and with it the WO-P2-017 focus restore — happens on the
+        // Escape that finds an empty query.
+        assert!(!keyboard_shortcuts_escape_closes_overlay("enter"));
+        assert!(!keyboard_shortcuts_escape_closes_overlay(" escape "));
+        assert!(keyboard_shortcuts_escape_closes_overlay(""));
+        // The restore target after the overlay close: the surface focused
+        // when the overlay opened (the palette hand-off in
+        // `toggle_keyboard_shortcuts` restores the palette's previous focus
+        // first, so the capture is never the dropped palette input), else
+        // the composer house default, else no focus.
+        assert_eq!(
+            overlay_close_focus_restore(true, true),
+            OverlayCloseFocusRestore::PreviousSurface
+        );
+        assert_eq!(
+            overlay_close_focus_restore(false, true),
+            OverlayCloseFocusRestore::Composer
+        );
+        assert_eq!(
+            overlay_close_focus_restore(false, false),
+            OverlayCloseFocusRestore::NoFocus
+        );
+    }
+
+    #[test]
+    fn command_palette_close_context_captures_the_files_mode() {
+        // WO-P2-017-FIX regression: the workspace close path must learn the
+        // palette mode from a captured context instead of re-reading the
+        // palette entity; only the Files mode restores the composer
+        // file-search state on close (the pre-017 parameter-passing shape).
+        assert!(CommandPaletteCloseContext::capture(PaletteMode::Files).files_mode);
+        assert!(!CommandPaletteCloseContext::capture(PaletteMode::Chats).files_mode);
+        assert!(!CommandPaletteCloseContext::capture(PaletteMode::Unified).files_mode);
+    }
+
+    #[test]
+    fn workspace_close_command_palette_requires_a_captured_close_context() {
+        // WO-P2-017-FIX regression, compile-time: the workspace close path
+        // must take the palette state it needs as a `CommandPaletteCloseContext`
+        // argument, structurally ruling out the r1 crash shape — a close
+        // that re-reads the palette entity from the workspace side while
+        // the palette is mid-update ("cannot read CommandPaletteView while it
+        // is already being updated"). A runtime test cannot catch r1: its
+        // unit tests passed while the binary crashed on Ctrl+K, Escape; this
+        // signature pin fails to compile against the r1 shape.
+        let _: fn(
+            &mut WorkspaceView,
+            CommandPaletteCloseContext,
+            &mut Window,
+            &mut Context<WorkspaceView>,
+        ) = WorkspaceView::close_command_palette;
     }
 }
