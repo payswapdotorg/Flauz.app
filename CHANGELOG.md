@@ -7,6 +7,59 @@ All notable changes are documented here. The project follows
 
 ### Added
 
+- (nothing yet)
+
+## [0.1.0-rc.14] - 2026-09-21
+
+The parity hardening release: discoverable surfaces, honest command
+feedback, and the keyboard/accessibility close-out for the Codex
+Desktop parity scope.
+
+### Added
+
+- Terminal and Browser surfaces are discoverable from the command palette
+  and the sidebar (P1 discoverability).
+- Multi-folder projects: a project can carry more than one local folder
+  (WO-P1-003).
+- Every default Settings section is indexed in the command palette
+  (Profile, Import, Browser, Configuration, Hooks, Git), so settings
+  pages are reachable by search (WO-P2-004).
+- Stable slash-command subset in the composer (WO-P2-005).
+- Side chats: task-scoped side conversations (WO-P2-006).
+- Per-chat unread-attention state with attention bindings — the sidebar
+  dot, jump-to-unread, and clear-on-visit semantics (WO-P2-008).
+- Command-palette rows for the evidenced registry commands (review, fork,
+  copy, approval, rename, goto-chat) with per-command availability
+  guards (WO-P2-010).
+- Context-scoped browser chords: reload (Ctrl+R), force-reload
+  (Ctrl+Shift+R), and copy-URL (Ctrl+Shift+C) while the browser panel is
+  focused (WO-P2-011).
+- Activity view on the existing attention primitives: the sidebar bell
+  opens the attention surface with jump/clear actions (WO-P2-013, J-17).
+- Visible palette entry, Activity bell, and accessible labels for
+  icon-only controls (WO-P2-018).
+- Tab/Shift+Tab focus traps for the four remaining confirmation modals —
+  remote pairing, the three remote-control confirmation variants, account
+  logout, and plugin-install confirmation: keyboard focus now cycles
+  inside the modal instead of escaping to the background surface
+  (WO-P2-019).
+- The command palette and the keyboard-shortcuts overlay now restore
+  focus to the previously focused surface on close (or the composer when
+  it is the house default, or a clean no-element-focus fallback), and the
+  close path no longer panics (WO-P2-017).
+
+### Fixed
+
+- The direct Ctrl+P keypress routes through the file-search interceptor —
+  the dead action is gone and the "Search files" palette opens as
+  referenced (WO-P2-007).
+- Settings/history and Downloads rows render ellipsis-only titles with
+  the palette-row convention instead of overflowing (WO-P2-009).
+- Guard honesty for the six evidenced silent no-op states: palette and
+  workspace commands without their preconditions now surface an honest
+  status instead of silently doing nothing (WO-P2-012).
+- Honest status for Ctrl+P without a workspace: "Select a workspace
+  before searching files." (WO-P2-020, F-A4).
 - Keyboard-only chat creation: `begin_new_chat` (Ctrl+N, the palette
   "New chat" row, the sidebar new-chat rows) now focuses the composer
   after the chat-creation dispatch, so a keyboard-only user can type and
