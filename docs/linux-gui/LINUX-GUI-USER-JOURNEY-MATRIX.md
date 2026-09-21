@@ -73,3 +73,33 @@ launch contract, same symptom — window maps at the identical geometry
 | --- | --- |
 | E-00 fresh desktop → build → launch | **WORKS** (460 s cold; fully reproducible) |
 | J-01 cold start | **BROKEN (P0, L-002 reproduced)** |
+
+### Run 3 — L-002 root-cause discrimination + in-lane fix validation (2026-09-21, E2B sandbox `io23l6hz0z2g7mqoq54om`, Flauz @ `f66965e` + one-line gpui visual patch + native codex binary)
+
+Environment additions: full Vulkan diagnostics (`vulkaninfo`, ICD
+inventory, `VK_LOADER_DEBUG=all`), `strace` syscall profiling, `vkcube`
+present-path control, VLM-verified screenshots. Root cause of L-002
+confirmed: GPUI 0.2.2 X11 visual selection prefers the 32-bit ARGB
+transparent visual; on the lavapipe software-Vulkan stack every presented
+frame is alpha=0 (fully transparent). Controls: `vkcube` (24-bit visual)
+presents opaque pixels correctly on the identical display/stack — the
+environment is capable; the app's visual choice is the defect. Secondary
+findings: L-004 (codex npm wrapper crashes on Node 12 → app-server never
+spawns → ~250 Hz silent retry spin) and L-005 (no logging backend —
+GPUI diagnostics invisible).
+
+| Journey | Verdict | Detail |
+| --- | --- | --- |
+| E-00 environment discrimination | **WORKS** (evidence-gathering) | Xvfb `-retro` + xfwm4 + lavapipe ICD set; vkcube control renders (LunarG cube visible, VLM-verified). |
+| E-00 app-server lifecycle | **BROKEN → FIXED (in-lane)** | Pre: `codex app-server` dies instantly (Node 12 vs top-level await), 250 Hz retry spin, no error state shown. Post (native binary): app-server alive, `App-server online` shown in UI sidebar. |
+| J-01 Start a project (cold start) | **WORKS (with in-lane patch)** | Full product shell renders: sidebar (New chat / Repository / Pull requests / Plugins / Workflows / Projects / Chats / Terminal / Browser / Settings + App-server online), "What should we work on?" empty state, composer with model/effort/mode selectors, onboarding modal (click-dismissible), honest signed-out auth gate (Sign in with ChatGPT / device code / API key / Bedrock). **Real interaction verified:** composer keyboard input (typed text + blinking cursor), Ctrl+Shift+P command palette (search, keyboard hints, sections), palette-driven navigation to Settings → Appearance (Back button, category sidebar, theme preview cards). Window own-content `xwd` mean 246.3 (pre-fix 0.0). |
+| J-02 … J-18 | **NOT-RUN (blocked → unblocked, pending re-run against patched build)** | Cold-start blocker removed; the full battery re-runs after LAB-003 merges the fix to `main`. |
+
+Evidence: `evidence/run3-l002-defect-wallpaper-through.png` (pre-fix,
+composited), `evidence/run3-vkcube-control.png` (Vulkan present control),
+`evidence/run3-l002-fix-inherit-visual.png` (post-fix full UI),
+`evidence/run3-j01-composer-keyboard.png`,
+`evidence/run3-j01-command-palette.png`,
+`evidence/run3-j01-settings-appearance.png`,
+`evidence/run3-appserver-live-transparent-still.png` (app-server fixed
+but still transparent pre-visual-patch — the two defects are independent).

@@ -54,7 +54,13 @@ APT_DEPS = [
     # lane diagnostics (run-1 lessons: fresh sandboxes lack them)
     "imagemagick", "x11-apps", "mesa-utils", "strace", "x11-utils",
     "xdotool", "procps",
+    # L-002 P0 render diagnosis (run-3): Vulkan stack + compositing probes
+    "mesa-vulkan-drivers", "vulkan-tools", "libvulkan1", "xcompmgr",
 ]
+
+# Pinned codex CLI (app-server protocol contract — crates/codex-core
+# stable_reference cli_version). NEVER drift to latest.
+CODEX_CLI_PIN = "0.146.0-alpha.3.1"
 
 
 def _secret(var: str) -> str:
@@ -66,6 +72,12 @@ def _secret(var: str) -> str:
     return ""
 
 
+# Self-contained credential bootstrap: every entry point (detached launchers,
+# cron-ish retry loops, interactive shells) must work without relying on the
+# parent shell having sourced ~/.secrets/env.sh.
+os.environ.setdefault("E2B_API_KEY", _secret("E2B_API_KEY"))
+
+
 class FlauzDesktop:
     def __init__(self, sb, sid: str):
         self.sb = sb
@@ -73,7 +85,12 @@ class FlauzDesktop:
 
     # ------------------------------------------------------------ lifecycle
     @classmethod
-    def create(cls, timeout_s: int = 6 * 3600, resolution=(1920, 1080)):
+    def create(cls, timeout_s: int = 3600, resolution=(1920, 1080)):
+        # NOTE: this E2B plan enforces max create-timeout of 1h (API 400s
+        # above that) and pauses idle sandboxes (~40 min). The destroy-and-
+        # recreate contract in E2B-ENVIRONMENT.md is therefore mandatory.
+        if timeout_s > 3600:
+            timeout_s = 3600
         from e2b_desktop import Sandbox
         sb = Sandbox.create(timeout=timeout_s, resolution=resolution)
         sid = sb.sandbox_id
@@ -182,14 +199,21 @@ class FlauzDesktop:
             self.run(f"touch {FL}/rust")
 
         # Codex CLI (runtime dependency; signed-out state is an honest journey)
+        # L-004 lesson: the npm wrapper bin/codex.js needs Node >=16 and the
+        # E2B image ships Node 12.22.9 — install the NATIVE platform binary
+        # from the pinned version's linux-x64 tarball instead (no Node).
         if not done("codex-cli"):
-            print("[prov] codex CLI via npm …")
+            print(f"[prov] codex CLI native binary (pinned {CODEX_CLI_PIN}) …")
             r = self.run(
-                "command -v npm >/dev/null 2>&1 || "
-                "sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y "
-                "--no-install-recommends npm >/dev/null 2>&1 || true; "
-                "npm install -g @openai/codex 2>&1 | tail -1; codex --version || true",
-                timeout=900)
+                f"set -e; cd /tmp && curl -sL -o cx.tgz "
+                f"https://registry.npmjs.org/@openai/codex/-/codex-{CODEX_CLI_PIN}-linux-x64.tgz && "
+                f"mkdir -p cxnative && tar xzf cx.tgz -C cxnative && "
+                f"sudo -n rm -f /usr/local/bin/codex || rm -f /usr/local/bin/codex || true; "
+                f"sudo -n ln -sf /tmp/cxnative/package/vendor/x86_64-unknown-linux-musl/bin/codex "
+                f"/usr/local/bin/codex 2>/dev/null || "
+                f"ln -sf /tmp/cxnative/package/vendor/x86_64-unknown-linux-musl/bin/codex /usr/local/bin/codex; "
+                f"codex --version || true",
+                timeout=300)
             self.run(f"touch {FL}/codex-cli")
             print(f"[prov] codex cli: {r.stdout.strip()[-120:]}")
 
@@ -277,6 +301,47 @@ class FlauzDesktop:
     def _display(self) -> str:
         r = self.run("echo $DISPLAY", timeout=15).stdout.strip()
         return r or ":1"
+
+    def launch_gui_debug(self, compositor: bool = False):
+        """L-002 diagnostic launcher: Vulkan loader debug, separate stderr,
+        optional compositor. Log → ~/.flauz/gui-debug.log (+ gui-debug-vk.log).
+        Returns (pgrep output, log paths)."""
+        H = self.home()
+        BIN = f"{H}/Flauz.app/target/release/codexrs"
+        self.run("pkill -f 'target/release/codexrs' 2>/dev/null; sleep 1; true",
+                 timeout=20)
+        comp = ""
+        if compositor:
+            comp = "(pgrep xcompmgr >/dev/null || nohup xcompmgr >/dev/null 2>&1 &) ; "
+        r = self.run(
+            f"export DISPLAY={self._display()} && "
+            f"export LD_LIBRARY_PATH=$HOME/pw10/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH && "
+            f"export CODEX_RS_CODEX_BIN=$(command -v codex || echo /usr/local/bin/codex) && "
+            f"export VK_LOADER_DEBUG=all && export RUST_LOG=debug && "
+            f"{comp}"
+            f"nohup {BIN} > {H}/.flauz/gui-debug.log 2> {H}/.flauz/gui-debug-vk.log & sleep 4; "
+            f"pgrep -af codexrs | head -2; echo ---; "
+            f"head -30 {H}/.flauz/gui-debug.log; echo ---VK---; "
+            f"grep -E 'vulkan|ICD|driver|vkCreate|surface|swapchain|Present' "
+            f"{H}/.flauz/gui-debug-vk.log | head -30",
+            timeout=90)
+        print("[gui-debug]", (r.stdout or r.stderr or "")[:800])
+        return r
+
+    def render_probe(self):
+        """Non-rendering render-path probe: vulkaninfo + X server + visual
+        inventory + compositor status. Returns the text report."""
+        r = self.run(
+            "echo '== vulkaninfo ==' ; vulkaninfo --summary 2>&1 | head -25 ; "
+            "echo '== ICD files ==' ; ls /usr/share/vulkan/icd.d/ 2>&1 ; "
+            "echo '== X server ==' ; ps aux | grep -E 'Xorg|Xvfb' | grep -v grep ; "
+            "echo '== compositor ==' ; pgrep -af 'xfwm4|xcompmgr|compton|picom' || echo none ; "
+            "echo '== GL renderer ==' ; DISPLAY=" + self._display() + " glxinfo 2>/dev/null | grep -E 'OpenGL renderer|OpenGL version' ; "
+            "echo '== 32bit visuals ==' ; DISPLAY=" + self._display() + " xdpyinfo | grep -c 'depth 24' ; "
+            "DISPLAY=" + self._display() + " xdpyinfo | grep -A1 'depth 32' | head -4",
+            timeout=120)
+        print("[probe]\n", (r.stdout or r.stderr or "")[:2000])
+        return (r.stdout or "") + (r.stderr or "")
 
     def gui_log(self, tail: int = 30) -> str:
         return self.run(f"tail -{tail} $HOME/.flauz/gui.log 2>/dev/null || true",
