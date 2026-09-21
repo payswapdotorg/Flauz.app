@@ -1,0 +1,67 @@
+{
+  "v": 1,
+  "id": "proc_01J8ZQ5V8K3T2B7N6X4R9DQPPC",
+  "version": 1,
+  "name": "Ticket reconciliation",
+  "versions": [
+    {
+      "major": 1,
+      "minor": 0,
+      "predecessor": null,
+      "objective": "Reconcile the weekly support-ticket counts",
+      "preconditions": [
+        "Dashboard and CRM access are connected"
+      ],
+      "inputs": [
+        {
+          "name": "week",
+          "kind": "text",
+          "description": "ISO week to reconcile"
+        }
+      ],
+      "steps": [
+        {
+          "summary": "Export the dashboard ticket counts",
+          "details": "Use the dashboard export surface"
+        },
+        {
+          "summary": "Export the CRM ticket counts",
+          "details": null
+        },
+        {
+          "summary": "Compare and report differences",
+          "details": null
+        }
+      ],
+      "required_capabilities": [
+        "browser.input",
+        "web.search"
+      ],
+      "resource_bindings": [
+        {
+          "role": "support_portal",
+          "resource_id": "res_01J8ZQ5V8K3T2B7N6X4R9DQPC2"
+        }
+      ],
+      "validation_rules": [
+        "Counts must match or every difference is explained"
+      ],
+      "recovery_rules": [
+        "Re-export once, then stop and ask the user"
+      ],
+      "evidence": [
+        "evd_01J8ZQ5V8K3T2B7N6X4R9DQPMA"
+      ],
+      "created_by": {
+        "kind": "agent",
+        "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPQD"
+      },
+      "created_at": "2026-09-21T13:45:00Z"
+    }
+  ],
+  "created_by": {
+    "kind": "user",
+    "id": "u1"
+  },
+  "created_at": "2026-09-21T13:45:00Z"
+}

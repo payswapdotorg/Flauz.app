@@ -1,0 +1,16 @@
+{
+  "v": 1,
+  "id": "art_01J8ZQ5V8K3T2B7N6X4R9DQPH7",
+  "version": 1,
+  "task_id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "title": "Ticket reconciliation report",
+  "content": {
+    "kind": "text",
+    "text": "Dashboard: 3 open tickets. CRM export: 3 open tickets. Match."
+  },
+  "created_by": {
+    "kind": "agent",
+    "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPQD"
+  },
+  "created_at": "2026-09-21T13:45:00Z"
+}

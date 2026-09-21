@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "id": "lease_01J8ZQ5V8K3T2B7N6X4R9DQPNB",
+  "version": 1,
+  "resource_id": "res_01J8ZQ5V8K3T2B7N6X4R9DQPC2",
+  "mode": "commit",
+  "owner": {
+    "kind": "user",
+    "id": "user-alice"
+  },
+  "granted_at": "2026-09-21T13:45:00Z",
+  "expires_at": "2026-09-21T13:45:01Z",
+  "conflict_policy": "escalate",
+  "released_at": null
+}

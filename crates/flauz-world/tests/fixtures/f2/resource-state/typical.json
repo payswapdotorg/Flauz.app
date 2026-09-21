@@ -1,0 +1,23 @@
+{
+  "v": 1,
+  "resource_id": "res_01J8ZQ5V8K3T2B7N6X4R9DQPC2",
+  "resource_version": 2,
+  "permissions": [
+    "dashboard:read",
+    "crm:read"
+  ],
+  "last_verified_observation": "obs_01J8ZQ5V8K3T2B7N6X4R9DQPJ8",
+  "authoritative_surface": "api",
+  "active_lease_ids": [
+    "lease_01J8ZQ5V8K3T2B7N6X4R9DQPNB"
+  ],
+  "pending_mutation_ids": [],
+  "related_artifact_ids": [
+    "art_01J8ZQ5V8K3T2B7N6X4R9DQPH7"
+  ],
+  "captured_by": {
+    "kind": "agent",
+    "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPQD"
+  },
+  "captured_at": "2026-09-21T13:45:00Z"
+}
