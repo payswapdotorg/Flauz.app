@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "YES\n\nThe composer input box contains the single lowercase letter **\"y\"**. The text cursor (a vertical blinking line) is positioned immediately to the right of the letter \"y\", indicating that the user has just typed it and the input field is currently focused.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789984279,
+  "id": "202609211751163aebfa5b2c964542",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609211751163aebfa5b2c964542",
+  "usage": {
+    "completion_tokens": 55,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1751,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1806
+  }
+}
