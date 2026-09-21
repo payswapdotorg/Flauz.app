@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "model_id": "model_01J8ZQ5V8K3T2B7N6X4R9DQPX0",
+  "environment_id": "env_01J8ZQ5V8K3T2B7N6X4R9DQPT6",
+  "required_capabilities": [
+    "filesystem.read",
+    "terminal"
+  ],
+  "instruction": "Run the test suite and report failures"
+}

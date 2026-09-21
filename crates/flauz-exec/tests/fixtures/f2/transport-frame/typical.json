@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "kind": "flauz.transport.frame",
+  "envelope": {
+    "event_id": "ev_01J8ZQ5V8K3T2B7N6X4R9DQPD3",
+    "event_type": "task.model_changed",
+    "kind": "flauz.event",
+    "seq": 42,
+    "ts": "2026-09-21T13:45:00Z",
+    "v": 1
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "runtime_kind": "codex-app-server",
+  "model_id": "model_01J8ZQ5V8K3T2B7N6X4R9DQPX0",
+  "environment_id": "env_01J8ZQ5V8K3T2B7N6X4R9DQPT6",
+  "status": "completed",
+  "missing_capabilities": [],
+  "summary": "codex-app-server completed one orchestration step"
+}
