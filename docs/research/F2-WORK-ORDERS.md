@@ -294,8 +294,17 @@ Acceptance criteria:
   3. First-run: keyboard path documented + verified at the current version
      (no silent swallowing without an escape hatch).
   4. Non-empty Contract deviations blocks closure.
-Status: DISPATCHED (2026-09-21 18:30 UTC — Worker D, agents-tab session;
-  dispatched into the freed Worker-A slot per this entry's dispatch rule)
+Status: MERGED (2026-09-21) — Lead gates green: bundle verified on base
+  67e2b74; single worker commit ce74a7c (ui.rs only, +478/−14); PR #44 CI
+  green (both platforms); merge 4378892 = origin/main. Contract deviations
+  NONE; architecture deviations NONE. N6 root-caused at code level (Linux
+  xkb reports Ctrl+Shift+] as the shifted keysym "}" — the fix extends the
+  canonical physical-position bracket normalization; the exact lab
+  asymmetry explained). N5 + NUX one-Escape contracts unit-pinned
+  (4 new tests; codex-app 244/0). Worker D = chat 2f76f2f6 (recovered from
+  two sandbox-pod resets via the Lead continuation protocol; report
+  archived at docs/research/evidence/f2-ux-003/). Lab probes (PTY focus,
+  swap re-evidence, promo capture) run at the F2 gate per F2-GATE-PLAN.md.
 ```
 
 ---
