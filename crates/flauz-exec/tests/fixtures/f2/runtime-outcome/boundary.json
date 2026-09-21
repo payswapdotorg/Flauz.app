@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "runtime_kind": "flauz-direct",
+  "model_id": "model_01J8ZQ5V8K3T2B7N6X4R9DQPX0",
+  "environment_id": null,
+  "status": "capability_gap",
+  "missing_capabilities": [
+    "filesystem.read",
+    "terminal"
+  ],
+  "summary": "flauz-direct is missing required capabilities"
+}

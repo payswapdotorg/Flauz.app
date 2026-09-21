@@ -6,6 +6,7 @@ members = [
     "crates/codex-platform",
     "crates/codex-protocol",
     "crates/codex-storage",
+    "crates/flauz-exec",
     "crates/flauz-world",
 ]
 exclude = ["third_party/gpui-component"]
