@@ -269,9 +269,13 @@ Scope:
     affordance / documented one-Escape contract) and re-check at each bump
 Non-goals: platform-bound a11y items (screen-reader labels/AT tree,
   OS-level reduced-motion — upstream-GPUI, revisited at F11); N2/N3/N4
-  bounded notes.
-Files/subsystems owned: TBD at dispatch (expected: crates/codex-app ui.rs
-  focus paths + a lab scene)
+  bounded notes; no new features beyond the three fixes; no F1 flow
+  behavior changes.
+Files/subsystems owned: crates/codex-app/src/ui.rs focused edits only —
+  (a) the terminal-dock OPEN path focus transfer; (b) the model-availability
+  NUX modal first-run keyboard contract; (c) the bracket-swap chord
+  selected-chat path IF a code-level cause is found — plus unit tests at
+  each fix site (house ui.rs test style). Nothing else.
 Tests: focused unit tests at the fix sites
 GUI/lab evidence: lab scenes (PTY-focus probe; swap re-evidence;
   fresh-profile promo capture) — the Lead runs them at the gate
@@ -282,7 +286,8 @@ Acceptance criteria:
   3. First-run: keyboard path documented + verified at the current version
      (no silent swallowing without an escape hatch).
   4. Non-empty Contract deviations blocks closure.
-Status: DEFINED — QUEUED (2026-09-21)
+Status: DISPATCHED (2026-09-21 18:30 UTC — Worker D, agents-tab session;
+  dispatched into the freed Worker-A slot per this entry's dispatch rule)
 ```
 
 ---
