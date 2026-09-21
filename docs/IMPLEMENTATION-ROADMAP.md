@@ -48,7 +48,7 @@ F3 Environments F4 Models      F5 Capabilities
 - ✅ current native architecture contract
 - ✅ Codex parity matrix
 
-## F1 — Codex Desktop parity
+## F1 — Codex Desktop parity — **CLOSED 2026-09-21**
 
 Already merged:
 - ✅ Terminal discoverability
@@ -93,10 +93,38 @@ Remaining:
 **Gate:** every remaining full-reference difference is explicitly classified;
 release-critical journeys remain green; and the final parity/accessibility/release
 journeys pass. — **SATISFIED per the F1 closure record**
-(`docs/research/evidence/f1-sweep/F1-CLOSURE-RECORD.md`, 2026-09-21);
-the F1→F2 flip awaits the user's review of that record.
+(`docs/research/evidence/f1-sweep/F1-CLOSURE-RECORD.md`, 2026-09-21).
+**CLOSED**: the user reviewed the record on 2026-09-21 and approved the F1→F2
+transition. F1 is complete at v0.1.0-rc.14; the bounded/platform/proprietary
+classifications stand and F1 is not reopened because full-reference parity
+remains non-green outside the closed release scope.
 
-## F2 — Canonical contracts
+## F2 — Canonical contracts — **ACTIVE (Wave 1 dispatched 2026-09-21)**
+
+Shared-contract authority: [F2-CONTRACT-KERNEL.md](F2-CONTRACT-KERNEL.md)
+(frozen by the Tech Lead before any worker branched: entity identity rules,
+ID/version rules, serialization format, event envelope, task identity
+semantics, ownership boundaries, file ownership, trait/module boundaries,
+fixture naming, test vocabulary).
+
+Wave-1 ownership split (parallel, non-overlapping; ledger:
+[research/F2-WORK-ORDERS.md](research/F2-WORK-ORDERS.md)):
+
+- **ARCH-001** — Workspace/Session/Task/Artifact/Resource/ResourceState/
+  Event/Observation/Claim/Evidence/ResourceLease + Procedure/ProcedureVersion
+  contracts (`crates/flauz-world`).
+- **ARCH-002** — Environment/ExecutionProvider/ModelProvider/Model/
+  AgentRuntime/Agent/Skill/Capability/ProviderConnection contracts + versioned
+  session/event transport (`crates/flauz-exec`).
+- **ORCH-001 + UX-001** — Context/MemoryItem/ContextSnapshot/ContextProvenance/
+  ModelContextProfile contracts (`crates/flauz-context`) + the first
+  discoverable platform GUI shell per PRODUCT-UX-JOURNEYS §2.1 (Workspace
+  navigation: Projects/Tasks, Procedures, Artifacts, Activity; Task rail:
+  Context, Agents, Environments, Evidence, More/Inspect) with honest empty
+  states (`crates/codex-app`).
+- **UX-003** (queued) — F2 accessibility carry-overs: N5 PTY focus transfer,
+  N6 bracket-swap positive re-evidence, fresh-profile first-run modal
+  keyboard-swallowing (promo modal).
 
 - ⬜ Workspace
 - ⬜ Session
@@ -123,10 +151,24 @@ the F1→F2 flip awaits the user's review of that record.
 - ⬜ ModelContextProfile
 - ⬜ versioned session/event transport
 - ⬜ conformance fixtures
+- ⬜ GUI discovery shell (Workspace navigation + Task rail per
+  PRODUCT-UX-JOURNEYS §2.1)
 
 **Gate:** fake model/runtime/environment/provider implementations pass the
 contracts without real external services; context, resource, execution,
 evidence and procedure fixtures round-trip without external services.
+Integration verification (Lead-run after the Wave-1 merges):
+
+```
+create task → attach resource → attach environment → attach agent →
+compile context → produce artifact → record observation → attach evidence →
+verify → persist → reload
+```
+
+with the same logical Task preserved through model/context changes. Every
+F2 capability ships as a vertical product slice (primary entry, contextual
+affordance, palette fallback, empty state, success state, keyboard path,
+truthful failure state).
 
 ## F3 — Environment fabric
 
@@ -198,9 +240,20 @@ unlock route when one exists.
 - ⬜ reusable Procedure capture/execution/improvement
 - ⬜ harness telemetry and replay
 
+Procedure phasing (adjusted 2026-09-21): F2 delivers the Procedure
+**contract**; F6 delivers the **first-class Save/Run/Deviation vertical slice**
+— the first successful repeatable task must be able to surface "Save as a
+reusable workflow", persist a minimal Procedure object, and be discoverable
+again from the Workspace; F10 delivers the full library (sharing, search,
+versions, improvement UX). Do not wait until F10 before exposing the concept.
+
 **Gate:** two independent model/runtime adapters cooperate on one task across
 multiple execution surfaces and produce attributable, independently verifiable
-results without a shared giant transcript.
+results without a shared giant transcript. Before F6 is declared complete, run
+at least one domain-neutral scenario that is not software development
+(recommended first scenario: research task → web/browser resources → parallel
+research agents → sandbox analysis → evidence collection → human review →
+final report artifact → Save as reusable workflow).
 
 ## F7 — User-owned providers / free-tier routing
 
@@ -267,6 +320,8 @@ without losing authorized state.
 - ⬜ remote environment selection
 - ⬜ parity journeys
 - ⬜ packaging
+- ⬜ full Procedure library: sharing, search, versions, improvement UX
+  (completes the Procedure lifecycle begun in F2/F6)
 
 ## F11 — Web client
 
@@ -326,6 +381,11 @@ discovering later, running, detecting deviations, and intentional improvement.
 The product architecture is domain-neutral. Journey validation must include
 at least one non-code example once the corresponding runtime capabilities
 exist; coding is not the universal acceptance scenario.
+
+At every major implementation wave, re-run the applicable J-01..J-18 journeys
+from a cold start and verify for each: primary visible path, contextual path,
+search/palette fallback, empty/error state, success/next action, keyboard
+path, and recovery/reconnect.
 
 ## Stable work-order prefixes
 

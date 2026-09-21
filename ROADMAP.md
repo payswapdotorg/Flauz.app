@@ -4,6 +4,11 @@ The product roadmap is now governed by [docs/FLAUZ-SOURCE-OF-TRUTH.md](docs/FLAU
 
 ## Current state
 
+**Current phase: F2 — canonical contracts + discoverability shell.**
+F1 (Codex Desktop parity) CLOSED 2026-09-21 at v0.1.0-rc.14 per the closure
+record (`docs/research/evidence/f1-sweep/F1-CLOSURE-RECORD.md`; user review
+received).
+
 - [x] Native Rust/GPUI Codex-compatible desktop foundation.
 - [x] Windows and Linux desktop targets.
 - [x] Official Codex app-server supervision boundary.
@@ -12,13 +17,15 @@ The product roadmap is now governed by [docs/FLAUZ-SOURCE-OF-TRUTH.md](docs/FLAU
 - [x] RWO-020/RWO-021/RWO-022 reference, verification, and adversarial review waves.
 - [x] Linux parity lab and official Linux reference+1 lab.
 - [x] Release-critical parity scope closed with remaining proprietary/platform and full-reference deltas explicitly bounded.
-- [ ] Complete the remaining full-reference Codex parity backlog and release-candidate gates.
+- [x] Full-reference Codex parity backlog and release-candidate gates closed at
+  v0.1.0-rc.14 — F1 CLOSED 2026-09-21 (closure record:
+  `docs/research/evidence/f1-sweep/F1-CLOSURE-RECORD.md`).
 
 ## Approved platform direction
 
 After parity closure, implement in this order:
 
-1. [ ] Canonical Workspace/Session/Task/Environment/Resource/Artifact/Evidence/Procedure/Context/Provider/Model/Agent/Skill/Capability contracts.
+1. [ ] Canonical Workspace/Session/Task/Environment/Resource/Artifact/Evidence/Procedure/Context/Provider/Model/Agent/Skill/Capability contracts. — **F2 IN PROGRESS** (Wave 1: ARCH-001 / ARCH-002 / ORCH-001+UX-001 against the frozen `docs/F2-CONTRACT-KERNEL.md`).
 2. [ ] Context Engine and model-aware Harness contracts: retrieval, tiered memory, compaction/reset, dynamic tool exposure, provenance, telemetry.
 3. [ ] Environment/provider fabric with local and remote execution through one contract, including browser/site/terminal/sandbox topology.
 4. [ ] Model-provider and agent-runtime fabric, including BYOK and non-Codex models.

@@ -25,13 +25,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-windows-x86_64.zip"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows%20x86__64-2f81f7?style=for-the-badge&logo=windows11&logoColor=white"></a>
-  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-linux-x86_64.tar.gz"><img alt="Download for Linux" src="https://img.shields.io/badge/Download-Linux%20x86__64-f0a050?style=for-the-badge&logo=linux&logoColor=white"></a>
-  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/SHA256SUMS.txt"><img alt="SHA-256 checksums" src="https://img.shields.io/badge/Verify-SHA--256-3fb950?style=for-the-badge"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.14/codexrs-v0.1.0-rc.14-windows-x86_64.zip"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows%20x86__64-2f81f7?style=for-the-badge&logo=windows11&logoColor=white"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.14/codexrs-v0.1.0-rc.14-linux-x86_64.tar.gz"><img alt="Download for Linux" src="https://img.shields.io/badge/Download-Linux%20x86__64-f0a050?style=for-the-badge&logo=linux&logoColor=white"></a>
+  <a href="https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.14/SHA256SUMS.txt"><img alt="SHA-256 checksums" src="https://img.shields.io/badge/Verify-SHA--256-3fb950?style=for-the-badge"></a>
 </p>
 
 <p align="center">
-  <sub>v0.1.0-rc.13 · unsigned portable preview · official Codex CLI required</sub>
+  <sub>v0.1.0-rc.14 · unsigned portable preview · official Codex CLI required</sub>
 </p>
 
 > [!WARNING]
@@ -148,17 +148,17 @@ If it is not on `PATH`, set `CODEX_RS_CODEX_BIN` to the native `codex` or
 
 ### 2. Download the portable preview
 
-Current preview: **v0.1.0-rc.13**.
+Current preview: **v0.1.0-rc.14**.
 
-- [Windows x86_64 ZIP](https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-windows-x86_64.zip)
-- [Linux x86_64 tar.gz](https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/codexrs-v0.1.0-rc.13-linux-x86_64.tar.gz)
-- [SHA-256 checksums](https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.13/SHA256SUMS.txt)
+- [Windows x86_64 ZIP](https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.14/codexrs-v0.1.0-rc.14-windows-x86_64.zip)
+- [Linux x86_64 tar.gz](https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.14/codexrs-v0.1.0-rc.14-linux-x86_64.tar.gz)
+- [SHA-256 checksums](https://github.com/payswapdotorg/Flauz.app/releases/download/v0.1.0-rc.14/SHA256SUMS.txt)
 - [All releases and release notes](https://github.com/payswapdotorg/Flauz.app/releases)
 
 Verify the archive before extraction. On Linux, run
-`grep 'codexrs-v0.1.0-rc.13-linux-x86_64.tar.gz$' SHA256SUMS.txt | sha256sum -c -`.
+`grep 'codexrs-v0.1.0-rc.14-linux-x86_64.tar.gz$' SHA256SUMS.txt | sha256sum -c -`.
 On Windows, compare
-`(Get-FileHash .\codexrs-v0.1.0-rc.13-windows-x86_64.zip -Algorithm SHA256).Hash`
+`(Get-FileHash .\codexrs-v0.1.0-rc.14-windows-x86_64.zip -Algorithm SHA256).Hash`
 with the matching entry. The checksum detects transfer corruption; it is not an
 independent publisher signature.
 

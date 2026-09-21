@@ -25,13 +25,15 @@ amendment/ADR before implementation.
 
 ## Immediate priority
 
-Finish Codex Desktop parity first. Do not pause parity to implement the future
-platform.
+F1 (Codex Desktop parity) is CLOSED at v0.1.0-rc.14 (closure record:
+`docs/research/evidence/f1-sweep/F1-CLOSURE-RECORD.md`; user review received
+2026-09-21). The current phase is F2 — canonical contracts + discoverability
+shell — executed as vertical product slices against the frozen shared
+contract kernel (`docs/F2-CONTRACT-KERNEL.md`).
 
-During parity closure, only narrow scaffolding explicitly needed to avoid
-hard-coupling is allowed. Do not implement Web, Mobile, arbitrary model-provider
-routing, remote providers, multi-user collaboration, or multi-model orchestration
-without an assigned future work order.
+Do not implement Web, Mobile, broad remote-provider integrations, or
+multi-user collaboration before F2–F6 close. Fake providers/runtimes satisfy
+the canonical contracts first; real integrations follow their own phases.
 
 Workflow/Pack development is frozen. It is not the new execution architecture.
 

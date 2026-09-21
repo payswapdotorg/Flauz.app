@@ -20,11 +20,36 @@ Read, in order:
 
 ## Immediate instruction
 
-Finish the remaining Codex Desktop parity backlog first.
+F1 (Codex Desktop parity) is CLOSED at v0.1.0-rc.14
+(`docs/research/evidence/f1-sweep/F1-CLOSURE-RECORD.md`; user review received
+2026-09-21). Do not reopen F1 merely because full-reference parity remains
+non-green outside the closed release scope — the bounded/platform/proprietary
+classifications stand.
 
-Do not start Web, Mobile, broad remote-provider integrations, or multi-user
-collaboration before parity closure. Only narrow scaffolding required to avoid
-future architectural coupling is allowed.
+Execute F2 — canonical contracts + discoverability shell — as the first
+vertical product slice wave:
+
+1. Freeze the shared contract kernel (`docs/F2-CONTRACT-KERNEL.md`) before any
+   worker branches.
+2. Dispatch Wave 1 in parallel: ARCH-001 (world/resource/evidence contracts),
+   ARCH-002 (execution/provider/model/agent contracts), ORCH-001 + UX-001
+   (context contracts + discoverable platform shell). Work orders live in
+   `docs/research/F2-WORK-ORDERS.md`.
+3. Close the F2 gate only when the fake-provider round-trip
+   (create task → attach resource/environment/agent → compile context →
+   produce artifact → observe → evidence → verify → persist → reload, with
+   task identity preserved across a model switch) passes end-to-end with no
+   external service.
+
+Every F2+ capability must be implemented as a vertical product slice: visible
+primary entry + contextual affordance + search/command-palette fallback +
+useful empty state + success/next-step state + keyboard-accessible path +
+truthful unavailable/failure state. The command palette is never the only
+discovery mechanism.
+
+Do not start Web/Mobile clients, broad remote-provider integrations, or
+multi-user collaboration before F2–F6 close. Fake providers/runtimes satisfy
+the contracts first; real integrations follow their own phases.
 
 Workflow/Pack development remains frozen.
 
