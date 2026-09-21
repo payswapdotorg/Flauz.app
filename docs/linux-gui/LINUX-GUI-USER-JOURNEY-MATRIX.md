@@ -42,6 +42,21 @@ does nothing visible) / `MISLEADING` (state contradicts reality).
 
 ## Run log
 
-### Run 1 — baseline sweep (2026-09-21, E2B, Flauz @ `f66965e`)
+### Run 1 — baseline sweep (2026-09-21, E2B sandbox `ipoaz31c43jj5vtjy8qvf`, Flauz @ `f66965e`, release build, Ubuntu 22.04.5 / Xfce4 / Xvfb :0 1920×1080, software GL)
 
-Populated after the baseline sweep completes (see evidence dir).
+Environment note: provisioning required the L-001 accommodation (pipewire
+1.0.5 side-load) before the release build compiled.
+
+| Journey | Verdict | Detail |
+| --- | --- | --- |
+| E-00 fresh desktop → build → launch → window appears | **WORKS-WITH-DEFECTS** | Build needs L-001 accommodation; binary launches; window maps (`com.codexrs.CodexRS`, 1278×818 @ +10+85, focused). |
+| J-01 Start a project (cold start) | **BROKEN (P0, L-002)** | Window content never presented — black on Xfce4 AND bare Xvfb; desktop shows through the 32-bit ARGB window. No first-run/onboarding/sign-in surface reachable → every downstream journey is blocked at cold start. Keyboard (ctrl-shift-p), mouse move/click input events produced no visible change. |
+
+Blocked-by note: J-02 … J-18 could not proceed past cold start (L-002).
+The battery re-runs after L-002 closes; entries stay `NOT-RUN (blocked by
+L-002)` until then.
+
+Evidence: `evidence/run1-j01-02-gui-mapped-unrendered-xfce.png`,
+`evidence/run1-j01-04-relaunch-softwaregl.png`,
+`evidence/run1-j01-05-xwd-window-content-black.png`,
+`evidence/run1-j01-06-bare-xvfb-root-all-black.png`.
