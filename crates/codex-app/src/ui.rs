@@ -1849,6 +1849,14 @@ gpui::actions!(
         ResetKeyboardShortcutsFocusPrev,
         AllowAllBrowserSitesFocusNext,
         AllowAllBrowserSitesFocusPrev,
+        RemotePairingFocusNext,
+        RemotePairingFocusPrev,
+        RemoteConfirmationFocusNext,
+        RemoteConfirmationFocusPrev,
+        AccountLogoutFocusNext,
+        AccountLogoutFocusPrev,
+        PluginInstallConfirmationFocusNext,
+        PluginInstallConfirmationFocusPrev,
         ActivityViewSelectNext,
         ActivityViewSelectPrevious,
         ActivityViewConfirm
@@ -5254,6 +5262,38 @@ pub fn run() {
                     "shift-tab",
                     AllowAllBrowserSitesFocusPrev,
                     Some("AllowAllBrowserSitesModal"),
+                ),
+                KeyBinding::new("tab", RemotePairingFocusNext, Some("RemotePairingModal")),
+                KeyBinding::new(
+                    "shift-tab",
+                    RemotePairingFocusPrev,
+                    Some("RemotePairingModal"),
+                ),
+                KeyBinding::new(
+                    "tab",
+                    RemoteConfirmationFocusNext,
+                    Some("RemoteConfirmationModal"),
+                ),
+                KeyBinding::new(
+                    "shift-tab",
+                    RemoteConfirmationFocusPrev,
+                    Some("RemoteConfirmationModal"),
+                ),
+                KeyBinding::new("tab", AccountLogoutFocusNext, Some("AccountLogoutModal")),
+                KeyBinding::new(
+                    "shift-tab",
+                    AccountLogoutFocusPrev,
+                    Some("AccountLogoutModal"),
+                ),
+                KeyBinding::new(
+                    "tab",
+                    PluginInstallConfirmationFocusNext,
+                    Some("PluginInstallConfirmationModal"),
+                ),
+                KeyBinding::new(
+                    "shift-tab",
+                    PluginInstallConfirmationFocusPrev,
+                    Some("PluginInstallConfirmationModal"),
                 ),
             ]);
             let default_bounds =
@@ -9929,6 +9969,111 @@ impl WorkspaceView {
                 .contains_focused(window, cx)
             {
                 self.allow_all_browser_sites_focus.focus(window);
+                window.focus_next();
+            }
+        }
+        cx.stop_propagation();
+    }
+
+    fn cycle_remote_pairing_focus(
+        &mut self,
+        backwards: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if backwards {
+            window.focus_prev();
+            if self.remote_pairing_focus.is_focused(window)
+                || !self.remote_pairing_focus.contains_focused(window, cx)
+            {
+                self.remote_pairing_focus.focus(window);
+                window.focus_next();
+                window.focus_next();
+            }
+        } else {
+            window.focus_next();
+            if !self.remote_pairing_focus.contains_focused(window, cx) {
+                self.remote_pairing_focus.focus(window);
+                window.focus_next();
+            }
+        }
+        cx.stop_propagation();
+    }
+
+    fn cycle_remote_confirmation_focus(
+        &mut self,
+        backwards: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if backwards {
+            window.focus_prev();
+            if self.remote_confirmation_focus.is_focused(window)
+                || !self.remote_confirmation_focus.contains_focused(window, cx)
+            {
+                self.remote_confirmation_focus.focus(window);
+                window.focus_next();
+                window.focus_next();
+            }
+        } else {
+            window.focus_next();
+            if !self.remote_confirmation_focus.contains_focused(window, cx) {
+                self.remote_confirmation_focus.focus(window);
+                window.focus_next();
+            }
+        }
+        cx.stop_propagation();
+    }
+
+    fn cycle_account_logout_focus(
+        &mut self,
+        backwards: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if backwards {
+            window.focus_prev();
+            if self.account_logout_focus.is_focused(window)
+                || !self.account_logout_focus.contains_focused(window, cx)
+            {
+                self.account_logout_focus.focus(window);
+                window.focus_next();
+                window.focus_next();
+            }
+        } else {
+            window.focus_next();
+            if !self.account_logout_focus.contains_focused(window, cx) {
+                self.account_logout_focus.focus(window);
+                window.focus_next();
+            }
+        }
+        cx.stop_propagation();
+    }
+
+    fn cycle_plugin_install_confirmation_focus(
+        &mut self,
+        backwards: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if backwards {
+            window.focus_prev();
+            if self.plugin_install_confirmation_focus.is_focused(window)
+                || !self
+                    .plugin_install_confirmation_focus
+                    .contains_focused(window, cx)
+            {
+                self.plugin_install_confirmation_focus.focus(window);
+                window.focus_next();
+                window.focus_next();
+            }
+        } else {
+            window.focus_next();
+            if !self
+                .plugin_install_confirmation_focus
+                .contains_focused(window, cx)
+            {
+                self.plugin_install_confirmation_focus.focus(window);
                 window.focus_next();
             }
         }
@@ -29592,6 +29737,17 @@ impl WorkspaceView {
             .track_focus(&self.plugin_install_confirmation_focus)
             .tab_group()
             .tab_stop(true)
+            .key_context("PluginInstallConfirmationModal")
+            .on_action(
+                cx.listener(|this, _: &PluginInstallConfirmationFocusNext, window, cx| {
+                    this.cycle_plugin_install_confirmation_focus(false, window, cx);
+                }),
+            )
+            .on_action(
+                cx.listener(|this, _: &PluginInstallConfirmationFocusPrev, window, cx| {
+                    this.cycle_plugin_install_confirmation_focus(true, window, cx);
+                }),
+            )
             .on_any_mouse_down(|_, _, cx| cx.stop_propagation())
             .child(
                 div()
@@ -39411,6 +39567,13 @@ impl WorkspaceView {
             .track_focus(&self.remote_pairing_focus)
             .tab_group()
             .tab_stop(true)
+            .key_context("RemotePairingModal")
+            .on_action(cx.listener(|this, _: &RemotePairingFocusNext, window, cx| {
+                this.cycle_remote_pairing_focus(false, window, cx);
+            }))
+            .on_action(cx.listener(|this, _: &RemotePairingFocusPrev, window, cx| {
+                this.cycle_remote_pairing_focus(true, window, cx);
+            }))
             .on_any_mouse_down(|_, _, cx| cx.stop_propagation())
             .child(
                 div()
@@ -43609,6 +43772,17 @@ impl WorkspaceView {
                     .track_focus(&self.remote_confirmation_focus)
                     .tab_group()
                     .tab_stop(true)
+                    .key_context("RemoteConfirmationModal")
+                    .on_action(
+                        cx.listener(|this, _: &RemoteConfirmationFocusNext, window, cx| {
+                            this.cycle_remote_confirmation_focus(false, window, cx);
+                        }),
+                    )
+                    .on_action(
+                        cx.listener(|this, _: &RemoteConfirmationFocusPrev, window, cx| {
+                            this.cycle_remote_confirmation_focus(true, window, cx);
+                        }),
+                    )
                     .on_any_mouse_down(|_, _, cx| cx.stop_propagation())
                     .child(
                         div()
@@ -43659,6 +43833,17 @@ impl WorkspaceView {
                     .track_focus(&self.remote_confirmation_focus)
                     .tab_group()
                     .tab_stop(true)
+                    .key_context("RemoteConfirmationModal")
+                    .on_action(
+                        cx.listener(|this, _: &RemoteConfirmationFocusNext, window, cx| {
+                            this.cycle_remote_confirmation_focus(false, window, cx);
+                        }),
+                    )
+                    .on_action(
+                        cx.listener(|this, _: &RemoteConfirmationFocusPrev, window, cx| {
+                            this.cycle_remote_confirmation_focus(true, window, cx);
+                        }),
+                    )
                     .on_any_mouse_down(|_, _, cx| cx.stop_propagation())
                     .child(
                         div()
@@ -43723,6 +43908,17 @@ impl WorkspaceView {
                     .track_focus(&self.remote_confirmation_focus)
                     .tab_group()
                     .tab_stop(true)
+                    .key_context("RemoteConfirmationModal")
+                    .on_action(
+                        cx.listener(|this, _: &RemoteConfirmationFocusNext, window, cx| {
+                            this.cycle_remote_confirmation_focus(false, window, cx);
+                        }),
+                    )
+                    .on_action(
+                        cx.listener(|this, _: &RemoteConfirmationFocusPrev, window, cx| {
+                            this.cycle_remote_confirmation_focus(true, window, cx);
+                        }),
+                    )
                     .on_any_mouse_down(|_, _, cx| cx.stop_propagation())
                     .child(
                         div()
@@ -43776,6 +43972,13 @@ impl WorkspaceView {
                     .track_focus(&self.account_logout_focus)
                     .tab_group()
                     .tab_stop(true)
+                    .key_context("AccountLogoutModal")
+                    .on_action(cx.listener(|this, _: &AccountLogoutFocusNext, window, cx| {
+                        this.cycle_account_logout_focus(false, window, cx);
+                    }))
+                    .on_action(cx.listener(|this, _: &AccountLogoutFocusPrev, window, cx| {
+                        this.cycle_account_logout_focus(true, window, cx);
+                    }))
                     .on_any_mouse_down(|_, _, cx| cx.stop_propagation())
                     .child(
                         div()
@@ -53312,6 +53515,234 @@ mod tests {
         assert!(focus_at > begins_at);
         // The scanned body is bounded: it ends before the next method.
         assert!(!body.contains("fn has_local_workspace"));
+    }
+
+    fn key_binding_region<'a>(source: &'a str, action: &str) -> &'a str {
+        // Returns the bounded source of the bind_keys entry that binds
+        // `action` — from its `KeyBinding::new(` to the next entry (or the
+        // block's closing `]);`). The modal focus-trap tests below pin
+        // WHICH key and WHICH key context each entry carries, reading
+        // tokens rather than layout so a formatting pass cannot silently
+        // sever a trap binding from its modal context.
+        let block_start = match source.find("cx.bind_keys([") {
+            Some(at) => at,
+            None => panic!("the bind_keys block exists in this file's source"),
+        };
+        let block_end = match source[block_start..].find("]);") {
+            Some(offset) => block_start + offset,
+            None => panic!("the bind_keys block closes"),
+        };
+        let block = &source[block_start..block_end];
+        let action_at = match block.find(action) {
+            Some(at) => at,
+            None => panic!("{action:?} is bound in the bind_keys block"),
+        };
+        let start = match block[..action_at].rfind("KeyBinding::new(") {
+            Some(at) => at,
+            None => panic!("{action:?} sits inside a KeyBinding::new entry"),
+        };
+        let end = match block[action_at..].find("KeyBinding::new(") {
+            Some(offset) => action_at + offset,
+            None => block.len(),
+        };
+        &block[start..end]
+    }
+
+    #[test]
+    fn remote_pairing_modal_traps_tab_focus_inside_the_modal() {
+        // WO-P2-019: the remote pairing modal completes the focus-trap
+        // contract the six evidenced confirmation modals already meet
+        // (PM L101/L113) — Tab/Shift+Tab resolve only inside the
+        // "RemotePairingModal" key context and cycle within the modal's
+        // focusable set. Focus is window state, which no pure reducer test
+        // can observe, so the wiring is asserted against this file's own
+        // source (the WO-P2-011/WO-UX-002 pattern; the D-scene lab probe
+        // re-verifies the runtime behavior).
+        let source = include_str!("ui.rs");
+
+        // The trap bindings are registered for the modal's key context
+        // only — outside that context Tab keeps its background meaning.
+        let next = key_binding_region(source, "RemotePairingFocusNext");
+        assert!(next.contains("\"tab\""));
+        assert!(next.contains("Some(\"RemotePairingModal\")"));
+        let prev = key_binding_region(source, "RemotePairingFocusPrev");
+        assert!(prev.contains("\"shift-tab\""));
+        assert!(prev.contains("Some(\"RemotePairingModal\")"));
+
+        // The cycle handler keeps focus inside the modal's focusable set:
+        // forward re-anchors on the modal handle when focus_next would
+        // leave it, backward wraps from the handle itself, and both stop
+        // propagation so the tab never reaches the background surface.
+        let body = impl_method_body(source, "fn cycle_remote_pairing_focus(");
+        assert_eq!(body.matches("window.focus_next();").count(), 4);
+        assert_eq!(body.matches("window.focus_prev();").count(), 1);
+        assert_eq!(body.matches(".contains_focused(window, cx)").count(), 2);
+        assert_eq!(body.matches("is_focused(window)").count(), 1);
+        assert_eq!(body.matches(".focus(window);").count(), 2);
+        assert!(body.contains("cx.stop_propagation();"));
+        assert!(body.contains("remote_pairing_focus"));
+        // The scanned body is bounded: it ends before the next method.
+        assert!(!body.contains("fn cycle_remote_confirmation_focus"));
+
+        // The modal panel carries the key context and routes both actions
+        // to the cycle handler, so the bindings match while it holds focus.
+        let panel = impl_method_body(source, "fn render_remote_pairing_modal(");
+        assert!(panel.contains(".track_focus(&self.remote_pairing_focus)"));
+        assert!(panel.contains(".key_context(\"RemotePairingModal\")"));
+        assert!(panel.contains("&RemotePairingFocusNext"));
+        assert!(panel.contains("this.cycle_remote_pairing_focus(false, window, cx);"));
+        assert!(panel.contains("&RemotePairingFocusPrev"));
+        assert!(panel.contains("this.cycle_remote_pairing_focus(true, window, cx);"));
+        // The scanned body is bounded: it ends before the next method.
+        assert!(!panel.contains("fn render_process_manager_row"));
+    }
+
+    #[test]
+    fn remote_confirmation_modal_traps_tab_focus_inside_every_variant() {
+        // WO-P2-019: the three remote-control confirmation variants share
+        // one focus handle (remote_confirmation_focus), so every variant
+        // panel — enable, disable, and device-revoke — must carry the trap;
+        // a variant without the wiring would leave a hole the keyboard
+        // could fall through into the background surface.
+        let source = include_str!("ui.rs");
+
+        // One shared context ("RemoteConfirmationModal") owns the bindings.
+        let next = key_binding_region(source, "RemoteConfirmationFocusNext");
+        assert!(next.contains("\"tab\""));
+        assert!(next.contains("Some(\"RemoteConfirmationModal\")"));
+        let prev = key_binding_region(source, "RemoteConfirmationFocusPrev");
+        assert!(prev.contains("\"shift-tab\""));
+        assert!(prev.contains("Some(\"RemoteConfirmationModal\")"));
+
+        // The shared cycle handler mirrors the evidenced family exactly.
+        let body = impl_method_body(source, "fn cycle_remote_confirmation_focus(");
+        assert_eq!(body.matches("window.focus_next();").count(), 4);
+        assert_eq!(body.matches("window.focus_prev();").count(), 1);
+        assert_eq!(body.matches(".contains_focused(window, cx)").count(), 2);
+        assert_eq!(body.matches("is_focused(window)").count(), 1);
+        assert_eq!(body.matches(".focus(window);").count(), 2);
+        assert!(body.contains("cx.stop_propagation();"));
+        assert!(body.contains("remote_confirmation_focus"));
+        // The scanned body is bounded: it ends before the next method.
+        assert!(!body.contains("fn cycle_account_logout_focus"));
+
+        // Every variant's panel carries the context and routes both
+        // actions to the shared handler.
+        let modal = impl_method_body(source, "fn render_workspace_modal_detail(");
+        let enable_at = match modal.find("WorkspaceModal::EnableRemoteControl =>") {
+            Some(at) => at,
+            None => panic!("the EnableRemoteControl arm exists"),
+        };
+        let disable_at = match modal.find("WorkspaceModal::DisableRemoteControl =>") {
+            Some(at) => at,
+            None => panic!("the DisableRemoteControl arm exists"),
+        };
+        let revoke_at = match modal[disable_at..].find("WorkspaceModal::RevokeRemoteDevice") {
+            Some(offset) => disable_at + offset,
+            None => panic!("the RevokeRemoteDevice arm exists"),
+        };
+        let logout_at = match modal.find("WorkspaceModal::LogOutAccount") {
+            Some(at) => at,
+            None => panic!("the LogOutAccount arm exists"),
+        };
+        assert!(enable_at < disable_at);
+        assert!(disable_at < revoke_at);
+        assert!(revoke_at < logout_at);
+        for branch in [
+            &modal[enable_at..disable_at],
+            &modal[disable_at..revoke_at],
+            &modal[revoke_at..logout_at],
+        ] {
+            assert!(branch.contains(".track_focus(&self.remote_confirmation_focus)"));
+            assert!(branch.contains(".key_context(\"RemoteConfirmationModal\")"));
+            assert!(branch.contains("&RemoteConfirmationFocusNext"));
+            assert!(branch.contains("this.cycle_remote_confirmation_focus(false, window, cx);"));
+            assert!(branch.contains("&RemoteConfirmationFocusPrev"));
+            assert!(branch.contains("this.cycle_remote_confirmation_focus(true, window, cx);"));
+        }
+        // The scanned body is bounded: it ends before the next method.
+        assert!(!modal.contains("fn render_workspace_modal_overlay"));
+    }
+
+    #[test]
+    fn account_logout_modal_traps_tab_focus_inside_the_modal() {
+        // WO-P2-019: the logout confirmation completes the focus-trap
+        // contract for its focus handle — the pre-existing request-once
+        // scaffolding (241dbda) gains the missing tab/shift-tab trap.
+        let source = include_str!("ui.rs");
+
+        let next = key_binding_region(source, "AccountLogoutFocusNext");
+        assert!(next.contains("\"tab\""));
+        assert!(next.contains("Some(\"AccountLogoutModal\")"));
+        let prev = key_binding_region(source, "AccountLogoutFocusPrev");
+        assert!(prev.contains("\"shift-tab\""));
+        assert!(prev.contains("Some(\"AccountLogoutModal\")"));
+
+        let body = impl_method_body(source, "fn cycle_account_logout_focus(");
+        assert_eq!(body.matches("window.focus_next();").count(), 4);
+        assert_eq!(body.matches("window.focus_prev();").count(), 1);
+        assert_eq!(body.matches(".contains_focused(window, cx)").count(), 2);
+        assert_eq!(body.matches("is_focused(window)").count(), 1);
+        assert_eq!(body.matches(".focus(window);").count(), 2);
+        assert!(body.contains("cx.stop_propagation();"));
+        assert!(body.contains("account_logout_focus"));
+        // The scanned body is bounded: it ends before the next method.
+        assert!(!body.contains("fn cycle_plugin_install_confirmation_focus"));
+
+        let modal = impl_method_body(source, "fn render_workspace_modal_detail(");
+        let logout_at = match modal.find("WorkspaceModal::LogOutAccount") {
+            Some(at) => at,
+            None => panic!("the LogOutAccount arm exists"),
+        };
+        let archived_at = match modal.find("WorkspaceModal::DeleteArchivedTasks") {
+            Some(at) => at,
+            None => panic!("the DeleteArchivedTasks arm exists"),
+        };
+        assert!(logout_at < archived_at);
+        let branch = &modal[logout_at..archived_at];
+        assert!(branch.contains(".track_focus(&self.account_logout_focus)"));
+        assert!(branch.contains(".key_context(\"AccountLogoutModal\")"));
+        assert!(branch.contains("&AccountLogoutFocusNext"));
+        assert!(branch.contains("this.cycle_account_logout_focus(false, window, cx);"));
+        assert!(branch.contains("&AccountLogoutFocusPrev"));
+        assert!(branch.contains("this.cycle_account_logout_focus(true, window, cx);"));
+    }
+
+    #[test]
+    fn plugin_install_confirmation_modal_traps_tab_focus_inside_the_modal() {
+        // WO-P2-019: the plugin-install confirmation completes the
+        // focus-trap contract — the marketplace install flow's Cancel and
+        // Install buttons become the only tab stops while the modal is
+        // open.
+        let source = include_str!("ui.rs");
+
+        let next = key_binding_region(source, "PluginInstallConfirmationFocusNext");
+        assert!(next.contains("\"tab\""));
+        assert!(next.contains("Some(\"PluginInstallConfirmationModal\")"));
+        let prev = key_binding_region(source, "PluginInstallConfirmationFocusPrev");
+        assert!(prev.contains("\"shift-tab\""));
+        assert!(prev.contains("Some(\"PluginInstallConfirmationModal\")"));
+
+        let body = impl_method_body(source, "fn cycle_plugin_install_confirmation_focus(");
+        assert_eq!(body.matches("window.focus_next();").count(), 4);
+        assert_eq!(body.matches("window.focus_prev();").count(), 1);
+        assert_eq!(body.matches(".contains_focused(window, cx)").count(), 2);
+        assert_eq!(body.matches("is_focused(window)").count(), 1);
+        assert_eq!(body.matches(".focus(window);").count(), 2);
+        assert!(body.contains("cx.stop_propagation();"));
+        assert!(body.contains("plugin_install_confirmation_focus"));
+        // The scanned body is bounded: it ends before the next method.
+        assert!(!body.contains("fn prompt_for_workspace"));
+
+        let panel = impl_method_body(source, "fn render_plugin_install_confirmation_modal(");
+        assert!(panel.contains(".track_focus(&self.plugin_install_confirmation_focus)"));
+        assert!(panel.contains(".key_context(\"PluginInstallConfirmationModal\")"));
+        assert!(panel.contains("&PluginInstallConfirmationFocusNext"));
+        assert!(panel.contains("this.cycle_plugin_install_confirmation_focus(false, window, cx);"));
+        assert!(panel.contains("&PluginInstallConfirmationFocusPrev"));
+        assert!(panel.contains("this.cycle_plugin_install_confirmation_focus(true, window, cx);"));
+        // The scanned body is bounded: it ends before the next method.
+        assert!(!panel.contains("fn render_app_detail_panel"));
     }
 
     #[test]
