@@ -248,6 +248,46 @@ class FlauzDesktop:
             assert "PW10-OK" in (r.stdout or ""), f"pw10 failed: {r.stderr[-300:]}"
             self.run(f"touch {FL}/pw10")
 
+        # Lane accommodation (validated run-3): GPUI 0.2.2 X11 prefers the
+        # 32-bit ARGB transparent visual; on software-Vulkan (lavapipe) every
+        # presented frame is alpha=0 → invisible window (L-002 P0). Apply the
+        # one-line inherit-visual patch via [patch.crates-io] until LAB-003
+        # merges the proper gated fix upstream.
+        if not done("lane-patch") and not self.run_text(
+                "grep -q gpui-patched ~/Flauz.app/Cargo.toml && echo OK") == "OK":
+            print("[prov] applying lane gpui visual patch (L-002) …")
+            r = self.run(
+                "set -e; "
+                "source $HOME/.cargo/env 2>/dev/null || true; "
+                "cd ~/Flauz.app && cargo fetch --quiet 2>/dev/null || cargo fetch; "
+                "cp -r ~/.cargo/registry/src/index.crates.io-*/gpui-0.2.2 ~/gpui-patched; "
+                "python3 - <<'PYEOF'\n"
+                "p = '/home/user/gpui-patched/src/platform/linux/x11/window.rs'\n"
+                "src = open(p).read()\n"
+                "old = '''        let visual = match visual_set.transparent {\n"
+                "            Some(visual) => visual,\n"
+                "            None => {\n"
+                "                log::warn!(\"Unable to find a transparent visual\",);\n"
+                "                visual_set.inherit\n"
+                "            }\n"
+                "        };'''\n"
+                "new = '''        // LANE PATCH (L-002 accommodation, run-3 validated): force the\n"
+                "        // inherit visual — presenting into the 32-bit ARGB visual\n"
+                "        // yields zero-alpha frames on software-Vulkan stacks.\n"
+                "        let visual = visual_set.inherit;'''\n"
+                "assert old in src, 'visual-selection pattern not found'\n"
+                "open(p, 'w').write(src.replace(old, new))\n"
+                "print('PATCHED')\n"
+                "PYEOF\n"
+                "grep -q \"gpui = { path\" ~/Flauz.app/Cargo.toml || "
+                "sed -i \"/^gpui-component = { path =/a gpui = { path = '/home/user/gpui-patched' }\" "
+                "~/Flauz.app/Cargo.toml; "
+                "grep -A2 'patch.crates-io' ~/Flauz.app/Cargo.toml | head -4",
+                timeout=120)
+            assert "patch.crates-io" in (r.stdout or "") or "PATCHED" in (r.stdout or ""), \
+                f"lane patch failed: {(r.stderr or '')[-300:]}"
+            self.run(f"touch {FL}/lane-patch")
+
         if commit:
             self.run(f"git -C {FLAUZ_SRC} fetch --depth 50 origin {commit} 2>/dev/null; "
                      f"git -C {FLAUZ_SRC} checkout -q {commit}", timeout=300)
