@@ -1,0 +1,24 @@
+{
+  "actor": {
+    "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPQD",
+    "kind": "agent"
+  },
+  "causation_id": null,
+  "correlation_id": null,
+  "event_id": "ev_01J8ZQ5V8K3T2B7N6X4R9DQPD3",
+  "event_type": "task.created",
+  "kind": "flauz.event",
+  "payload": {},
+  "seq": 42,
+  "stream": {
+    "id": "ws_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+    "kind": "workspace"
+  },
+  "subject": {
+    "entity_kind": "task",
+    "id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1"
+  },
+  "ts": "2026-09-21T13:45:00Z",
+  "unexpected_field": true,
+  "v": 1
+}

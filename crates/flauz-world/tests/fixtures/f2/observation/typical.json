@@ -1,0 +1,17 @@
+{
+  "v": 1,
+  "id": "obs_01J8ZQ5V8K3T2B7N6X4R9DQPJ8",
+  "version": 1,
+  "resource_id": "res_01J8ZQ5V8K3T2B7N6X4R9DQPC2",
+  "surface": "browser",
+  "actor": {
+    "kind": "agent",
+    "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPQD"
+  },
+  "observed_at": "2026-09-21T13:45:00Z",
+  "statement": "The dashboard shows 3 open tickets",
+  "verification": "observed",
+  "supporting_artifact_ids": [],
+  "verifying_evidence_id": null,
+  "contradicting_evidence_ids": []
+}

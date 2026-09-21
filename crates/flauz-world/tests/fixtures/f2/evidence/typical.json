@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "id": "evd_01J8ZQ5V8K3T2B7N6X4R9DQPMA",
+  "version": 1,
+  "claim_id": "claim_01J8ZQ5V8K3T2B7N6X4R9DQPK9",
+  "verifier": {
+    "kind": "user",
+    "id": "user-alice"
+  },
+  "verification_event_id": "ev_01J8ZQ5V8K3T2B7N6X4R9DQPD3",
+  "verified_at": "2026-09-21T13:45:00Z"
+}
