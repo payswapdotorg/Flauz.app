@@ -350,7 +350,9 @@ impl CommandPaletteCloseContext {
     /// Capture the close context from the palette mode the caller already
     /// holds directly — never through an entity read mid-update.
     fn capture(mode: PaletteMode) -> Self {
-        Self { files_mode: mode == PaletteMode::Files }
+        Self {
+            files_mode: mode == PaletteMode::Files,
+        }
     }
 }
 
@@ -9280,10 +9282,8 @@ impl WorkspaceView {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let restore = overlay_close_focus_restore(
-            previous.is_some(),
-            self.state.route == MainRoute::Tasks,
-        );
+        let restore =
+            overlay_close_focus_restore(previous.is_some(), self.state.route == MainRoute::Tasks);
         match restore {
             OverlayCloseFocusRestore::PreviousSurface => {
                 if let Some(handle) = previous {
@@ -9291,7 +9291,8 @@ impl WorkspaceView {
                 }
             }
             OverlayCloseFocusRestore::Composer => {
-                self.composer.update(cx, |input, cx| input.focus(window, cx));
+                self.composer
+                    .update(cx, |input, cx| input.focus(window, cx));
             }
             OverlayCloseFocusRestore::NoFocus => window.blur(),
         }
@@ -11937,8 +11938,10 @@ impl WorkspaceView {
     fn close_workspace_modal(&mut self, cx: &mut Context<Self>) {
         // WO-P2-017: remember whether the keyboard-shortcuts overlay is the
         // modal being closed; every close path for that overlay funnels here.
-        let closing_keyboard_shortcuts =
-            matches!(self.workspace_modal, Some(WorkspaceModal::KeyboardShortcuts));
+        let closing_keyboard_shortcuts = matches!(
+            self.workspace_modal,
+            Some(WorkspaceModal::KeyboardShortcuts)
+        );
         if let Some(WorkspaceModal::ModelAvailabilityNux { model_id, .. }) =
             self.workspace_modal.as_ref()
         {
