@@ -51,6 +51,9 @@ APT_DEPS = [
     "libxcb-shape0-dev", "libxcb-xfixes0-dev", "libxcb1-dev",
     "libxkbcommon-dev", "libxkbcommon-x11-dev", "pkg-config",
     "build-essential", "git", "curl", "unzip", "tar",
+    # lane diagnostics (run-1 lessons: fresh sandboxes lack them)
+    "imagemagick", "x11-apps", "mesa-utils", "strace", "x11-utils",
+    "xdotool", "procps",
 ]
 
 

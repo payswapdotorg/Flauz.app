@@ -60,3 +60,16 @@ Evidence: `evidence/run1-j01-02-gui-mapped-unrendered-xfce.png`,
 `evidence/run1-j01-04-relaunch-softwaregl.png`,
 `evidence/run1-j01-05-xwd-window-content-black.png`,
 `evidence/run1-j01-06-bare-xvfb-root-all-black.png`.
+
+### Run 2 — reproducibility proof (2026-09-21, E2B sandbox `ivmy0lvttlc2csmbklaay`, Flauz @ `f66965e`, full cold reprovision in 460 s)
+
+Fresh sandbox after the first expired (E2B pause-cleanup — the harness's
+destroy-and-recreate contract exercised for real): same build, same
+launch contract, same symptom — window maps at the identical geometry
+(1278×818 @ +10+85) and `xwd` window content is uniform black
+(mean RGB 0,0,0, std 0; `evidence/run2-j01-02-fresh-sandbox-xwd-black.png`).
+
+| Journey | Verdict |
+| --- | --- |
+| E-00 fresh desktop → build → launch | **WORKS** (460 s cold; fully reproducible) |
+| J-01 cold start | **BROKEN (P0, L-002 reproduced)** |
