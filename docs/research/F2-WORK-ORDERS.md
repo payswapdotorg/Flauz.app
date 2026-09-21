@@ -151,7 +151,15 @@ Rollback/recovery: crate is additive; revert the merge commit.
 Integration notes: no cargo dependency on flauz-world/flauz-context in Wave 1
   (kernel §1); the Lead's gate harness feeds flauz-world's EventEnvelope
   through the transport generic at integration.
-Status: DISPATCHED (2026-09-21)
+Status: MERGED (2026-09-21) — Lead gates 0-2 green: bundle verified on base
+  67e2b74 (post-ARCH-001 main — no members conflict); single worker commit
+  e2913a7 (36 files, +6375); Lead-local re-run: 60/60 tests (47 unit +
+  11 conformance + 2 exec_dynamics), fmt clean, clippy -D warnings clean,
+  flauz-world 46/46 unaffected on the branch; PR #43 CI green (both
+  platforms); merge 10825f6 + lock follow-up fb54936 = origin/main. One
+  members line; owned files only; empty Contract deviations. Worker B =
+  chat e83434a3 (agents tab; report archived at
+  docs/research/evidence/f2-arch-002/).
 ```
 
 ---
