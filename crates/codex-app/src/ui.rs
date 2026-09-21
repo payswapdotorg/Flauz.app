@@ -39568,16 +39568,12 @@ impl WorkspaceView {
             .tab_group()
             .tab_stop(true)
             .key_context("RemotePairingModal")
-            .on_action(
-                cx.listener(|this, _: &RemotePairingFocusNext, window, cx| {
-                    this.cycle_remote_pairing_focus(false, window, cx);
-                }),
-            )
-            .on_action(
-                cx.listener(|this, _: &RemotePairingFocusPrev, window, cx| {
-                    this.cycle_remote_pairing_focus(true, window, cx);
-                }),
-            )
+            .on_action(cx.listener(|this, _: &RemotePairingFocusNext, window, cx| {
+                this.cycle_remote_pairing_focus(false, window, cx);
+            }))
+            .on_action(cx.listener(|this, _: &RemotePairingFocusPrev, window, cx| {
+                this.cycle_remote_pairing_focus(true, window, cx);
+            }))
             .on_any_mouse_down(|_, _, cx| cx.stop_propagation())
             .child(
                 div()
