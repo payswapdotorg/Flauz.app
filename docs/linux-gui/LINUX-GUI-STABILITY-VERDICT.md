@@ -29,10 +29,31 @@ keyboard through the E2B desktop:
 
 Caveats that keep the verdict from `WORKS`: the fix is **not merged**
 (`main` still ships the L-002 P0); the app-server-failure error state is
-invisible (L-004); no logging backend exists (L-005); J-02..J-18 remain
-unre-run against the patched build; visual parity with the product's
-client-side decoration design is unverified on Linux (xfwm4 server-side
-decorations currently shown).
+invisible (L-004); no logging backend exists (L-005); visual parity with
+the product's client-side decoration design is unverified on Linux (xfwm4
+server-side decorations currently shown).
+
+## Run-4 update (2026-09-21, signed-out sub-battery)
+
+Run-4 (sandbox `izqinqfuxeylk815bn5sf`, auto-patched build, 469 s cold
+reprovision — third consecutive reproducible environment) advanced the
+matrix past cold start as far as the honest signed-out gate allows:
+
+- **J-01, J-11 WORKS**; **J-03, J-04, J-14 WORKS-WITH-DEFECTS**;
+  J-02/J-06..J-10/J-12/J-13/J-15/J-16/J-18 honestly auth-gated (Codex
+  sign-in = operator dependency, surfaced);
+- **J-05 = SILENT-NO-OP** (Projects "+" does nothing signed-out — L-009,
+  P2) and **J-17 Activity surface not found** signed-out (MISSING pending
+  signed-in verification) — the two open acceptance gaps;
+- L-006 corrected (Terminal honest toast confirmed; run-3 dead-click was a
+  coordinate miss); new findings L-007..L-012 registered;
+- Toasts never auto-dismiss (L-011); Workflows surfaces a raw JSON-RPC
+  error (L-008); composer drafts are lost across restart (L-010).
+
+Verdict UNCHANGED: **WORKS-WITH-DEFECTS** — the patched build's shell and
+navigation are solid and honest in most signed-out states, but the shipped
+`main` remains P0-broken (L-002) until LAB-003 merges, and J-05/J-17 leave
+open acceptance questions.
 
 The verdict will state, per acceptance area:
 

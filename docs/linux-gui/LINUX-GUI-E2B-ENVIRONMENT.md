@@ -83,3 +83,15 @@ fd.launch_gui(); fd.shot('fresh-boot')
 ```
 
 Cold rebuild measured time is recorded in `prov.log` per run.
+
+## Sandbox run record
+
+| Run | Sandbox ID | Date | Outcome |
+| --- | --- | --- | --- |
+| 1 | `ipoaz31c43jj5vtjy8qvf` | 2026-09-21 | baseline sweep; expired via pause-cleanup (~40 min idle limit on this plan) |
+| 2 | `ivmy0lvttlc2csmbklaay` | 2026-09-21 | reproducibility proof (460 s cold reprovision); L-002 reproduced identically |
+| 3 | `io23l6hz0z2g7mqoq54om` | 2026-09-21 | root-cause discrimination + in-lane fix validation + J-01; expired at the 1 h plan cap |
+| 4 | `izqinqfuxeylk815bn5sf` | 2026-09-21 | signed-out J-02..J-18 sub-battery (auto lane patch; 469 s cold reprovision) |
+
+Plan constraints re-confirmed every run: 1 h max create-timeout, ~40 min
+idle pause-cleanup — the destroy-and-recreate contract is mandatory.

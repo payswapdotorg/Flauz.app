@@ -103,3 +103,45 @@ composited), `evidence/run3-vkcube-control.png` (Vulkan present control),
 `evidence/run3-j01-settings-appearance.png`,
 `evidence/run3-appserver-live-transparent-still.png` (app-server fixed
 but still transparent pre-visual-patch — the two defects are independent).
+
+### Run 4 — signed-out J-02..J-18 sub-battery (2026-09-21, E2B sandbox `izqinqfuxeylk815bn5sf`, Flauz @ `f66965e` + auto lane patch + native codex binary, cold reprovision 469 s)
+
+The patched-build battery ran as far as the honest signed-out gate allows.
+Codex auth remains operator-gated: every journey that needs live model
+execution is honestly UNAVAILABLE-BUT-HONEST until a one-time operator
+sign-in inside E2B. Interaction methodology upgraded: pixel-row scanning +
+bounding-box cross-checks before every click (run-3's L-006 "dead click"
+was a coordinate miss — see the correction below).
+
+| Journey | Verdict | Detail |
+| --- | --- | --- |
+| J-01 Start a project (re-verify) | **WORKS** | Full shell renders on the auto-patched build (469 s cold provision, fully reproducible). Promo modal "Introducing GPT-5.6-Sol" at cold start: primary button dismisses + switches model to GPT-5.6-Sol (honest action) but there is NO secondary dismiss affordance (L-012, P3). |
+| J-02 Understand what the agent knows (Context) | **UNAVAILABLE-BUT-HONEST (auth-gated)** | No Context surface is reachable signed-out (no task exists); surfaces that would host it (composer, task views) show the honest sign-in gate. Deeper test needs Codex auth (operator-gated). |
+| J-03 Recover a task | **WORKS-WITH-DEFECTS** | Sidebar expanded state persists across full restart (positive), but typed composer draft is LOST with no resume prompt (L-010, P2). In-task resume needs auth (operator-gated). |
+| J-04 Discover a capability gap | **WORKS-WITH-DEFECTS** | Sidebar sweep, pixel-verified clicks: Repository → honest empty state; Pull requests → honest dependency error + actionable buttons; Plugins → marketplace renders; Workflows → raw protocol error (L-008, P2); Terminal → honest toast "Select a task before opening a terminal."; Browser → honest toast "Open a chat before opening the Browser." (L-006 corrected to P3 wording pass: task vs chat vocabulary). Toasts never auto-dismiss (L-011, P3). |
+| J-05 Add an environment / project | **SILENT-NO-OP (P2)** | The "Projects +" affordance does nothing visible signed-out — no dialog, no form, no toast (L-009). Inconsistent with "New chat"'s honest sign-in gate. Environment-adding surfaces live in Settings (Plugins/MCP servers/Browser/Computer use/Connections) — reachable and rendering; creating real environments needs auth. |
+| J-06..J-10, J-12, J-13, J-16 | **UNAVAILABLE-BUT-HONEST (auth-gated)** | Multi-surface coordination, parallel agents, human takeover, evidence states, reusable workflows, collaboration, resource conflicts all require a live model-backed task. The signed-out gates are honest (sign-in card with 4 auth paths; task-required toasts). |
+| J-11 Discover saved work later (cold-start discovery paths) | **WORKS** | ≥2 discovery paths verified: (1) persistent sidebar (all sections), (2) command palette with full inventory + working search (Suggested: New chat Ctrl+N / Open folder Ctrl+O; Settings pages; Thread: New standalone chat Ctrl+Alt+O; Navigation: Search chats Ctrl+G / Back Ctrl+[ / Forward Ctrl+]), (3) keyboard shortcuts, (4) first-run promo modal. Palette search "sidebar" → "Toggle sidebar (Ctrl+B)" works. |
+| J-14 Switch model | **WORKS-WITH-DEFECTS** | Discovery path verified: promo modal switches composer model to GPT-5.6-Sol (honest, visible in composer selector). Model/effort/mode selectors present in composer. State preservation across task switch needs auth (operator-gated). |
+| J-15 Switch environment | **UNAVAILABLE-BUT-HONEST (auth-gated)** | No environment exists to switch signed-out; settings surfaces for environments render. |
+| J-17 Human attention (Activity) | **MISSING (signed-out surface)** | No Activity surface found in sidebar or palette inventory (no "Activity" entry). Either activity surfaces are chat/task-scoped (auth-gated) or not yet implemented in this build — needs signed-in verification before final classification. |
+| J-18 Discover automation | **UNAVAILABLE-BUT-HONEST (auth-gated)** | Workflows surface exists (Teach a workflow / Published versions / Durable instances) — the discovery path renders; using it needs auth, and its signed-out state shows the raw error (L-008). No silent auto-scheduling observed. |
+
+Sidebar state defect: L-007 (P3) — accidental collapse possible (toggle
+adjacent to "Back to app"), no visible restore affordance (Ctrl+B and the
+palette command work; the empty-state copy references the hidden sidebar).
+
+Evidence: `evidence/run4-j01-launch.png`, `run4-modal-try-sol.png`,
+`run4-j04-repository.png`, `run4-j04-pullrequests.png`,
+`run4-j04-plugins.png`, `run4-j04-workflows.png`,
+`run4-j04-settings.png`, `run4-j04-terminal-toast.png`,
+`run4-j04-browser-toast.png`, `run4-j05-projects-plus-silent.png`,
+`run4-j03-draft-typed.png`, `run4-j03-restart-draft-lost.png`,
+`run4-j11-palette.png`, `run4-j11-palette-scrolled.png`,
+`run4-j11-palette-sidebar.png`, `run4-l007-sidebar-collapsed.png`,
+`run4-l007-ctrlb-restore.png`.
+
+Methodology note (harness lesson): VLM coordinate estimates drift 15-60 px
+on dense UI rows. Every journey click must be pixel-verified (row scanning /
+bounding-box cross-check) — a lesson now baked into the harness discipline
+and the reason L-006 was corrected.
