@@ -324,6 +324,25 @@ fn overlay_close_focus_restore(
     }
 }
 
+/// UX-003 N5 (the F1 a11y carry-over): whether this render is the one that
+/// must transfer keyboard focus to the terminal dock's PTY input. The dock
+/// open path (Ctrl+`, the palette/sidebar/footer rows, the bottom-panel
+/// toggle) arms a pending transfer; the transfer itself fires on the first
+/// render that mounts the PTY input surface — a freshly spawned tab renders
+/// its input only once the shell is running — so typed input lands in the
+/// PTY instead of staying on the composer. Occluding overlays (a workspace
+/// modal, the command palette, the Activity view) defer the transfer: the
+/// dock is not an honest focus target behind them. This mirrors the
+/// 017/N1 family's explicit-focus-transfer contract — the transfer is
+/// armed, tested, and never incidental.
+fn terminal_dock_focus_transfer_due(
+    focus_pending: bool,
+    pty_input_mounted: bool,
+    overlay_open: bool,
+) -> bool {
+    focus_pending && pty_input_mounted && !overlay_open
+}
+
 /// PM L113 two-Escape contract for the keyboard-shortcuts overlay: the first
 /// Escape clears the query and keeps the overlay open (the search keeps
 /// focus); only an empty query closes the overlay — and the close is what
@@ -1914,6 +1933,8 @@ gpui::actions!(
         ResetKeyboardShortcutsFocusPrev,
         AllowAllBrowserSitesFocusNext,
         AllowAllBrowserSitesFocusPrev,
+        ModelAvailabilityNuxFocusNext,
+        ModelAvailabilityNuxFocusPrev,
         RemotePairingFocusNext,
         RemotePairingFocusPrev,
         RemoteConfirmationFocusNext,
@@ -5275,6 +5296,14 @@ pub fn run() {
                 KeyBinding::new("down", ActivityViewSelectNext, Some("ActivityView")),
                 KeyBinding::new("enter", ActivityViewConfirm, Some("ActivityView")),
                 KeyBinding::new("escape", Escape, Some("ActivityView")),
+                // UX-003: the model-availability NUX modal's one-Escape
+                // contract — the modal auto-focuses its own handle on mount
+                // (the 019 request-once pattern), so this scoped binding
+                // guarantees the Escape action dispatches in the modal's
+                // context and bubbles to the overlay's existing Escape
+                // handler, instead of riding the keystroke-observer
+                // last-resort fallback the pristine boot depended on.
+                KeyBinding::new("escape", Escape, Some("ModelAvailabilityNuxModal")),
                 KeyBinding::new(
                     "tab",
                     RemoveLocalProjectFocusNext,
@@ -5362,6 +5391,16 @@ pub fn run() {
                     "shift-tab",
                     PluginInstallConfirmationFocusPrev,
                     Some("PluginInstallConfirmationModal"),
+                ),
+                KeyBinding::new(
+                    "tab",
+                    ModelAvailabilityNuxFocusNext,
+                    Some("ModelAvailabilityNuxModal"),
+                ),
+                KeyBinding::new(
+                    "shift-tab",
+                    ModelAvailabilityNuxFocusPrev,
+                    Some("ModelAvailabilityNuxModal"),
                 ),
             ]);
             let default_bounds =
@@ -5956,6 +5995,24 @@ struct WorkspaceView {
     /// Consumed on the first render after the keyboard-shortcuts overlay
     /// closes to restore focus (WO-P2-017) — the request-once house shape.
     keyboard_shortcuts_close_restore: bool,
+    /// Pending PTY focus transfer armed by the terminal dock open path
+    /// (UX-003 N5); consumed by the first render that mounts the PTY input
+    /// surface.
+    terminal_dock_focus_pending: bool,
+    /// Focus captured when the dock open path transferred focus to the PTY
+    /// input (UX-003 N5); restored when the dock surface goes away, per the
+    /// WO-P2-017 close contract.
+    focus_before_terminal_dock: Option<FocusHandle>,
+    /// Consumed on the first render after the terminal dock surface goes
+    /// away to restore focus (UX-003 N5) — the request-once house shape.
+    terminal_dock_close_restore: bool,
+    /// Auto-focused when the model-availability NUX modal mounts
+    /// (UX-003): the modal's keyboard focus handle, so the one-Escape
+    /// contract is guaranteed to reach the modal (WO-P2-019 pattern).
+    model_availability_nux_focus: FocusHandle,
+    /// Request-once guard for `model_availability_nux_focus` (UX-003) —
+    /// the WO-P2-019 house shape.
+    model_availability_nux_focus_requested: bool,
     about_window: Option<AnyWindowHandle>,
     process_manager_refresh_generation: u64,
     pending_conversation_markdown_copy: Option<PendingConversationMarkdownCopy>,
@@ -6033,6 +6090,7 @@ impl WorkspaceView {
         let account_logout_focus = cx.focus_handle();
         let plugin_install_confirmation_focus = cx.focus_handle();
         let activity_view_focus = cx.focus_handle();
+        let model_availability_nux_focus = cx.focus_handle();
         let initial_appearance_preferences = AppearancePreferences::default();
         let initial_appearance_variant = active_appearance_variant(cx);
         let initial_appearance_palette = initial_appearance_preferences
@@ -7178,6 +7236,11 @@ impl WorkspaceView {
             workspace_modal: None,
             focus_before_keyboard_shortcuts: None,
             keyboard_shortcuts_close_restore: false,
+            terminal_dock_focus_pending: false,
+            focus_before_terminal_dock: None,
+            terminal_dock_close_restore: false,
+            model_availability_nux_focus,
+            model_availability_nux_focus_requested: false,
             about_window: None,
             process_manager_refresh_generation: 0,
             pending_conversation_markdown_copy: None,
@@ -7970,6 +8033,7 @@ impl WorkspaceView {
         let previous_location = NavigationLocation::from_state(&self.state);
         let previous_selected_task_id = self.state.selected_task_id.clone();
         let previous_composer = self.state.composer.clone();
+        let terminal_dock_was_open = self.state.terminal_dock_open;
         let previous_side_composer = self
             .state
             .side_chat
@@ -7977,6 +8041,18 @@ impl WorkspaceView {
             .map(|side| side.composer.clone());
         let effects = reduce(&mut self.state, action);
         let selected_task_changed = previous_selected_task_id != self.state.selected_task_id;
+        // UX-003 N5 (the F1 a11y carry-over): the terminal dock open path —
+        // Ctrl+` on a selected live chat, the palette/sidebar/footer rows,
+        // and the bottom-panel toggle all land here — arms the explicit
+        // focus transfer to the PTY input instead of leaving keyboard focus
+        // on the composer (the 017/N1 family contract; the render consumes
+        // the arming once the PTY input surface mounts). A fresh capture per
+        // open cycle: the previous cycle's restore already consumed its own.
+        if !terminal_dock_was_open && self.state.terminal_dock_open {
+            self.terminal_dock_focus_pending = true;
+            self.focus_before_terminal_dock = None;
+            self.terminal_dock_close_restore = false;
+        }
         if selected_task_changed
             || (may_restore_composer && previous_composer != self.state.composer)
         {
@@ -10215,6 +10291,40 @@ impl WorkspaceView {
                 .contains_focused(window, cx)
             {
                 self.plugin_install_confirmation_focus.focus(window);
+                window.focus_next();
+            }
+        }
+        cx.stop_propagation();
+    }
+
+    /// UX-003: the model-availability NUX modal completes the 019 honest-
+    /// modal-keyboard wiring — Tab/Shift+Tab stay confined to the modal's
+    /// focusable set (the dismiss affordances) instead of falling through
+    /// to the background surface behind the overlay.
+    fn cycle_model_availability_nux_focus(
+        &mut self,
+        backwards: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if backwards {
+            window.focus_prev();
+            if self.model_availability_nux_focus.is_focused(window)
+                || !self
+                    .model_availability_nux_focus
+                    .contains_focused(window, cx)
+            {
+                self.model_availability_nux_focus.focus(window);
+                window.focus_next();
+                window.focus_next();
+            }
+        } else {
+            window.focus_next();
+            if !self
+                .model_availability_nux_focus
+                .contains_focused(window, cx)
+            {
+                self.model_availability_nux_focus.focus(window);
                 window.focus_next();
             }
         }
@@ -42408,6 +42518,20 @@ impl WorkspaceView {
                     .bg(cx.theme().popover)
                     .shadow_xl()
                     .occlude()
+                    .track_focus(&self.model_availability_nux_focus)
+                    .tab_group()
+                    .tab_stop(true)
+                    .key_context("ModelAvailabilityNuxModal")
+                    .on_action(cx.listener(
+                        |this, _: &ModelAvailabilityNuxFocusNext, window, cx| {
+                            this.cycle_model_availability_nux_focus(false, window, cx);
+                        },
+                    ))
+                    .on_action(cx.listener(
+                        |this, _: &ModelAvailabilityNuxFocusPrev, window, cx| {
+                            this.cycle_model_availability_nux_focus(true, window, cx);
+                        },
+                    ))
                     .on_any_mouse_down(|_, _, cx| cx.stop_propagation())
                     .child(
                         div()
@@ -44384,6 +44508,63 @@ impl Render for WorkspaceView {
             let previous = self.focus_before_keyboard_shortcuts.take();
             self.apply_overlay_close_focus_restore(previous, window, cx);
         }
+        // UX-003 N5: the terminal dock open path's explicit PTY focus
+        // transfer, and its 017-family close restore. The dock surface
+        // mounts only on the Tasks route with a selected chat; the PTY
+        // input mounts only when the active tab's shell is running (a
+        // freshly spawned tab starts as "Shell is starting…" without an
+        // input). Occluding overlays defer the transfer so focus never
+        // lands on the hidden dock behind them; the pending transfer stays
+        // armed until the overlay closes or the dock surface goes away.
+        let terminal_dock_surface_mounted = self.state.terminal_dock_open
+            && self.state.route == MainRoute::Tasks
+            && self.state.selected_task_id.is_some();
+        let terminal_pty_input_mounted = terminal_dock_surface_mounted
+            && self
+                .state
+                .selected_task_id
+                .as_deref()
+                .and_then(|task_id| self.state.terminal.active_tab_for(task_id))
+                .is_some_and(|tab| tab.running && !tab.stopping);
+        let terminal_dock_overlay_open = self.workspace_modal.is_some()
+            || self.command_palette.is_some()
+            || self.state.activity_view_visible;
+        if terminal_dock_focus_transfer_due(
+            self.terminal_dock_focus_pending,
+            terminal_pty_input_mounted,
+            terminal_dock_overlay_open,
+        ) {
+            // The transfer fires exactly once per open cycle, on the first
+            // render whose PTY input can actually receive the keystrokes.
+            self.terminal_dock_focus_pending = false;
+            if self.focus_before_terminal_dock.is_none() {
+                self.focus_before_terminal_dock = window.focused(cx);
+            }
+            self.terminal_dock_close_restore = true;
+            self.terminal_input
+                .update(cx, |input, cx| input.focus(window, cx));
+        } else if !terminal_dock_surface_mounted {
+            // The open transfer belongs to a mounted dock surface: a dock
+            // that lost its surface (closed, narrowed away, route or
+            // selection change) never transfers later.
+            self.terminal_dock_focus_pending = false;
+        }
+        if !terminal_dock_surface_mounted
+            && self.terminal_dock_close_restore
+            && !terminal_dock_overlay_open
+        {
+            // UX-003 N5: the dock close path applies the WO-P2-017 restore
+            // contract — the surface focused when the open path transferred
+            // focus, else the composer house default when rendered, else no
+            // element focus — consumed exactly once, so the PTY input's
+            // disappearance never strands keyboard focus on a dropped
+            // surface. An open overlay defers the restore (never land focus
+            // behind a modal/palette/Activity surface); the next dock open
+            // re-arms the cycle.
+            self.terminal_dock_close_restore = false;
+            let previous = self.focus_before_terminal_dock.take();
+            self.apply_overlay_close_focus_restore(previous, window, cx);
+        }
         if matches!(self.workspace_modal, Some(WorkspaceModal::RemotePairing)) {
             if !self.remote_pairing_focus_requested {
                 self.remote_pairing_focus.focus(window);
@@ -44477,6 +44658,24 @@ impl Render for WorkspaceView {
             }
         } else {
             self.account_logout_focus_requested = false;
+        }
+        if matches!(
+            self.workspace_modal,
+            Some(WorkspaceModal::ModelAvailabilityNux { .. })
+        ) {
+            // UX-003 (the F1 a11y carry-over): the fresh-profile NUX modal
+            // auto-focuses its own handle on mount — the 019 request-once
+            // shape — so the modal, not whatever held focus below it, owns
+            // the keyboard. The scoped Escape binding then guarantees the
+            // one-Escape dismissal reaches the overlay's Escape handler
+            // through the modal's focus path (contracted, not the
+            // keystroke-observer last resort the pristine boot rode).
+            if !self.model_availability_nux_focus_requested {
+                self.model_availability_nux_focus.focus(window);
+                self.model_availability_nux_focus_requested = true;
+            }
+        } else {
+            self.model_availability_nux_focus_requested = false;
         }
         if self
             .state
@@ -47923,8 +48122,17 @@ fn canonical_shortcut_key(raw_key: &str) -> Option<String> {
         "home" => "Home",
         "end" => "End",
         "insert" => "Insert",
-        "bracketleft" | "х" => "[",
-        "bracketright" | "ъ" => "]",
+        // UX-003 N6: a chord carrying Shift reports the SHIFTED symbol as the
+        // key on Linux (GPUI's `Keystroke::from_xkb` maps the bracket keysyms
+        // to "}" / "{" — and the X11 compose path to the keysym names
+        // "braceright" / "braceleft"), while the registry expresses the
+        // bracket chords with the unshifted key plus an explicit Shift
+        // modifier. Canonicalizing the shifted forms to the unshifted
+        // bracket — the same physical-position normalization the Cyrillic
+        // layout forms (х / ъ) already establish — makes the accelerator
+        // tokens match on every platform and key path.
+        "bracketleft" | "braceleft" | "{" | "х" => "[",
+        "bracketright" | "braceright" | "}" | "ъ" => "]",
         "backquote" | "grave" => "`",
         "comma" => ",",
         "period" => ".",
@@ -48784,9 +48992,10 @@ mod tests {
         CONVERSATION_MARKDOWN_TRUNCATED_NOTICE, ComposerSlashAvailability, DiffLineKind,
         DiffReviewRow, INIT_AGENTS_PROMPT, KeyboardShortcutGroup, MAX_CONVERSATION_MARKDOWN_BYTES,
         MAX_NAVIGATION_HISTORY_ENTRIES, MAX_THREAD_FIND_HISTORY_PAGES, MAX_THREAD_FIND_MATCHES,
-        MODEL_AVAILABILITY_NUX_SOL_COPY, NavigationHistory, NavigationLocation, PaletteCommand,
-        PaletteGroup, ReasoningEffortStep, SettingsSection, ShellWidthClass, TaskCopyKind,
-        ThreadFindSurface, UNREAD_ATTENTION_DOT_TOOLTIP, accelerators_conflict,
+        MODEL_AVAILABILITY_NUX_SOL_COPY, NEXT_CHAT_SHORTCUTS, NavigationHistory,
+        NavigationLocation, PREVIOUS_CHAT_SHORTCUTS, PaletteCommand, PaletteGroup,
+        ReasoningEffortStep, SettingsSection, ShellWidthClass, TaskCopyKind, ThreadFindSurface,
+        UNREAD_ATTENTION_DOT_TOOLTIP, accelerator_from_keystroke, accelerators_conflict,
         account_daily_usage_rows, account_device_code, account_refresh_disabled,
         activity_view_bell_entry, activity_view_count_label, activity_view_rows, adjacent_task_id,
         app_chatgpt_url, app_mention_prompt, appearance_color, appearance_color_value,
@@ -48798,12 +49007,12 @@ mod tests {
         bounded_settings_search_query, bounded_thread_find_query, browser_display_url,
         browser_navigation_url, browser_pane_chord_action, browser_pane_focused,
         browser_surface_coordinates, browser_url_copy_value, build_plugin_catalog_sections,
-        case_insensitive_match_ranges, command_palette_entry, command_task_slot,
-        composer_app_commands, composer_at_skill_commands, composer_desktop_app_commands,
-        composer_file_query, composer_file_search_max_height, composer_model_picker_items,
-        composer_model_placeholder, composer_model_retry_visible, composer_plugin_commands,
-        composer_service_tier_command_for_query, composer_service_tier_commands,
-        composer_skill_command_for_query, composer_skill_commands,
+        canonical_shortcut_key, case_insensitive_match_ranges, command_palette_entry,
+        command_task_slot, composer_app_commands, composer_at_skill_commands,
+        composer_desktop_app_commands, composer_file_query, composer_file_search_max_height,
+        composer_model_picker_items, composer_model_placeholder, composer_model_retry_visible,
+        composer_plugin_commands, composer_service_tier_command_for_query,
+        composer_service_tier_commands, composer_skill_command_for_query, composer_skill_commands,
         composer_slash_command_for_prefix, connection_send_failure, decode_mcp_form_image_data_url,
         default_branch_name, diff_file_review_rows, diff_file_sections,
         extract_assistant_file_citations, extract_code_comment_findings, fast_service_tier_id,
@@ -48832,9 +49041,9 @@ mod tests {
         sidebar_layout_width, sidebar_task_list_visible, sidebar_terminal_affordance,
         split_diff_rows, startup_recovery_card, status_context_total_label,
         status_rate_limit_label, status_rate_limit_reset_metadata_at, task_slot_id,
-        task_workspace_active, terminal_browser_affordances_available, terminal_tab_label,
-        thread_find_right_offset_for_shell, timeline_activity_content,
-        turn_diff_update_is_accepted, usage_limit_reset_summary_copy,
+        task_workspace_active, terminal_browser_affordances_available,
+        terminal_dock_focus_transfer_due, terminal_tab_label, thread_find_right_offset_for_shell,
+        timeline_activity_content, turn_diff_update_is_accepted, usage_limit_reset_summary_copy,
         usage_settings_requires_sign_in, validate_plugin_logo_dimensions, worktree_fork_queue_full,
         worktree_use_disabled,
     };
@@ -54427,5 +54636,260 @@ mod tests {
             &mut Window,
             &mut Context<WorkspaceView>,
         ) = WorkspaceView::close_command_palette;
+    }
+
+    #[test]
+    fn terminal_dock_focus_transfer_requires_pending_input_and_no_overlay() {
+        // UX-003 N5 (the F1 a11y carry-over): the transfer to the PTY input
+        // fires only when the open path armed it, the PTY input surface is
+        // actually mounted (a freshly spawned tab renders "Shell is
+        // starting…" until the shell runs — the input mounts exactly when
+        // `tab.running && !tab.stopping`), and no occluding overlay owns the
+        // keyboard. Every other combination must NOT steal focus from the
+        // composer: never incidental, never behind a modal/palette/Activity
+        // surface, never for an unmounted input.
+        assert!(terminal_dock_focus_transfer_due(true, true, false));
+        // Fresh tab, shell not running yet: the arming stays pending.
+        assert!(!terminal_dock_focus_transfer_due(true, false, false));
+        // An occluding overlay defers the transfer (the dock is not an
+        // honest focus target behind it).
+        assert!(!terminal_dock_focus_transfer_due(true, true, true));
+        // No arming: the dock never steals focus without an open intent.
+        assert!(!terminal_dock_focus_transfer_due(false, true, false));
+    }
+
+    #[test]
+    fn terminal_dock_open_path_transfers_focus_and_the_close_path_restores_it() {
+        // UX-003 N5 wiring (the 017/N1 family contract — focus is window
+        // state, which no pure reducer test can observe, so the wiring is
+        // asserted against this file's own source per the WO-P2-011 /
+        // WO-UX-002 pattern; the lab PTY probe re-verifies the behavior).
+        let source = include_str!("ui.rs");
+
+        // The dispatch funnel — where Ctrl+`, the palette/sidebar/footer
+        // rows, and the bottom-panel toggle all land — arms the transfer on
+        // the dock's false→true open transition, AFTER the reducer ran so
+        // the arming sees the post-reduce state.
+        let dispatch_body = impl_method_body(source, "fn dispatch(");
+        let reduce_at = match dispatch_body.find("let effects = reduce(&mut self.state, action);") {
+            Some(at) => at,
+            None => panic!("the dispatch funnel runs the reducer"),
+        };
+        let arming_at = match dispatch_body
+            .find("if !terminal_dock_was_open && self.state.terminal_dock_open {")
+        {
+            Some(at) => at,
+            None => panic!("the dock open transition is detected in dispatch"),
+        };
+        assert!(reduce_at < arming_at);
+        assert!(dispatch_body.contains("self.terminal_dock_focus_pending = true;"));
+
+        // The render consumes the arming through the tested predicate and
+        // moves focus into the PTY input, capturing the surface that held
+        // focus first (the 017 previous-surface contract shape).
+        let render_impl_at = match source.find("impl Render for WorkspaceView") {
+            Some(at) => at,
+            None => panic!("the WorkspaceView render impl exists in this file's source"),
+        };
+        let render_body = impl_method_body(&source[render_impl_at..], "fn render(");
+        assert!(
+            render_body
+                .contains("let terminal_dock_surface_mounted = self.state.terminal_dock_open")
+        );
+        assert!(render_body.contains(".is_some_and(|tab| tab.running && !tab.stopping)"));
+        assert!(render_body.contains("terminal_dock_focus_transfer_due("));
+        assert!(render_body.contains("self.focus_before_terminal_dock = window.focused(cx);"));
+        assert!(render_body.contains(".update(cx, |input, cx| input.focus(window, cx));"));
+        // The close path applies the same restore contract the palette and
+        // keyboard-shortcuts overlays use (previous surface, else the
+        // composer house default, else no focus), consumed exactly once.
+        assert!(render_body.contains("let previous = self.focus_before_terminal_dock.take();"));
+        assert!(
+            render_body.contains("self.apply_overlay_close_focus_restore(previous, window, cx);")
+        );
+    }
+
+    #[test]
+    fn model_availability_nux_modal_owns_the_keyboard_with_one_escape() {
+        // UX-003 (the F1 a11y carry-over, A11Y-BINDING-VERDICT §3): the
+        // fresh-profile "Introducing GPT-5.6-Sol" modal must not swallow the
+        // keyboard. It joins the 019 modal family exactly — Tab/Shift+Tab
+        // confined to its own context cycling the dismiss affordances, its
+        // focus handle auto-focused on mount (request-once), and a scoped
+        // escape binding so ONE Escape dispatches through the modal's focus
+        // path to the overlay's existing Escape handler instead of riding
+        // the keystroke-observer last resort the pristine boot depended on.
+        // Focus is window state, which no pure reducer test can observe, so
+        // the wiring is asserted against this file's own source (the
+        // WO-P2-019 family test pattern).
+        let source = include_str!("ui.rs");
+
+        // Tab/Shift+Tab resolve only inside the modal's key context.
+        let next = key_binding_region(source, "ModelAvailabilityNuxFocusNext");
+        assert!(next.contains("\"tab\""));
+        assert!(next.contains("Some(\"ModelAvailabilityNuxModal\")"));
+        let prev = key_binding_region(source, "ModelAvailabilityNuxFocusPrev");
+        assert!(prev.contains("\"shift-tab\""));
+        assert!(prev.contains("Some(\"ModelAvailabilityNuxModal\")"));
+
+        // The one-Escape contract: the modal's context owns a scoped escape
+        // binding (token-level, so a formatting pass cannot sever it).
+        let block_start = match source.find("cx.bind_keys([") {
+            Some(at) => at,
+            None => panic!("the bind_keys block exists in this file's source"),
+        };
+        let block_end = match source[block_start..].find("]);") {
+            Some(offset) => block_start + offset,
+            None => panic!("the bind_keys block closes"),
+        };
+        let block = &source[block_start..block_end];
+        let escape_binding = block.split("KeyBinding::new(").find(|entry| {
+            entry.contains("Some(\"ModelAvailabilityNuxModal\")")
+                && entry.contains("\"escape\"")
+                && entry.contains("Escape")
+        });
+        assert!(
+            escape_binding.is_some(),
+            "the ModelAvailabilityNuxModal context carries a scoped escape binding"
+        );
+
+        // The cycle handler mirrors the evidenced 019 family exactly.
+        let body = impl_method_body(source, "fn cycle_model_availability_nux_focus(");
+        assert_eq!(body.matches("window.focus_next();").count(), 4);
+        assert_eq!(body.matches("window.focus_prev();").count(), 1);
+        assert_eq!(body.matches(".contains_focused(window, cx)").count(), 2);
+        assert_eq!(body.matches("is_focused(window)").count(), 1);
+        assert_eq!(body.matches(".focus(window);").count(), 2);
+        assert!(body.contains("cx.stop_propagation();"));
+        assert!(body.contains("model_availability_nux_focus"));
+        // The scanned body is bounded: it ends before the next method.
+        assert!(!body.contains("fn prompt_for_workspace"));
+
+        // The modal's panel tracks the focus handle under the same context
+        // and routes both focus-cycle actions to the shared handler.
+        let modal = impl_method_body(source, "fn render_workspace_modal(");
+        let nux_at = match modal.find("WorkspaceModal::ModelAvailabilityNux {") {
+            Some(at) => at,
+            None => panic!("the ModelAvailabilityNux arm exists"),
+        };
+        let fork_at = match modal.find("WorkspaceModal::PendingWorktreeFork =>") {
+            Some(at) => at,
+            None => panic!("the PendingWorktreeFork arm exists"),
+        };
+        assert!(nux_at < fork_at);
+        let branch = &modal[nux_at..fork_at];
+        assert!(branch.contains(".track_focus(&self.model_availability_nux_focus)"));
+        assert!(branch.contains(".key_context(\"ModelAvailabilityNuxModal\")"));
+        assert!(branch.contains("&ModelAvailabilityNuxFocusNext"));
+        assert!(branch.contains("this.cycle_model_availability_nux_focus(false, window, cx);"));
+        assert!(branch.contains("&ModelAvailabilityNuxFocusPrev"));
+        assert!(branch.contains("this.cycle_model_availability_nux_focus(true, window, cx);"));
+        // The scanned body is bounded: it ends before the next method.
+        assert!(!modal.contains("fn render_workspace_modal_overlay"));
+
+        // The mount auto-focus uses the 019 request-once shape inside the
+        // WorkspaceView render: the modal's handle takes the keyboard the
+        // first frame it is visible, and the guard resets when it closes.
+        let render_impl_at = match source.find("impl Render for WorkspaceView") {
+            Some(at) => at,
+            None => panic!("the WorkspaceView render impl exists in this file's source"),
+        };
+        let render_body = impl_method_body(&source[render_impl_at..], "fn render(");
+        assert!(render_body.contains("Some(WorkspaceModal::ModelAvailabilityNux { .. })"));
+        assert!(render_body.contains("self.model_availability_nux_focus.focus(window);"));
+        assert!(render_body.contains("self.model_availability_nux_focus_requested = true;"));
+        assert!(render_body.contains("self.model_availability_nux_focus_requested = false;"));
+    }
+
+    #[test]
+    fn bracket_swap_chords_resolve_from_the_shifted_linux_key_forms() {
+        // UX-003 N6 (A11Y-BINDING-VERDICT §2): on Linux, GPUI reports
+        // Ctrl+Shift+] / Ctrl+Shift+[ with the SHIFTED symbol as the key
+        // (`Keystroke::from_xkb` maps braceright/braceleft to "}" / "{"),
+        // while the registry expresses the chords with the unshifted
+        // bracket plus an explicit Shift modifier — the normalized
+        // accelerators never matched, so the keystroke interceptor fell
+        // through and the chord silently no-op'd from a selected chat,
+        // while Ctrl+PageDown (whose key needs no Shift) kept working.
+        // The fix canonicalizes the shifted bracket forms to the unshifted
+        // bracket key — the same physical-position normalization the
+        // Cyrillic layout forms (х / ъ) already established.
+        assert_eq!(canonical_shortcut_key("}").as_deref(), Some("]"));
+        assert_eq!(canonical_shortcut_key("{").as_deref(), Some("["));
+        // The keysym-name form the X11 compose path reports.
+        assert_eq!(canonical_shortcut_key("braceright").as_deref(), Some("]"));
+        assert_eq!(canonical_shortcut_key("braceleft").as_deref(), Some("["));
+        // The unshifted and keysym-name forms keep resolving.
+        assert_eq!(canonical_shortcut_key("]").as_deref(), Some("]"));
+        assert_eq!(canonical_shortcut_key("[").as_deref(), Some("["));
+        assert_eq!(canonical_shortcut_key("bracketright").as_deref(), Some("]"));
+        assert_eq!(canonical_shortcut_key("bracketleft").as_deref(), Some("["));
+
+        // The exact keystroke shape Linux produces for the chords (shifted
+        // key symbol + ctrl/shift modifiers) now resolves to the
+        // unshifted-bracket accelerators the registry carries.
+        let shifted_next = gpui::Keystroke {
+            modifiers: gpui::Modifiers {
+                control: true,
+                shift: true,
+                ..Default::default()
+            },
+            key: "}".to_owned(),
+            key_char: None,
+        };
+        let shifted_previous = gpui::Keystroke {
+            modifiers: gpui::Modifiers {
+                control: true,
+                shift: true,
+                ..Default::default()
+            },
+            key: "{".to_owned(),
+            key_char: None,
+        };
+        let next = match accelerator_from_keystroke(&shifted_next) {
+            Some(accelerator) => accelerator,
+            None => panic!("the shifted next-chord keystroke resolves"),
+        };
+        let previous = match accelerator_from_keystroke(&shifted_previous) {
+            Some(accelerator) => accelerator,
+            None => panic!("the shifted previous-chord keystroke resolves"),
+        };
+        assert_eq!(next, "Ctrl+Shift+]");
+        assert_eq!(previous, "Ctrl+Shift+[");
+
+        // The registry side: the Linux chords normalize to exactly those
+        // tokens, and each is owned by exactly one registry command — the
+        // interceptor's `exact_command` lookup now finds previousThread /
+        // nextThread instead of silently falling through.
+        if cfg!(not(target_os = "macos")) {
+            assert_eq!(
+                normalized_accelerator(NEXT_CHAT_SHORTCUTS[0]),
+                normalized_accelerator(&next)
+            );
+            assert_eq!(
+                normalized_accelerator(PREVIOUS_CHAT_SHORTCUTS[0]),
+                normalized_accelerator(&previous)
+            );
+            let next_owners = ACTIVE_KEYBOARD_SHORTCUTS
+                .iter()
+                .filter(|item| {
+                    item.shortcuts.iter().any(|binding| {
+                        normalized_accelerator(binding) == normalized_accelerator(&next)
+                    })
+                })
+                .map(|item| item.id)
+                .collect::<Vec<_>>();
+            assert_eq!(next_owners, ["nextThread"]);
+            let previous_owners = ACTIVE_KEYBOARD_SHORTCUTS
+                .iter()
+                .filter(|item| {
+                    item.shortcuts.iter().any(|binding| {
+                        normalized_accelerator(binding) == normalized_accelerator(&previous)
+                    })
+                })
+                .map(|item| item.id)
+                .collect::<Vec<_>>();
+            assert_eq!(previous_owners, ["previousThread"]);
+        }
     }
 }
