@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1) Yes, this is the main chat surface with the heading \"What should we work on?\" and a composer input at the bottom.\n2) The \"d19 fixture repo\" item in the sidebar shows keyboard focus/highlight (indicated by the light blue background).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789969162,
+  "id": "20260921133919408cff94182040de",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260921133919408cff94182040de",
+  "usage": {
+    "completion_tokens": 56,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1746,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 1802
+  }
+}

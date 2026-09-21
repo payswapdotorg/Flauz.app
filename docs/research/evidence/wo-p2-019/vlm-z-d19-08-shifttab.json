@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the visual evidence in the image, here is the description of each button's state:\n\n*   **Cancel Button (Left):**\n    *   **Background Color:** White (or transparent, matching the dialog background).\n    *   **Text Color:** Black (or dark gray).\n    *   **Focus Ring/Outline:** None visible.\n\n*   **Clear Button (Right):**\n    *   **Background Color:** White.\n    *   **Text Color:** Red.\n    *   **Focus Ring/Outline:** Yes, there is a distinct, thin blue outline (focus ring) surrounding the button.\n\n**Answer:**\nThe **Clear** button has keyboard focus. This is indicated by the blue focus ring surrounding it.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789969002,
+  "id": "202609211336338d629509c82340d0",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609211336338d629509c82340d0",
+  "usage": {
+    "completion_tokens": 149,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1128,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1277
+  }
+}

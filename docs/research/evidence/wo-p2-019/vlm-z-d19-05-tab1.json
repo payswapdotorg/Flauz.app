@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the visual evidence in the image:\n\n**Cancel Button (Left):**\n*   **Background Color:** White (or the same color as the dialog background).\n*   **Text Color:** Black (or dark grey).\n*   **Focus Ring/Outline:** It has a distinct, light blue rounded rectangular outline surrounding it.\n\n**Clear Button (Right):**\n*   **Background Color:** Red.\n*   **Text Color:** Red (the text is not visible in this crop, but the prompt specifies it is red text).\n*   **Focus Ring/Outline:** None visible.\n\n**Which button has keyboard focus?**\nThe **Cancel** button has keyboard focus. This is indicated by the light blue focus ring (outline) drawn around it.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789968989,
+  "id": "20260921133621b78385c689c142d9",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260921133621b78385c689c142d9",
+  "usage": {
+    "completion_tokens": 152,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1128,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1280
+  }
+}

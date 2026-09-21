@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "1) Yes, this is the main chat surface with the heading \"What should we work on?\" and a composer input at the bottom.\n2) The **composer input caret** (text cursor) is visible inside the text input field, indicating it has keyboard focus.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1789969171,
+  "id": "202609211339284bee4bf4bcc44ad2",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609211339284bee4bf4bcc44ad2",
+  "usage": {
+    "completion_tokens": 55,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1746,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1801
+  }
+}

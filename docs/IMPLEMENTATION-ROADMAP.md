@@ -69,6 +69,7 @@ Already merged:
 - ✅ WO-P2-018 visible-entry + label parity (title-bar palette entry, Activity bell, archived-deletion label, unread-dot tooltip)
 - ✅ WO-P2-020 F-A4 honest status for Ctrl+P without a workspace
 - ✅ WO-UX-002 begin_new_chat composer focus (keyboard-only chat creation, RG-A11Y N1)
+- ✅ WO-P2-019 confirmation-modal focus-trap completion (four modals; runtime probes for the flow-gated four at the RC binding pass)
 - ✅ RWO-020/RWO-021/RWO-022 reference/review/adversarial verification waves
 - ✅ Release-critical parity scope is green for the selected public/runtime-owned rows;
   bounded proprietary/platform rows remain explicitly classified.
@@ -76,7 +77,6 @@ Already merged:
 Remaining:
 - ⬜ WO-P2-017 palette/overlay close focus restoration (r1 rejected — deterministic
   palette-close panic, D17 evidence; fix round in flight, rebases on the merged head)
-- ⬜ WO-P2-019 confirmation-modal focus-trap completion (worker in flight)
 - ⬜ remaining full-reference P2/P3 parity differences
 - ⬜ final parity journeys across the remaining partial/platform rows
 - ⬜ accessibility/keyboard-only/reduced-motion/screen-reader/contrast pass
