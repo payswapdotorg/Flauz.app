@@ -64,8 +64,16 @@ CODEX_CLI_PIN = "0.146.0-alpha.3.1"
 
 
 def _secret(var: str) -> str:
-    """Read a credential from ~/.secrets/env.sh without printing it."""
-    txt = Path(os.path.expanduser("~/.secrets/env.sh")).read_text()
+    """Read a credential from ~/.secrets/env.sh without printing it.
+
+    LAB-002 additive touch-up: tolerate a missing file so the module imports
+    cleanly on stations without Lead credentials (dry-run/tests); live use
+    still requires the real environment.
+    """
+    p = Path(os.path.expanduser("~/.secrets/env.sh"))
+    if not p.exists():
+        return ""
+    txt = p.read_text()
     for line in txt.splitlines():
         if line.strip().startswith(f"export {var}="):
             return line.split("=", 1)[1].strip().strip('"').strip("'")
@@ -134,6 +142,9 @@ class FlauzDesktop:
 
     @classmethod
     def _save_state(cls, sid: str, **extra):
+        # LAB-002 additive touch-up: create the state dir if this runs outside
+        # the Lead station layout.
+        STATE.parent.mkdir(parents=True, exist_ok=True)
         st = json.loads(STATE.read_text()) if STATE.exists() else {}
         st.update({"sandbox_id": sid, **extra})
         STATE.write_text(json.dumps(st, indent=2))

@@ -13,6 +13,32 @@ Verdict vocabulary: `WORKS` / `WORKS-WITH-DEFECTS` / `UNAVAILABLE-BUT-HONEST`
 `HIDDEN` (palette-only or developer-only) / `SILENT-NO-OP` (control exists,
 does nothing visible) / `MISLEADING` (state contradicts reality).
 
+## Battery usage (LAB-002)
+
+The run log below is populated by `scripts/e2b/journeys.py` (LAB-002 — the
+J-01..J-18 battery runner; specs in `scripts/e2b/journey_specs.py`):
+
+```bash
+python3 scripts/e2b/journeys.py --dry-run                  # plan + spec validation (no E2B, no network)
+python3 scripts/e2b/journeys.py --battery baseline         # full J-01..J-18 cold-start sweep + E-00 (Lead station)
+python3 scripts/e2b/journeys.py --journeys J01,J05 --battery baseline
+python3 scripts/e2b/journeys.py --run-id <id> --battery baseline          # resume-safe (state.json reconnect)
+python3 scripts/e2b/journeys.py --battery baseline --baseline <prev-id>   # per-step screenshot regression compare
+python3 scripts/e2b/tests.py                                # unit tests (FakeSandbox battery — no E2B)
+```
+
+Every run appends a `### Run <run-id>` section below (idempotent per run-id)
+and writes UNCLASSIFIED rows into the
+[regression ledger](LINUX-GUI-REGRESSION-LEDGER.md) for defect-shaped
+verdicts (classification stays Lead-owned). Evidence lands under
+`docs/linux-gui/evidence/<run-id>/`: per-step PNGs (`jNN-stepNN-<slug>.png`),
+`actions.jsonl` (every input event + assertion result), `verdicts.json`,
+`state.json`. Each journey runs as two passes — primary from the normal UI
+(no palette first), then the palette path as the search fallback
+(PRODUCT-UX-JOURNEYS §8). Pillow on the Lead station enables region probes
+and the calibrated palette differential; without it those assertions degrade
+honestly (recorded as skipped/unknown, never guessed).
+
 | Journey | Implementation status (main) | Primary entry | Contextual entry | Search/palette entry | Empty state | Success state | Keyboard path | E2B result | Known limitations | Open defects |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | J-01 Start a project | recorded per run | recorded per run | recorded per run | recorded per run | recorded per run | recorded per run | recorded per run | recorded per run | recorded per run | recorded per run |
