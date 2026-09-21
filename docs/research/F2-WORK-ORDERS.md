@@ -75,7 +75,13 @@ Rollback/recovery: crate is additive; revert the merge commit.
 Integration notes: envelope + IDs are the cross-crate seam (kernel §5-6);
   the Lead's gate harness wires flauz-exec/flauz-context to these types via
   the frozen formats.
-Status: DISPATCHED (2026-09-21)
+Status: MERGED (2026-09-21) — Lead gates 0-2 green: bundle verified on base
+  f66965e; single worker commit b22f8b2 + Lead mechanical follow-up e6146f7
+  (Windows CRLF fixture normalization — the F1 31f83da rustfmt precedent);
+  PR #42 CI green (windows-latest + ubuntu-24.04); Lead-local re-run at the
+  merge: 46/46 tests, fmt clean, clippy -D warnings clean; merge 3535b1d +
+  lock follow-up 63e9340 = origin/main. One members line; owned files only;
+  empty Contract deviations. Worker A = chat 73cc6cc6 (agents tab).
 ```
 
 ---
