@@ -46,7 +46,11 @@ fn fixture_path(relative: &str) -> PathBuf {
 fn read_fixture(relative: &str) -> String {
     let content = fs::read_to_string(fixture_path(relative))
         .unwrap_or_else(|error| panic!("could not read fixture {relative}: {error}"));
-    content.trim_end().to_owned()
+    // Canonical fixtures are committed with LF endings; a Windows checkout
+    // with autocrlf translates them to CRLF. Normalize before comparison so
+    // the byte-for-byte round-trip law is tested against the CANONICAL form,
+    // not the platform's line-ending translation.
+    content.replace("\r\n", "\n").trim_end().to_owned()
 }
 
 /// The frozen valid ID vectors (kernel §2), asserted through the generic
