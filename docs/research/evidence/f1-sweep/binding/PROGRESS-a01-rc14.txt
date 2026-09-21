@@ -1,0 +1,53 @@
+[11:02:10] boot APP_PID=17281 (keyboard-only journey)
+[11:02:20] UI rendered after 10s
+[11:02:29] PROMO-PRE 36b6dae58033f306d53db3a7cc4e4ea5
+[11:02:30] BOOT-CLEAN 9897a037bec92e34d805632aefd9c591
+[11:02:30] LEG-00 entry baseline
+[11:02:32] 00 9897a037bec92e34d805632aefd9c591
+[11:02:32] LEG-1 PALETTE (Ctrl+K -> filter -> Escape)
+[11:02:35] 01a 4a291d49b3af3c63acba72f52409e671
+[11:02:37] 01b 8a04b4e8a699cc6a7e87c8bde7d87497
+[11:02:39] 01c 9897a037bec92e34d805632aefd9c591
+[11:02:39] LEG-2 SETTINGS (Ctrl+, -> Ctrl+F search -> Escape return)
+[11:02:42] 02a 954e844d03158e7983b8bf2749f9d4d2
+[11:02:46] 02b 9c88488a6d6e2f9fb295cb06d76b76d2
+[11:02:49] 02c 9c88488a6d6e2f9fb295cb06d76b76d2
+[11:02:49] LEG-3 TERMINAL (Ctrl+` -> type lands in PTY -> close)
+[11:04:45] boot APP_PID=17847 (keyboard-only journey)
+[11:04:56] UI rendered after 10s
+[11:05:04] PROMO-PRE 36b6dae58033f306d53db3a7cc4e4ea5
+[11:05:06] BOOT-CLEAN 9897a037bec92e34d805632aefd9c591
+[11:05:06] LEG-00 entry baseline
+[11:05:08] 00 9897a037bec92e34d805632aefd9c591
+[11:05:08] LEG-1 PALETTE (Ctrl+K -> filter -> Escape)
+[11:05:11] 01a 4a291d49b3af3c63acba72f52409e671
+[11:05:13] 01b 8a04b4e8a699cc6a7e87c8bde7d87497
+[11:05:15] 01c 9897a037bec92e34d805632aefd9c591
+[11:05:15] LEG-2 SETTINGS (Ctrl+, -> Ctrl+F search -> Escape return)
+[11:05:18] 02a 954e844d03158e7983b8bf2749f9d4d2
+[11:05:22] 02b 9c88488a6d6e2f9fb295cb06d76b76d2
+[11:05:25] 02c 9c88488a6d6e2f9fb295cb06d76b76d2
+[11:05:25] LEG-3 TERMINAL (Ctrl+` -> type lands in PTY -> close)
+[11:05:28] 03a 9c88488a6d6e2f9fb295cb06d76b76d2
+[11:05:33] 03b 481a8bab80f32231422a6e999ee8e064
+[11:05:36] 03c d4f5b27ee5b0ac9e86d768c17b2d518a
+[11:05:36] LEG-4 BROWSER (Ctrl+Shift+B -> Ctrl+L address -> Escape -> close)
+[11:05:39] 04a d4f5b27ee5b0ac9e86d768c17b2d518a
+[11:05:41] 04b 481a8bab80f32231422a6e999ee8e064
+[11:05:44] 04c d4f5b27ee5b0ac9e86d768c17b2d518a
+[11:05:44] LEG-5 HISTORY (Ctrl+, -> Ctrl+F browsing -> nav filter)
+[11:05:50] 05a e0b4cb19f46307d32ee5f863c476465c
+[11:05:53] 05b e0b4cb19f46307d32ee5f863c476465c
+[11:05:53] LEG-6 ATTENTION (keyboard chat create -> mark -> jump -> clear)
+[11:06:10] 06a cca974389391bf9c3649f68d43126c68
+[11:06:13] 06b aa5cd3fcf109e90dfa16d1a82c996345
+[11:06:16] 06c b7033fc32b52097a1b1e04a9274f432e
+[11:06:21] 06d 06db55618f0c0474c4309aa7e24f53e3
+[11:06:21] LEG-7 CHAT SWAP (Ctrl+Shift+] / [)
+[11:06:23] 07a 6b94c1411e1da7178712f50859e71d55
+[11:06:26] 07b 6b94c1411e1da7178712f50859e71d55
+[11:06:26] LEG-8 OVERLAY (Ctrl+/ -> Escape ladder)
+[11:06:29] 08a c454c94c6329b00dd46a703318a5c317
+[11:06:31] 08b 06db55618f0c0474c4309aa7e24f53e3
+[11:06:32] 08c 6b94c1411e1da7178712f50859e71d55
+[11:06:32] RG-A11Y-01 COMPLETE — 24 frames, keyboard-only after window placement

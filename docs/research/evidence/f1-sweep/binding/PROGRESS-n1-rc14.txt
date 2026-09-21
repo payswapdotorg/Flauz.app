@@ -1,0 +1,21 @@
+[10:57:06] boot APP_PID=16227 (fresh data dir — default route)
+[10:57:17] UI rendered after 10s
+[10:57:25] PRE 959a7686f92a028a0d386901199da48d (promo-modal record for FR-3)
+[10:57:28] BOOT-CLEAN 959a7686f92a028a0d386901199da48d (post-dismissal keyboard-clean base)
+[10:57:29] LEG-A negative control (boot-default: no chord, typing + submit go nowhere)
+[10:57:30] A0 24706d2287e1d4fdfecf58bb39d0603a
+[10:57:32] A1 24706d2287e1d4fdfecf58bb39d0603a
+[10:57:35] A2 24706d2287e1d4fdfecf58bb39d0603a
+[10:57:35] LEG-B CTRL+N at the default route (keyboard-only chat creation)
+[10:57:38] B1 921bdedd4f229d796230a9e5c751cf0a
+[10:57:41] B2 d45d07a1c82fd40e4570b35e601f6926
+[10:57:56] B3 1f715eec468d99ec31c6591070336faa
+[10:57:56] LEG-C palette 'New chat' row path
+[10:58:00] C1 e4127c6adbf0acfc0c89d5ee4ac361a7
+[10:58:03] C2 a468a0d392a7d8dd409afb32d8723365
+[10:58:06] C3 a362db967a78b2041c3d9df1c976fd54
+[10:58:21] C4 3a09047c771390f0330640795fe1eb66
+[10:58:21] LEG-D ctrl+n from a selected live chat (swap-away path)
+[10:58:23] D1 78cdd7e7dbb3b124c9462527e8f1d999
+[10:58:41] D2 7fef32996e6973801c2515ed9bbf734b
+[10:58:41] RG-N1 PROBE COMPLETE — 12 frames; adjudicate A0=A1=A2 md5 + B2/B3 C3/C4 D2 (VLM)

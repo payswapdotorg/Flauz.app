@@ -1,0 +1,41 @@
+[11:08:47] boot APP_PID=19414 (donor state; live chats created at runtime)
+[11:08:58] UI rendered after 10s
+[11:09:06] PROMO-PRE 959a7686f92a028a0d386901199da48d
+[11:09:08] BOOT-CLEAN 24706d2287e1d4fdfecf58bb39d0603a
+[11:09:08] LEG-A live chat 1 (multi-occurrence body for Find)
+[11:09:13] A1 d5692ccfe7b1ed7b0a590c5d7da04b87
+[11:09:29] A2 107f69370c63a2139c7f3db68171b20d (auth-wall banner expected)
+[11:09:30] A3 107f69370c63a2139c7f3db68171b20d
+[11:09:30] LEG-B FIND positive path (ctrl+f -> query -> advance -> close)
+[11:09:33] B1 6a2b103e12d79c0ce1857340a79a58f4 (Find bar or honest guard)
+[11:09:35] B2 8e2b59968af2e07a38a693ee8a6fbbed (first occurrence + counter)
+[11:09:37] B3 56998b07ade1124e3e504723652e56b9 (advanced occurrence)
+[11:09:39] B4 65b9e23a52dd475d7cdc6cb40794379c
+[11:10:01] boot APP_PID=19955 (donor state; live chats created at runtime)
+[11:10:12] UI rendered after 10s
+[11:10:20] PROMO-PRE 959a7686f92a028a0d386901199da48d
+[11:10:22] BOOT-CLEAN 24706d2287e1d4fdfecf58bb39d0603a
+[11:10:22] LEG-A live chat 1 (multi-occurrence body for Find)
+[11:10:28] A1 d5692ccfe7b1ed7b0a590c5d7da04b87
+[11:10:43] A2 8a0c123e033302722c0d400366f9f205 (auth-wall banner expected)
+[11:10:44] A3 107f69370c63a2139c7f3db68171b20d
+[11:10:44] LEG-B FIND positive path (ctrl+f -> query -> advance -> close)
+[11:10:47] B1 6a2b103e12d79c0ce1857340a79a58f4 (Find bar or honest guard)
+[11:10:49] B2 8e2b59968af2e07a38a693ee8a6fbbed (first occurrence + counter)
+[11:10:51] B3 56998b07ade1124e3e504723652e56b9 (advanced occurrence)
+[11:10:53] B4 65b9e23a52dd475d7cdc6cb40794379c
+[11:10:53] LEG-C PTY focus transfer (ctrl+backtick -> immediate type -> echo)
+[11:10:56] C1 05e54591df8d845c517ca27d0f9a5ecc (PTY or honest empty state)
+[11:11:01] C2 05e54591df8d845c517ca27d0f9a5ecc (echo output = PTY received)
+[11:11:03] C3 2f96fc332cfbf16bc4099979127227b9
+[11:11:03] LEG-D live chat 2 (swap axis)
+[11:11:23] D1 ca89671723947c1125cfe292759ab483
+[11:11:24] LEG-E swap positive path (ctrl+shift+] / [)
+[11:11:27] E1 c3d1d001f574c0c1868fe16626ec7da1
+[11:11:30] E2 c3d1d001f574c0c1868fe16626ec7da1
+[11:11:32] E3 c3d1d001f574c0c1868fe16626ec7da1 (selection returned)
+[11:11:32] LEG-F attention positive path (mark unread -> jump -> clear)
+[11:11:35] F1 7665dc599fdbdb3982c4baaa1654fd1a (toast + unread dot)
+[11:11:38] F2 5ae582a4ddd36d77e16dc0e43687ee43
+[11:11:41] F3 d9851d8e2b79b57b18fef8def8dfa304 (clear-all toast)
+[11:11:41] RG-A11Y-04 COMPLETE — 18 frames; adjudicate B/C/E/F positive paths (VLM)

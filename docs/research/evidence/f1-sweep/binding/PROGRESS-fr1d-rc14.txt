@@ -1,0 +1,15 @@
+[11:18:20] boot APP_PID=22540 (FR-1c About flow)
+[11:18:31] UI rendered after 10s
+[11:18:31] main window WID=0x400001 (bounds in main-window-xwininfo.txt)
+[11:18:38] step-1 open Help (375,65) -> About (292,306)
+[11:18:40] 01 e29296c0afc829c533eb2204d2ba6db0
+[11:18:43] 02 7667b9d255f1332459328c3538f45a27
+[11:18:43] About window WID=0x400006 (bounds + geometry recorded)
+[11:18:43] about-window-count=1
+[11:18:43] step-3 refocus check (Help -> About again)
+[11:18:47] 04 7667b9d255f1332459328c3538f45a27
+[11:18:47] about-window-count-refocus=1
+[11:18:47] step-4 close via Escape
+[11:18:49] 05 0b1da410f1aa803507697fbce3589007
+[11:18:49] about-window-count-closed=0
+[11:18:49] RG-FR-1C COMPLETE — the About window flow + geometry + counts recorded

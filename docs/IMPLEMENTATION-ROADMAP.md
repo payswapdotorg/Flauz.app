@@ -76,14 +76,25 @@ Already merged:
   bounded proprietary/platform rows remain explicitly classified.
 
 Remaining:
-- ⬜ remaining full-reference P2/P3 parity differences
-- ⬜ final parity journeys across the remaining partial/platform rows
-- ⬜ accessibility/keyboard-only/reduced-motion/screen-reader/contrast pass
-- ⬜ release-candidate soak/reconnect/performance gates
+- ✅ remaining full-reference P2/P3 parity differences — explicitly classified
+  (WO-F1-SWEEP-001 inventory, reconciled at `7d1d61d`: 5 closed / 17 bounded /
+  11 P2 / 8 P3; the re-sliced current-target items → the F2 annex)
+- ✅ final parity journeys across the remaining partial/platform rows
+  (FR-1/FR-3 baselines at `8a68c9a` + binding PASS at the published rc.14 —
+  `FR-BINDING-VERDICT.md`)
+- ✅ accessibility/keyboard-only/reduced-motion/screen-reader/contrast pass
+  (WO-UX-001 baseline + binding GREEN at the published rc.14 —
+  `A11Y-BINDING-VERDICT.md`: N1 closed via UX-002, 017 focus contract verified,
+  Find/attention positive paths, 019 trap ladder green; N5/N6 bounded notes →
+  F2 a11y)
+- ✅ release-candidate soak/reconnect/performance gates (RG-SOAK CLOSED;
+  RG-RECONNECT adjudicated PASS; FR-4 fresh-machine rc.14 PASSED)
 
 **Gate:** every remaining full-reference difference is explicitly classified;
 release-critical journeys remain green; and the final parity/accessibility/release
-journeys pass.
+journeys pass. — **SATISFIED per the F1 closure record**
+(`docs/research/evidence/f1-sweep/F1-CLOSURE-RECORD.md`, 2026-09-21);
+the F1→F2 flip awaits the user's review of that record.
 
 ## F2 — Canonical contracts
 

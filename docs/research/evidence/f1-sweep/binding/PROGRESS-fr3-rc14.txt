@@ -1,0 +1,15 @@
+[11:19:14] boot APP_PID=22869 (FR-3 pristine empty workspace)
+[11:19:25] UI rendered after 10s
+[11:19:31] step-1 entry baseline (empty workspace; the rc.14 pristine boot carries the GPT-5.6-Sol promo modal — the FR-BASELINE fr3-01 record — capture, then dismiss)
+[11:19:31] 01 a3d34446595654e7cfcbcf9ea0aafb68 (promo-modal state)
+[11:19:33] 01b 8a26fcd019e70af1b1dabff9a01d72b7 (post-dismissal clean welcome)
+[11:19:33] step-3 palette: the Open-folder row
+[11:19:36] 02 2f8e80d2afa3cd3b3ca707023321e560
+[11:19:38] step-4 Ctrl+O: the native folder picker attempt
+[11:19:46] 03 8a26fcd019e70af1b1dabff9a01d72b7
+[11:19:46] picker window state recorded
+[11:19:46] a non-codexRS window exists — attempting the GTK chooser ladder
+[11:19:52] 04 6606c9e894737132c8633e72443d207e
+[11:19:52] step-6 the files-palette probe (workspace state truth)
+[11:19:55] 05 1b22727fea31e946bbc131b8efe72044
+[11:19:56] RG-FR-3 COMPLETE (baseline) — the offer + picker attempt + workspace truth recorded

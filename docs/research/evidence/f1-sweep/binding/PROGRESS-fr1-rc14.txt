@@ -1,0 +1,11 @@
+[11:17:36] boot APP_PID=22280 (FR-1 About window)
+[11:17:47] UI rendered after 10s
+[11:17:47] main window WID=0x400001
+[11:17:52] step-1 entry baseline
+[11:17:54] 01 24706d2287e1d4fdfecf58bb39d0603a
+[11:17:54] step-2 calibrating the Help menu via VLM
+[11:17:57] Help menu calibrated at (263,64)
+[11:17:58] 02 15fda9b2333f27760fd56b16b8512ee9
+[11:17:58] step-3 calibrating the About item
+[11:18:09] VLM could not locate 'About codexRS' in the open menu — honest note; the menu read is the evidence
+[11:18:09] RG-FR-1 COMPLETE (baseline) — evidence + xwininfo + VLM reads
