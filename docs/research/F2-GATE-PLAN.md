@@ -11,8 +11,8 @@
 |---|------------|-------|----------|
 | 1 | ARCH-001 (flauz-world) | MERGED (PR #42; 3535b1d, lock 63e9340) | 46/46 tests, CI both platforms |
 | 2 | ARCH-002 (flauz-exec) | MERGED (PR #43; 10825f6, lock fb54936) | 60/60 tests, CI both platforms |
-| 3 | ORCH-001+UX-001 (flauz-context + shell) | in flight | gates on landing |
-| 4 | UX-003 (a11y carry-overs) | in flight | gates on landing |
+| 3 | ORCH-001+UX-001 (flauz-context + shell) | MERGED (PR #45; d76afd764, incl. Lead gate-fix a12adac/6a0eece/f369001/f74b0a4) | 44/44 crate tests + 6 shell tests, CI both platforms |
+| 4 | UX-003 (a11y carry-overs) | MERGED (PR #44; 4378892) | N5/N6/NUX tests, CI both platforms |
 
 ## Gate A — kernel §10 integration round-trip (Lead-authored harness)
 

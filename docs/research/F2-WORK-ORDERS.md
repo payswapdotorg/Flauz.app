@@ -1,7 +1,9 @@
 # F2 Contract Wave Work Orders
 
-> **Status: ACTIVE — Wave 1 dispatched 2026-09-21** (ARCH-001, ARCH-002,
-> ORCH-001+UX-001). Shared-contract authority:
+> **Status: WAVE-1 COMPLETE — 4/4 MERGED 2026-09-22** (ARCH-001 PR #42,
+> ARCH-002 PR #43, UX-003 PR #44, ORCH-001+UX-001 PR #45; origin/main
+> d76afd764). F2 integration gate (A/B/C) in progress — see
+> [F2-GATE-PLAN.md](F2-GATE-PLAN.md). Shared-contract authority:
 > [F2-CONTRACT-KERNEL.md](../F2-CONTRACT-KERNEL.md) — frozen by the Tech Lead
 > before any Wave-1 worker branched. Every work order below follows
 > [WORK-ORDER-TEMPLATE.md](../WORK-ORDER-TEMPLATE.md). Non-empty
@@ -245,7 +247,16 @@ Rollback/recovery: shell is additive UI; context crate is additive; revert
   the merge commit.
 Integration notes: flauz-context is self-contained (kernel §1); the shell
   does not import flauz crates in Wave 1.
-Status: DISPATCHED (2026-09-21)
+Status: MERGED (2026-09-22) — Lead gates 0-2 green: bundle verified on base
+  92d9e5a (worker commit 19b223f, 30 files +6164/−4, all owned files);
+  PR #45 CI green both platforms (after Lead gate-fix a12adac fmt/E0308/
+  ULID typos → 44/44 crate tests, 6a0eece fmt --all, f369001 CI clippy
+  dead-code, f74b0a4 fmt-stable chord-scan test); merged d76afd764 =
+  origin/main. Worker session burned 18+ times server-side (capacity
+  family); delivery harvested from the dead pod + report recovered via the
+  nudge protocol; the worker sandbox had no Rust toolchain (static
+  verification stated). Report archived:
+  docs/research/evidence/f2-orch-001-ux-001/. Deviations NONE. Wave-1 4/4.
 ```
 
 ---
