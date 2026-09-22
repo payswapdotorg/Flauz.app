@@ -933,6 +933,15 @@ pub(crate) fn render_model_picker(
 mod tests {
     use super::*;
 
+    /// The house unwrap helpers (the runtime_codex test idiom):
+    /// `expect()`/`unwrap()` are workspace warnings and CI denies warnings.
+    fn some<T>(value: Option<T>) -> T {
+        match value {
+            Some(value) => value,
+            None => panic!("expected Some(_), got None"),
+        }
+    }
+
     fn connected_entry(model_id: &str, name: &str) -> PickerModelEntry {
         PickerModelEntry::new(
             model_id,
@@ -1113,18 +1122,26 @@ mod tests {
         let mut log = TaskModelEventLog::new();
         assert!(log.events().is_empty());
 
-        let first =
-            switch_model_through_seam(&catalog, &mut active_models, &mut log, task_id, model_a)
-                .expect("the first switch records an event");
+        let first = some(switch_model_through_seam(
+            &catalog,
+            &mut active_models,
+            &mut log,
+            task_id,
+            model_a,
+        ));
         assert_eq!(first.event_type, MODEL_CHANGED_EVENT_TYPE);
         assert_eq!(first.task_id, task_id);
         assert_eq!(first.from_model, None);
         assert_eq!(first.to_model, model_a);
         assert_eq!(first.seq, 1);
 
-        let second =
-            switch_model_through_seam(&catalog, &mut active_models, &mut log, task_id, model_b)
-                .expect("the second switch records an event");
+        let second = some(switch_model_through_seam(
+            &catalog,
+            &mut active_models,
+            &mut log,
+            task_id,
+            model_b,
+        ));
         assert_eq!(second.event_type, MODEL_CHANGED_EVENT_TYPE);
         assert_eq!(second.task_id, task_id, "the task ID never changes");
         assert_eq!(second.from_model.as_deref(), Some(model_a));
