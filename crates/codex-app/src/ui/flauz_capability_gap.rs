@@ -107,6 +107,7 @@ pub(crate) const PALETTE_ROW_DESCRIPTION: &str =
 /// vocabulary. The serialized dimension names of the contract crate never
 /// appear in UI copy; these labels do.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)] // matched by the render today; constructed by the module's tests and (Wave-later) the resolution-record population
 pub(crate) enum CapabilityDimension {
     /// The model in use offers the capability.
     Model,
@@ -122,6 +123,7 @@ pub(crate) enum CapabilityDimension {
 
 impl CapabilityDimension {
     /// Every admission dimension, in canonical order.
+    #[allow(dead_code)] // iterated by the module's tests; the Wave-later resolution population iterates it in production
     pub(crate) const ALL: [Self; 5] = [
         Self::Model,
         Self::Runtime,
@@ -179,6 +181,7 @@ pub(crate) struct DimensionStatus {
 
 impl DimensionStatus {
     /// Builds one dimension status.
+    #[allow(dead_code)] // used by the module's tests; the Wave-later resolution population builds statuses through it
     pub(crate) const fn new(dimension: CapabilityDimension, admitted: bool) -> Self {
         Self {
             dimension,
@@ -202,6 +205,7 @@ impl CapabilityGapDetail {
     /// Builds a detail view-model. A dimension status must be supplied
     /// for every dimension exactly once, in canonical order — the same
     /// record-consistency law the contract crate enforces.
+    #[allow(dead_code)] // used by the module's tests; the Wave-later resolution population builds details through it
     pub(crate) fn new(capability: String, dimensions: Vec<DimensionStatus>) -> Self {
         debug_assert_eq!(
             dimensions.len(),
@@ -220,6 +224,7 @@ impl CapabilityGapDetail {
     }
 
     /// Whether the capability is available (every dimension admits it).
+    #[allow(dead_code)] // used by the module's tests; the Wave-later resolution population reads it
     pub(crate) fn available(&self) -> bool {
         self.dimensions.iter().all(|status| status.admitted)
     }
@@ -273,6 +278,7 @@ impl CapabilityGapState {
     }
 
     /// Whether the panel is open.
+    #[allow(dead_code)] // the Wave-later wiring reads it; the render paths check `open` directly today
     pub(crate) fn is_open(&self) -> bool {
         self.open
     }
