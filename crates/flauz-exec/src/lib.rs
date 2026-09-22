@@ -103,6 +103,8 @@ pub mod agent;
 pub mod capability;
 pub mod connection;
 pub mod environment;
+pub mod environment_fake_remote;
+pub mod environment_local;
 pub mod fakes;
 pub mod ids;
 pub mod model;
@@ -121,6 +123,12 @@ pub use crate::connection::{ProviderConnection, SecretRef};
 pub use crate::environment::{
     Environment, EnvironmentDescriptor, EnvironmentSpec, EnvironmentStatus, ExecutionProvider,
     Locality,
+};
+pub use crate::environment_fake_remote::{
+    FAKE_REMOTE_PROVIDER_KIND, FakeRemoteEnvironmentProvider, FakeRemoteSandbox, FakeRemoteSnapshot,
+};
+pub use crate::environment_local::{
+    LOCAL_PROVIDER_KIND, LOCAL_SURFACES, LocalEnvironment, LocalEnvironmentProvider, LocalSurface,
 };
 pub use crate::ids::{
     AgentId, EntityKind, EnvironmentId, IdError, ModelId, ProviderConnectionId, validate,

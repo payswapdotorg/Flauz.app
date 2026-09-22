@@ -1,0 +1,29 @@
+{
+  "v": 1,
+  "id": "env_01J8ZQ5V8K3T2B7N6X4R9DQPE4",
+  "version": 1,
+  "name": "Local workstation",
+  "locality": "local",
+  "provider_kind": "local",
+  "capabilities": [
+    "browser",
+    "browser.input",
+    "browser.navigation",
+    "computer.screen",
+    "desktop.gui",
+    "filesystem.read",
+    "filesystem.write",
+    "git",
+    "keyboard",
+    "mouse",
+    "terminal",
+    "window"
+  ],
+  "status": "available",
+  "connection_id": null,
+  "created_by": {
+    "kind": "user",
+    "id": "alice"
+  },
+  "created_at": "2026-09-21T13:45:00Z"
+}
