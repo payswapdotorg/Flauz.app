@@ -13,12 +13,14 @@
 //! | Contract | Fakes |
 //! |---|---|
 //! | [`AgentRuntime`] | [`FakeCodexRuntime`] and [`FakeNonCodexRuntime`] — one fake Codex (app-server) runtime and one fake non-Codex (direct-model) runtime satisfying the SAME contract |
+//! | [`CodexServerHandle`](crate::runtime_codex::CodexServerHandle) | [`FakeCodexServerHandle`] — the deterministic app-server boundary handle the RT-001 Codex adapter delegates turns to |
 //! | [`Environment`] | [`FakeLocalEnvironment`] and [`FakeRemoteEnvironment`] — a local and a remote environment satisfying the SAME contract |
 //! | [`ModelProvider`] | [`FakeModelProvider`] with two fake models offering different capability sets |
 //! | [`ExecutionProvider`] | [`FakeExecutionProvider`] sourcing both localities |
 //! | [`ExecStore`] | [`FakeExecStore`] |
 
 use std::collections::BTreeMap;
+use std::sync::Mutex;
 
 use crate::agent::Agent;
 use crate::capability::CapabilityId;
@@ -752,6 +754,52 @@ impl ExecStore for FakeExecStore {
 /// connection: an opaque `flausec_...` token, never credential material.
 pub const FAKE_SECRET_REF: &str = "flausec_01J8ZQ5V8K3T2B7N6X4R9DQP34";
 
+/// The fixed summary the fake app-server handle reports for every served
+/// turn: bounded, deterministic, never credential material.
+pub const FAKE_CODEX_TURN_SUMMARY: &str = "fake app-server completed one orchestration turn";
+
+/// A fake handle to the official Codex app-server boundary (RT-001): the
+/// deterministic conformance surface for
+/// [`CodexAppServerRuntime`](crate::runtime_codex::CodexAppServerRuntime).
+/// Records every turn it served, in order — the adapter's tests and the
+/// F2 gate assert that gap turns NEVER reach the server. Deterministic,
+/// in-memory, no I/O.
+#[derive(Debug, Default)]
+pub struct FakeCodexServerHandle {
+    served_turns: Mutex<Vec<crate::runtime_codex::CodexServerTurn>>,
+}
+
+impl FakeCodexServerHandle {
+    /// An empty fake handle that has served no turns.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// The turns served so far, in serve order.
+    pub fn served_turns(&self) -> Vec<crate::runtime_codex::CodexServerTurn> {
+        self.served_turns
+            .lock()
+            .map(|turns| turns.clone())
+            .unwrap_or_default()
+    }
+}
+
+impl crate::runtime_codex::CodexServerHandle for FakeCodexServerHandle {
+    fn turn(
+        &self,
+        turn: &crate::runtime_codex::CodexServerTurn,
+    ) -> Result<crate::runtime_codex::CodexServerTurnResult, crate::ExecError> {
+        turn.validate()?;
+        let mut served = self
+            .served_turns
+            .lock()
+            .map_err(|_| crate::ExecError::invalid("the fake app-server handle is poisoned"))?;
+        served.push(turn.clone());
+        crate::runtime_codex::CodexServerTurnResult::completed(FAKE_CODEX_TURN_SUMMARY)
+    }
+}
+
 /// Builds a fake provider connection (for tests and the F2 gate): provider
 /// kind `e2b`, label "Fake sandbox account", the fixed opaque secret
 /// reference, and the canonical identity
@@ -895,5 +943,22 @@ mod tests {
         let serialized = ok(serde_json::to_string(&connection));
         assert!(serialized.contains("flausec_"));
         ok(connection.validate());
+    }
+
+    #[test]
+    fn fake_codex_server_handle_serves_and_records_turns() {
+        use crate::runtime_codex::CodexServerHandle;
+        let handle = FakeCodexServerHandle::new();
+        assert!(handle.served_turns().is_empty());
+        let turn = ok(crate::runtime_codex::CodexServerTurn::new(
+            ok(ModelId::parse(fake_model_ids::TEXT)),
+            "Run the test suite and report failures",
+        ));
+        let result = ok(handle.turn(&turn));
+        assert_eq!(result.summary, FAKE_CODEX_TURN_SUMMARY);
+        let served = handle.served_turns();
+        assert_eq!(served.len(), 1);
+        assert_eq!(served[0], turn);
+        ok(result.validate());
     }
 }
