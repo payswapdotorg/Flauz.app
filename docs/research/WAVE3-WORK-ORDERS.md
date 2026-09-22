@@ -4,7 +4,7 @@
 > [F2-CONTRACT-KERNEL.md](F2-CONTRACT-KERNEL.md) (frozen) + the Wave-2
 > addendum in [WAVE2-WORK-ORDERS.md](WAVE2-WORK-ORDERS.md) (frozen) + the
 > **Wave-3 kernel addendum** below + the MERGED contract crates themselves
-> (flauz-world / flauz-exec / flauz-context / flauz-cap at `6368c2e` — the
+> (flauz-world / flauz-exec / flauz-context / flauz-cap at `e9bee81` — the
 > crates are the implementation truth). Every work order follows
 > [WORK-ORDER-TEMPLATE.md](../WORK-ORDER-TEMPLATE.md). Non-empty
 > `Contract deviations` in a worker report blocks closure. Workers deliver
@@ -79,7 +79,7 @@ Title: The context engine — compile from durable task state, tiered
   model-aware compilation with dynamic tool exposure
 Phase: Wave 3 (F6 orchestration — context)
 Owner: Worker A (agents-tab session)
-Dependencies: flauz-context merged at 6368c2e (Context/MemoryItem/
+Dependencies: flauz-context merged at e9bee81 (Context/MemoryItem/
   ContextSnapshot/ContextProvenance/ModelContextProfile + the compile
   step); flauz-world (WorldStore reads: tasks/artifacts/observations/
   evidence/events); the F2 gate-A harness pattern
@@ -146,7 +146,7 @@ Contextual discovery surface: n/a
 Search/palette discovery: n/a
 Empty/success-state behavior: n/a
 Acceptance criteria:
-  1. Single clean commit on feat/orch-002-context-engine at base 6368c2e;
+  1. Single clean commit on feat/orch-002-context-engine at base e9bee81;
      owned files only.
   2. The rebuild law proven: context reconstructs from durable state
      with NO model-conversation replay (test: same durable state, fresh
@@ -160,7 +160,7 @@ Acceptance criteria:
 Rollback/recovery: additive modules; revert the commit.
 Integration notes: the engine is what ORCH-003's harness prepare-state
   calls (through the existing public types OR the new engine API —
-  ORCH-003 freezes against the 6368c2e surface + this order's public
+  ORCH-003 freezes against the e9bee81 surface + this order's public
   API). Keep the engine deterministic; the no-flauz-world-import rule
   holds (inputs as data).
 Status: DISPATCHED (2026-09-23)
@@ -177,8 +177,8 @@ Title: The execution harness — prepare/execute/observe/verify/persist
   telemetry, and the non-technical recovery surface (J-03)
 Phase: Wave 3 (F6 orchestration — harness/recovery)
 Owner: Worker B (agents-tab session)
-Dependencies: flauz-exec merged at 6368c2e (AgentRuntime, fakes, store);
-  flauz-context at 6368c2e (compile_context_snapshot + public types);
+Dependencies: flauz-exec merged at e9bee81 (AgentRuntime, fakes, store);
+  flauz-context at e9bee81 (compile_context_snapshot + public types);
   flauz-cap (resolver, inputs as data); the shell (flauz_shell patterns)
 Contract(s): F2-CONTRACT-KERNEL.md; Wave-2 addendum; this addendum §1-§3,
   §6-§7
@@ -260,7 +260,7 @@ Empty/success-state behavior: nothing to recover → no banner (the task
 Keyboard path: Ctrl+Alt+Shift+R (the recovery chord) + scoped Escape;
   focus returns to the task surface on close (never trapped)
 Acceptance criteria:
-  1. Single clean commit on feat/orch-003-harness at base 6368c2e;
+  1. Single clean commit on feat/orch-003-harness at base e9bee81;
      owned files only.
   2. The state machine: every transition event-sourced; recover
      reconstructs from the machine's own history; no model-output
@@ -290,8 +290,8 @@ Title: The reactive execution graph — agent roles/dependencies/blocked
   J-11)
 Phase: Wave 3 (F6 orchestration — the graph + the product slice)
 Owner: Worker C (agents-tab session)
-Dependencies: flauz-world at 6368c2e (Task/Artifact/Evidence/Procedure/
-  Event + WorldStore); flauz-exec at 6368c2e (Agent, AgentRuntime,
+Dependencies: flauz-world at e9bee81 (Task/Artifact/Evidence/Procedure/
+  Event + WorldStore); flauz-exec at e9bee81 (Agent, AgentRuntime,
   fakes); the shell (the task rail's Agents panel + the Workspace nav)
 Contract(s): F2-CONTRACT-KERNEL.md; Wave-2 addendum; this addendum §1-§7
 Problem: nothing models multiple agents cooperating on one task with
@@ -380,7 +380,7 @@ Keyboard path: Ctrl+Alt+Shift+7 (agents view) + the save-flow chord;
   scoped Escape everywhere; tab-navigable panels
 Acceptance criteria:
   1. Single clean commit on feat/orch-004-execution-graph at base
-     6368c2e; owned files only.
+     e9bee81; owned files only.
   2. The graph: dependencies/blocked/attribution/independence/
      merge — all proven by deterministic tests; no chat-relay
      abstraction anywhere.
