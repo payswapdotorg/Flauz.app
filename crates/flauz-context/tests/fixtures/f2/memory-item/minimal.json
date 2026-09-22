@@ -1,0 +1,17 @@
+{
+  "v": 1,
+  "id": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPF5",
+  "version": 1,
+  "task_id": null,
+  "tier": "cold",
+  "authorization": "workspace",
+  "content": {
+    "kind": "reference",
+    "reference": "art_01J8ZQ5V8K3T2B7N6X4R9DQPH7/workspace-handbook.md"
+  },
+  "created_by": {
+    "kind": "user",
+    "id": "alice"
+  },
+  "created_at": "2026-09-21T13:45:00Z"
+}

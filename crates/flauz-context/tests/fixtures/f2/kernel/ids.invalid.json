@@ -1,0 +1,50 @@
+[
+  {
+    "id": "taskX_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+    "reason": "bad separator"
+  },
+  {
+    "id": "TASK_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+    "reason": "uppercase kind"
+  },
+  {
+    "id": "task_01j8zq5v8k3t2b7n6x4r9dqpa0",
+    "reason": "lowercase ULID"
+  },
+  {
+    "id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPA",
+    "reason": "25-char ULID"
+  },
+  {
+    "id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPI0",
+    "reason": "contains I"
+  },
+  {
+    "id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPU0",
+    "reason": "contains U"
+  },
+  {
+    "id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPL0",
+    "reason": "contains L"
+  },
+  {
+    "id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPO0",
+    "reason": "contains O"
+  },
+  {
+    "id": "task",
+    "reason": "no separator"
+  },
+  {
+    "id": "task_",
+    "reason": "empty ULID"
+  },
+  {
+    "id": "",
+    "reason": "empty string"
+  },
+  {
+    "id": "01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+    "reason": "missing kind"
+  }
+]

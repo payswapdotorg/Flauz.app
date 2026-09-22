@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "model_id": "model_01J8ZQ5V8K3T2B7N6X4R9DQPRE",
+  "version": 1,
+  "context_capacity_tokens": 200000,
+  "multimodal": "image_input",
+  "tool_schema": "summaries_with_lazy_schemas",
+  "created_by": {
+    "kind": "system",
+    "id": "flauz-fake"
+  },
+  "created_at": "2026-09-21T13:45:00Z"
+}
