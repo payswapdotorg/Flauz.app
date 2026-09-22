@@ -438,11 +438,6 @@ impl FlauzShellState {
         self.workspace_surface
     }
 
-    /// The open task-rail section, if any.
-    pub(crate) fn task_rail_section(&self) -> Option<TaskRailSection> {
-        self.task_rail_section
-    }
-
     /// Closes both shell surfaces for an F1 navigation action. Returns
     /// whether anything changed (the caller notifies). Focus is left where
     /// the navigation action itself puts it — the deliberate close paths
