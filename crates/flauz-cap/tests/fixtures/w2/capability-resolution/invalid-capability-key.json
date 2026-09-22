@@ -1,0 +1,44 @@
+{
+  "v": 1,
+  "capability": "Browser Input",
+  "available": false,
+  "admissions": [
+    {
+      "kind": "admitted"
+    },
+    {
+      "kind": "admitted"
+    },
+    {
+      "kind": "gap",
+      "reason": "The attached environment does not offer this capability."
+    },
+    {
+      "kind": "admitted"
+    },
+    {
+      "kind": "gap",
+      "reason": "Workspace policy does not allow this capability for this task. this workspace allows browser input only in approved projects"
+    }
+  ],
+  "gaps": [
+    {
+      "dimension": "environment",
+      "reason": "The attached environment does not offer this capability."
+    },
+    {
+      "dimension": "workspace_policy",
+      "reason": "Workspace policy does not allow this capability for this task. this workspace allows browser input only in approved projects"
+    }
+  ],
+  "unlock_paths": [
+    {
+      "dimension": "environment",
+      "action": "Attach an environment that offers this capability."
+    },
+    {
+      "dimension": "workspace_policy",
+      "action": "Ask the workspace owner to allow this capability."
+    }
+  ]
+}

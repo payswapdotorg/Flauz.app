@@ -1,0 +1,18 @@
+{
+  "v": 1,
+  "model_advertised": [
+    "terminal"
+  ],
+  "runtime_advertised": [
+    "terminal"
+  ],
+  "environment_advertised": [
+    "terminal"
+  ],
+  "permission": {
+    "kind": "granted"
+  },
+  "policy": {
+    "kind": "allowed"
+  }
+}

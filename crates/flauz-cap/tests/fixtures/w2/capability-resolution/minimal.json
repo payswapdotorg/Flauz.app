@@ -1,0 +1,71 @@
+{
+  "v": 1,
+  "capability": "terminal",
+  "available": false,
+  "admissions": [
+    {
+      "kind": "gap",
+      "reason": "The model in use does not offer this capability."
+    },
+    {
+      "kind": "gap",
+      "reason": "The runtime in use does not advertise this capability."
+    },
+    {
+      "kind": "gap",
+      "reason": "No environment is attached to this task."
+    },
+    {
+      "kind": "gap",
+      "reason": "Permission to use this capability has not been granted for this task."
+    },
+    {
+      "kind": "gap",
+      "reason": "Workspace policy does not allow this capability for this task."
+    }
+  ],
+  "gaps": [
+    {
+      "dimension": "model",
+      "reason": "The model in use does not offer this capability."
+    },
+    {
+      "dimension": "runtime",
+      "reason": "The runtime in use does not advertise this capability."
+    },
+    {
+      "dimension": "environment",
+      "reason": "No environment is attached to this task."
+    },
+    {
+      "dimension": "permissions",
+      "reason": "Permission to use this capability has not been granted for this task."
+    },
+    {
+      "dimension": "workspace_policy",
+      "reason": "Workspace policy does not allow this capability for this task."
+    }
+  ],
+  "unlock_paths": [
+    {
+      "dimension": "model",
+      "action": "Choose a model that offers this capability."
+    },
+    {
+      "dimension": "runtime",
+      "action": "Use a runtime that advertises this capability."
+    },
+    {
+      "dimension": "environment",
+      "action": "Attach an environment that offers this capability."
+    },
+    {
+      "dimension": "permissions",
+      "action": "Grant permission for this capability on this task."
+    },
+    {
+      "dimension": "workspace_policy",
+      "action": "Ask the workspace owner to allow this capability."
+    }
+  ]
+}

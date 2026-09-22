@@ -1,0 +1,18 @@
+{
+  "v": 1,
+  "model_advertised": [
+    "web.search"
+  ],
+  "runtime_advertised": [
+    "web.search"
+  ],
+  "environment_advertised": null,
+  "permission": {
+    "kind": "denied",
+    "detail": null
+  },
+  "policy": {
+    "kind": "restricted",
+    "detail": null
+  }
+}
