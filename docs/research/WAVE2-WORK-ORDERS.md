@@ -1,8 +1,10 @@
 # Wave 2 Work Orders — Environment / Model / Capability fabric
 
-> **Status: DISPATCHED 2026-09-22** (ENV-001 Worker A, MOD-001+RT-001
-> Worker B, CAP-001 Worker C — three parallel agents-tab sessions on base
-> 5fd7178). Shared-contract authority: [F2-CONTRACT-KERNEL.md](F2-CONTRACT-KERNEL.md)
+> **Status: 1 of 3 MERGED** (MOD-001+RT-001 Worker B — PR #46, merge
+> a46b76f, CI both platforms, deviations NONE; see
+> [evidence/w2-mod-001-rt-001](evidence/w2-mod-001-rt-001/MOD-001-RT-001-COMPLETION-REPORT.md)).
+> ENV-001 Worker A + CAP-001 Worker C: DISPATCHED 2026-09-22, grinding the
+> peak-hours capacity gate. Shared-contract authority: [F2-CONTRACT-KERNEL.md](F2-CONTRACT-KERNEL.md)
 > (frozen, Wave 1) + the **Wave-2 kernel addendum** below + the MERGED
 > contract crates themselves (flauz-world / flauz-exec / flauz-context at
 > 5fd7178 — the crates are the implementation truth). Every work order
@@ -216,7 +218,14 @@ Rollback/recovery: additive modules + seams; revert the commit.
 Integration notes: the registry is the F7 BYOP foundation — keep the
   ProviderConnection states honest (the UI must never imply a connection
   exists when it is only configured).
-Status: DISPATCHED (2026-09-22)
+Status: MERGED (2026-09-22) — PR #46 (merge a46b76f): worker commit 2cd57e3
+  (bundle-verified, base fda38ea exact) + Lead gate-fixes c03c266 (picker
+  compile warnings: unused import + F7 wiring-seam allows) & 78123b2 (CI
+  clippy: expect_used → the house some() idiom). Gates: fmt/clippy clean;
+  flauz-exec 78/78; picker type-checked + stub-harness 8/8 (the sandbox's
+  libpipewire gap is pre-existing, verified at base); CI GREEN both
+  platforms. Deviations: NONE. Evidence:
+  evidence/w2-mod-001-rt-001/MOD-001-RT-001-COMPLETION-REPORT.md
 ```
 
 ---
