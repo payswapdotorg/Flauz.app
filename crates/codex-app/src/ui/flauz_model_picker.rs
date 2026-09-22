@@ -59,7 +59,7 @@ use std::collections::HashMap;
 
 use codex_core::Action;
 use gpui::prelude::*;
-use gpui::{AnyElement, App, Context, FocusHandle, IntoElement, SharedString, Window, div, px};
+use gpui::{AnyElement, Context, FocusHandle, IntoElement, SharedString, Window, div, px};
 use gpui_component::{
     ActiveTheme, Disableable, Icon, IconName, Selectable, Sizable,
     button::{Button, ButtonVariants},
@@ -179,6 +179,7 @@ pub(crate) const MODEL_LIST_CAPTION: &str = "Available models";
 /// not-configured. The UI must never imply a connection exists when the
 /// provider is only configured.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)] // variants are matched by the render today; constructed by the module's tests and (F7) the registry→catalog wiring
 pub(crate) enum PickerModelAvailability {
     /// No connection is stored for the provider: nothing is configured.
     NotConfigured,
@@ -230,6 +231,7 @@ pub(crate) struct PickerModelEntry {
 
 impl PickerModelEntry {
     /// Builds a catalog entry.
+    #[allow(dead_code)] // used by the module's tests; the F7 registry wiring builds production entries through it
     pub(crate) fn new(
         model_id: &str,
         model_name: &str,
@@ -333,6 +335,7 @@ impl TaskModelEventLog {
     }
 
     /// The recorded events, in append order.
+    #[allow(dead_code)] // read by the module's tests and the state-level accessor; the F7 wiring surfaces it
     pub(crate) fn events(&self) -> &[TaskModelEvent] {
         &self.events
     }
@@ -424,12 +427,14 @@ impl FlauzModelPickerState {
 
     /// The catalog seam for a later slice: replaces the catalog (the
     /// real registry wiring — F7 — calls this when the registry loads).
+    #[allow(dead_code)] // F7 wiring seam; exercised by the module's tests today
     pub(crate) fn set_catalog(&mut self, catalog: Vec<PickerModelEntry>) {
         self.catalog = catalog;
     }
 
     /// The active model's identifier for a task, if any (execution
     /// state; the task's identity is its ID, unchanged).
+    #[allow(dead_code)] // F7 wiring seam; exercised by the module's tests today
     pub(crate) fn active_model_id(&self, task_id: &str) -> Option<&str> {
         self.active_models.get(task_id).map(String::as_str)
     }
@@ -444,6 +449,7 @@ impl FlauzModelPickerState {
     }
 
     /// The world store seam's recorded events, in append order.
+    #[allow(dead_code)] // F7 wiring seam; exercised by the module's tests today
     pub(crate) fn events(&self) -> &[TaskModelEvent] {
         self.event_log.events()
     }
