@@ -401,8 +401,7 @@ pub(crate) const TASK_RAIL_NO_CHAT_GUIDANCE: &str =
 /// The Projects & tasks empty state when the workspace truly has no work
 /// yet (otherwise the surface explains what is coming).
 const PROJECTS_TASKS_EMPTY_TITLE_FRESH: &str = "No projects or tasks yet";
-const PROJECTS_TASKS_EMPTY_BODY_FRESH: &str =
-    "Projects hold your ongoing work. Each task keeps its objective, what the \
+const PROJECTS_TASKS_EMPTY_BODY_FRESH: &str = "Projects hold your ongoing work. Each task keeps its objective, what the \
      agent did, and everything it produced — whichever model or environment \
      ran it.";
 
@@ -582,22 +581,19 @@ pub(crate) fn render_workspace_nav(
         );
     for surface in FlauzWorkspaceSurface::ALL {
         section = section.child(
-            Button::new(SharedString::from(format!(
-                "flauz-nav-{}",
-                surface.id()
-            )))
-            .label(surface.nav_label())
-            .icon(surface.icon())
-            .tooltip(surface.nav_tooltip())
-            .small()
-            .ghost()
-            .w_full()
-            .h(px(34.0))
-            .justify_start()
-            .selected(open_surface == Some(surface))
-            .on_click(cx.listener(move |this, _, window, cx| {
-                open_workspace_surface(this, surface, window, cx);
-            })),
+            Button::new(SharedString::from(format!("flauz-nav-{}", surface.id())))
+                .label(surface.nav_label())
+                .icon(surface.icon())
+                .tooltip(surface.nav_tooltip())
+                .small()
+                .ghost()
+                .w_full()
+                .h(px(34.0))
+                .justify_start()
+                .selected(open_surface == Some(surface))
+                .on_click(cx.listener(move |this, _, window, cx| {
+                    open_workspace_surface(this, surface, window, cx);
+                })),
         );
     }
     section.into_any_element()
@@ -700,11 +696,8 @@ pub(crate) fn render_task_rail(
                 .flex_wrap()
                 .overflow_hidden()
                 .children(TaskRailSection::ALL.map(|section| {
-                    let tooltip = format!(
-                        "{} ({})",
-                        section.rail_tooltip(),
-                        section.shortcut_label()
-                    );
+                    let tooltip =
+                        format!("{} ({})", section.rail_tooltip(), section.shortcut_label());
                     Button::new(SharedString::from(format!(
                         "flauz-task-rail-{}",
                         section.id()
@@ -809,18 +802,15 @@ fn render_surface_header(
                 ),
         )
         .child(
-            Button::new(SharedString::from(format!(
-                "flauz-close-{}",
-                surface.id()
-            )))
-            .label("Back to your work")
-            .icon(IconName::ArrowLeft)
-            .tooltip("Return to your chat (Escape)")
-            .small()
-            .ghost()
-            .on_click(cx.listener(|this, _, window, cx| {
-                dismiss_shell_surfaces(this, window, cx);
-            })),
+            Button::new(SharedString::from(format!("flauz-close-{}", surface.id())))
+                .label("Back to your work")
+                .icon(IconName::ArrowLeft)
+                .tooltip("Return to your chat (Escape)")
+                .small()
+                .ghost()
+                .on_click(cx.listener(|this, _, window, cx| {
+                    dismiss_shell_surfaces(this, window, cx);
+                })),
         )
         .into_any_element()
 }
@@ -957,7 +947,11 @@ mod tests {
         let workflows = FlauzWorkspaceSurface::ReusableWorkflows;
         assert!(workflows.nav_label().contains("Reusable workflows"));
         assert!(workflows.empty_body().contains("run them again"));
-        assert!(workflows.next_step().contains("Save as a reusable workflow"));
+        assert!(
+            workflows
+                .next_step()
+                .contains("Save as a reusable workflow")
+        );
     }
 
     #[test]

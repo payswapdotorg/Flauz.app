@@ -4208,21 +4208,15 @@ impl PaletteCommand {
             | Self::GoToChat9 => IconName::ArrowRight,
             Self::ToggleReviewTab => IconName::PanelRight,
             Self::ToggleMaximizeSidePanel => IconName::Maximize,
-            Self::OpenProjectsTasks => {
-                flauz_shell::FlauzWorkspaceSurface::ProjectsTasks.icon()
-            }
+            Self::OpenProjectsTasks => flauz_shell::FlauzWorkspaceSurface::ProjectsTasks.icon(),
             Self::OpenReusableWorkflows => {
                 flauz_shell::FlauzWorkspaceSurface::ReusableWorkflows.icon()
             }
             Self::OpenArtifacts => flauz_shell::FlauzWorkspaceSurface::Artifacts.icon(),
-            Self::OpenWorkspaceActivity => {
-                flauz_shell::FlauzWorkspaceSurface::Activity.icon()
-            }
+            Self::OpenWorkspaceActivity => flauz_shell::FlauzWorkspaceSurface::Activity.icon(),
             Self::InspectTaskContext => flauz_shell::TaskRailSection::Context.icon(),
             Self::InspectTaskAgents => flauz_shell::TaskRailSection::Agents.icon(),
-            Self::InspectTaskEnvironments => {
-                flauz_shell::TaskRailSection::Environments.icon()
-            }
+            Self::InspectTaskEnvironments => flauz_shell::TaskRailSection::Environments.icon(),
             Self::InspectTaskEvidence => flauz_shell::TaskRailSection::Evidence.icon(),
             Self::InspectTaskMore => flauz_shell::TaskRailSection::MoreInspect.icon(),
         }
@@ -5483,7 +5477,11 @@ pub fn run() {
                 KeyBinding::new(&shortcut("alt-4"), FlauzActivityShortcut, None),
                 KeyBinding::new(&shortcut("alt-shift-1"), FlauzTaskContextShortcut, None),
                 KeyBinding::new(&shortcut("alt-shift-2"), FlauzTaskAgentsShortcut, None),
-                KeyBinding::new(&shortcut("alt-shift-3"), FlauzTaskEnvironmentsShortcut, None),
+                KeyBinding::new(
+                    &shortcut("alt-shift-3"),
+                    FlauzTaskEnvironmentsShortcut,
+                    None,
+                ),
                 KeyBinding::new(&shortcut("alt-shift-4"), FlauzTaskEvidenceShortcut, None),
                 KeyBinding::new(&shortcut("alt-shift-5"), FlauzTaskMoreInspectShortcut, None),
                 KeyBinding::new("escape", Escape, Some("AboutDialog")),
@@ -18488,11 +18486,7 @@ impl WorkspaceView {
         )
     }
 
-    fn render_task_workspace(
-        &mut self,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
+    fn render_task_workspace(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
         let Some(task_id) = self.state.selected_task_id.clone() else {
             let new_chat_cwd = self.state.new_chat_cwd.clone();
             let recovery = startup_recovery_card(&self.state.connection, self.backend.is_some());
@@ -45097,26 +45091,22 @@ impl Render for WorkspaceView {
                     );
                 }),
             )
-            .on_action(
-                cx.listener(|this, _: &FlauzArtifactsShortcut, window, cx| {
-                    flauz_shell::open_workspace_surface(
-                        this,
-                        flauz_shell::FlauzWorkspaceSurface::Artifacts,
-                        window,
-                        cx,
-                    );
-                }),
-            )
-            .on_action(
-                cx.listener(|this, _: &FlauzActivityShortcut, window, cx| {
-                    flauz_shell::open_workspace_surface(
-                        this,
-                        flauz_shell::FlauzWorkspaceSurface::Activity,
-                        window,
-                        cx,
-                    );
-                }),
-            )
+            .on_action(cx.listener(|this, _: &FlauzArtifactsShortcut, window, cx| {
+                flauz_shell::open_workspace_surface(
+                    this,
+                    flauz_shell::FlauzWorkspaceSurface::Artifacts,
+                    window,
+                    cx,
+                );
+            }))
+            .on_action(cx.listener(|this, _: &FlauzActivityShortcut, window, cx| {
+                flauz_shell::open_workspace_surface(
+                    this,
+                    flauz_shell::FlauzWorkspaceSurface::Activity,
+                    window,
+                    cx,
+                );
+            }))
             .on_action(
                 cx.listener(|this, _: &FlauzTaskContextShortcut, window, cx| {
                     flauz_shell::open_task_rail_section(
