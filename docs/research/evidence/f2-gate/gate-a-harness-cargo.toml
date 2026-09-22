@@ -1,0 +1,18 @@
+[package]
+name = "f2-integration-harness"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# Lead-authored F2 integration-gate harness (kernel §10) — verification
+# infrastructure, NOT a workspace crate. Wires the merged contract crates
+# together through the frozen formats: world + exec + context (the
+# context-snapshot step is real since the ORCH-001 merge).
+
+[dependencies]
+flauz-world = { path = "/home/z/Flauz.app/crates/flauz-world" }
+flauz-exec = { path = "/home/z/Flauz.app/crates/flauz-exec" }
+flauz-context = { path = "/home/z/Flauz.app/crates/flauz-context" }
+serde_json = "1"
+
+[workspace]

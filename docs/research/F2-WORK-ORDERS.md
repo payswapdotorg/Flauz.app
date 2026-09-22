@@ -1,9 +1,10 @@
 # F2 Contract Wave Work Orders
 
-> **Status: WAVE-1 COMPLETE — 4/4 MERGED 2026-09-22** (ARCH-001 PR #42,
-> ARCH-002 PR #43, UX-003 PR #44, ORCH-001+UX-001 PR #45; origin/main
-> d76afd764). F2 integration gate (A/B/C) in progress — see
-> [F2-GATE-PLAN.md](F2-GATE-PLAN.md). Shared-contract authority:
+> **Status: F2 COMPLETE — gate PASSED 2026-09-22** (Wave 1: 4/4 MERGED —
+> ARCH-001 PR #42, ARCH-002 PR #43, UX-003 PR #44, ORCH-001+UX-001 PR #45;
+> + Lead gate-fixes fb512f3/9977302). Integration gate A/B/C ALL GREEN at
+> final SHA 9977302 — see [F2-GATE-RECORD.md](evidence/f2-gate/F2-GATE-RECORD.md).
+> Shared-contract authority:
 > [F2-CONTRACT-KERNEL.md](../F2-CONTRACT-KERNEL.md) — frozen by the Tech Lead
 > before any Wave-1 worker branched. Every work order below follows
 > [WORK-ORDER-TEMPLATE.md](../WORK-ORDER-TEMPLATE.md). Non-empty

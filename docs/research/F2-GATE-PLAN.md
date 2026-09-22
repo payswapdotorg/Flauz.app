@@ -1,9 +1,9 @@
 # F2 Gate Plan — the Wave-1 integration gate (Lead-run)
 
-> Status: PREPARED 2026-09-21 (Lead) — executes after the remaining Wave-1
-> merges (ORCH-001+UX-001, UX-003). Authority: F2-CONTRACT-KERNEL.md §10-11;
-> F2-WORK-ORDERS.md. The gate is closed by the Tech Lead only, after merged
-> implementation AND evidence.
+> Status: **PASSED 2026-09-22 — F2 CLOSED.** Executed by the Lead after the
+> Wave-1 merges (4/4). Record:
+> [evidence/f2-gate/F2-GATE-RECORD.md](evidence/f2-gate/F2-GATE-RECORD.md).
+> Authority: F2-CONTRACT-KERNEL.md §10-11; F2-WORK-ORDERS.md.
 
 ## Inputs (merge order)
 

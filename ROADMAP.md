@@ -4,10 +4,13 @@ The product roadmap is now governed by [docs/FLAUZ-SOURCE-OF-TRUTH.md](docs/FLAU
 
 ## Current state
 
-**Current phase: F2 — canonical contracts + discoverability shell.**
+**Current phase: Wave 2 (F3+) — environment / model / capability fabric on the F2 contracts.**
 F1 (Codex Desktop parity) CLOSED 2026-09-21 at v0.1.0-rc.14 per the closure
 record (`docs/research/evidence/f1-sweep/F1-CLOSURE-RECORD.md`; user review
-received).
+received). F2 (canonical contracts + discoverability shell) CLOSED
+2026-09-22 at 9977302 per
+`docs/research/evidence/f2-gate/F2-GATE-RECORD.md` — Wave 1 4/4 merged, gate
+A/B/C green, 830/830 tests, CI both platforms.
 
 - [x] Native Rust/GPUI Codex-compatible desktop foundation.
 - [x] Windows and Linux desktop targets.
@@ -25,7 +28,7 @@ received).
 
 After parity closure, implement in this order:
 
-1. [ ] Canonical Workspace/Session/Task/Environment/Resource/Artifact/Evidence/Procedure/Context/Provider/Model/Agent/Skill/Capability contracts. — **F2 IN PROGRESS** (Wave 1: ARCH-001 / ARCH-002 / ORCH-001+UX-001 against the frozen `docs/F2-CONTRACT-KERNEL.md`).
+1. [x] Canonical Workspace/Session/Task/Environment/Resource/Artifact/Evidence/Procedure/Context/Provider/Model/Agent/Skill/Capability contracts. — **F2 CLOSED 2026-09-22** (flauz-world + flauz-exec + flauz-context + the discoverable shell; frozen `docs/F2-CONTRACT-KERNEL.md`; gate record: `docs/research/evidence/f2-gate/F2-GATE-RECORD.md`).
 2. [ ] Context Engine and model-aware Harness contracts: retrieval, tiered memory, compaction/reset, dynamic tool exposure, provenance, telemetry.
 3. [ ] Environment/provider fabric with local and remote execution through one contract, including browser/site/terminal/sandbox topology.
 4. [ ] Model-provider and agent-runtime fabric, including BYOK and non-Codex models.
