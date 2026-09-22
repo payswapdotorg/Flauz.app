@@ -14,9 +14,9 @@
 //! |---|---|
 //! | [`AgentRuntime`] | [`FakeCodexRuntime`] and [`FakeNonCodexRuntime`] — one fake Codex (app-server) runtime and one fake non-Codex (direct-model) runtime satisfying the SAME contract |
 //! | [`CodexServerHandle`](crate::runtime_codex::CodexServerHandle) | [`FakeCodexServerHandle`] — the deterministic app-server boundary handle the RT-001 Codex adapter delegates turns to |
-//! | [`Environment`] | [`FakeLocalEnvironment`] and [`FakeRemoteEnvironment`] — a local and a remote environment satisfying the SAME contract |
+//! | [`Environment`] | [`FakeLocalEnvironment`] and [`FakeRemoteEnvironment`] — a local and a remote environment satisfying the SAME contract; the Wave-2 provider family (ENV-001) adds [`LocalEnvironment`](crate::environment_local::LocalEnvironment) and [`FakeRemoteSandbox`] |
 //! | [`ModelProvider`] | [`FakeModelProvider`] with two fake models offering different capability sets |
-//! | [`ExecutionProvider`] | [`FakeExecutionProvider`] sourcing both localities |
+//! | [`ExecutionProvider`] | [`FakeExecutionProvider`] sourcing both localities; the Wave-2 provider family (ENV-001) adds [`LocalEnvironmentProvider`](crate::environment_local::LocalEnvironmentProvider) — the local wrapper of the four F1 surfaces — and [`FakeRemoteEnvironmentProvider`] — the fake-consistency remote, the template every later real remote provider copies (re-exported below for downstream use) |
 //! | [`ExecStore`] | [`FakeExecStore`] |
 
 use std::collections::BTreeMap;
@@ -36,6 +36,15 @@ use crate::runtime::{AgentRuntime, RuntimeOutcome, RuntimeRequest};
 use crate::store::{ExecSnapshot, ExecStore, ExecStoreError};
 use crate::time::Timestamp;
 use crate::{ExecError, MAX_ENVIRONMENTS_PER_PROVIDER, MAX_MODELS_PER_PROVIDER};
+
+// The fake-consistency remote provider family (ENV-001, addendum §2),
+// re-exported so downstream consumers — the Lead's F2 gate extension and
+// later provider waves — can source it from the fakes entry point. The
+// local provider is a real provider (not a fake) and stays at the crate
+// root: `flauz_exec::LocalEnvironmentProvider`.
+pub use crate::environment_fake_remote::{
+    FakeRemoteEnvironmentProvider, FakeRemoteSandbox, FakeRemoteSnapshot,
+};
 
 /// The fixed creation timestamp used by every fake: 2026-09-21T13:45:00Z.
 /// Fakes never read the wall clock (kernel §7 determinism rule).
