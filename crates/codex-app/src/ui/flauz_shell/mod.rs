@@ -1110,7 +1110,11 @@ mod tests {
 
         // The keyboard registration seams: one chord per §2.1 surface (so
         // no surface depends on pointer input) plus the scoped escape
-        // bindings for the shell's focus contexts.
+        // bindings for the shell's focus contexts. Scanned against the
+        // whitespace-normalized source: rustfmt legitimately wraps long
+        // `KeyBinding::new(...)` expressions across lines, and the chord
+        // registration must keep matching regardless of formatting.
+        let normalized: String = source.split_whitespace().collect::<Vec<_>>().join(" ");
         for binding in [
             "FlauzProjectsTasksShortcut, None",
             "FlauzReusableWorkflowsShortcut, None",
@@ -1123,7 +1127,7 @@ mod tests {
             "FlauzTaskMoreInspectShortcut, None",
         ] {
             assert!(
-                source.contains(binding),
+                normalized.contains(binding),
                 "a keyboard chord must be bound for {binding}"
             );
         }
