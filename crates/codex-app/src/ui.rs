@@ -123,6 +123,14 @@ use flauz_shell::FlauzTaskEvidenceShortcut;
 use flauz_shell::FlauzTaskMoreInspectShortcut;
 mod flauz_model_picker;
 use flauz_model_picker::FlauzModelPickerShortcut;
+// CAP-001 (F2 Wave 2): the capability-gap surface — the J-04 disclosure
+// chain (Capability unavailable → Why? → the named missing dimensions →
+// the ways to unlock), wired through the same minimal named seams below
+// (declaration, palette row, keyboard chord, dispatch, task-surface
+// render registration, navigation close). Seams are distinct from
+// MOD-001's.
+mod flauz_capability_gap;
+use flauz_capability_gap::FlauzCapabilityGapShortcut;
 
 const WINDOW_WIDTH: f32 = 1_278.0;
 const WINDOW_HEIGHT: f32 = 818.0;
@@ -3753,10 +3761,11 @@ enum PaletteCommand {
     InspectTaskEvidence,
     InspectTaskMore,
     ChooseModelForTask,
+    InspectCapabilityGaps,
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 81] = [
+    const ALL: [Self; 82] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3838,6 +3847,7 @@ impl PaletteCommand {
         Self::InspectTaskEvidence,
         Self::InspectTaskMore,
         Self::ChooseModelForTask,
+        Self::InspectCapabilityGaps,
     ];
 
     const fn title(self) -> &'static str {
@@ -3931,6 +3941,7 @@ impl PaletteCommand {
             Self::InspectTaskEvidence => flauz_shell::TaskRailSection::Evidence.palette_title(),
             Self::InspectTaskMore => flauz_shell::TaskRailSection::MoreInspect.palette_title(),
             Self::ChooseModelForTask => flauz_model_picker::PALETTE_ROW_TITLE,
+            Self::InspectCapabilityGaps => flauz_capability_gap::PALETTE_ROW_TITLE,
         }
     }
 
@@ -4031,6 +4042,7 @@ impl PaletteCommand {
                 flauz_shell::TaskRailSection::MoreInspect.palette_description()
             }
             Self::ChooseModelForTask => flauz_model_picker::PALETTE_ROW_DESCRIPTION,
+            Self::InspectCapabilityGaps => flauz_capability_gap::PALETTE_ROW_DESCRIPTION,
         }
     }
 
@@ -4067,6 +4079,7 @@ impl PaletteCommand {
             Self::InspectTaskEvidence => Some("Ctrl+Alt+Shift+4"),
             Self::InspectTaskMore => Some("Ctrl+Alt+Shift+5"),
             Self::ChooseModelForTask => Some("Ctrl+Alt+Shift+M"),
+            Self::InspectCapabilityGaps => Some("Ctrl+Alt+Shift+6"),
             _ => None,
         }
     }
@@ -4227,6 +4240,7 @@ impl PaletteCommand {
             Self::InspectTaskEvidence => flauz_shell::TaskRailSection::Evidence.icon(),
             Self::InspectTaskMore => flauz_shell::TaskRailSection::MoreInspect.icon(),
             Self::ChooseModelForTask => IconName::Bot,
+            Self::InspectCapabilityGaps => IconName::Asterisk,
         }
     }
 
@@ -4308,6 +4322,7 @@ impl PaletteCommand {
             | Self::InspectTaskEvidence
             | Self::InspectTaskMore
             | Self::ChooseModelForTask => PaletteGroup::WorkspaceShell,
+            Self::InspectCapabilityGaps => PaletteGroup::WorkspaceShell,
         }
     }
 
@@ -4353,6 +4368,7 @@ impl PaletteCommand {
                 | Self::InspectTaskEvidence
                 | Self::InspectTaskMore
                 | Self::ChooseModelForTask
+                | Self::InspectCapabilityGaps
         )
     }
 
@@ -4987,6 +5003,9 @@ impl CommandPaletteView {
             PaletteCommand::ChooseModelForTask => {
                 flauz_model_picker::open_model_picker(workspace, window, cx);
             }
+            PaletteCommand::InspectCapabilityGaps => {
+                flauz_capability_gap::open_capability_gap_surface(workspace, window, cx);
+            }
             PaletteCommand::SearchChats | PaletteCommand::SearchFiles => {}
         });
     }
@@ -5507,6 +5526,9 @@ pub fn run() {
                 // truthfully (unlike the rail's digit family — the N6
                 // gate-fix), so no shifted-symbol companion is needed.
                 KeyBinding::new(&shortcut("alt-shift-m"), FlauzModelPickerShortcut, None),
+                // CAP-001: the capability-gap surface rides the task-rail
+                // chord family (Capabilities, after More).
+                KeyBinding::new(&shortcut("alt-shift-6"), FlauzCapabilityGapShortcut, None),
                 // Gate-fix r2 (F2 Gate B, d23 run-2/3 evidence): on
                 // shifted-keysym platforms the digit form of a Shift+N
                 // chord NEVER matches the physical main-row keys. Two GPUI
@@ -5528,6 +5550,9 @@ pub fn run() {
                 KeyBinding::new(&shortcut("alt-#"), FlauzTaskEnvironmentsShortcut, None),
                 KeyBinding::new(&shortcut("alt-$"), FlauzTaskEvidenceShortcut, None),
                 KeyBinding::new(&shortcut("alt-%"), FlauzTaskMoreInspectShortcut, None),
+                // CAP-001: the shifted-symbol companion of the gap chord
+                // (Shift+6 → "^"), mirroring the N6 gate-fix family above.
+                KeyBinding::new(&shortcut("alt-^"), FlauzCapabilityGapShortcut, None),
                 KeyBinding::new("escape", Escape, Some("AboutDialog")),
                 KeyBinding::new("escape", Escape, Some("McpElicitation")),
                 KeyBinding::new("escape", Escape, Some("StructuredUserInput")),
@@ -5550,6 +5575,7 @@ pub fn run() {
                 // auto-focuses its own handle on mount, so one Escape
                 // dismisses it through its focus path.
                 KeyBinding::new("escape", Escape, Some("FlauzModelPicker")),
+                KeyBinding::new("escape", Escape, Some("FlauzCapabilityGap")),
                 // UX-003: the model-availability NUX modal's one-Escape
                 // contract — the modal auto-focuses its own handle on mount
                 // (the 019 request-once pattern), so this scoped binding
@@ -6302,6 +6328,10 @@ struct WorkspaceView {
     /// seam recording model switches. Additive UI state; F1 flows are
     /// unchanged.
     flauz_model_picker: flauz_model_picker::FlauzModelPickerState,
+    /// The capability-gap surface state (CAP-001): the open flag, the
+    /// Why-disclosure, and the panel's focus bookkeeping. Additive UI
+    /// state; F1 flows are unchanged.
+    flauz_capability_gap: flauz_capability_gap::CapabilityGapState,
     sidebar_visible: bool,
     sidebar_responsive: bool,
     shell_width_class: Option<ShellWidthClass>,
@@ -7532,6 +7562,7 @@ impl WorkspaceView {
             navigation_history_replaying: false,
             flauz_shell: flauz_shell::FlauzShellState::new(cx),
             flauz_model_picker: flauz_model_picker::FlauzModelPickerState::new(cx),
+            flauz_capability_gap: flauz_capability_gap::CapabilityGapState::new(cx),
             sidebar_visible: true,
             sidebar_responsive: true,
             shell_width_class: None,
@@ -8163,6 +8194,15 @@ impl WorkspaceView {
         // 017 contract instead).
         if flauz_model_picker::action_closes_model_picker(&action)
             && self.flauz_model_picker.close_for_navigation()
+        {
+            cx.notify();
+        }
+        // CAP-001 registration seam: the same F1 navigation closes the
+        // capability-gap panel (additive UI state; the reducer is
+        // untouched, and the deliberate close paths restore focus through
+        // the 017 contract instead).
+        if flauz_shell::action_closes_shell_surfaces(&action)
+            && self.flauz_capability_gap.close_for_navigation()
         {
             cx.notify();
         }
@@ -19227,6 +19267,14 @@ impl WorkspaceView {
                             // picker panel itself when open.
                             .child(flauz_model_picker::render_model_control(self, cx))
                             .child(flauz_model_picker::render_model_picker(self, window, cx))
+                            // CAP-001 registration seam: the capability-gap
+                            // entry (the J-04 affordance) lives in the task
+                            // rail's More/Inspect neighborhood — a labeled
+                            // control, never hidden behind developer
+                            // settings.
+                            .child(flauz_capability_gap::render_capability_gap_entry(
+                                self, window, cx,
+                            ))
                             .when_some(bedrock_workspace_notice, |workspace, notice| {
                                 workspace.child(notice)
                             })
@@ -45235,6 +45283,11 @@ impl Render for WorkspaceView {
             .on_action(
                 cx.listener(|this, _: &FlauzModelPickerShortcut, window, cx| {
                     flauz_model_picker::open_model_picker(this, window, cx);
+                }),
+            )
+            .on_action(
+                cx.listener(|this, _: &FlauzCapabilityGapShortcut, window, cx| {
+                    flauz_capability_gap::open_capability_gap_surface(this, window, cx);
                 }),
             )
             .relative()

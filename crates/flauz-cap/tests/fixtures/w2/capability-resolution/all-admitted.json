@@ -1,0 +1,24 @@
+{
+  "v": 1,
+  "capability": "terminal",
+  "available": true,
+  "admissions": [
+    {
+      "kind": "admitted"
+    },
+    {
+      "kind": "admitted"
+    },
+    {
+      "kind": "admitted"
+    },
+    {
+      "kind": "admitted"
+    },
+    {
+      "kind": "admitted"
+    }
+  ],
+  "gaps": [],
+  "unlock_paths": []
+}

@@ -1,0 +1,20 @@
+{
+  "v": 1,
+  "model_advertised": [
+    "terminal",
+    "browser.input"
+  ],
+  "runtime_advertised": [
+    "browser.input"
+  ],
+  "environment_advertised": [
+    "web.search"
+  ],
+  "permission": {
+    "kind": "granted"
+  },
+  "policy": {
+    "kind": "restricted",
+    "detail": "this workspace allows browser input only in approved projects"
+  }
+}
