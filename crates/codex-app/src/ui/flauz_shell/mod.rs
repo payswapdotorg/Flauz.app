@@ -1131,6 +1131,23 @@ mod tests {
                 "a keyboard chord must be bound for {binding}"
             );
         }
+        // Gate-fix regression guard (F2 Gate B, the N6 shifted-keysym
+        // family): the task-rail chords must ALSO be registered in their
+        // shifted-symbol forms — on Linux a Shift+1..5 keystroke reports
+        // "!"/"@"/"#"/"$"/"%" as the key, so the digit form alone can never
+        // match the physical main-row keys.
+        for companion in [
+            "alt-shift-!",
+            "alt-shift-@",
+            "alt-shift-#",
+            "alt-shift-$",
+            "alt-shift-%",
+        ] {
+            assert!(
+                source.contains(&format!("shortcut(\"{companion}\")")),
+                "the shifted-symbol chord companion {companion} must be registered"
+            );
+        }
         assert!(source.contains("Some(\"FlauzWorkspaceSurface\")"));
         assert!(source.contains("Some(\"FlauzTaskRail\")"));
     }
