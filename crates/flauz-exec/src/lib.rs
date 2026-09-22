@@ -107,7 +107,10 @@ pub mod fakes;
 pub mod ids;
 pub mod model;
 pub mod refs;
+pub mod registry;
 pub mod runtime;
+pub mod runtime_codex;
+pub mod runtime_direct;
 pub mod skill;
 pub mod store;
 pub mod time;
@@ -127,7 +130,14 @@ pub use crate::ids::{
 };
 pub use crate::model::{Model, ModelProvider};
 pub use crate::refs::{ActorKind, ActorRef};
+pub use crate::registry::{
+    ModelRegistry, ProviderAvailability, ProviderRegistration, ProviderSnapshot, RegistrySnapshot,
+};
 pub use crate::runtime::{AgentRuntime, RuntimeOutcome, RuntimeRequest, RuntimeStatus};
+pub use crate::runtime_codex::{
+    CodexAppServerRuntime, CodexServerHandle, CodexServerTurn, CodexServerTurnResult,
+};
+pub use crate::runtime_direct::DirectRuntime;
 pub use crate::skill::{SemanticVersion, Skill, SkillId};
 pub use crate::store::{ExecSnapshot, ExecStore, ExecStoreError};
 pub use crate::time::Timestamp;

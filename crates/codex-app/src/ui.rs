@@ -121,6 +121,8 @@ use flauz_shell::FlauzTaskContextShortcut;
 use flauz_shell::FlauzTaskEnvironmentsShortcut;
 use flauz_shell::FlauzTaskEvidenceShortcut;
 use flauz_shell::FlauzTaskMoreInspectShortcut;
+mod flauz_model_picker;
+use flauz_model_picker::FlauzModelPickerShortcut;
 
 const WINDOW_WIDTH: f32 = 1_278.0;
 const WINDOW_HEIGHT: f32 = 818.0;
@@ -3750,10 +3752,11 @@ enum PaletteCommand {
     InspectTaskEnvironments,
     InspectTaskEvidence,
     InspectTaskMore,
+    ChooseModelForTask,
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 80] = [
+    const ALL: [Self; 81] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3834,6 +3837,7 @@ impl PaletteCommand {
         Self::InspectTaskEnvironments,
         Self::InspectTaskEvidence,
         Self::InspectTaskMore,
+        Self::ChooseModelForTask,
     ];
 
     const fn title(self) -> &'static str {
@@ -3926,6 +3930,7 @@ impl PaletteCommand {
             }
             Self::InspectTaskEvidence => flauz_shell::TaskRailSection::Evidence.palette_title(),
             Self::InspectTaskMore => flauz_shell::TaskRailSection::MoreInspect.palette_title(),
+            Self::ChooseModelForTask => flauz_model_picker::PALETTE_ROW_TITLE,
         }
     }
 
@@ -4025,6 +4030,7 @@ impl PaletteCommand {
             Self::InspectTaskMore => {
                 flauz_shell::TaskRailSection::MoreInspect.palette_description()
             }
+            Self::ChooseModelForTask => flauz_model_picker::PALETTE_ROW_DESCRIPTION,
         }
     }
 
@@ -4060,6 +4066,7 @@ impl PaletteCommand {
             Self::InspectTaskEnvironments => Some("Ctrl+Alt+Shift+3"),
             Self::InspectTaskEvidence => Some("Ctrl+Alt+Shift+4"),
             Self::InspectTaskMore => Some("Ctrl+Alt+Shift+5"),
+            Self::ChooseModelForTask => Some("Ctrl+Alt+Shift+M"),
             _ => None,
         }
     }
@@ -4219,6 +4226,7 @@ impl PaletteCommand {
             Self::InspectTaskEnvironments => flauz_shell::TaskRailSection::Environments.icon(),
             Self::InspectTaskEvidence => flauz_shell::TaskRailSection::Evidence.icon(),
             Self::InspectTaskMore => flauz_shell::TaskRailSection::MoreInspect.icon(),
+            Self::ChooseModelForTask => IconName::Bot,
         }
     }
 
@@ -4298,7 +4306,8 @@ impl PaletteCommand {
             | Self::InspectTaskAgents
             | Self::InspectTaskEnvironments
             | Self::InspectTaskEvidence
-            | Self::InspectTaskMore => PaletteGroup::WorkspaceShell,
+            | Self::InspectTaskMore
+            | Self::ChooseModelForTask => PaletteGroup::WorkspaceShell,
         }
     }
 
@@ -4343,6 +4352,7 @@ impl PaletteCommand {
                 | Self::InspectTaskEnvironments
                 | Self::InspectTaskEvidence
                 | Self::InspectTaskMore
+                | Self::ChooseModelForTask
         )
     }
 
@@ -4971,6 +4981,12 @@ impl CommandPaletteView {
                     cx,
                 );
             }
+            // MOD-001 + RT-001: the model picker's palette row (the
+            // "Choose a model…" discovery surface). The module owns the
+            // logic; this seam only dispatches.
+            PaletteCommand::ChooseModelForTask => {
+                flauz_model_picker::open_model_picker(workspace, window, cx);
+            }
             PaletteCommand::SearchChats | PaletteCommand::SearchFiles => {}
         });
     }
@@ -5484,6 +5500,13 @@ pub fn run() {
                 ),
                 KeyBinding::new(&shortcut("alt-shift-4"), FlauzTaskEvidenceShortcut, None),
                 KeyBinding::new(&shortcut("alt-shift-5"), FlauzTaskMoreInspectShortcut, None),
+                // MOD-001 + RT-001: the model picker's direct keyboard
+                // path (Ctrl+Alt+Shift+M) — the letter family of the
+                // task-surface chords, so the picker never depends on
+                // pointer input. Letters report the shift modifier
+                // truthfully (unlike the rail's digit family — the N6
+                // gate-fix), so no shifted-symbol companion is needed.
+                KeyBinding::new(&shortcut("alt-shift-m"), FlauzModelPickerShortcut, None),
                 // Gate-fix r2 (F2 Gate B, d23 run-2/3 evidence): on
                 // shifted-keysym platforms the digit form of a Shift+N
                 // chord NEVER matches the physical main-row keys. Two GPUI
@@ -5522,6 +5545,11 @@ pub fn run() {
                 // Escape dismisses them through their focus path.
                 KeyBinding::new("escape", Escape, Some("FlauzWorkspaceSurface")),
                 KeyBinding::new("escape", Escape, Some("FlauzTaskRail")),
+                // MOD-001 + RT-001: the model picker panel owns a scoped
+                // escape binding (the 019 family shape) — the panel
+                // auto-focuses its own handle on mount, so one Escape
+                // dismisses it through its focus path.
+                KeyBinding::new("escape", Escape, Some("FlauzModelPicker")),
                 // UX-003: the model-availability NUX modal's one-Escape
                 // contract — the modal auto-focuses its own handle on mount
                 // (the 019 request-once pattern), so this scoped binding
@@ -6269,6 +6297,11 @@ struct WorkspaceView {
     /// The Flauz platform shell state (UX-001): the open workspace surface
     /// and task-rail section. Additive UI state; F1 flows are unchanged.
     flauz_shell: flauz_shell::FlauzShellState,
+    /// The model-picker state (MOD-001 + RT-001): the open picker panel,
+    /// the catalog seam, the per-task active model, and the world store
+    /// seam recording model switches. Additive UI state; F1 flows are
+    /// unchanged.
+    flauz_model_picker: flauz_model_picker::FlauzModelPickerState,
     sidebar_visible: bool,
     sidebar_responsive: bool,
     shell_width_class: Option<ShellWidthClass>,
@@ -7498,6 +7531,7 @@ impl WorkspaceView {
             navigation_history,
             navigation_history_replaying: false,
             flauz_shell: flauz_shell::FlauzShellState::new(cx),
+            flauz_model_picker: flauz_model_picker::FlauzModelPickerState::new(cx),
             sidebar_visible: true,
             sidebar_responsive: true,
             shell_width_class: None,
@@ -8120,6 +8154,15 @@ impl WorkspaceView {
         // the 017 contract instead of this quiet close).
         if flauz_shell::action_closes_shell_surfaces(&action)
             && self.flauz_shell.close_for_navigation()
+        {
+            cx.notify();
+        }
+        // MOD-001 + RT-001: F1 navigation and task-surface actions close
+        // the model picker panel the same quiet way (the deliberate close
+        // paths — Escape, the control toggle — restore focus through the
+        // 017 contract instead).
+        if flauz_model_picker::action_closes_model_picker(&action)
+            && self.flauz_model_picker.close_for_navigation()
         {
             cx.notify();
         }
@@ -19177,6 +19220,13 @@ impl WorkspaceView {
                             // is selected — never hidden behind developer
                             // settings.
                             .child(flauz_shell::render_task_rail(self, window, cx))
+                            // MOD-001 + RT-001 registration: the labeled
+                            // model control on the task surface (the
+                            // picker's primary discovery layer — visible
+                            // on every task, never hidden), then the
+                            // picker panel itself when open.
+                            .child(flauz_model_picker::render_model_control(self, cx))
+                            .child(flauz_model_picker::render_model_picker(self, window, cx))
                             .when_some(bedrock_workspace_notice, |workspace, notice| {
                                 workspace.child(notice)
                             })
@@ -45176,6 +45226,15 @@ impl Render for WorkspaceView {
                         window,
                         cx,
                     );
+                }),
+            )
+            // MOD-001 + RT-001 keyboard registration: the model picker's
+            // direct chord (Ctrl+Alt+Shift+M). The handler lives on the
+            // workspace root so it works whether or not the task surface
+            // is focused; the picker module owns the logic.
+            .on_action(
+                cx.listener(|this, _: &FlauzModelPickerShortcut, window, cx| {
+                    flauz_model_picker::open_model_picker(this, window, cx);
                 }),
             )
             .relative()

@@ -1,0 +1,45 @@
+{
+  "v": 1,
+  "version": 1,
+  "provider_kind": "flauz-fake",
+  "availability": "connected",
+  "connection_id": "conn_01J8ZQ5V8K3T2B7N6X4R9DQP34",
+  "models": [
+    {
+      "v": 1,
+      "id": "model_01J8ZQ5V8K3T2B7N6X4R9DQPX0",
+      "version": 1,
+      "name": "Fake Text Model",
+      "provider_kind": "flauz-fake",
+      "capabilities": [],
+      "description": "Deterministic fake model with no extra capabilities",
+      "created_by": {
+        "kind": "system",
+        "id": "flauz-fake"
+      },
+      "created_at": "2026-09-21T13:45:00Z"
+    },
+    {
+      "v": 1,
+      "id": "model_01J8ZQ5V8K3T2B7N6X4R9DQPY1",
+      "version": 1,
+      "name": "Fake Vision Model",
+      "provider_kind": "flauz-fake",
+      "capabilities": [
+        "image.input",
+        "vision"
+      ],
+      "description": "Deterministic fake model with vision capabilities",
+      "created_by": {
+        "kind": "system",
+        "id": "flauz-fake"
+      },
+      "created_at": "2026-09-21T13:45:00Z"
+    }
+  ],
+  "created_by": {
+    "kind": "system",
+    "id": "flauz-fake"
+  },
+  "created_at": "2026-09-21T13:45:00Z"
+}
