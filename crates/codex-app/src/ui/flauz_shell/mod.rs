@@ -1133,16 +1133,12 @@ mod tests {
         }
         // Gate-fix regression guard (F2 Gate B, the N6 shifted-keysym
         // family): the task-rail chords must ALSO be registered in their
-        // shifted-symbol forms — on Linux a Shift+1..5 keystroke reports
-        // "!"/"@"/"#"/"$"/"%" as the key, so the digit form alone can never
-        // match the physical main-row keys.
-        for companion in [
-            "alt-shift-!",
-            "alt-shift-@",
-            "alt-shift-#",
-            "alt-shift-$",
-            "alt-shift-%",
-        ] {
+        // shifted-symbol forms WITHOUT the shift component — on Linux a
+        // Shift+1..5 keystroke reports "!"/"@"/"#"/"$"/"%" as the key with
+        // the shift modifier stripped (GPUI from_xkb convention for symbol
+        // keys), so the digit form alone can never match the physical
+        // main-row keys.
+        for companion in ["alt-!", "alt-@", "alt-#", "alt-$", "alt-%"] {
             assert!(
                 source.contains(&format!("shortcut(\"{companion}\")")),
                 "the shifted-symbol chord companion {companion} must be registered"

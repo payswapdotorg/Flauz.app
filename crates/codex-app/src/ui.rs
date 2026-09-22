@@ -5484,26 +5484,27 @@ pub fn run() {
                 ),
                 KeyBinding::new(&shortcut("alt-shift-4"), FlauzTaskEvidenceShortcut, None),
                 KeyBinding::new(&shortcut("alt-shift-5"), FlauzTaskMoreInspectShortcut, None),
-                // Gate-fix (F2 Gate B, d23 run-2 evidence): on shifted-keysym
-                // platforms (Linux GPUI maps Keysym::exclam → "!", at → "@",
-                // numbersign → "#", dollar → "$", percent → "%"), the digit
-                // form of a Shift+N chord NEVER matches the physical main-row
-                // keys — the keystroke reports the shifted symbol while the
-                // binding above expects the digit. The N6 family again. The
-                // shifted-symbol companions make the rail chords fire on what
-                // users actually press; the labels stay "Ctrl+Alt+Shift+N"
-                // (the physical position, matching the rail tooltips and
-                // palette row hints). Keytop digits still match the digit
-                // form above where a platform reports them unshifted.
-                KeyBinding::new(&shortcut("alt-shift-!"), FlauzTaskContextShortcut, None),
-                KeyBinding::new(&shortcut("alt-shift-@"), FlauzTaskAgentsShortcut, None),
-                KeyBinding::new(
-                    &shortcut("alt-shift-#"),
-                    FlauzTaskEnvironmentsShortcut,
-                    None,
-                ),
-                KeyBinding::new(&shortcut("alt-shift-$"), FlauzTaskEvidenceShortcut, None),
-                KeyBinding::new(&shortcut("alt-shift-%"), FlauzTaskMoreInspectShortcut, None),
+                // Gate-fix r2 (F2 Gate B, d23 run-2/3 evidence): on
+                // shifted-keysym platforms the digit form of a Shift+N
+                // chord NEVER matches the physical main-row keys. Two GPUI
+                // behaviors compound: (1) Linux xkb reports Shift+1..5 as
+                // the shifted SYMBOLS (Keysym::exclam → "!" … percent →
+                // "%"); (2) from_xkb then STRIPS the shift modifier for
+                // single-char symbol keys (lower == upper by convention),
+                // so the live keystroke is key "!" with ctrl+alt and NO
+                // shift — the digit binding ("ctrl-alt-shift-1") matches
+                // neither form. The symbol companions below — WITHOUT the
+                // shift component, mirroring the live keystroke exactly —
+                // make the rail chords fire on what Linux users press; the
+                // labels stay "Ctrl+Alt+Shift+N" (the physical position,
+                // matching the rail tooltips and palette row hints). The
+                // digit form above still serves platforms that report the
+                // keytop digit with shift.
+                KeyBinding::new(&shortcut("alt-!"), FlauzTaskContextShortcut, None),
+                KeyBinding::new(&shortcut("alt-@"), FlauzTaskAgentsShortcut, None),
+                KeyBinding::new(&shortcut("alt-#"), FlauzTaskEnvironmentsShortcut, None),
+                KeyBinding::new(&shortcut("alt-$"), FlauzTaskEvidenceShortcut, None),
+                KeyBinding::new(&shortcut("alt-%"), FlauzTaskMoreInspectShortcut, None),
                 KeyBinding::new("escape", Escape, Some("AboutDialog")),
                 KeyBinding::new("escape", Escape, Some("McpElicitation")),
                 KeyBinding::new("escape", Escape, Some("StructuredUserInput")),
