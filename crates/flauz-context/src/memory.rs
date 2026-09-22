@@ -23,8 +23,8 @@ use crate::provenance::AuthorizationClass;
 use crate::refs::ActorRef;
 use crate::time::Timestamp;
 use crate::{
-    ContextError, ContextVersion, MAX_MEMORY_CONTENT_BYTES, MAX_STATEMENT_BYTES,
-    ensure_non_empty, ensure_str_bound,
+    ContextError, ContextVersion, MAX_MEMORY_CONTENT_BYTES, MAX_STATEMENT_BYTES, ensure_non_empty,
+    ensure_str_bound,
 };
 
 /// How a memory item participates in context compilation (context-harness
@@ -87,6 +87,7 @@ impl MemoryContent {
         }
     }
 
+    #[cfg(test)]
     fn kind(&self) -> &'static str {
         match self {
             Self::Text { .. } => "text",
@@ -301,10 +302,8 @@ mod tests {
         assert_eq!(content.kind(), "text");
 
         assert!(
-            serde_json::from_str::<MemoryContent>(
-                "{\"kind\":\"text\",\"text\":\"x\",\"extra\":1}"
-            )
-            .is_err()
+            serde_json::from_str::<MemoryContent>("{\"kind\":\"text\",\"text\":\"x\",\"extra\":1}")
+                .is_err()
         );
         assert!(
             serde_json::from_str::<MemoryContent>(

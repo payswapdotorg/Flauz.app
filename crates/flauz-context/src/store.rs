@@ -25,6 +25,7 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
+use crate::ContextVersion;
 use crate::context::{Context, ContextReset, ResetReason};
 use crate::ids::{ContextSnapshotId, MemoryItemId, ModelRef, TaskRef};
 use crate::memory::MemoryItem;
@@ -32,7 +33,6 @@ use crate::profile::ModelContextProfile;
 use crate::refs::ActorRef;
 use crate::snapshot::ContextSnapshot;
 use crate::time::Timestamp;
-use crate::ContextVersion;
 
 /// Errors returned by context-state store operations.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -156,7 +156,11 @@ impl ContextStateSnapshot {
             check_key(id.as_str(), snapshot.id.as_str(), snapshot.validate())?;
         }
         for (model, profile) in &self.profiles {
-            check_key(model.as_str(), profile.model_id.as_str(), profile.validate())?;
+            check_key(
+                model.as_str(),
+                profile.model_id.as_str(),
+                profile.validate(),
+            )?;
         }
         for reset in &self.resets {
             if let Err(error) = reset.validate() {
@@ -227,8 +231,10 @@ pub trait ContextStore {
     ///
     /// Returns [`ContextStoreError::Invalid`] only on store misuse; a
     /// missing snapshot yields `Ok(None)`.
-    fn snapshot(&self, id: &ContextSnapshotId)
-        -> Result<Option<ContextSnapshot>, ContextStoreError>;
+    fn snapshot(
+        &self,
+        id: &ContextSnapshotId,
+    ) -> Result<Option<ContextSnapshot>, ContextStoreError>;
 
     /// Stores a new model context profile (created at version 1, keyed by
     /// the model it profiles).

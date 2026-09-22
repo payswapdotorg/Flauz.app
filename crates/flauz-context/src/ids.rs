@@ -404,7 +404,11 @@ mod tests {
 
     #[test]
     fn generated_ids_carry_their_kind_prefix() {
-        assert!(ContextSnapshotId::generate().as_str().starts_with("ctxsnap_"));
+        assert!(
+            ContextSnapshotId::generate()
+                .as_str()
+                .starts_with("ctxsnap_")
+        );
         assert!(MemoryItemId::generate().as_str().starts_with("mem_"));
     }
 

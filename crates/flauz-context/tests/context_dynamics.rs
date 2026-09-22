@@ -10,8 +10,8 @@ use flauz_context::profile::{ModelContextProfile, MultimodalBehavior, ToolSchema
 use flauz_context::provenance::{AuthorizationClass, ContextProvenance, ContextSource};
 use flauz_context::{
     ActorRef, Context, ContextItem, ContextItemContent, ContextSnapshot, ContextSnapshotId,
-    ContextStore, ContextStoreError, MemoryContent, MemoryItemId, MemoryItem, MemoryTier,
-    ModelRef, ResetReason, SessionRef, TaskRef, Timestamp,
+    ContextStore, ContextStoreError, MemoryContent, MemoryItem, MemoryItemId, MemoryTier, ModelRef,
+    ResetReason, SessionRef, TaskRef, Timestamp,
 };
 
 fn test_ok<T, E: fmt::Display>(result: Result<T, E>) -> T {
@@ -22,8 +22,8 @@ fn test_ok<T, E: fmt::Display>(result: Result<T, E>) -> T {
 }
 
 const TASK: &str = "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1";
-const OTHER_TASK: &str = "task_01J8ZQ5V8K3T2B7N6X4R9DQZ9";
-const MODEL: &str = "model_01J8ZQ5V8K3T2B7N6X4R9DQRE";
+const OTHER_TASK: &str = "task_01J8ZQ5V8K3T2B7N6X4R9DQZ9T";
+const MODEL: &str = "model_01J8ZQ5V8K3T2B7N6X4R9DQPRE";
 const OTHER_MODEL: &str = "model_01J8ZQ5V8K3T2B7N6X4R9DQPSF";
 const MEMORY: &str = "mem_01J8ZQ5V8K3T2B7N6X4R9DQPF5";
 const SNAPSHOT: &str = "ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5";
@@ -67,7 +67,9 @@ fn snapshot(id: &str, task: &str, model: &str, items: Vec<ContextItem>) -> Conte
     test_ok(ContextSnapshot::new(
         test_ok(ContextSnapshotId::parse(id)),
         test_ok(TaskRef::parse(task)),
-        Some(test_ok(SessionRef::parse("sess_01J8ZQ5V8K3T2B7N6X4R9DQPG6"))),
+        Some(test_ok(SessionRef::parse(
+            "sess_01J8ZQ5V8K3T2B7N6X4R9DQPG6",
+        ))),
         test_ok(ModelRef::parse(model)),
         test_ok(ActorRef::system("flauz-context-engine")),
         test_ok(Timestamp::parse("2026-09-21T13:45:00Z")),
@@ -125,12 +127,7 @@ fn reset_reconstructs_from_durable_task_state() {
         AuthorizationClass::Task,
         "another task's memory",
     )));
-    test_ok(store.put_snapshot(snapshot(
-        SNAPSHOT,
-        TASK,
-        MODEL,
-        Vec::new(),
-    )));
+    test_ok(store.put_snapshot(snapshot(SNAPSHOT, TASK, MODEL, Vec::new())));
 
     let reconstruction = test_ok(store.reset_context(
         task_ref(),
@@ -169,7 +166,10 @@ fn reset_reconstructs_from_durable_task_state() {
 
     // The reset is recorded, and the fresh snapshot is durable.
     assert_eq!(reconstruction.reset.reason, ResetReason::Pressure);
-    assert_eq!(reconstruction.reset.superseded_snapshot_id.as_str(), SNAPSHOT);
+    assert_eq!(
+        reconstruction.reset.superseded_snapshot_id.as_str(),
+        SNAPSHOT
+    );
     let fresh = stored(&store, reconstruction.snapshot.id.as_str());
     assert_eq!(fresh.items.len(), 3);
 }
@@ -224,9 +224,7 @@ fn task_identity_survives_model_switch() {
     // Both projections coexist as distinct durable snapshots of one task.
     let state = store.state();
     assert!(state.snapshots.contains_key(&first.id));
-    assert!(state
-        .snapshots
-        .contains_key(&reconstruction.snapshot.id));
+    assert!(state.snapshots.contains_key(&reconstruction.snapshot.id));
     assert_eq!(state.resets.len(), 1);
 }
 

@@ -244,9 +244,16 @@ mod tests {
                 event_id: ok(EventRef::parse("ev_01J8ZQ5V8K3T2B7N6X4R9DQPD3")),
             },
         ];
-        assert_eq!(sources.len(), 10, "the frozen source vocabulary has ten kinds");
+        assert_eq!(
+            sources.len(),
+            10,
+            "the frozen source vocabulary has ten kinds"
+        );
         for source in &sources {
-            let provenance = ok(ContextProvenance::new(source.clone(), AuthorizationClass::Task));
+            let provenance = ok(ContextProvenance::new(
+                source.clone(),
+                AuthorizationClass::Task,
+            ));
             let serialized = ok(serde_json::to_string(&provenance));
             let reloaded: ContextProvenance = ok(serde_json::from_str(&serialized));
             assert_eq!(reloaded, provenance, "source {source:?} must round-trip");

@@ -221,7 +221,9 @@ mod tests {
 
     fn snapshot_with_items(model: &str, items: Vec<ContextItem>) -> ContextSnapshot {
         ok(ContextSnapshot::new(
-            ok(ContextSnapshotId::parse("ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5")),
+            ok(ContextSnapshotId::parse(
+                "ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5",
+            )),
             ok(TaskRef::parse("task_01J8ZQ5V8K3T2B7N6X4R9DQPB1")),
             Some(ok(SessionRef::parse("sess_01J8ZQ5V8K3T2B7N6X4R9DQPG6"))),
             ok(ModelRef::parse(model)),
@@ -257,7 +259,7 @@ mod tests {
         let task_before = snapshot.task_id.clone();
         let context = ok(Context::compile_from_snapshot(
             &snapshot,
-            &profile_for("model_01J8ZQ5V8K3T2B7N6X4R9DQRE"),
+            &profile_for("model_01J8ZQ5V8K3T2B7N6X4R9DQPRE"),
             ok(Timestamp::parse("2026-09-21T13:46:00Z")),
         ));
         assert_eq!(context.items.len(), 2, "secret items are never included");
@@ -273,7 +275,7 @@ mod tests {
 
     #[test]
     fn compile_rejects_a_profile_for_another_model() {
-        let snapshot = snapshot_with_items("model_01J8ZQ5V8K3T2B7N6X4R9DQRE", Vec::new());
+        let snapshot = snapshot_with_items("model_01J8ZQ5V8K3T2B7N6X4R9DQPRE", Vec::new());
         let other_profile = profile_for("model_01J8ZQ5V8K3T2B7N6X4R9DQPSF");
         assert!(
             Context::compile_from_snapshot(
@@ -292,13 +294,16 @@ mod tests {
             ResetReason::Pressure,
             ok(ActorRef::user("alice")),
             ok(Timestamp::parse("2026-09-21T14:00:00Z")),
-            ok(ContextSnapshotId::parse("ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5")),
+            ok(ContextSnapshotId::parse(
+                "ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5",
+            )),
         ));
         let serialized = ok(serde_json::to_string(&reset));
         let reloaded: ContextReset = ok(serde_json::from_str(&serialized));
         assert_eq!(reloaded, reset);
         assert!(
-            serde_json::from_str::<ContextReset>(&serialized.replace("\"v\":1", "\"v\":2")).is_err()
+            serde_json::from_str::<ContextReset>(&serialized.replace("\"v\":1", "\"v\":2"))
+                .is_err()
         );
     }
 }

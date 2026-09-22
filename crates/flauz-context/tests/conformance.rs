@@ -11,10 +11,10 @@ use flauz_context::ids::{self, EntityKind, IdError};
 use flauz_context::profile::{ModelContextProfile, MultimodalBehavior, ToolSchemaHandling};
 use flauz_context::provenance::{AuthorizationClass, ContextProvenance, ContextSource};
 use flauz_context::{
-    ActorRef, ArtifactRef, Context, ContextItem, ContextItemContent, ContextReset,
-    ContextSnapshot, ContextSnapshotId, ContextStore, ContextStoreError, EnvironmentRef, EventRef,
-    MemoryContent, MemoryItemId, MemoryItem, MemoryTier, ModelRef, ObservationRef, ResetReason,
-    SessionRef, SkillRef, TaskRef, Timestamp,
+    ActorRef, ArtifactRef, Context, ContextItem, ContextItemContent, ContextReset, ContextSnapshot,
+    ContextSnapshotId, ContextStore, ContextStoreError, EnvironmentRef, EventRef, MemoryContent,
+    MemoryItem, MemoryItemId, MemoryTier, ModelRef, ObservationRef, ResetReason, SessionRef,
+    SkillRef, TaskRef, Timestamp,
 };
 
 fn test_ok<T, E: fmt::Display>(result: Result<T, E>) -> T {
@@ -78,13 +78,16 @@ fn kernel_id_valid_vectors() {
     // Context-owned kinds also parse through their typed newtypes, and
     // serialization is the plain canonical string. Foreign kinds parse
     // through their local validating reference newtypes.
-    let snapshot_id = test_ok(ContextSnapshotId::parse("ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5"));
+    let snapshot_id = test_ok(ContextSnapshotId::parse(
+        "ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5",
+    ));
     assert_eq!(
         test_ok(serde_json::to_string(&snapshot_id)),
         "\"ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5\""
     );
-    let reloaded: ContextSnapshotId =
-        test_ok(serde_json::from_str("\"ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5\""));
+    let reloaded: ContextSnapshotId = test_ok(serde_json::from_str(
+        "\"ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5\"",
+    ));
     assert_eq!(reloaded, snapshot_id);
     let task_ref = test_ok(TaskRef::parse("task_01J8ZQ5V8K3T2B7N6X4R9DQPB1"));
     assert_eq!(task_ref.as_str(), "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1");
@@ -188,7 +191,7 @@ fn context_snapshot_reconstructible_from_references() {
     );
     assert_eq!(
         object["model_id"],
-        serde_json::json!("model_01J8ZQ5V8K3T2B7N6X4R9DQRE")
+        serde_json::json!("model_01J8ZQ5V8K3T2B7N6X4R9DQPRE")
     );
 }
 
@@ -255,8 +258,16 @@ fn context_compilation_does_not_mutate_task_refs() {
     let compiled_at = test_ok(Timestamp::parse("2026-09-21T13:46:00Z"));
 
     // Compile twice; the snapshot is untouched and the views agree.
-    let first = test_ok(Context::compile_from_snapshot(&snapshot, &profile, compiled_at));
-    let second = test_ok(Context::compile_from_snapshot(&snapshot, &profile, compiled_at));
+    let first = test_ok(Context::compile_from_snapshot(
+        &snapshot,
+        &profile,
+        compiled_at,
+    ));
+    let second = test_ok(Context::compile_from_snapshot(
+        &snapshot,
+        &profile,
+        compiled_at,
+    ));
     assert_eq!(first, second);
     assert_eq!(first.task_id, task_before);
     assert_eq!(snapshot.task_id, task_before);
@@ -268,7 +279,7 @@ fn context_compilation_does_not_mutate_task_refs() {
     // previous snapshot.
     let reconstruction = test_ok(store.reset_context(
         task_before.clone(),
-        test_ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQRE")),
+        test_ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQPRE")),
         ResetReason::ModelChanged,
         test_ok(ActorRef::user("alice")),
         test_ok(Timestamp::parse("2026-09-21T14:00:00Z")),
@@ -347,7 +358,7 @@ fn version_monotonic_and_version_conflict_rejected() {
     assert_eq!(
         store.update_profile(updated_profile).err(),
         Some(ContextStoreError::VersionConflict {
-            id: "model_01J8ZQ5V8K3T2B7N6X4R9DQRE".to_owned(),
+            id: "model_01J8ZQ5V8K3T2B7N6X4R9DQPRE".to_owned(),
             expected_version: 1,
             actual_version: 2,
         })
@@ -425,7 +436,7 @@ fn no_credential_material_in_serialized_state() {
     let snapshot = stored_snapshot(&store, "ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5");
     let reconstruction = test_ok(store.reset_context(
         snapshot.task_id.clone(),
-        test_ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQRE")),
+        test_ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQPRE")),
         ResetReason::Pressure,
         test_ok(ActorRef::user("alice")),
         test_ok(Timestamp::parse("2026-09-21T14:00:00Z")),
@@ -481,7 +492,7 @@ fn assert_credential_free(serialized: &str) {
 
 fn test_profile() -> ModelContextProfile {
     test_ok(ModelContextProfile::new(
-        test_ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQRE")),
+        test_ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQPRE")),
         200_000,
         MultimodalBehavior::ImageInput,
         ToolSchemaHandling::SummariesWithLazySchemas,
@@ -504,10 +515,14 @@ fn test_item(source: ContextSource, authorization: AuthorizationClass) -> Contex
 /// canonical entity reference.
 fn test_snapshot_with_every_source_kind() -> ContextSnapshot {
     test_ok(ContextSnapshot::new(
-        test_ok(ContextSnapshotId::parse("ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5")),
+        test_ok(ContextSnapshotId::parse(
+            "ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5",
+        )),
         test_ok(TaskRef::parse("task_01J8ZQ5V8K3T2B7N6X4R9DQPB1")),
-        Some(test_ok(SessionRef::parse("sess_01J8ZQ5V8K3T2B7N6X4R9DQPG6"))),
-        test_ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQRE")),
+        Some(test_ok(SessionRef::parse(
+            "sess_01J8ZQ5V8K3T2B7N6X4R9DQPG6",
+        ))),
+        test_ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQPRE")),
         test_ok(ActorRef::system("flauz-context-engine")),
         test_ok(Timestamp::parse("2026-09-21T13:45:00Z")),
         vec![

@@ -9,16 +9,16 @@
 
 use std::collections::BTreeMap;
 
+use crate::MAX_CONTEXT_ITEMS;
 use crate::context::{Context, ContextReset, ResetReason};
 use crate::ids::{ContextSnapshotId, MemoryItemId, ModelRef, TaskRef};
-use crate::memory::{MemoryContent, MemoryItem, MemoryTier};
+use crate::memory::{MemoryContent, MemoryItem};
 use crate::profile::ModelContextProfile;
-use crate::provenance::{AuthorizationClass, ContextProvenance, ContextSource};
+use crate::provenance::{ContextProvenance, ContextSource};
 use crate::refs::ActorRef;
 use crate::snapshot::{ContextItem, ContextItemContent, ContextSnapshot};
 use crate::store::{ContextReconstruction, ContextStateSnapshot, ContextStore, ContextStoreError};
 use crate::time::Timestamp;
-use crate::MAX_CONTEXT_ITEMS;
 
 /// The in-memory fake context store. Deterministic: identical operation
 /// sequences produce identical logical state (generated IDs aside).
@@ -126,7 +126,8 @@ impl ContextStore for FakeContextStore {
         }
         let mut updated = item;
         updated.version = stored.version + 1;
-        self.memory_items.insert(updated.id.clone(), updated.clone());
+        self.memory_items
+            .insert(updated.id.clone(), updated.clone());
         Ok(updated)
     }
 
@@ -166,7 +167,8 @@ impl ContextStore for FakeContextStore {
                 ),
             });
         }
-        self.profiles.insert(profile.model_id.clone(), profile.clone());
+        self.profiles
+            .insert(profile.model_id.clone(), profile.clone());
         Ok(profile)
     }
 
@@ -193,7 +195,8 @@ impl ContextStore for FakeContextStore {
         }
         let mut updated = profile;
         updated.version = stored.version + 1;
-        self.profiles.insert(updated.model_id.clone(), updated.clone());
+        self.profiles
+            .insert(updated.model_id.clone(), updated.clone());
         Ok(updated)
     }
 
@@ -282,6 +285,8 @@ impl ContextStore for FakeContextStore {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::AuthorizationClass;
+    use crate::MemoryTier;
 
     fn ok<T, E: std::fmt::Display>(result: Result<T, E>) -> T {
         match result {
@@ -308,7 +313,7 @@ mod tests {
             ContextSnapshotId::generate(),
             ok(TaskRef::parse("task_01J8ZQ5V8K3T2B7N6X4R9DQPB1")),
             None,
-            ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQRE")),
+            ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQPRE")),
             ok(ActorRef::system("flauz-context-engine")),
             ok(Timestamp::parse("2026-09-21T13:45:00Z")),
             Vec::new(),

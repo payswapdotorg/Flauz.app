@@ -27,8 +27,8 @@ use crate::provenance::ContextProvenance;
 use crate::refs::ActorRef;
 use crate::time::Timestamp;
 use crate::{
-    ContextError, ContextVersion, MAX_CONTEXT_ITEMS, MAX_ITEM_CONTENT_BYTES,
-    MAX_STATEMENT_BYTES, ensure_non_empty, ensure_str_bound,
+    ContextError, ContextVersion, MAX_CONTEXT_ITEMS, MAX_ITEM_CONTENT_BYTES, MAX_STATEMENT_BYTES,
+    ensure_non_empty, ensure_str_bound,
 };
 
 /// The content of one context item: either bounded inline text (for
@@ -382,7 +382,9 @@ mod tests {
     #[test]
     fn snapshot_round_trips_and_lists_durable_references() {
         let snapshot = ok(ContextSnapshot::new(
-            ok(ContextSnapshotId::parse("ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5")),
+            ok(ContextSnapshotId::parse(
+                "ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5",
+            )),
             ok(TaskRef::parse("task_01J8ZQ5V8K3T2B7N6X4R9DQPB1")),
             Some(ok(SessionRef::parse("sess_01J8ZQ5V8K3T2B7N6X4R9DQPG6"))),
             ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQPRE")),
@@ -411,7 +413,7 @@ mod tests {
             ok(TaskRef::parse("task_01J8ZQ5V8K3T2B7N6X4R9DQPB1")),
             None,
             ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQPRE")),
-            ActorRef::system("flauz-context-engine"),
+            ok(ActorRef::system("flauz-context-engine")),
             ok(Timestamp::parse("2026-09-21T13:45:00Z")),
             Vec::new(),
         ));

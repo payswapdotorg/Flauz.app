@@ -136,7 +136,7 @@ mod tests {
     #[test]
     fn profile_round_trips_and_is_keyed_by_its_model() {
         let profile = ok(ModelContextProfile::new(
-            ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQRE")),
+            ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQPRE")),
             200_000,
             MultimodalBehavior::ImageInput,
             ToolSchemaHandling::SummariesWithLazySchemas,
@@ -147,7 +147,7 @@ mod tests {
         assert_eq!(
             serialized,
             "{\"v\":1,\
-             \"model_id\":\"model_01J8ZQ5V8K3T2B7N6X4R9DQRE\",\
+             \"model_id\":\"model_01J8ZQ5V8K3T2B7N6X4R9DQPRE\",\
              \"version\":1,\
              \"context_capacity_tokens\":200000,\
              \"multimodal\":\"image_input\",\
@@ -169,7 +169,7 @@ mod tests {
     fn profile_rejects_out_of_bounds_capacity() {
         assert!(
             ModelContextProfile::new(
-                ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQRE")),
+                ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQPRE")),
                 MIN_MODEL_TOKENS.saturating_sub(1),
                 MultimodalBehavior::TextOnly,
                 ToolSchemaHandling::InlineFullSchemas,
@@ -180,7 +180,7 @@ mod tests {
         );
         assert!(
             ModelContextProfile::new(
-                ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQRE")),
+                ok(ModelRef::parse("model_01J8ZQ5V8K3T2B7N6X4R9DQPRE")),
                 MAX_MODEL_TOKENS + 1,
                 MultimodalBehavior::TextOnly,
                 ToolSchemaHandling::InlineFullSchemas,
