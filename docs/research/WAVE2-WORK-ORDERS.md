@@ -1,10 +1,13 @@
 # Wave 2 Work Orders — Environment / Model / Capability fabric
 
-> **Status: 1 of 3 MERGED** (MOD-001+RT-001 Worker B — PR #46, merge
-> a46b76f, CI both platforms, deviations NONE; see
-> [evidence/w2-mod-001-rt-001](evidence/w2-mod-001-rt-001/MOD-001-RT-001-COMPLETION-REPORT.md)).
-> ENV-001 Worker A + CAP-001 Worker C: DISPATCHED 2026-09-22, grinding the
-> peak-hours capacity gate. Shared-contract authority: [F2-CONTRACT-KERNEL.md](F2-CONTRACT-KERNEL.md)
+> **Status: 3 of 3 MERGED — Wave 2 DELIVERED** (MOD-001+RT-001 Worker B —
+> PR #46, merge a46b76f; CAP-001 Worker C — PR #47, merge 93125d0, see
+> [evidence/w2-cap-001](evidence/w2-cap-001/CAP-001-COMPLETION-REPORT.md);
+> ENV-001 Worker A — PR #48, merge f5fae68, see
+> [evidence/w2-env-001](evidence/w2-env-001/ENV-001-COMPLETION-REPORT.md);
+> all CI both platforms, deviations NONE ×3; the Wave-2 integration gate
+> record at [evidence/w2-gate](evidence/w2-gate/WAVE2-GATE-RECORD.md)).
+> Shared-contract authority: [F2-CONTRACT-KERNEL.md](F2-CONTRACT-KERNEL.md)
 > (frozen, Wave 1) + the **Wave-2 kernel addendum** below + the MERGED
 > contract crates themselves (flauz-world / flauz-exec / flauz-context at
 > 5fd7178 — the crates are the implementation truth). Every work order
@@ -123,7 +126,14 @@ Acceptance criteria:
 Rollback/recovery: additive modules; revert the commit.
 Integration notes: the provider family is the template every later real
   provider (E2B, Daytona) must copy; keep the fake-remote deterministic.
-Status: DISPATCHED (2026-09-22)
+Status: MERGED (2026-09-22) — PR #48 (merge f5fae68): worker commit 0a71706
+  (bundle-verified, base fda38ea exact) + the ci.yml workflow_dispatch
+  cherry-pick (9839c09, the event-swallow workaround). CI dispatched GREEN
+  both platforms at 9839c09. Merge resolution: fakes.rs keep-all-lines
+  (doc table: mod-001's CodexServerHandle row + env-001's Environment row);
+  lib.rs auto-merged complete. Gates on the merged tree: fmt clean, clippy
+  -p flauz-exec clean, test -p flauz-exec 90/90. Deviations: NONE. Evidence:
+  evidence/w2-env-001/ENV-001-COMPLETION-REPORT.md
 ```
 
 ---
@@ -310,7 +320,13 @@ Rollback/recovery: additive crate + module; revert the commit.
 Integration notes: the resolution record is the evidence type future
   waves (skill unlock flows, permission UIs) build on; keep the unlock
   hints honest (never promise an unlock the product cannot perform).
-Status: DISPATCHED (2026-09-22)
+Status: MERGED (2026-09-22) — PR #47 (merge 93125d0): worker commit 158fa0a
+  (bundle-verified, base fda38ea exact) + Lead gate-fix 8393012 (gap-surface
+  dead-code allows — the picker precedent) + the ci.yml workflow_dispatch
+  cherry-pick (02d8473, the event-swallow workaround). CI dispatched GREEN
+  both platforms at 02d8473. Gates: flauz-cap 31/31, codex-app clippy clean,
+  fmt clean. Deviations: NONE. Evidence:
+  evidence/w2-cap-001/CAP-001-COMPLETION-REPORT.md
 ```
 
 ---
