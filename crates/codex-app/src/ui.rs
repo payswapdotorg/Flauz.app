@@ -108,6 +108,20 @@ use crate::backend::{Backend, QueuedAction};
 
 mod ui_workflow;
 
+// UX-001 (ORCH-001 + UX-001): the first Flauz platform shell — the §2.1
+// information architecture with honest empty states, wired through minimal
+// navigation/palette/keyboard registration seams below.
+mod flauz_shell;
+use flauz_shell::FlauzActivityShortcut;
+use flauz_shell::FlauzArtifactsShortcut;
+use flauz_shell::FlauzProjectsTasksShortcut;
+use flauz_shell::FlauzReusableWorkflowsShortcut;
+use flauz_shell::FlauzTaskAgentsShortcut;
+use flauz_shell::FlauzTaskContextShortcut;
+use flauz_shell::FlauzTaskEnvironmentsShortcut;
+use flauz_shell::FlauzTaskEvidenceShortcut;
+use flauz_shell::FlauzTaskMoreInspectShortcut;
+
 const WINDOW_WIDTH: f32 = 1_278.0;
 const WINDOW_HEIGHT: f32 = 818.0;
 const WINDOW_MIN_WIDTH: f32 = 480.0;
@@ -2932,6 +2946,7 @@ enum PaletteGroup {
     Skills,
     Configure,
     App,
+    WorkspaceShell,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -3726,10 +3741,19 @@ enum PaletteCommand {
     OpenConfigurationSettings,
     OpenHooksSettings,
     OpenGitSettings,
+    OpenProjectsTasks,
+    OpenReusableWorkflows,
+    OpenArtifacts,
+    OpenWorkspaceActivity,
+    InspectTaskContext,
+    InspectTaskAgents,
+    InspectTaskEnvironments,
+    InspectTaskEvidence,
+    InspectTaskMore,
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 71] = [
+    const ALL: [Self; 80] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3801,6 +3825,15 @@ impl PaletteCommand {
         Self::OpenPlugins,
         Self::OpenWorkflows,
         Self::OpenConnectionsSettings,
+        Self::OpenProjectsTasks,
+        Self::OpenReusableWorkflows,
+        Self::OpenArtifacts,
+        Self::OpenWorkspaceActivity,
+        Self::InspectTaskContext,
+        Self::InspectTaskAgents,
+        Self::InspectTaskEnvironments,
+        Self::InspectTaskEvidence,
+        Self::InspectTaskMore,
     ];
 
     const fn title(self) -> &'static str {
@@ -3876,6 +3909,23 @@ impl PaletteCommand {
             Self::GoToChat9 => "Go to chat 9",
             Self::ToggleReviewTab => "Toggle review",
             Self::ToggleMaximizeSidePanel => "Toggle maximize side panel",
+            Self::OpenProjectsTasks => {
+                flauz_shell::FlauzWorkspaceSurface::ProjectsTasks.palette_title()
+            }
+            Self::OpenReusableWorkflows => {
+                flauz_shell::FlauzWorkspaceSurface::ReusableWorkflows.palette_title()
+            }
+            Self::OpenArtifacts => flauz_shell::FlauzWorkspaceSurface::Artifacts.palette_title(),
+            Self::OpenWorkspaceActivity => {
+                flauz_shell::FlauzWorkspaceSurface::Activity.palette_title()
+            }
+            Self::InspectTaskContext => flauz_shell::TaskRailSection::Context.palette_title(),
+            Self::InspectTaskAgents => flauz_shell::TaskRailSection::Agents.palette_title(),
+            Self::InspectTaskEnvironments => {
+                flauz_shell::TaskRailSection::Environments.palette_title()
+            }
+            Self::InspectTaskEvidence => flauz_shell::TaskRailSection::Evidence.palette_title(),
+            Self::InspectTaskMore => flauz_shell::TaskRailSection::MoreInspect.palette_title(),
         }
     }
 
@@ -3952,6 +4002,29 @@ impl PaletteCommand {
             Self::GoToChat9 => "Open the visible chat in this shortcut slot",
             Self::ToggleReviewTab => "Show or hide Review for the current Git-backed chat",
             Self::ToggleMaximizeSidePanel => "Expand or restore the side panel",
+            Self::OpenProjectsTasks => {
+                flauz_shell::FlauzWorkspaceSurface::ProjectsTasks.palette_description()
+            }
+            Self::OpenReusableWorkflows => {
+                flauz_shell::FlauzWorkspaceSurface::ReusableWorkflows.palette_description()
+            }
+            Self::OpenArtifacts => {
+                flauz_shell::FlauzWorkspaceSurface::Artifacts.palette_description()
+            }
+            Self::OpenWorkspaceActivity => {
+                flauz_shell::FlauzWorkspaceSurface::Activity.palette_description()
+            }
+            Self::InspectTaskContext => flauz_shell::TaskRailSection::Context.palette_description(),
+            Self::InspectTaskAgents => flauz_shell::TaskRailSection::Agents.palette_description(),
+            Self::InspectTaskEnvironments => {
+                flauz_shell::TaskRailSection::Environments.palette_description()
+            }
+            Self::InspectTaskEvidence => {
+                flauz_shell::TaskRailSection::Evidence.palette_description()
+            }
+            Self::InspectTaskMore => {
+                flauz_shell::TaskRailSection::MoreInspect.palette_description()
+            }
         }
     }
 
@@ -3978,6 +4051,15 @@ impl PaletteCommand {
             Self::OpenBrowserTab => Some("Ctrl+T"),
             Self::ToggleBrowserPanel => Some("Ctrl+Shift+B"),
             Self::FocusBrowserAddressBar => Some("Ctrl+L"),
+            Self::OpenProjectsTasks => Some("Ctrl+Alt+1"),
+            Self::OpenReusableWorkflows => Some("Ctrl+Alt+2"),
+            Self::OpenArtifacts => Some("Ctrl+Alt+3"),
+            Self::OpenWorkspaceActivity => Some("Ctrl+Alt+4"),
+            Self::InspectTaskContext => Some("Ctrl+Alt+Shift+1"),
+            Self::InspectTaskAgents => Some("Ctrl+Alt+Shift+2"),
+            Self::InspectTaskEnvironments => Some("Ctrl+Alt+Shift+3"),
+            Self::InspectTaskEvidence => Some("Ctrl+Alt+Shift+4"),
+            Self::InspectTaskMore => Some("Ctrl+Alt+Shift+5"),
             _ => None,
         }
     }
@@ -4126,6 +4208,23 @@ impl PaletteCommand {
             | Self::GoToChat9 => IconName::ArrowRight,
             Self::ToggleReviewTab => IconName::PanelRight,
             Self::ToggleMaximizeSidePanel => IconName::Maximize,
+            Self::OpenProjectsTasks => {
+                flauz_shell::FlauzWorkspaceSurface::ProjectsTasks.icon()
+            }
+            Self::OpenReusableWorkflows => {
+                flauz_shell::FlauzWorkspaceSurface::ReusableWorkflows.icon()
+            }
+            Self::OpenArtifacts => flauz_shell::FlauzWorkspaceSurface::Artifacts.icon(),
+            Self::OpenWorkspaceActivity => {
+                flauz_shell::FlauzWorkspaceSurface::Activity.icon()
+            }
+            Self::InspectTaskContext => flauz_shell::TaskRailSection::Context.icon(),
+            Self::InspectTaskAgents => flauz_shell::TaskRailSection::Agents.icon(),
+            Self::InspectTaskEnvironments => {
+                flauz_shell::TaskRailSection::Environments.icon()
+            }
+            Self::InspectTaskEvidence => flauz_shell::TaskRailSection::Evidence.icon(),
+            Self::InspectTaskMore => flauz_shell::TaskRailSection::MoreInspect.icon(),
         }
     }
 
@@ -4197,6 +4296,15 @@ impl PaletteCommand {
             | Self::DisableGitReview
             | Self::EnableGitReview => PaletteGroup::Configure,
             Self::LogOut | Self::Feedback | Self::OpenProcessManager => PaletteGroup::App,
+            Self::OpenProjectsTasks
+            | Self::OpenReusableWorkflows
+            | Self::OpenArtifacts
+            | Self::OpenWorkspaceActivity
+            | Self::InspectTaskContext
+            | Self::InspectTaskAgents
+            | Self::InspectTaskEnvironments
+            | Self::InspectTaskEvidence
+            | Self::InspectTaskMore => PaletteGroup::WorkspaceShell,
         }
     }
 
@@ -4236,6 +4344,11 @@ impl PaletteCommand {
                 | Self::ToggleBrowserPanel
                 | Self::FocusBrowserAddressBar
                 | Self::ShowComputerUse
+                | Self::InspectTaskContext
+                | Self::InspectTaskAgents
+                | Self::InspectTaskEnvironments
+                | Self::InspectTaskEvidence
+                | Self::InspectTaskMore
         )
     }
 
@@ -4792,6 +4905,78 @@ impl CommandPaletteView {
                     workspace.navigate_chat_slot(slot, cx);
                 }
             }
+            PaletteCommand::OpenProjectsTasks => {
+                flauz_shell::open_workspace_surface(
+                    workspace,
+                    flauz_shell::FlauzWorkspaceSurface::ProjectsTasks,
+                    window,
+                    cx,
+                );
+            }
+            PaletteCommand::OpenReusableWorkflows => {
+                flauz_shell::open_workspace_surface(
+                    workspace,
+                    flauz_shell::FlauzWorkspaceSurface::ReusableWorkflows,
+                    window,
+                    cx,
+                );
+            }
+            PaletteCommand::OpenArtifacts => {
+                flauz_shell::open_workspace_surface(
+                    workspace,
+                    flauz_shell::FlauzWorkspaceSurface::Artifacts,
+                    window,
+                    cx,
+                );
+            }
+            PaletteCommand::OpenWorkspaceActivity => {
+                flauz_shell::open_workspace_surface(
+                    workspace,
+                    flauz_shell::FlauzWorkspaceSurface::Activity,
+                    window,
+                    cx,
+                );
+            }
+            PaletteCommand::InspectTaskContext => {
+                flauz_shell::open_task_rail_section(
+                    workspace,
+                    flauz_shell::TaskRailSection::Context,
+                    window,
+                    cx,
+                );
+            }
+            PaletteCommand::InspectTaskAgents => {
+                flauz_shell::open_task_rail_section(
+                    workspace,
+                    flauz_shell::TaskRailSection::Agents,
+                    window,
+                    cx,
+                );
+            }
+            PaletteCommand::InspectTaskEnvironments => {
+                flauz_shell::open_task_rail_section(
+                    workspace,
+                    flauz_shell::TaskRailSection::Environments,
+                    window,
+                    cx,
+                );
+            }
+            PaletteCommand::InspectTaskEvidence => {
+                flauz_shell::open_task_rail_section(
+                    workspace,
+                    flauz_shell::TaskRailSection::Evidence,
+                    window,
+                    cx,
+                );
+            }
+            PaletteCommand::InspectTaskMore => {
+                flauz_shell::open_task_rail_section(
+                    workspace,
+                    flauz_shell::TaskRailSection::MoreInspect,
+                    window,
+                    cx,
+                );
+            }
             PaletteCommand::SearchChats | PaletteCommand::SearchFiles => {}
         });
     }
@@ -5139,6 +5324,7 @@ impl Render for CommandPaletteView {
                     (PaletteGroup::Skills, "Skills"),
                     (PaletteGroup::Configure, "Configure"),
                     (PaletteGroup::App, "App"),
+                    (PaletteGroup::WorkspaceShell, "Workspace"),
                 ] {
                     let grouped = commands
                         .iter()
@@ -5285,6 +5471,21 @@ pub fn run() {
                 KeyBinding::new(&shortcut(","), OpenSettingsShortcut, None),
                 KeyBinding::new(&shortcut("/"), ShowKeyboardShortcutsShortcut, None),
                 KeyBinding::new("f11", ToggleFullscreenShortcut, None),
+                // UX-001 (ORCH-001 + UX-001): the Flauz workspace shell's
+                // direct keyboard paths — one chord per PRODUCT-UX-JOURNEYS
+                // §2.1 surface, so no new surface depends on pointer input.
+                // The alt-number family maps the sidebar's workspace
+                // navigation order; the alt-shift-number family maps the
+                // task rail order.
+                KeyBinding::new(&shortcut("alt-1"), FlauzProjectsTasksShortcut, None),
+                KeyBinding::new(&shortcut("alt-2"), FlauzReusableWorkflowsShortcut, None),
+                KeyBinding::new(&shortcut("alt-3"), FlauzArtifactsShortcut, None),
+                KeyBinding::new(&shortcut("alt-4"), FlauzActivityShortcut, None),
+                KeyBinding::new(&shortcut("alt-shift-1"), FlauzTaskContextShortcut, None),
+                KeyBinding::new(&shortcut("alt-shift-2"), FlauzTaskAgentsShortcut, None),
+                KeyBinding::new(&shortcut("alt-shift-3"), FlauzTaskEnvironmentsShortcut, None),
+                KeyBinding::new(&shortcut("alt-shift-4"), FlauzTaskEvidenceShortcut, None),
+                KeyBinding::new(&shortcut("alt-shift-5"), FlauzTaskMoreInspectShortcut, None),
                 KeyBinding::new("escape", Escape, Some("AboutDialog")),
                 KeyBinding::new("escape", Escape, Some("McpElicitation")),
                 KeyBinding::new("escape", Escape, Some("StructuredUserInput")),
@@ -5296,6 +5497,12 @@ pub fn run() {
                 KeyBinding::new("down", ActivityViewSelectNext, Some("ActivityView")),
                 KeyBinding::new("enter", ActivityViewConfirm, Some("ActivityView")),
                 KeyBinding::new("escape", Escape, Some("ActivityView")),
+                // UX-001: the Flauz workspace shell surfaces own a scoped
+                // escape binding (the 019 family shape) — the surface and
+                // rail panels auto-focus their own handles on mount, so one
+                // Escape dismisses them through their focus path.
+                KeyBinding::new("escape", Escape, Some("FlauzWorkspaceSurface")),
+                KeyBinding::new("escape", Escape, Some("FlauzTaskRail")),
                 // UX-003: the model-availability NUX modal's one-Escape
                 // contract — the modal auto-focuses its own handle on mount
                 // (the 019 request-once pattern), so this scoped binding
@@ -6040,6 +6247,9 @@ struct WorkspaceView {
     thread_find_history_truncated: bool,
     navigation_history: NavigationHistory,
     navigation_history_replaying: bool,
+    /// The Flauz platform shell state (UX-001): the open workspace surface
+    /// and task-rail section. Additive UI state; F1 flows are unchanged.
+    flauz_shell: flauz_shell::FlauzShellState,
     sidebar_visible: bool,
     sidebar_responsive: bool,
     shell_width_class: Option<ShellWidthClass>,
@@ -7268,6 +7478,7 @@ impl WorkspaceView {
             thread_find_history_truncated: false,
             navigation_history,
             navigation_history_replaying: false,
+            flauz_shell: flauz_shell::FlauzShellState::new(cx),
             sidebar_visible: true,
             sidebar_responsive: true,
             shell_width_class: None,
@@ -7883,6 +8094,16 @@ impl WorkspaceView {
     }
 
     fn dispatch(&mut self, action: Action, cx: &mut Context<Self>) {
+        // UX-001 navigation registration: F1 navigation and task-surface
+        // actions close any open Flauz workspace-shell surface and
+        // task-rail panel (the shell is additive UI state; the reducer is
+        // untouched, and the deliberate close paths restore focus through
+        // the 017 contract instead of this quiet close).
+        if flauz_shell::action_closes_shell_surfaces(&action)
+            && self.flauz_shell.close_for_navigation()
+        {
+            cx.notify();
+        }
         let leaves_login_surface = (self.api_key_login_visible || self.bedrock_login_visible)
             && match &action {
                 Action::Navigate(route) => match route {
@@ -15123,7 +15344,11 @@ impl WorkspaceView {
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.navigate(MainRoute::Workflows, cx);
                             })),
-                    ),
+                    )
+                    // UX-001 navigation registration: the Flauz workspace
+                    // navigation (Projects & tasks, Reusable workflows,
+                    // Artifacts, Activity) — persistent and labeled.
+                    .child(flauz_shell::render_workspace_nav(self, cx)),
             )
             .child(
                 v_flex()
@@ -15644,8 +15869,14 @@ impl WorkspaceView {
     }
 
     fn render_main(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+        // UX-001 navigation registration: an open Flauz workspace surface
+        // takes the main area (additive; the F1 route match is untouched
+        // and renders whenever no shell surface is open).
+        if let Some(surface) = self.flauz_shell.workspace_surface() {
+            return flauz_shell::render_workspace_surface(self, surface, window, cx);
+        }
         match self.state.route {
-            MainRoute::Tasks => self.render_task_workspace(cx),
+            MainRoute::Tasks => self.render_task_workspace(window, cx),
             MainRoute::Repository => self.render_repository(cx),
             MainRoute::PullRequests => self.render_pull_requests(window, cx),
             MainRoute::Marketplace => self.render_marketplace(cx),
@@ -18257,7 +18488,11 @@ impl WorkspaceView {
         )
     }
 
-    fn render_task_workspace(&mut self, cx: &mut Context<Self>) -> AnyElement {
+    fn render_task_workspace(
+        &mut self,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
         let Some(task_id) = self.state.selected_task_id.clone() else {
             let new_chat_cwd = self.state.new_chat_cwd.clone();
             let recovery = startup_recovery_card(&self.state.connection, self.backend.is_some());
@@ -18921,6 +19156,12 @@ impl WorkspaceView {
                                         )
                                     }),
                             )
+                            // UX-001 navigation registration: the task
+                            // control rail (Context, Agents, Environments,
+                            // Evidence, More) stays visible while a task
+                            // is selected — never hidden behind developer
+                            // settings.
+                            .child(flauz_shell::render_task_rail(self, window, cx))
                             .when_some(bedrock_workspace_notice, |workspace, notice| {
                                 workspace.child(notice)
                             })
@@ -44830,6 +45071,100 @@ impl Render for WorkspaceView {
             .on_action(
                 cx.listener(|this, _: &ShowKeyboardShortcutsShortcut, window, cx| {
                     this.toggle_keyboard_shortcuts(window, cx);
+                }),
+            )
+            // UX-001 keyboard registration: the Flauz workspace shell's
+            // direct chords (Ctrl+Alt+1..4 / Ctrl+Alt+Shift+1..5). The
+            // handlers live on the workspace root so they work whether or
+            // not a shell surface is open; the shell module owns the logic.
+            .on_action(
+                cx.listener(|this, _: &FlauzProjectsTasksShortcut, window, cx| {
+                    flauz_shell::open_workspace_surface(
+                        this,
+                        flauz_shell::FlauzWorkspaceSurface::ProjectsTasks,
+                        window,
+                        cx,
+                    );
+                }),
+            )
+            .on_action(
+                cx.listener(|this, _: &FlauzReusableWorkflowsShortcut, window, cx| {
+                    flauz_shell::open_workspace_surface(
+                        this,
+                        flauz_shell::FlauzWorkspaceSurface::ReusableWorkflows,
+                        window,
+                        cx,
+                    );
+                }),
+            )
+            .on_action(
+                cx.listener(|this, _: &FlauzArtifactsShortcut, window, cx| {
+                    flauz_shell::open_workspace_surface(
+                        this,
+                        flauz_shell::FlauzWorkspaceSurface::Artifacts,
+                        window,
+                        cx,
+                    );
+                }),
+            )
+            .on_action(
+                cx.listener(|this, _: &FlauzActivityShortcut, window, cx| {
+                    flauz_shell::open_workspace_surface(
+                        this,
+                        flauz_shell::FlauzWorkspaceSurface::Activity,
+                        window,
+                        cx,
+                    );
+                }),
+            )
+            .on_action(
+                cx.listener(|this, _: &FlauzTaskContextShortcut, window, cx| {
+                    flauz_shell::open_task_rail_section(
+                        this,
+                        flauz_shell::TaskRailSection::Context,
+                        window,
+                        cx,
+                    );
+                }),
+            )
+            .on_action(
+                cx.listener(|this, _: &FlauzTaskAgentsShortcut, window, cx| {
+                    flauz_shell::open_task_rail_section(
+                        this,
+                        flauz_shell::TaskRailSection::Agents,
+                        window,
+                        cx,
+                    );
+                }),
+            )
+            .on_action(
+                cx.listener(|this, _: &FlauzTaskEnvironmentsShortcut, window, cx| {
+                    flauz_shell::open_task_rail_section(
+                        this,
+                        flauz_shell::TaskRailSection::Environments,
+                        window,
+                        cx,
+                    );
+                }),
+            )
+            .on_action(
+                cx.listener(|this, _: &FlauzTaskEvidenceShortcut, window, cx| {
+                    flauz_shell::open_task_rail_section(
+                        this,
+                        flauz_shell::TaskRailSection::Evidence,
+                        window,
+                        cx,
+                    );
+                }),
+            )
+            .on_action(
+                cx.listener(|this, _: &FlauzTaskMoreInspectShortcut, window, cx| {
+                    flauz_shell::open_task_rail_section(
+                        this,
+                        flauz_shell::TaskRailSection::MoreInspect,
+                        window,
+                        cx,
+                    );
                 }),
             )
             .relative()

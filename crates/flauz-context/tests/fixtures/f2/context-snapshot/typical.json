@@ -1,0 +1,42 @@
+{
+  "v": 1,
+  "id": "ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5",
+  "version": 1,
+  "task_id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "session_id": "sess_01J8ZQ5V8K3T2B7N6X4R9DQPG6",
+  "model_id": "model_01J8ZQ5V8K3T2B7N6X4R9DQRE",
+  "compiled_by": {
+    "kind": "system",
+    "id": "flauz-context-engine"
+  },
+  "compiled_at": "2026-09-21T13:45:00Z",
+  "items": [
+    {
+      "content": {
+        "kind": "text",
+        "text": "reconcile the ticket counts between the dashboard and the CRM export"
+      },
+      "tier": "hot",
+      "provenance": {
+        "source": {
+          "kind": "user_input"
+        },
+        "authorization": "task"
+      }
+    },
+    {
+      "content": {
+        "kind": "reference",
+        "reference": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPF5/decision"
+      },
+      "tier": "warm",
+      "provenance": {
+        "source": {
+          "kind": "memory_item",
+          "memory_item_id": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPF5"
+        },
+        "authorization": "task"
+      }
+    }
+  ]
+}
