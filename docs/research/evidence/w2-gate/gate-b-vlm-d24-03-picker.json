@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot, here is a description of the open panel:\n\n**Panel Title and Status**\nThe panel is titled **\"Choose a model\"**. It is currently in an **empty state**, indicated by the header **\"Model: not chosen yet\"** at the top of the view.\n\n**Sections and Content**\nThe panel contains the following sections and text:\n\n*   **Introduction:**\n    > \"The model is the engine that reads your instructions and does the work. Switching models keeps this task — its objective, its plan, and everything it produced — exactly as it is.\"\n\n*   **Empty State Message (No List of Models):**\n    Instead of a list, there is a section titled **\"No models connected yet\"** with the following explanation:\n    > \"A model is what does the work of a task — reading your instructions, writing, analyzing, and planning. Different models bring different strengths; for example, some can understand images. Models become available when you connect a provider.\"\n\n*   **Instructions (\"What to do next\"):**\n    This section provides the exact steps to resolve the empty state:\n    > \"To make models available, connect a provider: open Settings, then Connections, and follow the steps there. Models from connected providers appear in this panel, ready to run your tasks.\"\n\n*   **Action Button:**\n    There is a blue button labeled **\"Open Connections settings.\"**\n\n*   **Footer Information:**\n    *   \"Applies to 'Untitled task' — switching never starts a new task\"\n    *   \"Escape closes this panel\"\n    *   A collapsed section titled **\"* Capabilities\"** with the subtitle \"What a task can do — and what's missing when it can't\".",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790116662,
+  "id": "20260923063735feeb5f62328a4276",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260923063735feeb5f62328a4276",
+  "usage": {
+    "completion_tokens": 358,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1730,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2088
+  }
+}

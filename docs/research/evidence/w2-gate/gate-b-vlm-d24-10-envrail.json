@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot, here is a description of the right-side rail panel (the main content area):\n\n**Title and Context**\nThe panel is titled **\"Wave 2 gate anchor\"** with the path `/tmp/d10-seed-ws` underneath. The **\"Environments\"** tab is currently active in the sub-navigation bar.\n\n**Sections and Empty State Text**\nThe primary section displayed is an empty state for environments. It contains the following exact text:\n\n*   **Header:** \"No environments attached\"\n*   **Explanation:** \"Environments are where work actually happens — browser sites, terminals, sandboxes, and desktops. Attached environments and their status will appear here.\"\n*   **Instruction/Call to Action:** \"Use the Browser and Terminal panels in this chat today: attached environments will show up here.\"\n*   **Helper Text:** \"Escape closes this panel\"\n\n**Other Visible Sections**\nBelow the environments box, there are two other informational lines:\n*   **Model Status:** \"Model: not chosen yet\"\n*   **Capabilities:** \"* Capabilities What a task can do — and what's missing when it can't\"\n\nAt the very bottom of the panel is an input field containing the placeholder text: \"Ask Codex to change, inspect, or explain...\"",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790116694,
+  "id": "20260923063808a7fc645eb31f4152",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260923063808a7fc645eb31f4152",
+  "usage": {
+    "completion_tokens": 262,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1713,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1975
+  }
+}

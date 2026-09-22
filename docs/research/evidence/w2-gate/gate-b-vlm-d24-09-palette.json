@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot, here is the exact text of the visible row/result in the command palette:\n\n**Why is a capability unavailable?**",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790116688,
+  "id": "20260923063806af03ff0f94174f25",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260923063806af03ff0f94174f25",
+  "usage": {
+    "completion_tokens": 29,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1700,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1729
+  }
+}

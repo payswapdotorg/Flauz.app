@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot, here is the only row/result visible in the command palette:\n\n*   **Choose a model...**",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790116669,
+  "id": "20260923063748fd2b6eddcd8d4c0a",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260923063748fd2b6eddcd8d4c0a",
+  "usage": {
+    "completion_tokens": 26,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1700,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1726
+  }
+}

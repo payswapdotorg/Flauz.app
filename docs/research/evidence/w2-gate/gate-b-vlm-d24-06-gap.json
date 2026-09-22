@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot, here is a description of the open panel:\n\n**Panel Title and Header**\n*   **Title:** \"Capabilities\"\n*   **Subtitle/Description:** \"What a task can do — and what's missing when it can't\"\n*   **Navigation:** There is a link on the right that says \"**← Back to your work**\".\n\n**Sections and Structure**\nThe panel is currently displaying an empty or \"loading\" state for capability resolution. It is structured with the following text blocks:\n\n*   **Status Indicator:**\n    > * Capability resolution is on its way\n\n*   **The 'Why?' / 'What is missing' Explanation (The core logic):**\n    > When a capability is unavailable, this panel will say why — naming exactly what is missing: the model, the runtime, the environment, permissions, or workspace policy. No capability quietly disappears.\n\n*   **'Ways to unlock' / Next Steps:**\n    > **What to do next**\n    > Run a task and ask for something it can't do — the named gaps and the steps that would unlock them appear here once capability resolution is wired into the task surface.\n\n**Other Visible Text**\nAt the very bottom of the main window (outside the specific panel but part of the view), there is an error message regarding the AI assistant:\n> Codex couldn't complete the request. Try again, or check the account and connection settings. [Dismiss]",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790116677,
+  "id": "202609230637497850c2cc4de24975",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609230637497850c2cc4de24975",
+  "usage": {
+    "completion_tokens": 296,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1718,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2014
+  }
+}
