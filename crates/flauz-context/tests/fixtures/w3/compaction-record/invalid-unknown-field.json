@@ -1,0 +1,63 @@
+{
+  "v": 1,
+  "totally_unknown": true,
+  "task_id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "reason": "pressure",
+  "performed_by": {
+    "kind": "user",
+    "id": "alice"
+  },
+  "performed_at": "2026-09-21T14:00:00Z",
+  "superseded_snapshot_id": "ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5",
+  "budget": {
+    "v": 1,
+    "max_items": 256,
+    "max_tokens": 40
+  },
+  "summarized": [
+    {
+      "provenance": {
+        "source": {
+          "kind": "memory_item",
+          "memory_item_id": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPF7"
+        },
+        "authorization": "task"
+      },
+      "tier": "warm",
+      "summary": "discovery: the CRM export needs the staging tokenxxxxxxxxxxx"
+    },
+    {
+      "provenance": {
+        "source": {
+          "kind": "memory_item",
+          "memory_item_id": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPF8"
+        },
+        "authorization": "task"
+      },
+      "tier": "warm",
+      "summary": "question: which sync window does the export coverxxxxxxxxxxx"
+    },
+    {
+      "provenance": {
+        "source": {
+          "kind": "memory_item",
+          "memory_item_id": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPF9"
+        },
+        "authorization": "task"
+      },
+      "tier": "warm",
+      "summary": "decision: re-run the export after the nightly syncxxxxxxxxxx"
+    },
+    {
+      "provenance": {
+        "source": {
+          "kind": "memory_item",
+          "memory_item_id": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPGA"
+        },
+        "authorization": "task"
+      },
+      "tier": "warm",
+      "summary": "discovery: the dashboard API paginates at fifty rowsxxxxxxxx"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "v": 1,
+  "task_id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "reason": "manual",
+  "performed_by": {
+    "kind": "user",
+    "id": "alice"
+  },
+  "performed_at": "2026-09-21T14:00:00Z",
+  "superseded_snapshot_id": "ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5",
+  "budget": {
+    "v": 1,
+    "max_items": 256,
+    "max_tokens": 200000
+  },
+  "summarized": []
+}
