@@ -1,0 +1,35 @@
+{
+  "kind": "granted",
+  "v": 1,
+  "request": {
+    "v": 1,
+    "lease_id": "lease_01J8ZQ5V8K3T2B7N6X4R9DQPJ8",
+    "resource_id": "res_01J8ZQ5V8K3T2B7N6X4R9DQPC2",
+    "mode": "write",
+    "requester": {
+      "kind": "user",
+      "id": "user_dev"
+    },
+    "requested_from": "2026-09-23T15:04:00Z",
+    "requested_until": "2026-09-23T16:30:00Z",
+    "policy": "queue",
+    "renewal_of": null
+  },
+  "lease": {
+    "v": 1,
+    "id": "lease_01J8ZQ5V8K3T2B7N6X4R9DQPJ8",
+    "version": 1,
+    "resource_id": "res_01J8ZQ5V8K3T2B7N6X4R9DQPC2",
+    "mode": "write",
+    "owner": {
+      "kind": "user",
+      "id": "user_dev"
+    },
+    "granted_at": "2026-09-23T15:04:00Z",
+    "expires_at": "2026-09-23T16:30:00Z",
+    "conflict_policy": "queue",
+    "released_at": null
+  },
+  "renewal": null,
+  "extra": 1
+}

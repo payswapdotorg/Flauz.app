@@ -11,6 +11,7 @@ members = [
     "crates/flauz-context",
     "crates/flauz-exec",
     "crates/flauz-lab",
+    "crates/flauz-lease",
     "crates/flauz-orch",
     "crates/flauz-prov",
     "crates/flauz-world",
