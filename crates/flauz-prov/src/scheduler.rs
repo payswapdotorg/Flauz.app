@@ -113,11 +113,7 @@ impl RoutingNeed {
         for key in &self.capabilities {
             key.validate()?;
         }
-        if self
-            .capabilities
-            .windows(2)
-            .any(|pair| pair[0] >= pair[1])
-        {
+        if self.capabilities.windows(2).any(|pair| pair[0] >= pair[1]) {
             return Err(ProvError::invalid(
                 "routing need capabilities must be sorted and free of duplicates",
             ));
@@ -267,7 +263,11 @@ impl SessionLoad {
                 "the session load is bounded at {MAX_ACCOUNTS} accounts"
             )));
         }
-        let per_account_sum: u64 = self.per_account.values().map(|count| u64::from(*count)).sum();
+        let per_account_sum: u64 = self
+            .per_account
+            .values()
+            .map(|count| u64::from(*count))
+            .sum();
         if u64::from(self.workspace) < per_account_sum {
             return Err(ProvError::invalid(
                 "the workspace session count must cover every per-account session",
@@ -441,7 +441,11 @@ impl SchedulingChoice {
                      escalation)",
                 ));
             }
-            if !self.skipped.iter().any(|skipped| skipped.tier == TierKind::Free) {
+            if !self
+                .skipped
+                .iter()
+                .any(|skipped| skipped.tier == TierKind::Free)
+            {
                 return Err(ProvError::invalid(
                     "an escalation must name the free account it passed over",
                 ));
@@ -499,13 +503,13 @@ pub fn schedule_routing(inputs: &SchedulingInputs) -> Result<SchedulingChoice, P
             )));
         }
     }
-    if let Some(limit) = policy.workspace_concurrency_limit {
-        if inputs.load.workspace >= limit {
-            return Err(ProvError::invalid(format!(
-                "the workspace limit of {limit} tasks running at the same time is already \
-                 reached: no account is used until a task finishes or the limit changes"
-            )));
-        }
+    if let Some(limit) = policy.workspace_concurrency_limit
+        && inputs.load.workspace >= limit
+    {
+        return Err(ProvError::invalid(format!(
+            "the workspace limit of {limit} tasks running at the same time is already \
+             reached: no account is used until a task finishes or the limit changes"
+        )));
     }
 
     // The walk order: the task override's account first, then the
@@ -520,23 +524,21 @@ pub fn schedule_routing(inputs: &SchedulingInputs) -> Result<SchedulingChoice, P
         .provider_override(&need.provider_kind)
         .and_then(|provider_override| provider_override.preferred_account.clone());
     let mut ordered: Vec<&ProviderAccount> = Vec::with_capacity(candidates.len());
-    if let Some(preferred) = &task_preferred {
-        if let Some(account) = candidates
+    if let Some(preferred) = &task_preferred
+        && let Some(account) = candidates
             .iter()
             .copied()
             .find(|account| &account.connection_id == preferred)
-        {
-            ordered.push(account);
-        }
+    {
+        ordered.push(account);
     }
-    if let Some(preferred) = &provider_preferred {
-        if let Some(account) = candidates
+    if let Some(preferred) = &provider_preferred
+        && let Some(account) = candidates
             .iter()
             .copied()
-            .find(|account| &account.connection_id == preferred && !ordered.contains(&account))
-        {
-            ordered.push(account);
-        }
+            .find(|account| &account.connection_id == preferred && !ordered.contains(account))
+    {
+        ordered.push(account);
     }
     let mut rest: Vec<&ProviderAccount> = candidates
         .iter()
@@ -544,7 +546,10 @@ pub fn schedule_routing(inputs: &SchedulingInputs) -> Result<SchedulingChoice, P
         .filter(|account| !ordered.contains(account))
         .collect();
     rest.sort_by_key(|account| {
-        (tier_rank(account.tier, policy.order), account.connection_id.clone())
+        (
+            tier_rank(account.tier, policy.order),
+            account.connection_id.clone(),
+        )
     });
     ordered.extend(rest);
 
@@ -609,8 +614,7 @@ pub fn schedule_routing(inputs: &SchedulingInputs) -> Result<SchedulingChoice, P
         None if skipped.len() == candidates.len() - 1 => PolicyRule::OnlyAvailable,
         None => PolicyRule::DefaultOrder,
     };
-    let rule_explanation =
-        rule_explanation_for(policy_rule, policy.order, preferred_tier_existed);
+    let rule_explanation = rule_explanation_for(policy_rule, policy.order, preferred_tier_existed);
 
     let choice = SchedulingChoice {
         v: ProvVersion,
@@ -654,9 +658,7 @@ fn rule_explanation_for(
 ) -> String {
     match rule {
         PolicyRule::TaskOverride => "You chose this account for this task.".to_owned(),
-        PolicyRule::ProviderOverride => {
-            "You set this provider to prefer this account.".to_owned()
-        }
+        PolicyRule::ProviderOverride => "You set this provider to prefer this account.".to_owned(),
         PolicyRule::DefaultOrder => match (order, preferred_tier_existed) {
             (RoutingOrder::FreeTierFirst, true) => {
                 "Free accounts are tried first, and this one had quota left.".to_owned()
@@ -703,15 +705,15 @@ fn usability_of(
     if account.quota.is_depleted() {
         return Err(SkipReason::Depleted);
     }
-    if let Some(limit) = policy.account_spend_limit {
-        if ledger.units_since(&account.connection_id, account.quota.window_start) >= limit {
-            return Err(SkipReason::SpendLimit);
-        }
+    if let Some(limit) = policy.account_spend_limit
+        && ledger.units_since(&account.connection_id, account.quota.window_start) >= limit
+    {
+        return Err(SkipReason::SpendLimit);
     }
-    if let Some(limit) = policy.account_concurrency_limit {
-        if load.sessions_for(&account.connection_id) >= limit {
-            return Err(SkipReason::ConcurrencyLimit);
-        }
+    if let Some(limit) = policy.account_concurrency_limit
+        && load.sessions_for(&account.connection_id) >= limit
+    {
+        return Err(SkipReason::ConcurrencyLimit);
     }
     Ok(())
 }
@@ -750,7 +752,7 @@ mod tests {
         ok(RoutingNeed::new(
             "openai",
             &["terminal", "web.search"],
-            task.map(|task| test_task(task)),
+            task.map(test_task),
         ))
     }
 
@@ -763,7 +765,9 @@ mod tests {
     ) -> ProviderAccount {
         ok(ProviderAccount::new(
             test_connection(connection),
-            ok(crate::key::SecretRef::parse("flausec_01J8ZQ5V8K3T2B7N6X4R9DQP34")),
+            ok(crate::key::SecretRef::parse(
+                "flausec_01J8ZQ5V8K3T2B7N6X4R9DQP34",
+            )),
             label,
             "openai",
             tier,
@@ -803,7 +807,11 @@ mod tests {
     fn routing_needs_validate_canonically() {
         ok(test_need(None).validate());
         // The capability list is canonicalized: sorted and deduplicated.
-        let need = ok(RoutingNeed::new("openai", &["web.search", "terminal", "web.search"], None));
+        let need = ok(RoutingNeed::new(
+            "openai",
+            &["web.search", "terminal", "web.search"],
+            None,
+        ));
         assert_eq!(need.capabilities.len(), 2);
         assert_eq!(need.capabilities[0].as_str(), "terminal");
         assert_eq!(need.capabilities[1].as_str(), "web.search");
@@ -976,7 +984,10 @@ mod tests {
         ];
         let inputs = test_inputs(accounts);
         let choice = ok(schedule_routing(&inputs));
-        assert_eq!(choice.connection_id.as_str(), "conn_01J8ZQ5V8K3T2B7N6X4R9DQPB1");
+        assert_eq!(
+            choice.connection_id.as_str(),
+            "conn_01J8ZQ5V8K3T2B7N6X4R9DQPB1"
+        );
         // The depleted first account is a named skip in walk order.
         assert_eq!(choice.skipped.len(), 1);
         assert_eq!(
@@ -1100,7 +1111,9 @@ mod tests {
         workspace_busy.load.workspace = 1;
         let refused = err(schedule_routing(&workspace_busy));
         assert!(
-            refused.to_string().contains("tasks running at the same time"),
+            refused
+                .to_string()
+                .contains("tasks running at the same time"),
             "the refusal names the workspace concurrency limit: {refused}"
         );
     }
@@ -1121,7 +1134,10 @@ mod tests {
         assert_eq!(choice.connection_id.as_str(), PAID);
         assert_eq!(choice.policy_rule, PolicyRule::TaskOverride);
         assert!(!choice.escalated);
-        assert_eq!(choice.rule_explanation, "You chose this account for this task.");
+        assert_eq!(
+            choice.rule_explanation,
+            "You chose this account for this task."
+        );
 
         // A provider override: the provider's preferred account is chosen
         // with the named rule.
@@ -1175,7 +1191,9 @@ mod tests {
         foreign.accounts[0].provider_kind = "e2b".to_owned();
         let refused = err(schedule_routing(&foreign));
         assert!(
-            refused.to_string().contains("no account is connected for provider"),
+            refused
+                .to_string()
+                .contains("no account is connected for provider"),
             "the refusal names the missing provider: {refused}"
         );
 

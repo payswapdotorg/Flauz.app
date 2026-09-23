@@ -19513,9 +19513,7 @@ impl WorkspaceView {
                             // ("Using your OpenAI free tier — 3 of 5 runs
                             // left today" / the depletion moment), and the
                             // open accounts panel.
-                            .child(flauz_providers::render_providers_entry(
-                                self, window, cx,
-                            ))
+                            .child(flauz_providers::render_providers_entry(self, window, cx))
                             .when_some(bedrock_workspace_notice, |workspace, notice| {
                                 workspace.child(notice)
                             })

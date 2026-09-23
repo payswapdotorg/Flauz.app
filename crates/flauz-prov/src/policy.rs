@@ -33,7 +33,6 @@ pub enum RoutingOrder {
 
 impl RoutingOrder {
     /// The default routing order (free-tier-first).
-    #[must_use]
     pub const DEFAULT: Self = Self::FreeTierFirst;
 
     /// The user-facing label for this order (plain words).
@@ -54,9 +53,7 @@ impl RoutingOrder {
                 "Flauz uses free quota before paid accounts, and tells you before it uses a \
                  paid account."
             }
-            Self::PaidFirst => {
-                "Tasks use your paid accounts first, even when free quota is left."
-            }
+            Self::PaidFirst => "Tasks use your paid accounts first, even when free quota is left.",
         }
     }
 }
@@ -181,7 +178,9 @@ impl RoutingPolicy {
     /// Returns [`ProvError::Invalid`] when a rule is violated.
     pub fn validate(&self) -> Result<(), ProvError> {
         if self.version == 0 {
-            return Err(ProvError::invalid("routing policy version must be at least 1"));
+            return Err(ProvError::invalid(
+                "routing policy version must be at least 1",
+            ));
         }
         if self.provider_overrides.len() > MAX_ACCOUNTS {
             return Err(ProvError::invalid(format!(
@@ -213,7 +212,10 @@ impl RoutingPolicy {
         }
         for (field, limit) in [
             ("account concurrency limit", self.account_concurrency_limit),
-            ("workspace concurrency limit", self.workspace_concurrency_limit),
+            (
+                "workspace concurrency limit",
+                self.workspace_concurrency_limit,
+            ),
         ] {
             if limit == Some(0) {
                 return Err(ProvError::invalid(format!(
@@ -393,17 +395,18 @@ mod tests {
         assert_eq!(policy.version, 1);
         assert_eq!(RoutingOrder::DEFAULT, RoutingOrder::FreeTierFirst);
         assert_eq!(policy.order.user_label(), "free accounts first");
-        assert_eq!(
-            RoutingOrder::PaidFirst.user_label(),
-            "paid accounts first"
-        );
+        assert_eq!(RoutingOrder::PaidFirst.user_label(), "paid accounts first");
         // The consequences are stated plainly (addendum §7).
-        assert!(RoutingOrder::FreeTierFirst
-            .consequence()
-            .contains("tells you before it uses a paid account"));
-        assert!(RoutingOrder::PaidFirst
-            .consequence()
-            .contains("even when free quota is left"));
+        assert!(
+            RoutingOrder::FreeTierFirst
+                .consequence()
+                .contains("tells you before it uses a paid account")
+        );
+        assert!(
+            RoutingOrder::PaidFirst
+                .consequence()
+                .contains("even when free quota is left")
+        );
         // The canonical default serializes deterministically.
         let serialized = ok(serde_json::to_string(&policy));
         assert_eq!(
@@ -469,24 +472,28 @@ mod tests {
         // Zero limits, empty overrides, and invalid keys are refused.
         assert!(policy.set_spend_limits(Some(0), None).is_err());
         assert!(policy.set_concurrency_limits(None, Some(0)).is_err());
-        assert!(policy
-            .set_provider_override(
-                "OpenAI",
-                ProviderOverride {
-                    preferred_account: None,
-                    order: Some(RoutingOrder::FreeTierFirst),
-                },
-            )
-            .is_err());
-        assert!(policy
-            .set_provider_override(
-                "openai",
-                ProviderOverride {
-                    preferred_account: None,
-                    order: None,
-                },
-            )
-            .is_err());
+        assert!(
+            policy
+                .set_provider_override(
+                    "OpenAI",
+                    ProviderOverride {
+                        preferred_account: None,
+                        order: Some(RoutingOrder::FreeTierFirst),
+                    },
+                )
+                .is_err()
+        );
+        assert!(
+            policy
+                .set_provider_override(
+                    "openai",
+                    ProviderOverride {
+                        preferred_account: None,
+                        order: None,
+                    },
+                )
+                .is_err()
+        );
 
         // The canonical round-trip survives a full policy.
         let serialized = ok(serde_json::to_string(&policy));
@@ -500,11 +507,12 @@ mod tests {
         invalid.account_spend_limit = Some(0);
         assert!(invalid.validate().is_err());
         let mut foreign_task_key = policy.clone();
-        foreign_task_key
-            .task_overrides
-            .insert("not-a-task-id".to_owned(), TaskOverride {
+        foreign_task_key.task_overrides.insert(
+            "not-a-task-id".to_owned(),
+            TaskOverride {
                 preferred_account: None,
-            });
+            },
+        );
         assert!(foreign_task_key.validate().is_err());
     }
 }

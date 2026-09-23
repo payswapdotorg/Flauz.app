@@ -157,8 +157,7 @@ pub(crate) const CONNECT_EMPTY_KEY_FAILURE: &str =
 /// The truthful failure when the entered material looks like a real
 /// credential: this build's flows run on practice keys only, and nothing
 /// was stored.
-pub(crate) const CONNECT_LOOKS_REAL_FAILURE: &str =
-    "This looks like a real key. This build only accepts clearly fake practice keys — \
+pub(crate) const CONNECT_LOOKS_REAL_FAILURE: &str = "This looks like a real key. This build only accepts clearly fake practice keys — \
      nothing was stored.";
 
 /// The truthful failure when the account name is empty.
@@ -203,13 +202,11 @@ pub(crate) const POLICY_CHANGE_BUTTON: &str = "Change the order";
 
 /// The consequence of switching to paid-first, stated plainly (the
 /// surface always states consequences).
-pub(crate) const POLICY_CONSEQUENCE_TO_PAID: &str =
-    "Switched to paid accounts first: tasks will use your paid accounts even when free \
+pub(crate) const POLICY_CONSEQUENCE_TO_PAID: &str = "Switched to paid accounts first: tasks will use your paid accounts even when free \
      quota is left.";
 
 /// The consequence of switching back to free-first.
-pub(crate) const POLICY_CONSEQUENCE_TO_FREE: &str =
-    "Switched to free accounts first: Flauz uses free quota before paid accounts, and \
+pub(crate) const POLICY_CONSEQUENCE_TO_FREE: &str = "Switched to free accounts first: Flauz uses free quota before paid accounts, and \
      tells you before it uses a paid account.";
 
 /// The spend and concurrency limits caption.
@@ -341,7 +338,8 @@ pub(crate) struct ProviderAccountView {
     pub(crate) window_word: &'static str,
     /// The opaque storage reference minted at connect time (`flausec_`
     /// prefixed, as data). Never rendered; never credential material.
-    #[allow(dead_code)] // the storage-law proof: retained as data, never shown — pinned by the module's tests
+    #[allow(dead_code)]
+    // the storage-law proof: retained as data, never shown — pinned by the module's tests
     pub(crate) secret_reference: String,
 }
 
@@ -546,9 +544,8 @@ impl ProvidersState {
         Self {
             open: false,
             accounts: Vec::new(),
-            name_input: cx.new(|cx| {
-                InputState::new(window, cx).placeholder(CONNECT_NAME_PLACEHOLDER)
-            }),
+            name_input: cx
+                .new(|cx| InputState::new(window, cx).placeholder(CONNECT_NAME_PLACEHOLDER)),
             key_input: cx.new(|cx| {
                 InputState::new(window, cx)
                     .masked(true)
@@ -864,7 +861,7 @@ fn render_attribution_affordance(
                     div()
                         .text_sm()
                         .line_height(px(20.0))
-                        .text_color(cx.theme()->muted_foreground)
+                        .text_color(cx.theme().muted_foreground)
                         .child(attribution.line()),
                 )
                 // Why this account: whose account and the policy rule's
@@ -874,7 +871,7 @@ fn render_attribution_affordance(
                     div()
                         .text_xs()
                         .line_height(px(16.0))
-                        .text_color(cx.theme()->muted_foreground)
+                        .text_color(cx.theme().muted_foreground)
                         .child(format!(
                             "{} · {}",
                             attribution.account_label, attribution.why
@@ -899,12 +896,7 @@ fn render_providers_panel(
     let panel_focus = state.panel_focus.clone();
     let accounts = state.accounts.clone();
     let order = state.order;
-    let (
-        account_spend,
-        workspace_spend,
-        account_concurrency,
-        workspace_concurrency,
-    ) = (
+    let (account_spend, workspace_spend, account_concurrency, workspace_concurrency) = (
         state.account_spend_limit,
         state.workspace_spend_limit,
         state.account_concurrency_limit,
@@ -941,7 +933,7 @@ fn render_providers_panel(
                     div()
                         .text_sm()
                         .line_height(px(20.0))
-                        .text_color(cx.theme()->muted_foreground)
+                        .text_color(cx.theme().muted_foreground)
                         .child(PANEL_DESCRIPTION),
                 ),
         );
@@ -954,7 +946,7 @@ fn render_providers_panel(
                 .p_3()
                 .rounded_lg()
                 .border_1()
-                .border_color(cx.theme()->border)
+                .border_color(cx.theme().border)
                 .child(
                     div()
                         .text_sm()
@@ -965,20 +957,18 @@ fn render_providers_panel(
                     div()
                         .text_sm()
                         .line_height(px(20.0))
-                        .text_color(cx.theme()->muted_foreground)
+                        .text_color(cx.theme().muted_foreground)
                         .child(EMPTY_BODY),
                 ),
         );
     } else {
-        let mut list = v_flex()
-            .gap_1()
-            .child(
-                div()
-                    .text_xs()
-                    .font_weight(gpui::FontWeight::MEDIUM)
-                    .text_color(cx.theme()->muted_foreground)
-                    .child(ACCOUNTS_LIST_CAPTION),
-            );
+        let mut list = v_flex().gap_1().child(
+            div()
+                .text_xs()
+                .font_weight(gpui::FontWeight::MEDIUM)
+                .text_color(cx.theme().muted_foreground)
+                .child(ACCOUNTS_LIST_CAPTION),
+        );
         for (index, account) in accounts.iter().enumerate() {
             list = list.child(render_account_row(index, account, cx));
         }
@@ -992,7 +982,7 @@ fn render_providers_panel(
                 div()
                     .text_xs()
                     .font_weight(gpui::FontWeight::MEDIUM)
-                    .text_color(cx.theme()->muted_foreground)
+                    .text_color(cx.theme().muted_foreground)
                     .child(CONNECT_HEADING),
             ),
         )
@@ -1002,7 +992,7 @@ fn render_providers_panel(
                 .child(
                     div()
                         .text_xs()
-                        .text_color(cx.theme()->muted_foreground)
+                        .text_color(cx.theme().muted_foreground)
                         .child(CONNECT_PROVIDER_LABEL),
                 )
                 .child(
@@ -1011,7 +1001,7 @@ fn render_providers_panel(
                         .child(
                             div()
                                 .text_xs()
-                                .text_color(cx.theme()->muted_foreground)
+                                .text_color(cx.theme().muted_foreground)
                                 .child(CONNECT_NAME_LABEL),
                         )
                         .child(Input::new(&name_input).small().cleanable(true)),
@@ -1022,7 +1012,7 @@ fn render_providers_panel(
                         .child(
                             div()
                                 .text_xs()
-                                .text_color(cx.theme()->muted_foreground)
+                                .text_color(cx.theme().muted_foreground)
                                 .child(CONNECT_KEY_LABEL),
                         )
                         .child(Input::new(&key_input).small().cleanable(true)),
@@ -1041,7 +1031,7 @@ fn render_providers_panel(
                     div()
                         .text_xs()
                         .line_height(px(16.0))
-                        .text_color(cx.theme()->muted_foreground)
+                        .text_color(cx.theme().muted_foreground)
                         .child(CONNECT_SECURE_NOTE),
                 ),
         );
@@ -1054,7 +1044,7 @@ fn render_providers_panel(
                 div()
                     .text_xs()
                     .font_weight(gpui::FontWeight::MEDIUM)
-                    .text_color(cx.theme()->muted_foreground)
+                    .text_color(cx.theme().muted_foreground)
                     .child(POLICY_HEADING),
             )
             .child(
@@ -1087,7 +1077,7 @@ fn render_providers_panel(
         div()
             .text_xs()
             .font_weight(gpui::FontWeight::MEDIUM)
-            .text_color(cx.theme()->muted_foreground)
+            .text_color(cx.theme().muted_foreground)
             .child(LIMITS_CAPTION),
     );
     let has_limits = account_spend.is_some()
@@ -1096,18 +1086,13 @@ fn render_providers_panel(
         || workspace_concurrency.is_some();
     if has_limits {
         for line in [
-            account_spend.map(|limit| {
-                ACCOUNT_SPEND_SHAPE.replace("{limit}", &limit.to_string())
-            }),
-            workspace_spend.map(|limit| {
-                WORKSPACE_SPEND_SHAPE.replace("{limit}", &limit.to_string())
-            }),
-            account_concurrency.map(|limit| {
-                ACCOUNT_CONCURRENCY_SHAPE.replace("{limit}", &limit.to_string())
-            }),
-            workspace_concurrency.map(|limit| {
-                WORKSPACE_CONCURRENCY_SHAPE.replace("{limit}", &limit.to_string())
-            }),
+            account_spend.map(|limit| ACCOUNT_SPEND_SHAPE.replace("{limit}", &limit.to_string())),
+            workspace_spend
+                .map(|limit| WORKSPACE_SPEND_SHAPE.replace("{limit}", &limit.to_string())),
+            account_concurrency
+                .map(|limit| ACCOUNT_CONCURRENCY_SHAPE.replace("{limit}", &limit.to_string())),
+            workspace_concurrency
+                .map(|limit| WORKSPACE_CONCURRENCY_SHAPE.replace("{limit}", &limit.to_string())),
         ]
         .into_iter()
         .flatten()
@@ -1116,7 +1101,7 @@ fn render_providers_panel(
                 div()
                     .text_sm()
                     .line_height(px(20.0))
-                    .text_color(cx.theme()->muted_foreground)
+                    .text_color(cx.theme().muted_foreground)
                     .child(line),
             );
         }
@@ -1125,7 +1110,7 @@ fn render_providers_panel(
             div()
                 .text_sm()
                 .line_height(px(20.0))
-                .text_color(cx.theme()->muted_foreground)
+                .text_color(cx.theme().muted_foreground)
                 .child(NO_LIMITS_LINE),
         );
     }
@@ -1134,7 +1119,7 @@ fn render_providers_panel(
     panel = panel.child(
         div()
             .text_xs()
-            .text_color(cx.theme()->muted_foreground)
+            .text_color(cx.theme().muted_foreground)
             .child(PROVIDERS_ESCAPE_HINT),
     );
     panel.into_any_element()
@@ -1155,7 +1140,7 @@ fn render_account_row(
         .p_3()
         .rounded_lg()
         .border_1()
-        .border_color(cx.theme()->border)
+        .border_color(cx.theme().border)
         .child(
             h_flex()
                 .gap_2()
@@ -1170,7 +1155,7 @@ fn render_account_row(
                 .child(
                     div()
                         .text_xs()
-                        .text_color(cx.theme()->muted_foreground)
+                        .text_color(cx.theme().muted_foreground)
                         .child(account.provider_label.clone()),
                 )
                 .child(
@@ -1184,14 +1169,14 @@ fn render_account_row(
             div()
                 .text_sm()
                 .line_height(px(20.0))
-                .text_color(cx.theme()->muted_foreground)
+                .text_color(cx.theme().muted_foreground)
                 .child(account.quota_line()),
         )
         .child(
             div()
                 .text_xs()
                 .line_height(px(16.0))
-                .text_color(cx.theme()->muted_foreground)
+                .text_color(cx.theme().muted_foreground)
                 .child(ACCOUNT_SECURE_NOTE),
         )
         .into_any_element()
@@ -1379,12 +1364,8 @@ mod tests {
 
         // The success path: the account appears with tier + quota state,
         // and the minted reference carries the frozen prefix (as data).
-        let first = connect_account_through_fake_seam(
-            " Personal account ",
-            "practice-key-1",
-            1,
-        )
-        .unwrap_or_else(|failure| panic!("the connect flow must succeed: {failure:?}"));
+        let first = connect_account_through_fake_seam(" Personal account ", "practice-key-1", 1)
+            .unwrap_or_else(|failure| panic!("the connect flow must succeed: {failure:?}"));
         assert_eq!(first.account_label, "Personal account");
         assert_eq!(first.provider_label, "OpenAI");
         assert_eq!(first.tier, TierView::Free);
@@ -1392,12 +1373,8 @@ mod tests {
         assert!(first.secret_reference.starts_with("flausec_"));
 
         // Multi-account: a second connect mints a distinct reference.
-        let second = connect_account_through_fake_seam(
-            "Work account",
-            "practice-key-2",
-            2,
-        )
-        .unwrap_or_else(|failure| panic!("the connect flow must succeed: {failure:?}"));
+        let second = connect_account_through_fake_seam("Work account", "practice-key-2", 2)
+            .unwrap_or_else(|failure| panic!("the connect flow must succeed: {failure:?}"));
         assert_ne!(first.secret_reference, second.secret_reference);
         assert!(second.secret_reference.starts_with("flausec_"));
 
@@ -1508,14 +1485,7 @@ mod tests {
     /// Layer 3: the palette rows resolve through natural queries.
     #[test]
     fn palette_queries_resolve_to_the_provider_rows() {
-        for query in [
-            "connect",
-            "provider",
-            "account",
-            "api key",
-            "quota",
-            "paid",
-        ] {
+        for query in ["connect", "provider", "account", "api key", "quota", "paid"] {
             let title = PALETTE_ROW_CONNECT_TITLE.to_lowercase();
             let description = PALETTE_ROW_CONNECT_DESCRIPTION.to_lowercase();
             assert!(
@@ -1558,12 +1528,11 @@ mod tests {
         assert!(source.contains("PaletteCommand::SeeWhichAccountATaskUses"));
         assert!(source.contains("flauz_providers::PALETTE_ROW_CONNECT_TITLE"));
         assert!(source.contains("flauz_providers::PALETTE_ROW_SEE_TITLE"));
-        assert!(source.contains(
-            "flauz_providers::open_providers_surface(workspace, window, cx)"
-        ));
-        assert!(source.contains(
-            "flauz_providers::see_which_account_a_task_uses(workspace, window, cx)"
-        ));
+        assert!(source.contains("flauz_providers::open_providers_surface(workspace, window, cx)"));
+        assert!(
+            source
+                .contains("flauz_providers::see_which_account_a_task_uses(workspace, window, cx)")
+        );
 
         // The keyboard chord seam (Ctrl+Alt+Shift+P, the letter family —
         // verified conflict-free: only the unshifted Ctrl+Alt+P exists

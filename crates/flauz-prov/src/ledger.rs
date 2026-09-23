@@ -67,7 +67,9 @@ impl UsageRecord {
     /// Returns [`ProvError::Invalid`] when a rule is violated.
     pub fn validate(&self) -> Result<(), ProvError> {
         if self.seq == 0 {
-            return Err(ProvError::invalid("usage record sequence must be at least 1"));
+            return Err(ProvError::invalid(
+                "usage record sequence must be at least 1",
+            ));
         }
         if self.units == 0 {
             return Err(ProvError::invalid(
@@ -164,9 +166,10 @@ impl QuotaLedger {
         }
         let seq = match account_records.last() {
             None => 1,
-            Some(last) => last.seq.checked_add(1).ok_or_else(|| {
-                ProvError::invalid("usage record sequence overflowed")
-            })?,
+            Some(last) => last
+                .seq
+                .checked_add(1)
+                .ok_or_else(|| ProvError::invalid("usage record sequence overflowed"))?,
         };
         let record = UsageRecord {
             v: ProvVersion,
@@ -188,9 +191,7 @@ impl QuotaLedger {
     /// The usage records attributed to one account, in append order.
     #[must_use]
     pub fn records_for(&self, connection_id: &ConnectionRef) -> &[UsageRecord] {
-        self.records
-            .get(connection_id)
-            .map_or(&[], Vec::as_slice)
+        self.records.get(connection_id).map_or(&[], Vec::as_slice)
     }
 
     /// The units consumed through one account since a bound (inclusive) —
@@ -463,37 +464,43 @@ mod tests {
         assert_eq!(third.seq, 1);
 
         // A stale expected version is rejected — never a silent overwrite.
-        assert!(ledger
-            .record_usage(
-                2,
-                &connection,
-                &task,
-                "a stale append",
-                1,
-                test_timestamp("2026-09-23T12:00:00Z"),
-            )
-            .is_err());
+        assert!(
+            ledger
+                .record_usage(
+                    2,
+                    &connection,
+                    &task,
+                    "a stale append",
+                    1,
+                    test_timestamp("2026-09-23T12:00:00Z"),
+                )
+                .is_err()
+        );
         // Zero-unit and empty-label records are not consumption.
-        assert!(ledger
-            .record_usage(
-                ledger.version(),
-                &connection,
-                &task,
-                "nothing",
-                0,
-                test_timestamp("2026-09-23T12:00:00Z"),
-            )
-            .is_err());
-        assert!(ledger
-            .record_usage(
-                ledger.version(),
-                &connection,
-                &task,
-                "",
-                1,
-                test_timestamp("2026-09-23T12:00:00Z"),
-            )
-            .is_err());
+        assert!(
+            ledger
+                .record_usage(
+                    ledger.version(),
+                    &connection,
+                    &task,
+                    "nothing",
+                    0,
+                    test_timestamp("2026-09-23T12:00:00Z"),
+                )
+                .is_err()
+        );
+        assert!(
+            ledger
+                .record_usage(
+                    ledger.version(),
+                    &connection,
+                    &task,
+                    "",
+                    1,
+                    test_timestamp("2026-09-23T12:00:00Z"),
+                )
+                .is_err()
+        );
 
         ok(ledger.validate());
         assert_eq!(ledger.records_for(&connection).len(), 2);
@@ -515,7 +522,10 @@ mod tests {
             4
         );
         // Attribution: the tasks that used each account, first-seen.
-        assert_eq!(ledger.tasks_through(&connection), vec![task.clone(), other_task]);
+        assert_eq!(
+            ledger.tasks_through(&connection),
+            vec![task.clone(), other_task]
+        );
         assert_eq!(ledger.tasks_through(&other), vec![task]);
 
         // Records are immutable and the sequences stay contiguous: a

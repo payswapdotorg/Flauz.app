@@ -256,7 +256,8 @@ impl ProviderAccount {
     /// reported bound has not passed yet).
     #[must_use]
     pub fn is_rate_limited_at(&self, at: Timestamp) -> bool {
-        self.rate_limited_until.is_some_and(|until| at.is_before(until))
+        self.rate_limited_until
+            .is_some_and(|until| at.is_before(until))
     }
 }
 
@@ -487,7 +488,8 @@ impl AccountStore {
         }
         let mut next = account;
         next.version = stored.version + 1;
-        self.accounts.insert(next.connection_id.clone(), next.clone());
+        self.accounts
+            .insert(next.connection_id.clone(), next.clone());
         Ok(next)
     }
 
@@ -600,7 +602,12 @@ mod tests {
             label,
             kind,
             tier,
-            test_window(remaining, limit, "2026-09-23T00:00:00Z", "2026-09-24T00:00:00Z"),
+            test_window(
+                remaining,
+                limit,
+                "2026-09-23T00:00:00Z",
+                "2026-09-24T00:00:00Z",
+            ),
             None,
         ))
     }
@@ -610,12 +617,16 @@ mod tests {
         ok(test_window(3, 5, "2026-09-23T00:00:00Z", "2026-09-24T00:00:00Z").validate());
         // remaining above the limit, zero limit, and empty bounds are all
         // refused.
-        assert!(test_window(6, 5, "2026-09-23T00:00:00Z", "2026-09-24T00:00:00Z")
-            .validate()
-            .is_err());
-        assert!(test_window(0, 0, "2026-09-23T00:00:00Z", "2026-09-24T00:00:00Z")
-            .validate()
-            .is_err());
+        assert!(
+            test_window(6, 5, "2026-09-23T00:00:00Z", "2026-09-24T00:00:00Z")
+                .validate()
+                .is_err()
+        );
+        assert!(
+            test_window(0, 0, "2026-09-23T00:00:00Z", "2026-09-24T00:00:00Z")
+                .validate()
+                .is_err()
+        );
         assert!(
             test_window(0, 5, "2026-09-24T00:00:00Z", "2026-09-23T00:00:00Z")
                 .validate()
@@ -680,17 +691,10 @@ mod tests {
         assert!(limited.is_rate_limited_at(test_timestamp("2026-09-23T12:00:00Z")));
         assert!(!limited.is_rate_limited_at(test_timestamp("2026-09-23T14:00:00Z")));
 
-        // Canonical violations are rejected on construction.
-        assert!(ProviderAccount::new(
-            test_connection("conn_01J8ZQ5V8K3T2B7N6X4R9DQPA0"),
-            ok(SecretRef::parse("flausec_ghp_0123456789abcdef")),
-            "Personal account",
-            "openai",
-            TierKind::Free,
-            test_window(3, 5, "2026-09-23T00:00:00Z", "2026-09-24T00:00:00Z"),
-            None,
-        )
-        .is_err());
+        // Canonical violations are rejected: credential-material-looking
+        // references never even parse (the credentials-are-references law
+        // enforced at the earliest layer — §3 of the Wave-4 addendum).
+        assert!(SecretRef::parse("flausec_ghp_0123456789abcdef").is_err());
         assert!(
             ProviderAccount::new(
                 test_connection("conn_01J8ZQ5V8K3T2B7N6X4R9DQPA0"),

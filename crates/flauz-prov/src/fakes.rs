@@ -166,7 +166,10 @@ impl FakeAccountBackend {
         units: u64,
         at: Timestamp,
     ) -> Result<UsageRecord, ProvError> {
-        if self.rate_limited_until.is_some_and(|until| at.is_before(until)) {
+        if self
+            .rate_limited_until
+            .is_some_and(|until| at.is_before(until))
+        {
             return Err(ProvError::invalid(format!(
                 "account {} is paused by the provider right now",
                 self.connection_id
@@ -181,10 +184,10 @@ impl FakeAccountBackend {
         }
         self.remaining -= units;
         self.calls_in_window += 1;
-        if let Some(after) = self.rate_limit_after {
-            if self.calls_in_window >= after {
-                self.rate_limited_until = Some(self.window_end);
-            }
+        if let Some(after) = self.rate_limit_after
+            && self.calls_in_window >= after
+        {
+            self.rate_limited_until = Some(self.window_end);
         }
         Ok(UsageRecord {
             v: crate::ProvVersion,
@@ -274,10 +277,8 @@ impl FakeProviderBackend {
         paid_secret: &SecretRef,
     ) -> Vec<ProviderAccount> {
         vec![
-            self.free
-                .snapshot_account(&self.provider_kind, free_secret),
-            self.paid
-                .snapshot_account(&self.provider_kind, paid_secret),
+            self.free.snapshot_account(&self.provider_kind, free_secret),
+            self.paid.snapshot_account(&self.provider_kind, paid_secret),
         ]
     }
 }
@@ -347,16 +348,14 @@ impl FakeRoutingScenario {
             TierKind::Paid => self.paid_secret = Some(secret.clone()),
         }
         let mut account = match tier {
-            TierKind::Free => {
-                self.backend
-                    .free
-                    .snapshot_account(&self.backend.provider_kind, &secret)
-            }
-            TierKind::Paid => {
-                self.backend
-                    .paid
-                    .snapshot_account(&self.backend.provider_kind, &secret)
-            }
+            TierKind::Free => self
+                .backend
+                .free
+                .snapshot_account(&self.backend.provider_kind, &secret),
+            TierKind::Paid => self
+                .backend
+                .paid
+                .snapshot_account(&self.backend.provider_kind, &secret),
         };
         if !account_label.is_empty() {
             account.account_label = account_label.to_owned();
@@ -492,7 +491,10 @@ mod tests {
     }
 
     fn scenario() -> FakeRoutingScenario {
-        ok(FakeRoutingScenario::new("openai", test_timestamp("2026-09-23T08:00:00Z")))
+        ok(FakeRoutingScenario::new(
+            "openai",
+            test_timestamp("2026-09-23T08:00:00Z"),
+        ))
     }
 
     #[test]
@@ -540,11 +542,8 @@ mod tests {
 
         // The connect flow: key entry → the seam mints a reference → the
         // account appears with tier + quota state.
-        let free = ok(scenario.connect_account(
-            TierKind::Free,
-            "practice-key-1",
-            "Personal account",
-        ));
+        let free =
+            ok(scenario.connect_account(TierKind::Free, "practice-key-1", "Personal account"));
         assert_eq!(free.tier, TierKind::Free);
         assert_eq!(free.secret_ref.as_str(), FAKE_FREE_SECRET_REF);
         assert_eq!(free.quota.remaining, 5);
@@ -552,11 +551,7 @@ mod tests {
         assert_eq!(free.account_label, "Personal account");
         ok(free.validate());
 
-        let paid = ok(scenario.connect_account(
-            TierKind::Paid,
-            "practice-key-2",
-            "Work account",
-        ));
+        let paid = ok(scenario.connect_account(TierKind::Paid, "practice-key-2", "Work account"));
         assert_eq!(paid.tier, TierKind::Paid);
         assert_eq!(paid.quota.remaining, 100);
 
@@ -564,9 +559,11 @@ mod tests {
         assert_eq!(scenario.accounts().len(), 2);
         assert_eq!(scenario.accounts()[0].tier, TierKind::Free);
         // Connecting the same tier twice is refused.
-        assert!(scenario
-            .connect_account(TierKind::Free, "practice-key-3", "Another")
-            .is_err());
+        assert!(
+            scenario
+                .connect_account(TierKind::Free, "practice-key-3", "Another")
+                .is_err()
+        );
 
         // No credential material anywhere in the connected state.
         let serialized = ok(serde_json::to_string(&scenario.accounts()));
@@ -582,21 +579,13 @@ mod tests {
 
     #[test]
     fn the_scenario_depletes_and_escalates_honestly() {
-        let mut scenario = scenario();
-        ok(scenario.connect_account(
-            TierKind::Free,
-            "practice-key-1",
-            "Personal account",
-        ));
-        ok(scenario.connect_account(
-            TierKind::Paid,
-            "practice-key-2",
-            "Work account",
-        ));
+        let mut world = scenario();
+        ok(world.connect_account(TierKind::Free, "practice-key-1", "Personal account"));
+        ok(world.connect_account(TierKind::Paid, "practice-key-2", "Work account"));
         let noon = test_timestamp("2026-09-23T12:00:00Z");
 
         // Free tier first: the free account is chosen while it has quota.
-        let first = ok(scenario.schedule(noon));
+        let first = ok(world.schedule(noon));
         assert_eq!(first.connection_id.as_str(), FAKE_FREE_CONNECTION);
         assert_eq!(first.tier, TierKind::Free);
         assert_eq!(
@@ -611,28 +600,28 @@ mod tests {
         // on every record.
         let connection = ok(ConnectionRef::parse(FAKE_FREE_CONNECTION));
         for units in [1u64, 1, 1] {
-            let record = ok(scenario.consume(&first, "one model run", units, noon));
+            let record = ok(world.consume(&first, "one model run", units, noon));
             assert_eq!(record.units, units);
             assert_eq!(record.task_id.as_str(), FAKE_TASK);
             assert_eq!(record.connection_id.as_str(), FAKE_FREE_CONNECTION);
         }
         assert_eq!(
-            scenario
+            world
                 .ledger()
                 .units_since(&connection, first.quota_at_choice.window_start),
             3
         );
 
         // The honest remaining state: two uses left.
-        let near = ok(scenario.schedule(noon));
+        let near = ok(world.schedule(noon));
         assert_eq!(near.connection_id.as_str(), FAKE_FREE_CONNECTION);
         assert_eq!(near.quota_at_choice.remaining, 2);
 
         // The depletion moment: the last double run empties the window,
         // then the next schedule ESCALATES — named, with the free
         // account as the named skipped alternative.
-        ok(scenario.consume(&near, "one model run for the review pass", 2, noon));
-        let escalated = ok(scenario.schedule(noon));
+        ok(world.consume(&near, "one model run for the review pass", 2, noon));
+        let escalated = ok(world.schedule(noon));
         assert_eq!(escalated.connection_id.as_str(), FAKE_PAID_CONNECTION);
         assert_eq!(escalated.tier, TierKind::Paid);
         assert!(escalated.escalated);
@@ -652,21 +641,17 @@ mod tests {
         ok(escalated.validate());
 
         // Over-consumption is refused honestly — never a silent negative.
-        assert!(scenario.consume(&escalated, "one model run", 200, noon).is_err());
+        assert!(
+            world
+                .consume(&escalated, "one model run", 200, noon)
+                .is_err()
+        );
 
         // Determinism: a fresh identical scenario replays byte-identical
         // choices.
         let mut replay = scenario();
-        ok(replay.connect_account(
-            TierKind::Free,
-            "practice-key-1",
-            "Personal account",
-        ));
-        ok(replay.connect_account(
-            TierKind::Paid,
-            "practice-key-2",
-            "Work account",
-        ));
+        ok(replay.connect_account(TierKind::Free, "practice-key-1", "Personal account"));
+        ok(replay.connect_account(TierKind::Paid, "practice-key-2", "Work account"));
         let replay_first = ok(replay.schedule(noon));
         assert_eq!(
             ok(serde_json::to_string(&replay_first)),
@@ -677,16 +662,8 @@ mod tests {
     #[test]
     fn the_rate_limit_trips_and_is_a_named_skip() {
         let mut scenario = scenario();
-        ok(scenario.connect_account(
-            TierKind::Free,
-            "practice-key-1",
-            "Personal account",
-        ));
-        ok(scenario.connect_account(
-            TierKind::Paid,
-            "practice-key-2",
-            "Work account",
-        ));
+        ok(scenario.connect_account(TierKind::Free, "practice-key-1", "Personal account"));
+        ok(scenario.connect_account(TierKind::Paid, "practice-key-2", "Work account"));
         let noon = test_timestamp("2026-09-23T12:00:00Z");
 
         // Five single-use calls empty the window AND trip the free
@@ -713,16 +690,8 @@ mod tests {
     #[test]
     fn the_policy_order_changes_and_the_scenario_follows() {
         let mut scenario = scenario();
-        ok(scenario.connect_account(
-            TierKind::Free,
-            "practice-key-1",
-            "Personal account",
-        ));
-        ok(scenario.connect_account(
-            TierKind::Paid,
-            "practice-key-2",
-            "Work account",
-        ));
+        ok(scenario.connect_account(TierKind::Free, "practice-key-1", "Personal account"));
+        ok(scenario.connect_account(TierKind::Paid, "practice-key-2", "Work account"));
         let noon = test_timestamp("2026-09-23T12:00:00Z");
 
         // Free first by default; paid-first after the change (the

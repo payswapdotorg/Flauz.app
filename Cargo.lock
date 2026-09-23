@@ -2001,6 +2001,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "flauz-prov"
+version = "0.1.0-rc.14"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "flauz-world"
 version = "0.1.0-rc.14"
 dependencies = [

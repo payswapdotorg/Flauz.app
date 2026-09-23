@@ -441,7 +441,10 @@ mod tests {
             assert_eq!(ok(CapabilityKey::parse(valid)).as_str(), valid);
         }
         for invalid in ["", "Terminal", "browser..input", ".input", "browser.Input"] {
-            assert!(CapabilityKey::parse(invalid).is_err(), "{invalid:?} must not parse");
+            assert!(
+                CapabilityKey::parse(invalid).is_err(),
+                "{invalid:?} must not parse"
+            );
         }
     }
 }

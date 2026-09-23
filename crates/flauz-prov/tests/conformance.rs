@@ -9,7 +9,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use flauz_prov::account::{AccountStore, ProviderAccount};
-use flauz_prov::fakes::{FakeRoutingScenario, FAKE_TASK};
+use flauz_prov::fakes::{FAKE_TASK, FakeRoutingScenario};
 use flauz_prov::key::CREDENTIAL_MARKERS;
 use flauz_prov::ledger::{DepletionProjection, QuotaLedger};
 use flauz_prov::policy::RoutingPolicy;
@@ -54,16 +54,8 @@ fn connected_scenario() -> FakeRoutingScenario {
         "openai",
         test_ok(flauz_prov::Timestamp::parse("2026-09-23T08:00:00Z")),
     ));
-    test_ok(scenario.connect_account(
-        TierKind::Free,
-        "practice-key-1",
-        "Personal account",
-    ));
-    test_ok(scenario.connect_account(
-        TierKind::Paid,
-        "practice-key-2",
-        "Work account",
-    ));
+    test_ok(scenario.connect_account(TierKind::Free, "practice-key-1", "Personal account"));
+    test_ok(scenario.connect_account(TierKind::Paid, "practice-key-2", "Work account"));
     scenario
 }
 
@@ -199,8 +191,9 @@ fn choice_fixtures_are_the_scheduler_output_over_the_fakes() {
     // The typical fixture: free-tier-first over the connected pair.
     let scenario = connected_scenario();
     let choice = test_ok(scenario.schedule(noon));
-    let expected: SchedulingChoice =
-        test_ok(serde_json::from_str(&read_fixture("scheduling-choice/typical.json")));
+    let expected: SchedulingChoice = test_ok(serde_json::from_str(&read_fixture(
+        "scheduling-choice/typical.json",
+    )));
     assert_eq!(
         test_ok(serde_json::to_string_pretty(&choice)),
         test_ok(serde_json::to_string_pretty(&expected)),
@@ -213,14 +206,11 @@ fn choice_fixtures_are_the_scheduler_output_over_the_fakes() {
         "openai",
         test_ok(flauz_prov::Timestamp::parse("2026-09-23T08:00:00Z")),
     ));
-    test_ok(paid_only.connect_account(
-        TierKind::Paid,
-        "practice-key-2",
-        "Work account",
-    ));
+    test_ok(paid_only.connect_account(TierKind::Paid, "practice-key-2", "Work account"));
     let choice = test_ok(paid_only.schedule(noon));
-    let expected: SchedulingChoice =
-        test_ok(serde_json::from_str(&read_fixture("scheduling-choice/minimal.json")));
+    let expected: SchedulingChoice = test_ok(serde_json::from_str(&read_fixture(
+        "scheduling-choice/minimal.json",
+    )));
     assert_eq!(
         test_ok(serde_json::to_string_pretty(&choice)),
         test_ok(serde_json::to_string_pretty(&expected)),
@@ -236,8 +226,9 @@ fn the_public_fakes_match_the_committed_account_fixture() {
     let scenario = connected_scenario();
     let accounts = scenario.accounts();
     assert_eq!(accounts.len(), 2);
-    let expected: ProviderAccount =
-        test_ok(serde_json::from_str(&read_fixture("provider-account/typical.json")));
+    let expected: ProviderAccount = test_ok(serde_json::from_str(&read_fixture(
+        "provider-account/typical.json",
+    )));
     assert_eq!(
         test_ok(serde_json::to_string_pretty(&accounts[0])),
         test_ok(serde_json::to_string_pretty(&expected)),
@@ -245,11 +236,13 @@ fn the_public_fakes_match_the_committed_account_fixture() {
     );
     // The depletion-projection fixtures are the pure function's outputs.
     let window = expected.quota;
-    let typical: DepletionProjection =
-        test_ok(serde_json::from_str(&read_fixture("depletion-projection/typical.json")));
+    let typical: DepletionProjection = test_ok(serde_json::from_str(&read_fixture(
+        "depletion-projection/typical.json",
+    )));
     assert_eq!(project_depletion(&window, 3), typical);
-    let boundary: DepletionProjection =
-        test_ok(serde_json::from_str(&read_fixture("depletion-projection/boundary.json")));
+    let boundary: DepletionProjection = test_ok(serde_json::from_str(&read_fixture(
+        "depletion-projection/boundary.json",
+    )));
     let over_window = flauz_prov::account::QuotaWindow {
         remaining: 3,
         ..window
@@ -296,7 +289,11 @@ fn serialized_contract_state_contains_no_floats() {
         let value: serde_json::Value = test_ok(serde_json::from_str(&read_fixture(relative)));
         assert_no_floats(&value, relative);
         // The schema version marker is exactly 1.
-        assert_eq!(value["v"], serde_json::json!(1), "{relative} carries \"v\": 1");
+        assert_eq!(
+            value["v"],
+            serde_json::json!(1),
+            "{relative} carries \"v\": 1"
+        );
     }
 }
 
@@ -318,7 +315,10 @@ fn no_credential_material_in_serialized_state() {
             let path = entry.path();
             if path.is_dir() {
                 stack.push(path);
-            } else if path.extension().is_some_and(|extension| extension == "json") {
+            } else if path
+                .extension()
+                .is_some_and(|extension| extension == "json")
+            {
                 let content =
                     fs::read_to_string(&path).unwrap_or_else(|error| panic!("{path:?}: {error}"));
                 for marker in CREDENTIAL_MARKERS {
