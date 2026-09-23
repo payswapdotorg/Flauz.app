@@ -228,6 +228,11 @@ Status: DISPATCHED 2026-09-23
 
 ## LAB-001 — The provider-neutral lab fabric: journey specs, normalized evidence, the comparator
 
+> **Status: MERGED 2026-09-23** — commit `a6d37f5` + Lead lockfile gate-fix
+> `b8b8223`, merged via PR #52 (CI green both platforms, run 35848069053);
+> deviations NONE; Lead gates 60/60 + fmt/clippy clean; evidence:
+> [w4-lab-001](evidence/w4-lab-001/LAB-001-COMPLETION-REPORT.md).
+
 ```
 ID: LAB-001
 Title: The provider-neutral parity-lab fabric — declarative journey
