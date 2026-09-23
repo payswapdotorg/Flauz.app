@@ -1,7 +1,16 @@
 # Wave 4 Work Orders — F7 BYOP / F8 Labs / F9 Collaboration (the parallel wave)
 
-> **Status: DISPATCHED 2026-09-23** (PROV-001 Worker A, LAB-001 Worker B,
-> COL-001 Worker C — all base = the Wave-3 gate-record head; the dispatch
+> **Status: 3 of 3 MERGED — Wave 4 DELIVERED 2026-09-23** (LAB-001 PR #52
+> `a134cec`; PROV-001 PR #53 `250109d`; COL-001 PR #54 `526d53c` — the
+> ui.rs three-way resolved as the additive union, palette ALL 89/89).
+> Evidence: [w4-lab-001](evidence/w4-lab-001/LAB-001-COMPLETION-REPORT.md) ·
+> [w4-prov-001](evidence/w4-prov-001/PROV-001-COMPLETION-REPORT.md) ·
+> [w4-col-001](evidence/w4-col-001/COL-001-COMPLETION-REPORT.md).
+> The wave integration gate (the three-fabric scenario + the lab scenes
+> at the merged binary) closes F7/F8/F9 — the record lands at
+> [w4-gate](evidence/w4-gate/WAVE4-GATE-RECORD.md). Workers were
+> dispatched 2026-09-23 (PROV-001 Worker A, LAB-001 Worker B, COL-001
+> Worker C — all base = the Wave-3 gate-record head; the dispatch
 > prompts pin the full SHA). Shared-contract authority:
 > [F2-CONTRACT-KERNEL.md](F2-CONTRACT-KERNEL.md) (frozen) + the Wave-2
 > addendum in [WAVE2-WORK-ORDERS.md](WAVE2-WORK-ORDERS.md) (frozen) + the
@@ -97,6 +106,14 @@
 ---
 
 ## PROV-001 — BYOP connections, quota attribution, free-tier-first routing
+
+> **Status: MERGED 2026-09-23** — worker commit `acb722b` + Lead gate-fixes
+> `6c265a2` (first-real-compile corrections — the worker's sandbox had no
+> Rust toolchain) + `765f66f` (CI round-2 UI-test corrections), merged via
+> PR #53 (`250109d`, CI green both platforms); deviations NONE; Lead gates
+> 37/37 + fmt/clippy clean + palette 87/87 + the chord listener
+> seam-tested; evidence:
+> [w4-prov-001](evidence/w4-prov-001/PROV-001-COMPLETION-REPORT.md).
 
 ```
 ID: PROV-001
@@ -348,6 +365,14 @@ Status: DISPATCHED 2026-09-23
 ---
 
 ## COL-001 — Collaboration contracts + the members/presence surface
+
+> **Status: MERGED 2026-09-23** — worker commit `d9f3563` + Lead gate-fixes
+> `77ca824` (lockfile) + `306d9b1` (CI dead-code + two missing renders),
+> merged via PR #54 (`526d53c`, CI green both platforms); deviations NONE
+> (the M→U chord change is documented necessity — M is owned by the model
+> picker); worker gates 51/51 real runs; Lead merge gates green + palette
+> ALL resolved 87+2=89/89; evidence:
+> [w4-col-001](evidence/w4-col-001/COL-001-COMPLETION-REPORT.md).
 
 ```
 ID: COL-001

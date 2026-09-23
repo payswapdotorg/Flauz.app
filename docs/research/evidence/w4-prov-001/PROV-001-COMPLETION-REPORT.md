@@ -1,0 +1,100 @@
+# PROV-001 Completion Report — BYOP Accounts, Quota Attribution, Free-Tier-First Routing (Wave 4 / F7)
+
+> **Lead gate record.** Worker A (GLM-5.3 + Full-Stack, agents-tab session
+> `b5ed1adc`). Base: main @ 83796f5 (pinned). Branch:
+> `feat/prov-001-byop`, worker commit `acb722b` (parent = the pinned base
+> exactly, `git bundle verify` clean). Delivered via git bundle (70,760
+> bytes, harvested from the pod); NOT pushed by the worker — the Lead
+> applies, verifies, pushes, merges.
+>
+> **Lead gates.** GATE 0 PASS (single commit, parent = base exactly).
+> GATE 1 PASS (29 files, +7,110/−1, all owned: `crates/flauz-prov/**` +
+> the one workspace members line + `flauz_providers.rs` + ui.rs named
+> seams only).
+> GATE 2 — **the sandbox had NO Rust toolchain** (the worker's report
+> states this plainly; verification was two static review passes +
+> programmatic checks). The Lead's first-real-compile gate-fix
+> `6c265a2`: (1) orphan `pub mod time;` removed (E0583+E0428 — the
+> module is inline); (2) the shadowing local `scenario`→`world` in
+> fakes.rs (E0618); (3) the credential test now asserts the PARSE-layer
+> rejection (`SecretRef::parse` rejects `ghp_`-bearing refs before
+> `ProviderAccount::new` — stronger enforcement of §3); (4) fixture
+> `invalid-secret-ref.json` de-materialized (invalid via missing prefix
+> with an opaque token — the no-material law applies to invalid fixtures
+> too); (5) `#[must_use]` off the const + collapsible-ifs + needless
+> borrow (clippy -D warnings); (6) 20× `theme()->field` →
+> `theme().field` in flauz_providers.rs; (7) rustfmt. Post-fix gates:
+> fmt clean; `cargo clippy -p flauz-prov --all-targets` 0 warnings;
+> `cargo test -p flauz-prov` **37/37** (31 lib + 6 conformance);
+> `cargo clippy -p codex-app --all-targets` clean; palette ALL 87/87;
+> the `Ctrl+Alt+Shift+P` chord has BOTH the KeyBinding AND the
+> on_action listener (the d25 law). Lead lockfile gate-fix on the branch
+> (the flauz-prov Cargo.lock entry). CI round-2 Lead corrections
+> `765f66f` (three codex-app UI-test items, verified by exact assertion
+> simulation — the codex-app suite runs in CI only in this sandbox, the
+> documented libpipewire gap). CI at `765f66f0`: ubuntu-24.04 +
+> windows-latest both SUCCESS (runs 35851907375 / 35851904483).
+> **Merged PR #53** (merge `250109d`, GitHub auto-merged 2026-09-23
+> 12:37:09Z).
+>
+> **Contract deviations: NONE** (the worker's report field, verified by the
+> Lead against the frozen Wave-4 kernel addendum §1-§7).
+>
+> The verbatim worker report follows.
+
+=== PROV-001 COMPLETION REPORT ===
+- Work Order ID: PROV-001
+- base branch + base SHA: main @ 83796f59805948a503760d03c5d06d8d872fd758
+- BRANCH: feat/prov-001-byop | COMMITS: acb722b (single clean commit; bundle at `/home/z/my-project/PROV-001-delivery.bundle`, git-bundle-verified to require exactly the pinned base; NOT pushed)
+- changed files/surfaces:
+  - `crates/flauz-prov/**` (NEW, 10 files): `Cargo.toml` (serde + chrono only; serde_json dev), `src/{lib,key,account,ledger,policy,scheduler,fakes}.rs`, `tests/conformance.rs`, `tests/fixtures/w4/**` (17 fixtures: provider-account, quota-ledger, routing-policy, scheduling-choice, depletion-projection — typical/minimal/invalid per family)
+  - Workspace `Cargo.toml`: exactly one members line (`"crates/flauz-prov"`)
+  - `crates/codex-app/src/ui/flauz_providers.rs` (NEW, 1,644 lines: the shell-family surface + 7 module tests)
+  - `crates/codex-app/src/ui.rs`: NAMED SEAMS ONLY (+97/−1, every hunk tagged PROV-001 ×16): module declaration + use, 2 palette enum variants + `ALL` [85→87] + title/description/shortcut/icon/group arms + 2 dispatch arms, the `alt-shift-p` chord binding, the scoped `FlauzProviders` escape, the state field + init, the task-surface mount, the navigation close, and the **on_action listener on the workspace root**
+- implementation summary (account/ledger/policy/scheduler + the surface):
+  - **account.rs**: `ProviderAccount` — the connection-ref link (frozen `conn_<ULID>` format as data: the account's identity, so no new ID prefix is invented), a `flausec_` `SecretRef` string as data, the account label in user words, provider kind, `TierKind` (free/paid), and quota state as **data snapshots** (`QuotaWindow`: remaining/limit/window bounds; never live counters). `AccountStore` follows the MOD-001 registry discipline: version 1 at create, +1 per durable mutation, `VersionConflict` OCC, snapshot/restore round-trip, one account per connection, multi-account per provider.
+  - **ledger.rs**: `QuotaLedger` — append-only, immutable `UsageRecord`s (which logical consumption, when, how much, attributed to which `task_<ULID>` ref), per-account strictly-increasing contiguous sequences, ledger-version OCC on append; `project_depletion` — the honest remaining state: saturating remaining, `depleted` flag, and a **NAMED deficit** (never silently negative; hand-staged inconsistent projections fail `validate`).
+  - **policy.rs**: `RoutingPolicy` as DATA the user can see and change — the ordering (free-tier-first default / paid-first), per-provider and per-task overrides (preferred accounts), account + workspace spend limits and concurrency limits; every mutation is a durable +1 version.
+  - **scheduler.rs**: `schedule_routing` — a pure, deterministic function over `SchedulingInputs` (need + accounts + policy + ledger + load + caller-supplied `now`). The walk: task override → provider override → the policy's tier ordering (ties broken by canonical connection reference) → per-account usability checks in a fixed order (rate limit → window currency → depletion → spend limit → concurrency limit), every pass-over a **named** `SkippedAccount`. **THE ATTRIBUTION LAW is structural**: `SchedulingChoice`'s account/tier/policy-rule fields are non-optional, and `validate` rejects empty labels, provider mismatches, and any escalation without a named free alternative — ambient attribution cannot be constructed. Escalation to paid is NAMED (`PolicyRule::EscalatedToPaid` + the free account in `skipped` with its reason); workspace-wide limits stop all routing with named errors; capability needs are recorded for attribution (resolution stays flauz-cap's intersection — no silent capability fall-through).
+  - **The surface** (`flauz_providers.rs`): the connect flow (API-key entry, masked → the fake seam validates, mints a `flausec_` reference, retains NOTHING → the account appears with tier + quota state + "The key is stored securely; Flauz never shows it again."), the accounts list (whose account, provider, tier chip, quota in user words), the routing-policy surface (see + change, the consequence stated), spend/concurrency limits display (with the honest no-limits fallback), and the task-surface attribution affordance ("Using your OpenAI free tier — 3 of 5 runs left today" + whose account + why; the depletion moment "Your free tier is used up today — next run uses your paid account. Change this" only when a paid account actually exists).
+- tests/commands and exact results (or static-verification statement):
+  - **The sandbox has NO Rust toolchain** (no cargo/rustc, no ~/.cargo) — stated plainly per the work order; all gates verified by **static reasoning across two independent review passes** plus programmatic checks, and the Lead independently compiles and gates.
+  - Pass 1 (full crate read against the compiled flauz-cap/flauz-exec references) found 3 errors, all fixed: `ok()` on a unit value (policy tests), missing `Serialize` on `FakeSecretStore`, an over-broad conformance assertion; plus style items (4 >100-char lines, exploded tuples, `unwrap_err`×4 → an `err()` helper, a bare doc link, by-value `Timestamp` accessors). It verified: serde shapes (deny_unknown_fields everywhere, snake_case enums, declaration-order field serialization), all 17 fixtures byte-exact vs `to_string_pretty`, all scheduler logic hand-traced, visibility correct for the integration test.
+  - Pass 2 (UI module + ui.rs seams) found 3 errors, all fixed: missing `Entity` import, the non-exhaustive `icon()` and `group()` matches for the two new palette variants (the exact regression class prior waves hit), unused `window` param; it verified: all gpui/gpui-component API shapes against compiled references, IconName variants exist, borrow-checker safety, all 17 seam-test strings present in ui.rs, `ALL` = exactly 87 entries, single WorkspaceView construction site, codex-app does NOT depend on flauz-prov.
+  - Final programmatic checks: precise brace/paren/bracket balance — all 9 files OK; palette `ALL` count = 87, no duplicates; `git bundle verify` — requires exactly the pinned base; working tree clean (0 dirty files).
+  - Test inventory (44 tests + 17 fixtures): flauz-prov lib 31 (scheduler 9: the attribution law, free-tier-first + named escalation, multi-account determinism, rate-limit/stale-window named skips, spend+concurrency limits per account and workspace, overrides, honest errors, canonical round-trip; account 4; ledger 3; fakes 5; policy 2; key 4; lib 4), conformance 6, UI module 7 (copy rules, connect flow with the retention Debug-scan, attribution honesty, quota/policy/limits words, palette queries, **the seam test pinning the on_action listener (the d25 law)**, focus-never-traps).
+- kernel compliance checklist (Wave-4 addendum §1–§7, each item):
+  - **§1 Existing signatures frozen**: no trait touched, no signature changed, no contract-crate file modified; the crate is purely additive; every existing fake conformance implementation compiles untouched (nothing outside the owned boundary was edited).
+  - **§2 The quota-attribution law**: every `SchedulingChoice` names whose account (label), which provider, which tier, and the policy rule; the routing policy is DATA; escalation is NAMED with the free alternative it left behind (the CAP-001 law applied to money); ambient consumption is unconstructible. The task event-stream record is future wiring through the world-store seam (the choice carries the task ref + canonical JSON for exactly that; new event types stay behind the frozen-format discipline — not widened).
+  - **§3 Credentials are references, forever**: accounts carry `flausec_` refs only; `CREDENTIAL_MARKERS` re-pinned locally (13 markers, identical to flauz-exec); refs that look like material are rejected (tested with the exec vectors); fixtures + fakes contain no material (the scan runs over the whole w4 tree + every serialized family); the fake secret store refuses real-credential-shaped material; no real OAuth.
+  - **§4 Lab journeys provider-independent (F8)**: not PROV-001's scope (LAB-001); nothing in this commit constrains it.
+  - **§5 Collaboration extends the attention model (F9)**: not PROV-001's scope (COL-001); nothing in this commit adds a second event store.
+  - **§6 Private vs shared context (F9)**: not PROV-001's scope; no frozen record shape was mutated.
+  - **§7 GUI slices follow the seven-layer rule; user language only**: seven layers implemented and tested; money/quota language is plain (the copy test enforces "flausec_"/"token budget"/internal type names never appear; the exact order phrases appear verbatim); the palette is never the only discovery mechanism (the labeled task-surface control is the primary entry).
+  - Also honored (Wave-2/3 addenda in the contract list): §3/§5/§6 (Wave-2) — references-only, registry entity rules (version/OCC/fixtures), task identity sacred (task refs are opaque data; never forked); §6/§7 (Wave-3) — canonical JSON discipline, determinism (no wall clock, no entropy — the crate generates no IDs at all).
+- GUI discoverability layers covered (the seven, each):
+  1. **Visible primary entry**: the labeled "Provider accounts" control on every task surface with the honest summary ("None connected yet" / "2 connected · free accounts first").
+  2. **Contextual affordance**: the state-driven attribution line + why-line ("Using your OpenAI free tier — 3 of 5 runs left today · Personal account · Free accounts are tried first…") and the depletion moment with the "Change this" action.
+  3. **Palette rows**: "Connect a provider account" and "See which account a task uses" (titles + descriptions + dispatches; both resolve natural queries — tested).
+  4. **Keyboard path**: Ctrl+Alt+Shift+P (verified conflict-free — only unshifted Ctrl+Alt+P exists for pinning), with the **on_action listener registered on the workspace root and pinned by the seam test** (the d25 Gate-B lesson), plus scoped Escape (`FlauzProviders`), tab-navigable panel.
+  5. **Honest empty state**: "No provider accounts connected yet" + what connecting adds + the connect form as the next step.
+  6. **Success/next-step state**: the connected account appears with tier + quota words + "Stored securely — Flauz never shows it again."; the connect form stays available for multi-account.
+  7. **Truthful failure states**: empty key, empty name, and real-looking key refused ("nothing was stored"), depleted quota says "Used up for today", the see-row's honest not-yet guidance.
+- acceptance-criteria evidence (map each of the 5 bullets):
+  1. **Single clean commit on feat/prov-001-byop at the pinned base; owned files only**: commit `acb722b`, parent exactly `83796f5`; 29 files — `crates/flauz-prov/**`, one workspace members line, `flauz_providers.rs`, ui.rs seams only (+97/−1; the one deletion is the mechanical `ALL: [Self; 85]` → `[Self; 87]` line); `git status` clean; bundle verified.
+  2. **The attribution law proven**: `SchedulingChoice::validate` rejects empty account labels, provider mismatches, escalated-without-named-free-alternative, rule/flag disagreement, and chosen-also-skipped; `no_scheduling_choice_without_full_attribution` proves each; `free_tier_first_with_the_named_escalation` proves the named escalation (rule + flag + the free account in `skipped` with `Depleted`); the invalid fixtures `invalid-silent-escalation.json` + `invalid-ambient-account.json` fail conformance validation; the fakes scenario escalates honestly end-to-end.
+  3. **The connect flow works end-to-end on fakes with SecretRef-only storage; the credential scan passes on every new family**: `the_connect_flow_works_end_to_end_with_reference_only_storage` + the UI's `the_connect_flow_mints_references_and_retains_nothing` (Debug-scan: the entered key survives nowhere); the scan covers the whole fixture tree, every serialized family built through the fakes, and the store's entire state; material rejection tested at both the `SecretRef` parser (the frozen exec vectors) and the fake seam.
+  4. **The surface: seven layers; user language only (tested); keyboard path with the listener REGISTERED AND SEAM-TESTED**: the seven layers above; `providers_copy_uses_user_language_only` (49 constants + every generated line against 16 forbidden terms; the exact phrases verbatim); `providers_seams_are_registered_in_the_ui_seams` pins the whitespace-normalized `cx.listener(|this, _: &FlauzProvidersShortcut, window, cx| { flauz_providers::open_providers_surface(this, window, cx); })` form — the listener, not just the binding.
+  5. **Non-empty "Contract deviations" blocks closure**: see below — NONE.
+- known limitations:
+  - The sandbox lacks the Rust toolchain — every gate is static-verification evidence (two review passes + programmatic checks), not a compiled run; the Lead independently compiles and gates (the `Cargo.lock` entry is left to the Lead per the CAP-001/ORCH-004 precedent — the worker's owned-files boundary excludes the lock).
+  - The UI's connected-accounts/order/limits state is the module's fake-seam state this wave (the picker/recovery view-model precedent); the real `flauz-prov` scheduler/account-store wiring lands with the F7 persistence slice through the module's seams. The attribution affordance renders only when the wiring seam attaches a view (no invented data at cold start).
+  - The Workspace-level nav mount (the shell's sidebar surface) is a later shell slice — the primary visible entry is the task-surface control + palette rows + chord, exactly the merged MOD-001 picker precedent.
+  - Spend-limit blocking uses `spent >= limit` at scheduling (the projection at choice time records the honest remaining state; per-unit pre-checks land with the consumption wiring).
+- contract deviations: NONE
+- follow-up work:
+  - Wire the UI seams to the real `flauz-prov` types (codex-app dependency + catalog/attribution population) with the F7 persistence slice; add the shell's Workspace nav surface for the accounts list.
+  - Record scheduling choices on the task's event stream through the world-store seam (new `task.scheduled_on_account`-style event types under the frozen-format discipline).
+  - Real provider adapters (OpenAI etc.) behind the lab-proven adapter pattern; the real keychain with F13 hardening; OAuth flows.
+  - LAB-001 may reuse the fakes' window/depletion semantics for lab journeys; the depletion-moment affordance should ride the live scheduler state once wired.
+=== END REPORT ===
