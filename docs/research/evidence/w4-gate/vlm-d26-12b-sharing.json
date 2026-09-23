@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot, here is the exact text and structure of the visible panel:\n\n**Panel Heading:**\n*   **Sharing**\n\n**Section Headings & Exact Lines:**\n*   **Files**\n    *   Isolated copy — your files stay separate\n*   **Remembered notes**\n    *   Only me — remembered notes stay visible only to you\n*   **Work products**\n    *   The workspace — everyone here can see this task’s work products\n\n**Change Affordances (Buttons/Links) & Tooltips:**\n*   **Button:** `Change sharing`\n    *   *Tooltip:* (None explicitly visible in the static text, but it is a primary action button).\n*   **Link/Toggle:** `Notes: Only me`\n    *   *Context:* Indicates the current setting for remembered notes.\n*   **Link:** `← Back to your work`\n    *   *Context:* Navigation affordance to exit the panel.\n*   **Icon:** `X` (Close icon next to \"Remembered notes\")\n    *   *Function:* Likely removes the section or resets the setting.\n\n**Footer Hints:**\n*   This applies while this workspace is open; it syncs to other devices once workspaces connect.\n*   Escape closes this panel",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790169709,
+  "id": "2026092321214386ccc743867b4ac3",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026092321214386ccc743867b4ac3",
+  "usage": {
+    "completion_tokens": 263,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1747,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2010
+  }
+}

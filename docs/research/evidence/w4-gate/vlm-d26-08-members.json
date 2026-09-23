@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot, here is the text from the visible panel:\n\n**1. Panel Heading**\nWho is on this workspace\n\n**2. Solo/Empty State Title and Body Text**\n**Title:** Just you\n**Body:** Right now this workspace is just you. Inviting someone lets them see the same projects and tasks, work on them with you, and show up here with what they're doing.\n\n**3. 'Isn't connected yet' Titles and Body Text**\n*   **Title:** Inviting isn't connected yet\n    *   **Body:** Invitations arrive when Flauz connects workspaces across devices — nothing is sent today, and no one else can see your work.\n*   **Title:** Changing roles isn't connected yet\n    *   **Body:** Roles change here once workspaces connect — everyone invited gets to see the workspace, and roles decide what they can change.\n\n**4. Buttons or Affordances**\n*   [Icon] **Invite someone**\n\n**5. Footer Hints**\nCtrl+Alt+Shift+U opens this panel · Escape closes this panel",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790169698,
+  "id": "20260923212133e8dc7ce829794cd9",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260923212133e8dc7ce829794cd9",
+  "usage": {
+    "completion_tokens": 225,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1752,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1977
+  }
+}

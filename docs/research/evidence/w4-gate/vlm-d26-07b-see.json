@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot, the surface shown is a **provider accounts panel** (specifically the \"Provider accounts\" tab within the task view).\n\n**Main Heading:**\nYour provider accounts\n\n**Guidance/Status Text:**\n*   **Panel description:** Accounts you connect let Flauz run tasks with your provider quota. Flauz says whose account a task uses, and tells you before it uses a paid account.\n*   **Status message inside the box:** No provider accounts connected yet\n*   **Instructional text:** Connect an account you already have — for example an OpenAI account — and Flauz can run tasks with your quota instead of a shared one. Flauz shows what is left before each run, and never spends a paid account without saying so.\n*   **Bottom status line:** This task has not been set up with an account yet — it will get one when it next runs.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790169718,
+  "id": "20260923212154da7a98e321114ab9",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260923212154da7a98e321114ab9",
+  "usage": {
+    "completion_tokens": 188,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1747,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1935
+  }
+}

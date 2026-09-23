@@ -1,17 +1,18 @@
 # Wave 4 Work Orders — F7 BYOP / F8 Labs / F9 Collaboration (the parallel wave)
 
-> **Status: 3 of 3 MERGED — Wave 4 DELIVERED 2026-09-23** (LAB-001 PR #52
-> `a134cec`; PROV-001 PR #53 `250109d`; COL-001 PR #54 `526d53c` — the
-> ui.rs three-way resolved as the additive union, palette ALL 89/89).
+> **Status: CLOSED 2026-09-23 — 3 of 3 MERGED + the integration gate
+> GREEN (Gates A/B/C; F7/F8/F9 closed)** (LAB-001 PR #52 `a134cec`;
+> PROV-001 PR #53 `250109d`; COL-001 PR #54 `526d53c` — the ui.rs
+> three-way resolved as the additive union, palette ALL 89/89; the gate
+> record: [w4-gate](evidence/w4-gate/WAVE4-GATE-RECORD.md) — the
+> 19-step harness with the three-fabric scenario + the d26 lab scenes
+> VLM-adjudicated + CI green both platforms at the final head).
 > Evidence: [w4-lab-001](evidence/w4-lab-001/LAB-001-COMPLETION-REPORT.md) ·
 > [w4-prov-001](evidence/w4-prov-001/PROV-001-COMPLETION-REPORT.md) ·
 > [w4-col-001](evidence/w4-col-001/COL-001-COMPLETION-REPORT.md).
-> The wave integration gate (the three-fabric scenario + the lab scenes
-> at the merged binary) closes F7/F8/F9 — the record lands at
-> [w4-gate](evidence/w4-gate/WAVE4-GATE-RECORD.md). Workers were
-> dispatched 2026-09-23 (PROV-001 Worker A, LAB-001 Worker B, COL-001
-> Worker C — all base = the Wave-3 gate-record head; the dispatch
-> prompts pin the full SHA). Shared-contract authority:
+> Workers were dispatched 2026-09-23 (PROV-001 Worker A, LAB-001 Worker
+> B, COL-001 Worker C — all base = the Wave-3 gate-record head; the
+> dispatch prompts pin the full SHA). Shared-contract authority:
 > [F2-CONTRACT-KERNEL.md](F2-CONTRACT-KERNEL.md) (frozen) + the Wave-2
 > addendum in [WAVE2-WORK-ORDERS.md](WAVE2-WORK-ORDERS.md) (frozen) + the
 > Wave-3 addendum in [WAVE3-WORK-ORDERS.md](WAVE3-WORK-ORDERS.md) (frozen)

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot, here is the exact transcription of the visible text and a description of the panel shown:\n\n**Panel/Surface Shown:**\nThis is the **\"Provider accounts\"** configuration panel within the **\"Context\"** tab of an **Untitled task** in the **Flauz** desktop application (an AI coding assistant).\n\n**1. Main Heading**\n*   **Untitled task**\n*   /tmp/d10-seed-ws\n\n**2. Empty-State Title and Body**\n*   **Title:** No provider accounts connected yet\n*   **Body:** Connect an account you already have — for example an OpenAI account — and Flauz can run tasks with your quota instead of a shared one. Flauz shows what is left before each run, and never spends a paid account without saying so.\n\n**3. Form Fields and Labels**\n*   **Section Label:** Connect a provider account\n*   **Sub-label:** OpenAI\n*   **Label:** Account name\n    *   *Placeholder:* For example: Personal account\n*   **Label:** API key\n    *   *Placeholder:* Paste the key from your provider\n*   **Button:** + Connect account\n\n**4. Section Headings (Account Usage & Limits)**\n*   **Heading:** Which account Flauz uses\n    *   **Text:** Order today: free accounts first → Change the order\n*   **Heading:** Spending and task limits\n\n**5. Footer Hints & Status Messages**\n*   **Hint:** The key is stored securely: Flauz never shows it again.\n*   **Status Banner:** Codex hit an error and is retrying. [Dismiss]\n\n---\n*Other visible text for context:*\n*   **Top Bar:** File, Edit, View, Help | Commit or push, Fork, Refresh Git, Changes, Outputs, Browser, Terminal, Computer\n*   **Tab Bar:** Context, Agents, Environments, Evidence, More\n*   **Status Line:** Model: not chosen yet\n*   **Info Lines:** Capabilities (What a task can do...), Save as a reusable workflow, Provider accounts (None connected yet)\n*   **Intro Text:** Your provider accounts / Accounts you connect let Flauz run tasks with your provider quota...",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790169687,
+  "id": "20260923212116689be45f704c4c00",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260923212116689be45f704c4c00",
+  "usage": {
+    "completion_tokens": 472,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1763,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2235
+  }
+}

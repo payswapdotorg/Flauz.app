@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot, the **provider accounts panel is open** (specifically, the \"Your provider accounts\" section within the task surface).\n\n**Main Heading:** Wave 4 gate anchor\n\n**Status/Guidance Line at the bottom:**\nCodex couldn't complete the request. Try again, or check the account and connection settings.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790169728,
+  "id": "20260923212205fba1a88ea3564848",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260923212205fba1a88ea3564848",
+  "usage": {
+    "completion_tokens": 70,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1734,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 1804
+  }
+}

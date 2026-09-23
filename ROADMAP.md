@@ -4,8 +4,8 @@ The product roadmap is now governed by [docs/FLAUZ-SOURCE-OF-TRUTH.md](docs/FLAU
 
 ## Current state
 
-**Current phase: Wave 4 (the parallel wave: F7 BYOP / F8 labs / F9
-collaboration).**
+**Current phase: post-Wave-4 (remaining F6 orchestration depth, then
+the Web client) per docs/ACTIVE-EXECUTION-STATE.md.**
 F1 (Codex Desktop parity) CLOSED 2026-09-21 at v0.1.0-rc.14 per the closure
 record (`docs/research/evidence/f1-sweep/F1-CLOSURE-RECORD.md`; user review
 received). F2 (canonical contracts + discoverability shell) CLOSED
@@ -18,9 +18,18 @@ orchestration: context engine / harness / execution graph) CLOSED
 gate-fix db79499), deviations NONE ×3, the 18-step integration harness
 green including the F6 domain-neutral non-software-development scenario;
 gate record:
-`docs/research/evidence/w3-gate/WAVE3-GATE-RECORD.md`. Wave-4 work orders
-(PROV-001 / LAB-001 / COL-001) dispatched per
-`docs/research/WAVE4-WORK-ORDERS.md`.
+`docs/research/evidence/w3-gate/WAVE3-GATE-RECORD.md`. **Wave 4 (the
+parallel wave: F7 BYOP / F8 labs / F9 collaboration) CLOSED 2026-09-23**
+— 3/3 merged (a134cec / 250109d / 526d53c), deviations NONE ×3, the
+19-step integration harness green including the three-fabric scenario
+(PROV named escalation on the task stream / LAB same-journey-bytes
+zero-divergence + seeded named major divergence / COL two-actor
+interleaving with privacy + named denials + stated sharing), the d26
+lab scenes VLM-adjudicated at the merged binary, CI green both
+platforms; gate record:
+`docs/research/evidence/w4-gate/WAVE4-GATE-RECORD.md`. Wave-4 work
+orders (PROV-001 / LAB-001 / COL-001) per
+`docs/research/WAVE4-WORK-ORDERS.md` (3/3 MERGED).
 
 - [x] Native Rust/GPUI Codex-compatible desktop foundation.
 - [x] Windows and Linux desktop targets.
@@ -66,9 +75,9 @@ After parity closure, implement in this order:
 4. [ ] Model-provider and agent-runtime fabric, including BYOK and non-Codex models. — **Wave-2 foundation merged 2026-09-22** (MOD-001+RT-001: the model/provider registry with SecretRef-only connections, the Codex adapter boundary + the first non-Codex runtime, the model picker; BYOK flows → Wave 4 PROV-001).
 5. [ ] Capability resolver, skill dependency checking, and skill-unlock UX. — **Wave-2 foundation merged 2026-09-22** (CAP-001: the five-dimension resolver with named gaps, no silent fall-through, + the gap UX; skill dependency checking/unlock flows are later waves).
 6. [ ] Reactive execution graph, multi-model/multi-agent orchestration, verification, resource leases/conflict handling, and human takeover. — **F6 core merged 2026-09-23** (ORCH-004: the attributed graph + the Save-as-a-reusable-workflow slice; ORCH-002/003: the engine + harness behind it; leases/conflict handling and human-takeover UX are later waves).
-7. [ ] User-owned provider connections, quotas, cost policies, and free-tier-first routing. — **Wave 4 DISPATCHED 2026-09-23** (PROV-001: the connection flow on fakes, the quota ledger with visible attribution, the routing policy as data).
-8. [ ] Provider-neutral parity labs and cross-environment execution validation. — **Wave 4 DISPATCHED 2026-09-23** (LAB-001: journey specs, the normalized evidence schema, the comparator, local + fake-remote adapters).
-9. [ ] Collaboration: shared task state, presence, shared sessions/environments, documents/sheets, collaborative code, private-vs-shared context. — **Wave 4 DISPATCHED 2026-09-23** (COL-001: membership/permissions with named denial, presence, private-vs-shared visibility, the two-actor simulation + the members surface; editors and real transport are F10+).
+7. [x] User-owned provider connections, quotas, cost policies, and free-tier-first routing. — **Wave 4 CLOSED 2026-09-23** (PROV-001 merged via PR #53: the connection flow on fakes, the quota ledger with visible attribution, the routing policy as data, free-tier-first scheduling with the NAMED escalation; the UI wiring + real adapters follow with the F7 persistence slice).
+8. [x] Provider-neutral parity labs and cross-environment execution validation. — **Wave 4 CLOSED 2026-09-23** (LAB-001 merged via PR #52: journey specs, the normalized evidence schema, the comparator, local + fake-remote adapters; the F8 gate law proven in-tests + at the wave gate; the real lab driver + real provider adapters follow).
+9. [x] Collaboration: shared task state, presence, shared sessions/environments, documents/sheets, collaborative code, private-vs-shared context. — **Wave 4 CLOSED 2026-09-23** (COL-001 merged via PR #54: membership/permissions with named denial, presence, private-vs-shared visibility, the two-actor simulation + the members surface; editors and real transport are F10+).
 10. [ ] Procedure library and learn → save → discover → run → deviation → improve lifecycle.
 11. [ ] Web client adapter — **required before first production release**.
 12. [ ] Formal verification gate — Linux + Windows + Web.
