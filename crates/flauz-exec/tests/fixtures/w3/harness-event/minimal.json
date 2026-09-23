@@ -1,0 +1,1 @@
+{"v":1,"event_type":"harness.continued","seq":6,"task_id":"task_01J8ZQ5V8K3T2B7N6X4R9DQPB1","occurred_at":"2026-09-21T13:50:00Z","actor":{"kind":"system","id":"flauz-harness"},"to_state":"continuing","detail":{"kind":"continue"}}

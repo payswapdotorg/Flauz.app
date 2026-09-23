@@ -131,6 +131,15 @@ use flauz_model_picker::FlauzModelPickerShortcut;
 // MOD-001's.
 mod flauz_capability_gap;
 use flauz_capability_gap::FlauzCapabilityGapShortcut;
+// ORCH-003 (F6 Wave 3): the recovery surface — the J-03 banner
+// ("Picking up where we left off" / what was kept / what was
+// summarized / Review-and-continue + Escalate-to-me; the escalated
+// "Needs you" state is explicit and visible), wired through the same
+// minimal named seams below (declaration, palette row, keyboard
+// chord, scoped escape, state field, task-surface mount, navigation
+// close). Seams are distinct from MOD-001's and CAP-001's.
+mod flauz_recovery;
+use flauz_recovery::FlauzRecoveryShortcut;
 
 const WINDOW_WIDTH: f32 = 1_278.0;
 const WINDOW_HEIGHT: f32 = 818.0;
@@ -3762,10 +3771,11 @@ enum PaletteCommand {
     InspectTaskMore,
     ChooseModelForTask,
     InspectCapabilityGaps,
+    ResumeTaskWhereItLeftOff,
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 82] = [
+    const ALL: [Self; 83] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3848,6 +3858,7 @@ impl PaletteCommand {
         Self::InspectTaskMore,
         Self::ChooseModelForTask,
         Self::InspectCapabilityGaps,
+        Self::ResumeTaskWhereItLeftOff,
     ];
 
     const fn title(self) -> &'static str {
@@ -3942,6 +3953,11 @@ impl PaletteCommand {
             Self::InspectTaskMore => flauz_shell::TaskRailSection::MoreInspect.palette_title(),
             Self::ChooseModelForTask => flauz_model_picker::PALETTE_ROW_TITLE,
             Self::InspectCapabilityGaps => flauz_capability_gap::PALETTE_ROW_TITLE,
+            // ORCH-003: the recovery surface's palette row (the
+            // "Resume this task where it left off" fallback — visible
+            // under the Workspace group; the state-conditional
+            // visibility rides the recovery view-model seam).
+            Self::ResumeTaskWhereItLeftOff => flauz_recovery::PALETTE_ROW_TITLE,
         }
     }
 
@@ -4043,6 +4059,8 @@ impl PaletteCommand {
             }
             Self::ChooseModelForTask => flauz_model_picker::PALETTE_ROW_DESCRIPTION,
             Self::InspectCapabilityGaps => flauz_capability_gap::PALETTE_ROW_DESCRIPTION,
+            // ORCH-003: the resume row's description.
+            Self::ResumeTaskWhereItLeftOff => flauz_recovery::PALETTE_ROW_DESCRIPTION,
         }
     }
 
@@ -4080,6 +4098,8 @@ impl PaletteCommand {
             Self::InspectTaskMore => Some("Ctrl+Alt+Shift+5"),
             Self::ChooseModelForTask => Some("Ctrl+Alt+Shift+M"),
             Self::InspectCapabilityGaps => Some("Ctrl+Alt+Shift+6"),
+            // ORCH-003: the recovery chord.
+            Self::ResumeTaskWhereItLeftOff => Some("Ctrl+Alt+Shift+R"),
             _ => None,
         }
     }
@@ -4241,6 +4261,8 @@ impl PaletteCommand {
             Self::InspectTaskMore => flauz_shell::TaskRailSection::MoreInspect.icon(),
             Self::ChooseModelForTask => IconName::Bot,
             Self::InspectCapabilityGaps => IconName::Asterisk,
+            // ORCH-003: the resume row's icon.
+            Self::ResumeTaskWhereItLeftOff => IconName::Undo2,
         }
     }
 
@@ -4323,6 +4345,8 @@ impl PaletteCommand {
             | Self::InspectTaskMore
             | Self::ChooseModelForTask => PaletteGroup::WorkspaceShell,
             Self::InspectCapabilityGaps => PaletteGroup::WorkspaceShell,
+            // ORCH-003: the resume row joins the Workspace group.
+            Self::ResumeTaskWhereItLeftOff => PaletteGroup::WorkspaceShell,
         }
     }
 
@@ -4369,6 +4393,7 @@ impl PaletteCommand {
                 | Self::InspectTaskMore
                 | Self::ChooseModelForTask
                 | Self::InspectCapabilityGaps
+                | Self::ResumeTaskWhereItLeftOff
         )
     }
 
@@ -5006,6 +5031,12 @@ impl CommandPaletteView {
             PaletteCommand::InspectCapabilityGaps => {
                 flauz_capability_gap::open_capability_gap_surface(workspace, window, cx);
             }
+            // ORCH-003: the recovery surface's palette row dispatch —
+            // focuses the banner when there is something to pick up,
+            // honest guidance otherwise.
+            PaletteCommand::ResumeTaskWhereItLeftOff => {
+                flauz_recovery::open_recovery_surface(workspace, window, cx);
+            }
             PaletteCommand::SearchChats | PaletteCommand::SearchFiles => {}
         });
     }
@@ -5529,6 +5560,12 @@ pub fn run() {
                 // CAP-001: the capability-gap surface rides the task-rail
                 // chord family (Capabilities, after More).
                 KeyBinding::new(&shortcut("alt-shift-6"), FlauzCapabilityGapShortcut, None),
+                // ORCH-003: the recovery chord (Ctrl+Alt+Shift+R — the
+                // letter family, like the picker's M; letters report the
+                // shift modifier truthfully, so no shifted-symbol
+                // companion is needed). Focuses the recovery banner when
+                // there is something to pick up.
+                KeyBinding::new(&shortcut("alt-shift-r"), FlauzRecoveryShortcut, None),
                 // Gate-fix r2 (F2 Gate B, d23 run-2/3 evidence): on
                 // shifted-keysym platforms the digit form of a Shift+N
                 // chord NEVER matches the physical main-row keys. Two GPUI
@@ -5576,6 +5613,13 @@ pub fn run() {
                 // dismisses it through its focus path.
                 KeyBinding::new("escape", Escape, Some("FlauzModelPicker")),
                 KeyBinding::new("escape", Escape, Some("FlauzCapabilityGap")),
+                // ORCH-003: the recovery banner owns a scoped escape
+                // binding (the 019 family shape + the d19 discipline:
+                // never trapped) — the banner auto-focuses its own
+                // handle only through the explicit chord path, and one
+                // Escape returns focus to the task surface through the
+                // 017 restore contract.
+                KeyBinding::new("escape", Escape, Some("FlauzRecovery")),
                 // UX-003: the model-availability NUX modal's one-Escape
                 // contract — the modal auto-focuses its own handle on mount
                 // (the 019 request-once pattern), so this scoped binding
@@ -6332,6 +6376,10 @@ struct WorkspaceView {
     /// Why-disclosure, and the panel's focus bookkeeping. Additive UI
     /// state; F1 flows are unchanged.
     flauz_capability_gap: flauz_capability_gap::CapabilityGapState,
+    /// The recovery surface state (ORCH-003): the J-03 view-model seam
+    /// and the banner's focus bookkeeping. Additive UI state; F1 flows
+    /// are unchanged.
+    flauz_recovery: flauz_recovery::RecoveryState,
     sidebar_visible: bool,
     sidebar_responsive: bool,
     shell_width_class: Option<ShellWidthClass>,
@@ -7563,6 +7611,7 @@ impl WorkspaceView {
             flauz_shell: flauz_shell::FlauzShellState::new(cx),
             flauz_model_picker: flauz_model_picker::FlauzModelPickerState::new(cx),
             flauz_capability_gap: flauz_capability_gap::CapabilityGapState::new(cx),
+            flauz_recovery: flauz_recovery::RecoveryState::new(cx),
             sidebar_visible: true,
             sidebar_responsive: true,
             shell_width_class: None,
@@ -8203,6 +8252,16 @@ impl WorkspaceView {
         // the 017 contract instead).
         if flauz_shell::action_closes_shell_surfaces(&action)
             && self.flauz_capability_gap.close_for_navigation()
+        {
+            cx.notify();
+        }
+        // ORCH-003 registration seam: the same F1 navigation quietly
+        // drops the recovery banner's focus bookkeeping and disclosure —
+        // the banner itself is state-driven and stays visible while the
+        // task is being picked up or needs the user (the deliberate
+        // release path restores focus through the 017 contract instead).
+        if flauz_shell::action_closes_shell_surfaces(&action)
+            && self.flauz_recovery.close_for_navigation()
         {
             cx.notify();
         }
@@ -19275,6 +19334,12 @@ impl WorkspaceView {
                             .child(flauz_capability_gap::render_capability_gap_entry(
                                 self, window, cx,
                             ))
+                            // ORCH-003 registration seam: the recovery banner
+                            // on the task surface — state-driven (always
+                            // visible while the task is being picked up or
+                            // needs the user; absent when there is nothing
+                            // to recover — never a permanent banner).
+                            .child(flauz_recovery::render_recovery_banner(self, window, cx))
                             .when_some(bedrock_workspace_notice, |workspace, notice| {
                                 workspace.child(notice)
                             })

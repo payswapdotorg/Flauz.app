@@ -106,6 +106,8 @@ pub mod environment;
 pub mod environment_fake_remote;
 pub mod environment_local;
 pub mod fakes;
+pub mod harness;
+pub mod harness_telemetry;
 pub mod ids;
 pub mod model;
 pub mod refs;
@@ -132,6 +134,16 @@ pub use crate::environment_fake_remote::{
 };
 pub use crate::environment_local::{
     LOCAL_PROVIDER_KIND, LOCAL_SURFACES, LocalEnvironment, LocalEnvironmentProvider, LocalSurface,
+};
+pub use crate::harness::{
+    ContextCompileInput, ContextCompileOutput, ContextCompiler, HarnessAttachments,
+    HarnessCompactionRecord, HarnessError, HarnessEventDetail, HarnessEventRecord, HarnessKeptRefs,
+    HarnessObserver, HarnessStateKind, HarnessTransition, HarnessView, RecoveryBrief,
+    ReplayedHarness, TaskHarness, harness_event_types, replay_history, transition_is_legal,
+};
+pub use crate::harness_telemetry::{
+    HarnessSpanOutcome, HarnessTrace, HarnessTraceSpan, HarnessTraceSummary,
+    MAX_HARNESS_TRACE_SPANS,
 };
 pub use crate::ids::{
     AgentId, EntityKind, EnvironmentId, IdError, ModelId, ProviderConnectionId, validate,
