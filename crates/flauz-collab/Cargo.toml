@@ -1,0 +1,19 @@
+[package]
+name = "flauz-collab"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Workspace collaboration contracts: membership, permissions, presence and sharing policy for Flauz"
+publish = false
+
+[dependencies]
+chrono.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

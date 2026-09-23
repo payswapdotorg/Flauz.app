@@ -1,0 +1,27 @@
+{
+  "v": 1,
+  "roles": [
+    {
+      "role": "owner",
+      "access": [
+        {
+          "surface": "tasks",
+          "level": "manage"
+        },
+        {
+          "surface": "provider_accounts",
+          "level": "manage"
+        },
+        {
+          "surface": "environments",
+          "level": "manage"
+        },
+        {
+          "surface": "members",
+          "level": "manage"
+        }
+      ]
+    }
+  ],
+  "extra": 1
+}
