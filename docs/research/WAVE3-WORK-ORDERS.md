@@ -1,9 +1,12 @@
 # Wave 3 Work Orders — F6 Orchestration: Context Engine / Harness / Execution Graph
 
-> **Status: 1 of 3 MERGED** (ORCH-002 Worker A — PR #49, merge
-> cd59421, CI both platforms, deviations NONE; see
-> [evidence/w3-orch-002](evidence/w3-orch-002/ORCH-002-COMPLETION-REPORT.md)).
-> ORCH-003 Worker B + ORCH-004 Worker C: DISPATCHED 2026-09-23, generating. Shared-contract authority:
+> **Status: 2 of 3 MERGED** (ORCH-002 Worker A — PR #49, merge
+> cd59421; ORCH-004 Worker C — PR #50, merge ef43a0e; both CI both
+> platforms, deviations NONE; evidence:
+> [w3-orch-002](evidence/w3-orch-002/ORCH-002-COMPLETION-REPORT.md) +
+> [w3-orch-004](evidence/w3-orch-004/ORCH-004-COMPLETION-REPORT.md)).
+> ORCH-003 Worker B: delivered + gated (PR #51, CI running on the
+> gate-fix head de4b792). Shared-contract authority:
 > [F2-CONTRACT-KERNEL.md](F2-CONTRACT-KERNEL.md) (frozen) + the Wave-2
 > addendum in [WAVE2-WORK-ORDERS.md](WAVE2-WORK-ORDERS.md) (frozen) + the
 > **Wave-3 kernel addendum** below + the MERGED contract crates themselves
