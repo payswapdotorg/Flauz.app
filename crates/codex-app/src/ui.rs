@@ -176,6 +176,19 @@ use flauz_providers::FlauzProvidersShortcut;
 // prior wave's.
 mod flauz_members;
 use flauz_members::FlauzMembersShortcut;
+// LEASE-001 (F2 Wave 5): the resource-conflicts surface — every
+// resource's live state in user words ("Ana is using the browser —
+// exclusive until 3:40 PM"), the honest queue view ("2 tasks waiting
+// — yours is next"), the escalation card with the decision
+// affordances and their stated consequences, and the task-surface
+// wait/hold affordance ("Waiting for the browser — 2nd in line").
+// Wired through the same minimal named seams below (declaration,
+// palette rows, keyboard chord, scoped escape, state field,
+// title-bar entry, task-surface mount, workspace-root panel mount,
+// navigation close, the chord listener). Seams are distinct from
+// every prior wave's.
+mod flauz_conflicts;
+use flauz_conflicts::FlauzConflictsShortcut;
 
 const WINDOW_WIDTH: f32 = 1_278.0;
 const WINDOW_HEIGHT: f32 = 818.0;
@@ -3819,10 +3832,13 @@ enum PaletteCommand {
     // COL-001: the members + sharing surface rows.
     SeeWhoIsOnWorkspace,
     ChangeTaskSharing,
+    // LEASE-001: the resource-conflicts surface rows.
+    SeeWhoIsUsingWhat,
+    ResolveResourceConflict,
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 89] = [
+    const ALL: [Self; 91] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3915,6 +3931,9 @@ impl PaletteCommand {
         // COL-001: the members + sharing surface rows.
         Self::SeeWhoIsOnWorkspace,
         Self::ChangeTaskSharing,
+        // LEASE-001: the resource-conflicts surface rows.
+        Self::SeeWhoIsUsingWhat,
+        Self::ResolveResourceConflict,
     ];
 
     const fn title(self) -> &'static str {
@@ -4024,6 +4043,9 @@ impl PaletteCommand {
             // COL-001: the members + sharing surface rows.
             Self::SeeWhoIsOnWorkspace => flauz_members::PALETTE_ROW_TITLE,
             Self::ChangeTaskSharing => flauz_members::PALETTE_ROW_SHARING_TITLE,
+            // LEASE-001: the resource-conflicts surface rows.
+            Self::SeeWhoIsUsingWhat => flauz_conflicts::PALETTE_ROW_TITLE,
+            Self::ResolveResourceConflict => flauz_conflicts::PALETTE_ROW_RESOLVE_TITLE,
         }
     }
 
@@ -4136,6 +4158,9 @@ impl PaletteCommand {
             // COL-001: the members + sharing rows' descriptions.
             Self::SeeWhoIsOnWorkspace => flauz_members::PALETTE_ROW_DESCRIPTION,
             Self::ChangeTaskSharing => flauz_members::PALETTE_ROW_SHARING_DESCRIPTION,
+            // LEASE-001: the resource-conflicts rows' descriptions.
+            Self::SeeWhoIsUsingWhat => flauz_conflicts::PALETTE_ROW_DESCRIPTION,
+            Self::ResolveResourceConflict => flauz_conflicts::PALETTE_ROW_RESOLVE_DESCRIPTION,
         }
     }
 
@@ -4186,6 +4211,14 @@ impl PaletteCommand {
             // family; the work order's suggested M was verified TAKEN by
             // the model picker above, so U is the verified free letter).
             Self::SeeWhoIsOnWorkspace => Some("Ctrl+Alt+Shift+U"),
+            // LEASE-001: the conflicts chord (Ctrl+Alt+Shift+L — the
+            // letter family, verified conflict-free: the letters in
+            // use are M (model picker), R (recovery), P (providers),
+            // S (save flow) and U (members), plus the digits 1-7; L
+            // is the verified free letter — both rows ride it, the
+            // chord opens the panel).
+            Self::SeeWhoIsUsingWhat => Some("Ctrl+Alt+Shift+L"),
+            Self::ResolveResourceConflict => Some("Ctrl+Alt+Shift+L"),
             _ => None,
         }
     }
@@ -4358,6 +4391,11 @@ impl PaletteCommand {
             // COL-001: the members + sharing rows' icons.
             Self::SeeWhoIsOnWorkspace => IconName::User,
             Self::ChangeTaskSharing => IconName::FolderOpen,
+            // LEASE-001: the resource-conflicts rows' icons (the Worker's
+            // documented choices — Globe for the resource surface,
+            // TriangleAlert for conflict resolution).
+            Self::SeeWhoIsUsingWhat => IconName::Globe,
+            Self::ResolveResourceConflict => IconName::TriangleAlert,
         }
     }
 
@@ -4452,6 +4490,9 @@ impl PaletteCommand {
             }
             // COL-001: the members + sharing rows join the same group.
             Self::SeeWhoIsOnWorkspace | Self::ChangeTaskSharing => PaletteGroup::WorkspaceShell,
+            // LEASE-001: the resource-conflicts rows join the shell group
+            // (the members precedent).
+            Self::SeeWhoIsUsingWhat | Self::ResolveResourceConflict => PaletteGroup::WorkspaceShell,
         }
     }
 
@@ -5178,6 +5219,16 @@ impl CommandPaletteView {
             PaletteCommand::ChangeTaskSharing => {
                 flauz_members::open_sharing_surface(workspace, window, cx);
             }
+            // LEASE-001: the resource-conflicts surface rows' dispatch —
+            // the see row opens the workspace panel; the resolve row opens
+            // it and surfaces the honest nothing-to-decide guidance when
+            // no conflict needs the human (the WO-P2-012 pattern).
+            PaletteCommand::SeeWhoIsUsingWhat => {
+                flauz_conflicts::open_conflicts_panel(workspace, window, cx);
+            }
+            PaletteCommand::ResolveResourceConflict => {
+                flauz_conflicts::open_conflicts_panel_for_resolution(workspace, window, cx);
+            }
             PaletteCommand::SearchChats | PaletteCommand::SearchFiles => {}
         });
     }
@@ -5754,6 +5805,12 @@ pub fn run() {
                 // the shift modifier truthfully, so no shifted-symbol
                 // companion is needed).
                 KeyBinding::new(&shortcut("alt-shift-u"), FlauzMembersShortcut, None),
+                // LEASE-001: the conflicts chord (Ctrl+Alt+Shift+L — the
+                // letter family, verified conflict-free; letters report
+                // the shift modifier truthfully, so no shifted-symbol
+                // companion is needed). Opens the resource-conflicts
+                // panel from anywhere.
+                KeyBinding::new(&shortcut("alt-shift-l"), FlauzConflictsShortcut, None),
                 KeyBinding::new("escape", Escape, Some("AboutDialog")),
                 KeyBinding::new("escape", Escape, Some("McpElicitation")),
                 KeyBinding::new("escape", Escape, Some("StructuredUserInput")),
@@ -5803,6 +5860,12 @@ pub fn run() {
                 // own handle on mount, and one Escape closes it through
                 // the 017 restore contract.
                 KeyBinding::new("escape", Escape, Some("FlauzMembers")),
+                // LEASE-001: the conflicts panel owns a scoped escape
+                // binding (the 019 family shape + the d19 discipline:
+                // never trapped) — the panel auto-focuses its own handle
+                // on mount, and one Escape closes it through the 017
+                // restore contract.
+                KeyBinding::new("escape", Escape, Some("FlauzConflicts")),
                 // UX-003: the model-availability NUX modal's one-Escape
                 // contract — the modal auto-focuses its own handle on mount
                 // (the 019 request-once pattern), so this scoped binding
@@ -6582,6 +6645,11 @@ struct WorkspaceView {
     /// seam, and the panels' focus bookkeeping. Additive UI state; F1
     /// flows are unchanged.
     flauz_members: flauz_members::MembersState,
+    /// The conflicts surface state (LEASE-001): the resource view-model
+    /// seam, the per-task wait/hold affordances, the world-store seam,
+    /// and the panel's focus bookkeeping. Additive UI state; F1 flows
+    /// are unchanged.
+    flauz_conflicts: flauz_conflicts::ConflictsState,
     sidebar_visible: bool,
     sidebar_responsive: bool,
     shell_width_class: Option<ShellWidthClass>,
@@ -7818,6 +7886,7 @@ impl WorkspaceView {
             flauz_recovery: flauz_recovery::RecoveryState::new(cx),
             flauz_providers: flauz_providers::ProvidersState::new(window, cx),
             flauz_members: flauz_members::MembersState::new(cx),
+            flauz_conflicts: flauz_conflicts::ConflictsState::new(cx),
             sidebar_visible: true,
             sidebar_responsive: true,
             shell_width_class: None,
@@ -8495,6 +8564,14 @@ impl WorkspaceView {
         // close paths restore focus through the 017 contract instead).
         if flauz_shell::action_closes_shell_surfaces(&action)
             && self.flauz_members.close_for_navigation()
+        {
+            cx.notify();
+        }
+        // LEASE-001 registration seam: the same F1 navigation quietly
+        // closes the conflicts panel (additive UI state; the deliberate
+        // close path restores focus through the 017 contract instead).
+        if flauz_shell::action_closes_shell_surfaces(&action)
+            && self.flauz_conflicts.close_for_navigation()
         {
             cx.notify();
         }
@@ -15425,7 +15502,12 @@ impl WorkspaceView {
                     // COL-001 registration seam: the members button in the
                     // title bar (layer 1's visible primary entry — the
                     // WO-P2-018 bell precedent) opens the members panel.
-                    .child(flauz_members::render_members_entry_button(self, cx)),
+                    .child(flauz_members::render_members_entry_button(self, cx))
+                    // LEASE-001 registration seam: the conflicts button
+                    // in the title bar (layer 1's visible primary entry —
+                    // the WO-P2-018 bell/members precedent) opens the
+                    // resource-conflicts panel.
+                    .child(flauz_conflicts::render_conflicts_entry_button(self, cx)),
             )
             .when(!cfg!(target_os = "macos"), |title_bar| {
                 title_bar
@@ -19598,6 +19680,14 @@ impl WorkspaceView {
                             // surface — the picker/save-family neighborhood,
                             // never hidden behind developer settings.
                             .child(flauz_members::render_task_sharing_entry(self, window, cx))
+                            // LEASE-001 registration seam: the task-surface
+                            // wait/hold affordance — a state-driven line when
+                            // this task waits or holds ("Waiting for the
+                            // browser — 2nd in line"), absent otherwise,
+                            // opening the conflicts panel.
+                            .child(flauz_conflicts::render_task_resource_affordance(
+                                self, window, cx,
+                            ))
                             .when_some(bedrock_workspace_notice, |workspace, notice| {
                                 workspace.child(notice)
                             })
@@ -45687,6 +45777,28 @@ impl Render for WorkspaceView {
             .on_action(cx.listener(|this, _: &FlauzMembersShortcut, window, cx| {
                 flauz_members::open_members_panel(this, window, cx);
             }))
+            // LEASE-001 keyboard registration: the conflicts surface
+            // (Ctrl+Alt+Shift+L). The d25 Gate-B lesson is law: the
+            // listener lives on the workspace root next to the
+            // picker/gap/agents/save/recovery/providers/members chord
+            // listeners, so the chord works whether or not the task
+            // surface is focused — a KeyBinding without this listener
+            // would dispatch into the void while the palette row
+            // worked.
+            .on_action(cx.listener(|this, _: &FlauzConflictsShortcut, window, cx| {
+                flauz_conflicts::open_conflicts_panel(this, window, cx);
+            }))
+            .relative()
+            // (Ctrl+Alt+Shift+L). The d25 Gate-B lesson is law: the
+            // listener lives on the workspace root next to the
+            // picker/gap/agents/save/recovery/providers/members chord
+            // listeners, so the chord works whether or not the task
+            // surface is focused — a KeyBinding without this listener
+            // would dispatch into the void while the palette row
+            // worked.
+            .on_action(cx.listener(|this, _: &FlauzConflictsShortcut, window, cx| {
+                flauz_conflicts::open_conflicts_panel(this, window, cx);
+            }))
             .relative()
             .w_full()
             .flex_1()
@@ -45867,6 +45979,13 @@ impl Render for WorkspaceView {
             // task surface above.
             .when(self.flauz_members.members_open(), |root| {
                 root.child(flauz_members::render_members_panel(self, window, cx))
+            })
+            // LEASE-001 registration seam: the conflicts panel renders
+            // as a workspace-level overlay while open (the members
+            // overlay precedent); the task-surface wait/hold
+            // affordance mounts on the task surface above.
+            .when(self.flauz_conflicts.conflicts_open(), |root| {
+                root.child(flauz_conflicts::render_conflicts_panel(self, window, cx))
             });
         v_flex()
             .size_full()

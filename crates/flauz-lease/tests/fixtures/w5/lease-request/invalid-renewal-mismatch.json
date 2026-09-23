@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "lease_id": "lease_01J8ZQ5V8K3T2B7N6X4R9DQPMB",
+  "resource_id": "res_01J8ZQ5V8K3T2B7N6X4R9DQPC2",
+  "mode": "read",
+  "requester": {
+    "kind": "user",
+    "id": "user_dev"
+  },
+  "requested_from": "2026-09-23T15:04:00Z",
+  "requested_until": "2026-09-23T15:05:00Z",
+  "policy": "reject",
+  "renewal_of": "lease_01J8ZQ5V8K3T2B7N6X4R9DQPH7"
+}
