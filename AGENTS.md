@@ -2,6 +2,8 @@
 
 ## Flauz source of truth
 
+Before implementation, also read [Active Execution State](docs/ACTIVE-EXECUTION-STATE.md). It is the current operational handoff for the active Tech Leads: current main SHA, active work orders, ownership, release sequencing, and synchronization rules. It does not override the architecture constitution or work-order contracts.
+
 Before implementation, read [Flauz Architecture & Implementation Constitution](docs/FLAUZ-SOURCE-OF-TRUTH.md), [Master Implementation Roadmap](docs/IMPLEMENTATION-ROADMAP.md), [Work Order Template / Execution Protocol](docs/WORK-ORDER-TEMPLATE.md), [Context/Harness Architecture](docs/CONTEXT-HARNESS-ARCHITECTURE.md), and [Product UX Journeys](docs/PRODUCT-UX-JOURNEYS.md). These documents define the product architecture, runtime context/harness contracts, UX discoverability requirements, and execution process. `docs/parity-matrix.md` is authoritative for Codex-specific parity only.
 
 - Build a native Rust replacement for Codex Desktop. Do not add Electron, Tauri,
