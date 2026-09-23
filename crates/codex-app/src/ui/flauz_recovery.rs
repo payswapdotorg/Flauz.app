@@ -926,7 +926,7 @@ mod tests {
     /// ORCH-003, distinct from MOD-001's and CAP-001's seams.
     #[test]
     fn recovery_seams_are_registered_in_the_ui_seams() {
-        let source = include_str!("../../ui.rs");
+        let source = include_str!("../ui.rs");
 
         // The module declaration seam.
         assert!(source.contains("mod flauz_recovery;"));
