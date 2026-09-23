@@ -96,7 +96,7 @@ pub(crate) const PALETTE_ROW_CONNECT_TITLE: &str = "Connect a provider account";
 
 /// The connect row's description.
 pub(crate) const PALETTE_ROW_CONNECT_DESCRIPTION: &str =
-    "Add your own account for a provider, with its own quota and limits";
+    "Add your own free or paid account for a provider with its API key, quota and limits";
 
 /// The command-palette row title for the attribution affordance (layer 3
 /// — the work order's exact row).
@@ -280,11 +280,12 @@ impl TierView {
     }
 
     /// The tier noun inside the attribution line ("free tier" /
-    /// "paid account").
+    /// "paid account") — sentence-internal lowercase, the work order's
+    /// exact phrase (the standalone chip labels stay capitalized).
     pub(crate) const fn attribution_noun(self) -> &'static str {
         match self {
-            Self::Free => TIER_FREE_LABEL,
-            Self::Paid => TIER_PAID_LABEL,
+            Self::Free => "free tier",
+            Self::Paid => "paid account",
         }
     }
 }
