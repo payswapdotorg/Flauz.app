@@ -63,7 +63,23 @@
 //! [`ContextReset`] represents the RESET operation: a fresh context
 //! reconstructed from durable task state, superseding the previous
 //! snapshot. RESET is distinct from COMPACTION (preserve continuity while
-//! shrinking); representing compaction is later work.
+//! shrinking); compaction is represented by the Wave-3 [`tiers`] module
+//! (ORCH-002) through its own record family.
+//!
+//! # The context engine (Wave 3, ORCH-002)
+//!
+//! The [`engine`] module compiles context snapshots from a task's
+//! **durable state** — artifacts, observations, evidence, recent events
+//! and memory items, taken as data (the flauz-cap pattern: inputs, never
+//! entity imports). The rebuild law holds: two compilations from the
+//! same durable state with no memory-item mutation yield equivalent
+//! projections — context reconstructs without replaying any model
+//! conversation. The [`tiers`] module adds tier dynamics (promotion and
+//! demotion with a bounded HOT tier) and the structured compaction
+//! planner (provenance retained on every retained item, every summarized
+//! item named in a compaction record, budgets per model profile). The
+//! [`tools`] module computes dynamic tool exposure per model profile:
+//! excluded tools are named, never silently dropped.
 //!
 //! # Canonical JSON (kernel §4)
 //!
@@ -94,6 +110,7 @@ use std::error::Error;
 use std::fmt;
 
 pub mod context;
+pub mod engine;
 pub mod fakes;
 pub mod ids;
 pub mod memory;
@@ -102,11 +119,17 @@ pub mod provenance;
 pub mod refs;
 pub mod snapshot;
 pub mod store;
+pub mod tiers;
 pub mod time;
+pub mod tools;
 
 mod ulid;
 
 pub use crate::context::{Context, ContextReset, ResetReason};
+pub use crate::engine::{
+    ArtifactRecord, DurableStateInputs, EvidenceRecord, EvidenceRef, ObservationRecord,
+    TaskEventRecord, compile_from_durable_state, projections_equivalent,
+};
 pub use crate::ids::{
     ArtifactRef, ContextSnapshotId, EntityKind, EnvironmentRef, EventRef, IdError, MemoryItemId,
     ModelRef, ObservationRef, SessionRef, TaskRef, validate,
@@ -119,7 +142,16 @@ pub use crate::snapshot::{ContextItem, ContextItemContent, ContextSnapshot};
 pub use crate::store::{
     ContextReconstruction, ContextStateSnapshot, ContextStore, ContextStoreError,
 };
+pub use crate::tiers::{
+    Compaction, CompactionBudget, CompactionReason, CompactionRecord, SummarizedItem,
+    age_out_unreferenced_warm, demote_memory_item, enforce_hot_memory_bound, estimate_tokens,
+    plan_compaction, promote_memory_item,
+};
 pub use crate::time::Timestamp;
+pub use crate::tools::{
+    AdmissionGap, CapabilityAdmission, ExcludedTool, ExposedTool, ToolDefinition, ToolExposure,
+    ToolPresentation, compute_tool_exposure, validate_capability_key,
+};
 
 /// Maximum length of short human-readable names (skill keys).
 pub const MAX_NAME_BYTES: usize = 256;

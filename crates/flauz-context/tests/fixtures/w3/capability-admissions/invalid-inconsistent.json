@@ -1,0 +1,29 @@
+[
+  {
+    "v": 1,
+    "capability": "filesystem.read",
+    "available": true,
+    "gaps": []
+  },
+  {
+    "v": 1,
+    "capability": "terminal",
+    "available": true,
+    "gaps": []
+  },
+  {
+    "v": 1,
+    "capability": "browser.navigation",
+    "available": true,
+    "gaps": [
+      {
+        "dimension": "model",
+        "reason": "the model in use does not offer it"
+      },
+      {
+        "dimension": "environment",
+        "reason": "the attached environment does not offer this capability"
+      }
+    ]
+  }
+]

@@ -1,0 +1,163 @@
+{
+  "v": 1,
+  "task_id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "session_id": "sess_01J8ZQ5V8K3T2B7N6X4R9DQPG6",
+  "artifacts": [
+    {
+      "artifact_id": "art_01J8ZQ5V8K3T2B7N6X4R9DQPH7",
+      "summary": "the CRM ticket export: 3 open tickets, reconciled against the dashboard"
+    },
+    {
+      "artifact_id": "art_01J8ZQ5V8K3T2B7N6X4R9DQPH8",
+      "summary": "the reconciliation report draft: dashboard and CRM counts now match"
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "obs_01J8ZQ5V8K3T2B7N6X4R9DQPJ8",
+      "summary": "the dashboard currently shows 3 open tickets"
+    },
+    {
+      "observation_id": "obs_01J8ZQ5V8K3T2B7N6X4R9DQPJ9",
+      "summary": "the CRM export lists 3 open tickets as of the last sync"
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "evd_01J8ZQ5V8K3T2B7N6X4R9DQPK9",
+      "verification_event_id": "ev_01J8ZQ5V8K3T2B7N6X4R9DQPD4",
+      "summary": "the ticket counts were independently verified: 3 open tickets"
+    }
+  ],
+  "recent_events": [
+    {
+      "event_id": "ev_01J8ZQ5V8K3T2B7N6X4R9DQPD3",
+      "summary": "the reconciliation started: both sources were queried"
+    },
+    {
+      "event_id": "ev_01J8ZQ5V8K3T2B7N6X4R9DQPD4",
+      "summary": "the ticket counts were verified against both sources"
+    }
+  ],
+  "memory_items": [
+    {
+      "v": 1,
+      "id": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPF5",
+      "version": 1,
+      "task_id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+      "tier": "hot",
+      "authorization": "task",
+      "content": {
+        "kind": "text",
+        "text": "current plan: reconcile the ticket counts between the dashboard and the CRM export"
+      },
+      "created_by": {
+        "kind": "agent",
+        "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPQD"
+      },
+      "created_at": "2026-09-21T13:45:00Z"
+    },
+    {
+      "v": 1,
+      "id": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPF6",
+      "version": 1,
+      "task_id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+      "tier": "warm",
+      "authorization": "task",
+      "content": {
+        "kind": "text",
+        "text": "decision: the CRM export is the source of truth for ticket counts"
+      },
+      "created_by": {
+        "kind": "agent",
+        "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPQD"
+      },
+      "created_at": "2026-09-21T13:44:00Z"
+    },
+    {
+      "v": 1,
+      "id": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPF7",
+      "version": 1,
+      "task_id": null,
+      "tier": "warm",
+      "authorization": "workspace",
+      "content": {
+        "kind": "text",
+        "text": "workspace knowledge: the staging portal is read-only"
+      },
+      "created_by": {
+        "kind": "agent",
+        "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPQD"
+      },
+      "created_at": "2026-09-21T13:43:00Z"
+    },
+    {
+      "v": 1,
+      "id": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPF8",
+      "version": 1,
+      "task_id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+      "tier": "cold",
+      "authorization": "task",
+      "content": {
+        "kind": "reference",
+        "reference": "flauz-archive://runs/2026-09-20/full-ticket-export"
+      },
+      "created_by": {
+        "kind": "agent",
+        "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPQD"
+      },
+      "created_at": "2026-09-21T13:42:00Z"
+    },
+    {
+      "v": 1,
+      "id": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPF9",
+      "version": 1,
+      "task_id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+      "tier": "hot",
+      "authorization": "secret",
+      "content": {
+        "kind": "reference",
+        "reference": "flauz-secrets://providers/example/api-key"
+      },
+      "created_by": {
+        "kind": "agent",
+        "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPQD"
+      },
+      "created_at": "2026-09-21T13:41:00Z"
+    },
+    {
+      "v": 1,
+      "id": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPGA",
+      "version": 1,
+      "task_id": "task_01J8ZQ5V8K3T2B7N6X4R9DQZ9T",
+      "tier": "hot",
+      "authorization": "task",
+      "content": {
+        "kind": "text",
+        "text": "current plan for the other task: ship the onboarding guide"
+      },
+      "created_by": {
+        "kind": "agent",
+        "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPQD"
+      },
+      "created_at": "2026-09-21T13:40:00Z"
+    },
+    {
+      "v": 1,
+      "id": "mem_01J8ZQ5V8K3T2B7N6X4R9DQPF5",
+      "version": 1,
+      "task_id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+      "tier": "hot",
+      "authorization": "task",
+      "content": {
+        "kind": "text",
+        "text": "current plan: reconcile the ticket counts between the dashboard and the CRM export"
+      },
+      "created_by": {
+        "kind": "agent",
+        "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPQD"
+      },
+      "created_at": "2026-09-21T13:45:00Z"
+    }
+  ]
+}

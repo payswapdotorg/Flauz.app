@@ -1,0 +1,35 @@
+{
+  "v": 1,
+  "model_id": "model_01J8ZQ5V8K3T2B7N6X4R9DQPRE",
+  "tool_schema": "summaries_with_lazy_schemas",
+  "exposed": [
+    {
+      "name": "read_file",
+      "capability": "filesystem.read",
+      "presentation": {
+        "kind": "summary",
+        "summary": "reads one file from the workspace"
+      }
+    },
+    {
+      "name": "run_command",
+      "capability": "terminal",
+      "presentation": {
+        "kind": "summary",
+        "summary": "runs one shell command in the task environment"
+      }
+    }
+  ],
+  "excluded": [
+    {
+      "name": "browse_web",
+      "capability": "browser.navigation",
+      "reason": "model: the model in use does not offer it; environment: the attached environment does not offer this capability"
+    },
+    {
+      "name": "view_screen",
+      "capability": "Terminal",
+      "reason": "no capability resolution is recorded for computer.screen"
+    }
+  ]
+}
