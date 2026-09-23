@@ -1,0 +1,74 @@
+{
+  "v": 1,
+  "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "nodes": [
+    {
+      "v": 1,
+      "node_id": "analysis",
+      "who": {
+        "kind": "agent",
+        "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPF5"
+      },
+      "role": "Analysis",
+      "inputs": {
+        "waits": [
+          {
+            "kind": "artifact_ready",
+            "from_node": "research",
+            "label": "the research notes"
+          }
+        ]
+      },
+      "state": "blocked",
+      "verifier": null,
+      "harness_state": null
+    },
+    {
+      "v": 1,
+      "node_id": "research",
+      "who": {
+        "kind": "agent",
+        "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPE4"
+      },
+      "role": "Research",
+      "inputs": {
+        "waits": []
+      },
+      "state": "ready",
+      "verifier": null,
+      "harness_state": null
+    },
+    {
+      "v": 1,
+      "node_id": "review",
+      "who": {
+        "kind": "agent",
+        "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPG6"
+      },
+      "role": "Independent review",
+      "inputs": {
+        "waits": [
+          {
+            "kind": "artifact_ready",
+            "from_node": "research",
+            "label": "the research notes"
+          },
+          {
+            "kind": "artifact_ready",
+            "from_node": "analysis",
+            "label": "the analysis notes"
+          }
+        ]
+      },
+      "state": "blocked",
+      "verifier": {
+        "verifies": [
+          "analysis",
+          "research"
+        ]
+      },
+      "harness_state": null
+    }
+  ],
+  "objective": "Research, analyze and independently review the weekly brief"
+}

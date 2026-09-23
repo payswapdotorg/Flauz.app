@@ -1,0 +1,71 @@
+{
+  "v": 1,
+  "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "nodes": [
+    {
+      "node_id": "analysis",
+      "state": "verified",
+      "changed": true,
+      "waiting_on": []
+    },
+    {
+      "node_id": "research",
+      "state": "verified",
+      "changed": true,
+      "waiting_on": []
+    },
+    {
+      "node_id": "review",
+      "state": "done",
+      "changed": true,
+      "waiting_on": []
+    }
+  ],
+  "attribution": [
+    {
+      "node_id": "research",
+      "product": {
+        "kind": "artifact",
+        "artifact": "art_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+        "label": "the research notes"
+      }
+    },
+    {
+      "node_id": "analysis",
+      "product": {
+        "kind": "artifact",
+        "artifact": "art_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+        "label": "the analysis notes"
+      }
+    },
+    {
+      "node_id": "review",
+      "product": {
+        "kind": "evidence",
+        "evidence": "evd_01J8ZQ5V8K3T2B7N6X4R9DQPC2",
+        "label": "the review verdict"
+      }
+    }
+  ],
+  "cancellation": null,
+  "merge": {
+    "v": 1,
+    "event_type": "task.verification_merged",
+    "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+    "verified": [
+      "analysis",
+      "research"
+    ],
+    "done": [
+      "review"
+    ],
+    "artifacts": [
+      "art_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+      "art_01J8ZQ5V8K3T2B7N6X4R9DQPB1"
+    ],
+    "evidence": [
+      "evd_01J8ZQ5V8K3T2B7N6X4R9DQPC2"
+    ]
+  },
+  "chat_relay": "never"
+}

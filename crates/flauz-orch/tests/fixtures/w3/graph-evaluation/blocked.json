@@ -1,0 +1,42 @@
+{
+  "v": 1,
+  "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "nodes": [
+    {
+      "node_id": "analysis",
+      "state": "ready",
+      "changed": true,
+      "waiting_on": []
+    },
+    {
+      "node_id": "research",
+      "state": "done",
+      "changed": true,
+      "waiting_on": []
+    },
+    {
+      "node_id": "review",
+      "state": "blocked",
+      "changed": false,
+      "waiting_on": [
+        {
+          "kind": "artifact_ready",
+          "from_node": "analysis",
+          "label": "the analysis notes"
+        }
+      ]
+    }
+  ],
+  "attribution": [
+    {
+      "node_id": "research",
+      "product": {
+        "kind": "artifact",
+        "artifact": "art_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+        "label": "the research notes"
+      }
+    }
+  ],
+  "cancellation": null,
+  "merge": null
+}

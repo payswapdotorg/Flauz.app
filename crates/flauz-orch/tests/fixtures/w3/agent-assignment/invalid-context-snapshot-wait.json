@@ -1,0 +1,25 @@
+{
+  "v": 1,
+  "node_id": "review",
+  "who": {
+    "kind": "agent",
+    "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPG6"
+  },
+  "role": "Independent review",
+  "inputs": {
+    "waits": [
+      {
+        "kind": "context_snapshot",
+        "from_node": "research",
+        "label": "its context"
+      }
+    ]
+  },
+  "state": "blocked",
+  "verifier": {
+    "verifies": [
+      "research"
+    ]
+  },
+  "harness_state": null
+}
