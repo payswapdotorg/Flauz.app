@@ -1,0 +1,53 @@
+{
+  "v": 1,
+  "run": "flauz-lab-local-minimal-settle",
+  "journey": "minimal-settle",
+  "adapter": {
+    "provider_kind": "flauz-lab-local",
+    "family": "local",
+    "locality": "local",
+    "lab_surfaces": [
+      "browser.input",
+      "browser.navigation",
+      "computer.keyboard",
+      "computer.mouse",
+      "computer.screen",
+      "desktop.gui",
+      "filesystem.read",
+      "filesystem.write",
+      "git",
+      "snapshots",
+      "terminal"
+    ]
+  },
+  "steps": [
+    {
+      "step": "settle-first-run",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-first-run-dismissed",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "first-run-promo-modal",
+              "state": "closed"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "first-run-promo-modal",
+              "state": "closed"
+            },
+            "findings": [
+              "first-run-keyboard-swallowing"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

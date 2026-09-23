@@ -1,0 +1,797 @@
+{
+  "v": 1,
+  "run": "flauz-lab-fake-remote-shell-discovery",
+  "journey": "shell-discovery",
+  "adapter": {
+    "provider_kind": "flauz-lab-fake-remote",
+    "family": "fake_remote",
+    "locality": "remote",
+    "lab_surfaces": [
+      "browser.input",
+      "browser.navigation",
+      "computer.keyboard",
+      "computer.mouse",
+      "computer.screen",
+      "filesystem.read",
+      "filesystem.write",
+      "git",
+      "ports",
+      "snapshots",
+      "terminal"
+    ]
+  },
+  "steps": [
+    {
+      "step": "settle-first-run",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-first-run-dismissed",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "first-run-promo-modal",
+              "state": "closed"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "first-run-promo-modal",
+              "state": "closed"
+            },
+            "findings": [
+              "first-run-keyboard-swallowing"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "step": "anchor-task",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-composer-focus",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "new-task-composer"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "focus",
+              "anchor": "new-task-composer"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "assert-composer-open",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "new-task-composer",
+              "state": "open"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "new-task-composer",
+              "state": "open"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-composer-open",
+          "result": {
+            "kind": "frame",
+            "moment": "composer-open",
+            "frame": "frame-0001",
+            "digest": "4ed2cf05e7bd8eac",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-one"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "closed"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "open"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "inactive"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'composer-open' of journey 'shell-discovery': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0001.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "type-objective",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-objective-landed",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "text_landed",
+              "anchor": "new-task-composer",
+              "text": "the lab anchor task"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "text",
+              "anchor": "new-task-composer",
+              "text": "the lab anchor task"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-typed-objective",
+          "result": {
+            "kind": "frame",
+            "moment": "typed-objective",
+            "frame": "frame-0002",
+            "digest": "4ed2cf05e7bd8eac",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-one"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "closed"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "open"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "inactive"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'typed-objective' of journey 'shell-discovery': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0002.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "submit-task",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-task-active",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "task-surface",
+              "state": "active"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "task-surface",
+              "state": "active"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "assert-task-composer-focus",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "task-composer"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "focus",
+              "anchor": "task-composer"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-task-surface",
+          "result": {
+            "kind": "frame",
+            "moment": "task-surface",
+            "frame": "frame-0003",
+            "digest": "ade5a9b478523f73",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-two"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "closed"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "closed"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "active"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'task-surface' of journey 'shell-discovery': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0003.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "open-picker",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-picker-focus",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "model-picker-panel"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "focus",
+              "anchor": "model-picker-panel"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "assert-picker-open",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "model-picker-panel",
+              "state": "open-empty"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "model-picker-panel",
+              "state": "open-empty"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-picker-open",
+          "result": {
+            "kind": "frame",
+            "moment": "picker-open",
+            "frame": "frame-0004",
+            "digest": "69b907aa929409cf",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-two"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "closed"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "open-empty"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "closed"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "active"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'picker-open' of journey 'shell-discovery': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0004.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "close-picker",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-focus-returns",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "task-composer"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "focus",
+              "anchor": "task-composer"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "assert-picker-closed",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "model-picker-panel",
+              "state": "closed"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "model-picker-panel",
+              "state": "closed"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-picker-closed",
+          "result": {
+            "kind": "frame",
+            "moment": "picker-closed",
+            "frame": "frame-0005",
+            "digest": "ade5a9b478523f73",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-two"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "closed"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "closed"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "active"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'picker-closed' of journey 'shell-discovery': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0005.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "open-palette",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-palette-input-focus",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "palette-input"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "focus",
+              "anchor": "palette-input"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "assert-palette-open",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "command-palette",
+              "state": "open"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "command-palette",
+              "state": "open"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-palette-open",
+          "result": {
+            "kind": "frame",
+            "moment": "palette-open",
+            "frame": "frame-0006",
+            "digest": "781b8036e5b8a4cb",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-two"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "open"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "closed"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "active"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'palette-open' of journey 'shell-discovery': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0006.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "palette-query",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-palette-row-visible",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "palette-row-model-picker",
+              "state": "visible"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "palette-row-model-picker",
+              "state": "visible"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-palette-row",
+          "result": {
+            "kind": "frame",
+            "moment": "palette-row",
+            "frame": "frame-0007",
+            "digest": "3a8ec6108369b06d",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-two"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "open"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "closed"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "visible"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "active"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'palette-row' of journey 'shell-discovery': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0007.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "palette-land",
+      "outcome": {
+        "kind": "no_visible_change"
+      },
+      "probes": [
+        {
+          "probe": "assert-picker-landed",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "model-picker-panel",
+              "state": "open-empty"
+            },
+            "satisfied": false,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "model-picker-panel",
+              "state": "closed"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "assert-picker-landed-focus",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "model-picker-panel"
+            },
+            "satisfied": false,
+            "observed": {
+              "kind": "focus",
+              "anchor": "palette-input"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-picker-landed",
+          "result": {
+            "kind": "frame",
+            "moment": "picker-landed",
+            "frame": "frame-0008",
+            "digest": "3a8ec6108369b06d",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-two"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "open"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "closed"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "visible"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "active"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'picker-landed' of journey 'shell-discovery': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0008.json"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

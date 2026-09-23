@@ -1,0 +1,53 @@
+{
+  "v": 1,
+  "id": "minimal-settle",
+  "title": "A minimal settle journey",
+  "surfaces": [
+    "task-surface"
+  ],
+  "journeys": [
+    "J-01"
+  ],
+  "steps": [
+    {
+      "id": "settle-first-run",
+      "action": {
+        "kind": "key_chord",
+        "chord": "escape"
+      },
+      "probes": [
+        {
+          "id": "assert-first-run-dismissed",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "first-run-promo-modal",
+              "state": "closed"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "settle-first-run",
+      "action": {
+        "kind": "key_chord",
+        "chord": "escape"
+      },
+      "probes": [
+        {
+          "id": "assert-first-run-dismissed",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "first-run-promo-modal",
+              "state": "closed"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

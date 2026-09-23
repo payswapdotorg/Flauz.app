@@ -9,6 +9,7 @@ members = [
     "crates/flauz-cap",
     "crates/flauz-context",
     "crates/flauz-exec",
+    "crates/flauz-lab",
     "crates/flauz-orch",
     "crates/flauz-world",
 ]

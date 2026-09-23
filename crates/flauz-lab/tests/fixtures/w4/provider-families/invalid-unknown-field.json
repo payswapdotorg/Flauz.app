@@ -1,0 +1,126 @@
+{
+  "v": 1,
+  "families": [
+    {
+      "family": "azure",
+      "kind": "azure",
+      "locality": "remote",
+      "interaction": "interactive",
+      "lab_surfaces": [
+        "computer.keyboard",
+        "computer.mouse",
+        "computer.screen",
+        "desktop.gui",
+        "filesystem.read",
+        "filesystem.write",
+        "snapshots",
+        "terminal"
+      ],
+      "status": "skeleton"
+    },
+    {
+      "family": "codemagic",
+      "kind": "codemagic",
+      "locality": "remote",
+      "interaction": "batch",
+      "lab_surfaces": [
+        "filesystem.read",
+        "filesystem.write",
+        "git",
+        "terminal"
+      ],
+      "status": "skeleton"
+    },
+    {
+      "family": "daytona",
+      "kind": "daytona",
+      "locality": "remote",
+      "interaction": "interactive",
+      "lab_surfaces": [
+        "computer.keyboard",
+        "computer.mouse",
+        "computer.screen",
+        "filesystem.read",
+        "filesystem.write",
+        "git",
+        "ports",
+        "snapshots",
+        "ssh",
+        "terminal"
+      ],
+      "status": "skeleton"
+    },
+    {
+      "family": "e2b",
+      "kind": "e2b",
+      "locality": "remote",
+      "interaction": "interactive",
+      "lab_surfaces": [
+        "computer.keyboard",
+        "computer.mouse",
+        "computer.screen",
+        "filesystem.read",
+        "filesystem.write",
+        "git",
+        "ports",
+        "snapshots",
+        "terminal"
+      ],
+      "status": "skeleton"
+    },
+    {
+      "family": "fake_remote",
+      "kind": "flauz-lab-fake-remote",
+      "locality": "remote",
+      "interaction": "interactive",
+      "lab_surfaces": [
+        "browser.input",
+        "browser.navigation",
+        "computer.keyboard",
+        "computer.mouse",
+        "computer.screen",
+        "filesystem.read",
+        "filesystem.write",
+        "git",
+        "ports",
+        "snapshots",
+        "terminal"
+      ],
+      "status": "consistency"
+    },
+    {
+      "family": "local",
+      "kind": "flauz-lab-local",
+      "locality": "local",
+      "interaction": "interactive",
+      "lab_surfaces": [
+        "browser.input",
+        "browser.navigation",
+        "computer.keyboard",
+        "computer.mouse",
+        "computer.screen",
+        "desktop.gui",
+        "filesystem.read",
+        "filesystem.write",
+        "git",
+        "snapshots",
+        "terminal"
+      ],
+      "status": "reference"
+    },
+    {
+      "family": "github_actions",
+      "kind": "github_actions",
+      "locality": "remote",
+      "interaction": "batch",
+      "lab_surfaces": [
+        "filesystem.read",
+        "filesystem.write",
+        "git",
+        "terminal"
+      ],
+      "status": "skeleton"
+    }
+  ],
+  "network": "none"
+}

@@ -1,0 +1,48 @@
+{
+  "v": 1,
+  "findings": [
+    {
+      "id": "bracket-swap-chords",
+      "surface": "chat-list",
+      "description": "The previous/next chat chords (Ctrl+Shift+]/[) produced no selection move in the lab configuration while Ctrl+PageDown moved it positively; chord families must be re-evidenced positively per configuration (F1 a11y N6).",
+      "guard": {
+        "kind": "unguarded"
+      }
+    },
+    {
+      "id": "first-run-keyboard-swallowing",
+      "surface": "first-run-promo-modal",
+      "description": "A fresh-profile promo modal swallows all keyboard input until dismissed; Escape is the verified dismissal, so first-run scenes carry a defensive capture-then-Escape block that is a no-op when the modal is absent (the rc.14 lesson).",
+      "guard": {
+        "kind": "unguarded"
+      }
+    },
+    {
+      "id": "modal-focus-traps",
+      "surface": "confirmation-modals",
+      "description": "Destructive confirmation modals must confine Tab/Shift+Tab focus to their actions and close on scoped Escape, returning focus to the surface that opened them (the d19 trap-ladder contract).",
+      "guard": {
+        "kind": "guarded",
+        "guard": "the d19 trap-ladder lab evidence and the tab/shift-tab KeyBindings"
+      }
+    },
+    {
+      "id": "pty-focus-transfer",
+      "surface": "terminal-dock",
+      "description": "Opening the terminal dock starts a live PTY, but keyboard focus does not transfer to it on open; typed input keeps landing on the previously focused surface (F1 a11y N5, carried to the F2 a11y binding items).",
+      "guard": {
+        "kind": "unguarded"
+      }
+    },
+    {
+      "id": "shifted-symbol-chord-companions",
+      "surface": "keybindings",
+      "description": "Digit-family chords carry shifted-symbol companions (for example alt+^ beside Ctrl+Alt+Shift+6/7) that must be exercised alongside the primary chord: a binding whose listener answers only one form dispatches the other into the void (the N6 family + the d25 Gate-B missing-listener lesson).",
+      "guard": {
+        "kind": "guarded",
+        "guard": "the d24/d25 gate scenes exercise the companion form on every digit chord, and the seam tests pin the listener form, not just the binding"
+      }
+    }
+  ],
+  "owner": "the lead"
+}
