@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "version": 1,
+  "order": "free_tier_first",
+  "provider_overrides": {},
+  "task_overrides": {},
+  "account_spend_limit": null,
+  "workspace_spend_limit": null,
+  "account_concurrency_limit": null,
+  "workspace_concurrency_limit": null
+}

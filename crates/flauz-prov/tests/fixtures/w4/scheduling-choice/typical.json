@@ -1,0 +1,25 @@
+{
+  "v": 1,
+  "need": {
+    "v": 1,
+    "provider_kind": "openai",
+    "capabilities": [
+      "terminal"
+    ],
+    "task_id": "task_01J8ZQ5V8K3T2B7N6X4R9DQPD3"
+  },
+  "connection_id": "conn_01J8ZQ5V8K3T2B7N6X4R9DQPF6",
+  "account_label": "Personal account",
+  "provider_kind": "openai",
+  "tier": "free",
+  "policy_rule": "default_order",
+  "rule_explanation": "Free accounts are tried first, and this one had quota left.",
+  "escalated": false,
+  "skipped": [],
+  "quota_at_choice": {
+    "remaining": 5,
+    "limit": 5,
+    "window_start": "2026-09-23T08:00:00Z",
+    "window_end": "2026-09-24T08:00:00Z"
+  }
+}
