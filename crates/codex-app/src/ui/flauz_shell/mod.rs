@@ -44,6 +44,11 @@ use gpui_component::{
 };
 
 use super::WorkspaceView;
+// ORCH-004: the Agents panel body and the Reusable workflows surface
+// card render through the two execution-graph surface modules (the
+// additive mounts below).
+use super::flauz_agents_view;
+use super::flauz_save_workflow;
 
 gpui::actions!(
     codexrs,
@@ -642,13 +647,27 @@ pub(crate) fn render_workspace_surface(
                 .overflow_y_scrollbar()
                 .items_center()
                 .p_6()
-                .child(render_empty_state(
-                    surface.icon(),
-                    empty_title,
-                    empty_body,
-                    surface.next_step(),
-                    cx,
-                ))
+                // ORCH-004 (additive mount): the Reusable workflows
+                // surface renders the saved-workflow card — from the
+                // honest empty state (how to save one) to the list with
+                // Run again; every other surface keeps the honest
+                // empty state below.
+                .when(
+                    surface == FlauzWorkspaceSurface::ReusableWorkflows,
+                    |body| body.child(flauz_save_workflow::render_workflows_card(workspace, cx)),
+                )
+                .when(
+                    surface != FlauzWorkspaceSurface::ReusableWorkflows,
+                    |body| {
+                        body.child(render_empty_state(
+                            surface.icon(),
+                            empty_title,
+                            empty_body,
+                            surface.next_step(),
+                            cx,
+                        ))
+                    },
+                )
                 .when(surface == FlauzWorkspaceSurface::ProjectsTasks, |body| {
                     body.child(
                         v_flex().mt_3().child(
@@ -714,23 +733,31 @@ pub(crate) fn render_task_rail(
             workspace.flauz_shell.shell_focus.focus(window);
         }
         let shell_focus = workspace.flauz_shell.shell_focus.clone();
-        rail = rail.child(
-            v_flex()
-                .key_context("FlauzTaskRail")
-                .track_focus(&shell_focus)
-                .tab_group()
-                .tab_stop(true)
-                .on_action(cx.listener(|this, _: &Escape, window, cx| {
-                    dismiss_shell_surfaces(this, window, cx);
-                }))
-                .mx_5()
-                .my_3()
-                .p_4()
-                .gap_2()
-                .rounded_lg()
-                .border_1()
-                .border_color(cx.theme().border)
-                .bg(cx.theme().sidebar)
+        // ORCH-004 (additive mount): the Agents rail section renders
+        // the execution-graph view — the who/role/state list with the
+        // dependency disclosures and the verification badges; every
+        // other section keeps the honest empty-state panel below. The
+        // panel wrapper (focus + the scoped Escape) is the shell's own.
+        let mut panel = v_flex()
+            .key_context("FlauzTaskRail")
+            .track_focus(&shell_focus)
+            .tab_group()
+            .tab_stop(true)
+            .on_action(cx.listener(|this, _: &Escape, window, cx| {
+                dismiss_shell_surfaces(this, window, cx);
+            }))
+            .mx_5()
+            .my_3()
+            .p_4()
+            .gap_2()
+            .rounded_lg()
+            .border_1()
+            .border_color(cx.theme().border)
+            .bg(cx.theme().sidebar);
+        panel = if section == TaskRailSection::Agents {
+            panel.child(flauz_agents_view::render_agents_panel(workspace, cx))
+        } else {
+            panel
                 .child(
                     h_flex()
                         .gap_2()
@@ -761,8 +788,9 @@ pub(crate) fn render_task_rail(
                         .text_xs()
                         .text_color(cx.theme().muted_foreground)
                         .child("Escape closes this panel"),
-                ),
-        );
+                )
+        };
+        rail = rail.child(panel);
     }
     rail.into_any_element()
 }

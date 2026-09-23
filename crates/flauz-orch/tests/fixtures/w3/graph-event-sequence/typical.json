@@ -1,0 +1,47 @@
+{
+  "v": 1,
+  "events": [
+    {
+      "kind": "node_started",
+      "node": "research"
+    },
+    {
+      "kind": "artifact_produced",
+      "by_node": "research",
+      "artifact": "art_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+      "label": "the research notes"
+    },
+    {
+      "kind": "node_finished",
+      "node": "research"
+    },
+    {
+      "kind": "node_started",
+      "node": "analysis"
+    },
+    {
+      "kind": "artifact_produced",
+      "by_node": "analysis",
+      "artifact": "art_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+      "label": "the analysis notes"
+    },
+    {
+      "kind": "node_finished",
+      "node": "analysis"
+    },
+    {
+      "kind": "node_started",
+      "node": "review"
+    },
+    {
+      "kind": "evidence_recorded",
+      "by_node": "review",
+      "evidence": "evd_01J8ZQ5V8K3T2B7N6X4R9DQPC2",
+      "label": "the review verdict"
+    },
+    {
+      "kind": "node_finished",
+      "node": "review"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "v": 1,
+  "node_id": "analysis",
+  "who": {
+    "kind": "agent",
+    "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPF5"
+  },
+  "role": "Analysis",
+  "inputs": {
+    "waits": [
+      {
+        "kind": "artifact_ready",
+        "from_node": "research",
+        "label": "the research notes"
+      }
+    ]
+  },
+  "state": "blocked",
+  "verifier": null,
+  "harness_state": null
+}

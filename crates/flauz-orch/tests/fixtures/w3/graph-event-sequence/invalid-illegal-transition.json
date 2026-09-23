@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "events": [
+    {
+      "kind": "artifact_produced",
+      "by_node": "analysis",
+      "artifact": "art_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+      "label": "the analysis notes"
+    }
+  ]
+}

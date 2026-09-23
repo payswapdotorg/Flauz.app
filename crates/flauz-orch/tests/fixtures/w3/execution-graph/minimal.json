@@ -1,0 +1,22 @@
+{
+  "v": 1,
+  "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "nodes": [
+    {
+      "v": 1,
+      "node_id": "research",
+      "who": {
+        "kind": "agent",
+        "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPE4"
+      },
+      "role": "Research",
+      "inputs": {
+        "waits": []
+      },
+      "state": "ready",
+      "verifier": null,
+      "harness_state": null
+    }
+  ],
+  "objective": null
+}

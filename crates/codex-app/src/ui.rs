@@ -131,6 +131,17 @@ use flauz_model_picker::FlauzModelPickerShortcut;
 // MOD-001's.
 mod flauz_capability_gap;
 use flauz_capability_gap::FlauzCapabilityGapShortcut;
+// ORCH-004 (F2 Wave 3): the two product surfaces of the execution
+// graph — the Agents panel upgrade (J-07/J-09: who/role/state chips in
+// user language, dependency disclosure, verification badges, parallel
+// progress) and the Save-as-a-reusable-workflow slice (J-10/J-11: the
+// save flow, the Workspace nav's Reusable workflows list with Run
+// again). Wired through the same minimal named seams below; the seams
+// are distinct from MOD-001's, CAP-001's and ORCH-003's.
+mod flauz_agents_view;
+use flauz_agents_view::FlauzAgentsViewShortcut;
+mod flauz_save_workflow;
+use flauz_save_workflow::FlauzSaveWorkflowShortcut;
 
 const WINDOW_WIDTH: f32 = 1_278.0;
 const WINDOW_HEIGHT: f32 = 818.0;
@@ -3762,10 +3773,13 @@ enum PaletteCommand {
     InspectTaskMore,
     ChooseModelForTask,
     InspectCapabilityGaps,
+    // ORCH-004: the two execution-graph surface rows.
+    SeeWhoIsWorking,
+    SaveReusableWorkflow,
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 82] = [
+    const ALL: [Self; 84] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3848,6 +3862,9 @@ impl PaletteCommand {
         Self::InspectTaskMore,
         Self::ChooseModelForTask,
         Self::InspectCapabilityGaps,
+        // ORCH-004: the two execution-graph surface rows.
+        Self::SeeWhoIsWorking,
+        Self::SaveReusableWorkflow,
     ];
 
     const fn title(self) -> &'static str {
@@ -3942,6 +3959,9 @@ impl PaletteCommand {
             Self::InspectTaskMore => flauz_shell::TaskRailSection::MoreInspect.palette_title(),
             Self::ChooseModelForTask => flauz_model_picker::PALETTE_ROW_TITLE,
             Self::InspectCapabilityGaps => flauz_capability_gap::PALETTE_ROW_TITLE,
+            // ORCH-004: the execution-graph surface rows.
+            Self::SeeWhoIsWorking => flauz_agents_view::PALETTE_ROW_TITLE,
+            Self::SaveReusableWorkflow => flauz_save_workflow::PALETTE_ROW_TITLE,
         }
     }
 
@@ -4043,6 +4063,9 @@ impl PaletteCommand {
             }
             Self::ChooseModelForTask => flauz_model_picker::PALETTE_ROW_DESCRIPTION,
             Self::InspectCapabilityGaps => flauz_capability_gap::PALETTE_ROW_DESCRIPTION,
+            // ORCH-004: the execution-graph surface rows.
+            Self::SeeWhoIsWorking => flauz_agents_view::PALETTE_ROW_DESCRIPTION,
+            Self::SaveReusableWorkflow => flauz_save_workflow::PALETTE_ROW_DESCRIPTION,
         }
     }
 
@@ -4080,6 +4103,9 @@ impl PaletteCommand {
             Self::InspectTaskMore => Some("Ctrl+Alt+Shift+5"),
             Self::ChooseModelForTask => Some("Ctrl+Alt+Shift+M"),
             Self::InspectCapabilityGaps => Some("Ctrl+Alt+Shift+6"),
+            // ORCH-004: the execution-graph surface chords.
+            Self::SeeWhoIsWorking => Some("Ctrl+Alt+Shift+7"),
+            Self::SaveReusableWorkflow => Some("Ctrl+Alt+Shift+S"),
             _ => None,
         }
     }
@@ -4241,6 +4267,9 @@ impl PaletteCommand {
             Self::InspectTaskMore => flauz_shell::TaskRailSection::MoreInspect.icon(),
             Self::ChooseModelForTask => IconName::Bot,
             Self::InspectCapabilityGaps => IconName::Asterisk,
+            // ORCH-004: the execution-graph surface rows.
+            Self::SeeWhoIsWorking => IconName::Bot,
+            Self::SaveReusableWorkflow => IconName::Star,
         }
     }
 
@@ -4323,6 +4352,9 @@ impl PaletteCommand {
             | Self::InspectTaskMore
             | Self::ChooseModelForTask => PaletteGroup::WorkspaceShell,
             Self::InspectCapabilityGaps => PaletteGroup::WorkspaceShell,
+            // ORCH-004: the execution-graph surface rows ride the same
+            // Workspace shell group.
+            Self::SeeWhoIsWorking | Self::SaveReusableWorkflow => PaletteGroup::WorkspaceShell,
         }
     }
 
@@ -4369,6 +4401,10 @@ impl PaletteCommand {
                 | Self::InspectTaskMore
                 | Self::ChooseModelForTask
                 | Self::InspectCapabilityGaps
+                // ORCH-004: both execution-graph surfaces act on the
+                // selected task.
+                | Self::SeeWhoIsWorking
+                | Self::SaveReusableWorkflow
         )
     }
 
@@ -5006,6 +5042,15 @@ impl CommandPaletteView {
             PaletteCommand::InspectCapabilityGaps => {
                 flauz_capability_gap::open_capability_gap_surface(workspace, window, cx);
             }
+            // ORCH-004: the execution-graph surface rows — the agents
+            // view opens the task rail's Agents section (the panel
+            // upgrade); the save row opens the save flow.
+            PaletteCommand::SeeWhoIsWorking => {
+                flauz_agents_view::open_agents_view(workspace, window, cx);
+            }
+            PaletteCommand::SaveReusableWorkflow => {
+                flauz_save_workflow::open_save_flow(workspace, window, cx);
+            }
             PaletteCommand::SearchChats | PaletteCommand::SearchFiles => {}
         });
     }
@@ -5553,6 +5598,15 @@ pub fn run() {
                 // CAP-001: the shifted-symbol companion of the gap chord
                 // (Shift+6 → "^"), mirroring the N6 gate-fix family above.
                 KeyBinding::new(&shortcut("alt-^"), FlauzCapabilityGapShortcut, None),
+                // ORCH-004: the agents-view chord (Ctrl+Alt+Shift+7, the
+                // rail family after Capabilities) and its shifted-symbol
+                // companion (Shift+7 → "&", the N6 gate-fix family), plus
+                // the save-flow chord (Ctrl+Alt+Shift+S, the letter family
+                // — letters report the shift modifier truthfully, so no
+                // shifted-symbol companion is needed).
+                KeyBinding::new(&shortcut("alt-shift-7"), FlauzAgentsViewShortcut, None),
+                KeyBinding::new(&shortcut("alt-&"), FlauzAgentsViewShortcut, None),
+                KeyBinding::new(&shortcut("alt-shift-s"), FlauzSaveWorkflowShortcut, None),
                 KeyBinding::new("escape", Escape, Some("AboutDialog")),
                 KeyBinding::new("escape", Escape, Some("McpElicitation")),
                 KeyBinding::new("escape", Escape, Some("StructuredUserInput")),
@@ -5576,6 +5630,13 @@ pub fn run() {
                 // dismisses it through its focus path.
                 KeyBinding::new("escape", Escape, Some("FlauzModelPicker")),
                 KeyBinding::new("escape", Escape, Some("FlauzCapabilityGap")),
+                // ORCH-004: the save-flow panel owns a scoped escape
+                // binding (the 019 family shape) — the panel auto-focuses
+                // its own handle on mount, so one Escape dismisses it
+                // through its focus path. (The agents panel needs none of
+                // its own: it renders inside the shell's task-rail panel,
+                // whose FlauzTaskRail context dismisses it.)
+                KeyBinding::new("escape", Escape, Some("FlauzSaveWorkflow")),
                 // UX-003: the model-availability NUX modal's one-Escape
                 // contract — the modal auto-focuses its own handle on mount
                 // (the 019 request-once pattern), so this scoped binding
@@ -6332,6 +6393,15 @@ struct WorkspaceView {
     /// Why-disclosure, and the panel's focus bookkeeping. Additive UI
     /// state; F1 flows are unchanged.
     flauz_capability_gap: flauz_capability_gap::CapabilityGapState,
+    /// The agents-view state (ORCH-004): the execution-graph view-model
+    /// the task rail's Agents panel renders (the panel's open state is
+    /// the shell's task-rail section). Additive UI state; F1 flows are
+    /// unchanged.
+    flauz_agents_view: flauz_agents_view::AgentsViewState,
+    /// The save-workflow state (ORCH-004): the save panel (name entry,
+    /// staged run shape), the saved-workflow catalog, and the
+    /// world-store seam. Additive UI state; F1 flows are unchanged.
+    flauz_save_workflow: flauz_save_workflow::SaveWorkflowState,
     sidebar_visible: bool,
     sidebar_responsive: bool,
     shell_width_class: Option<ShellWidthClass>,
@@ -7563,6 +7633,8 @@ impl WorkspaceView {
             flauz_shell: flauz_shell::FlauzShellState::new(cx),
             flauz_model_picker: flauz_model_picker::FlauzModelPickerState::new(cx),
             flauz_capability_gap: flauz_capability_gap::CapabilityGapState::new(cx),
+            flauz_agents_view: flauz_agents_view::AgentsViewState::new(),
+            flauz_save_workflow: flauz_save_workflow::SaveWorkflowState::new(window, cx),
             sidebar_visible: true,
             sidebar_responsive: true,
             shell_width_class: None,
@@ -8203,6 +8275,16 @@ impl WorkspaceView {
         // the 017 contract instead).
         if flauz_shell::action_closes_shell_surfaces(&action)
             && self.flauz_capability_gap.close_for_navigation()
+        {
+            cx.notify();
+        }
+        // ORCH-004 registration seam: the same F1 navigation closes the
+        // save-workflow panel (the agents panel is the shell's own
+        // task-rail section and closes through the shell's seam above;
+        // additive UI state, the reducer untouched, the deliberate close
+        // paths restore focus through the 017 contract instead).
+        if flauz_shell::action_closes_shell_surfaces(&action)
+            && self.flauz_save_workflow.close_for_navigation()
         {
             cx.notify();
         }
@@ -19273,6 +19355,14 @@ impl WorkspaceView {
                             // control, never hidden behind developer
                             // settings.
                             .child(flauz_capability_gap::render_capability_gap_entry(
+                                self, window, cx,
+                            ))
+                            // ORCH-004 registration seam: the
+                            // Save-as-a-reusable-workflow affordance (the
+                            // J-10 next-step affordance) lives in the same
+                            // task-surface neighborhood — a labeled control,
+                            // never hidden behind developer settings.
+                            .child(flauz_save_workflow::render_save_workflow_entry(
                                 self, window, cx,
                             ))
                             .when_some(bedrock_workspace_notice, |workspace, notice| {
@@ -45288,6 +45378,22 @@ impl Render for WorkspaceView {
             .on_action(
                 cx.listener(|this, _: &FlauzCapabilityGapShortcut, window, cx| {
                     flauz_capability_gap::open_capability_gap_surface(this, window, cx);
+                }),
+            )
+            // ORCH-004 keyboard registration: the agents view
+            // (Ctrl+Alt+Shift+7) opens the task rail's Agents section
+            // through the shell's own logic, so the rail button, the chord
+            // and the palette row all drive the same surface.
+            .on_action(
+                cx.listener(|this, _: &FlauzAgentsViewShortcut, window, cx| {
+                    flauz_agents_view::open_agents_view(this, window, cx);
+                }),
+            )
+            // ORCH-004 keyboard registration: the save flow
+            // (Ctrl+Alt+Shift+S).
+            .on_action(
+                cx.listener(|this, _: &FlauzSaveWorkflowShortcut, window, cx| {
+                    flauz_save_workflow::open_save_flow(this, window, cx);
                 }),
             )
             .relative()
