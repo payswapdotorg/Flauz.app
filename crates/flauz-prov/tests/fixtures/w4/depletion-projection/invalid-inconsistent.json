@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "window": {
+    "remaining": 5,
+    "limit": 5,
+    "window_start": "2026-09-23T08:00:00Z",
+    "window_end": "2026-09-24T08:00:00Z"
+  },
+  "projected_units": 1,
+  "projected_remaining": 4,
+  "depleted": false,
+  "deficit": 4
+}

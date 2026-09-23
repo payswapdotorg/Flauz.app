@@ -151,6 +151,17 @@ use flauz_save_workflow::FlauzSaveWorkflowShortcut;
 // close). Seams are distinct from MOD-001's and CAP-001's.
 mod flauz_recovery;
 use flauz_recovery::FlauzRecoveryShortcut;
+// PROV-001 (F7 Wave 4): the provider-accounts surface — BYOP connections
+// (the connect flow with the secret-store seam), the accounts list with
+// tier + quota state in user words, the routing-policy surface (see +
+// change, consequences stated), the spend/concurrency limits display,
+// and the task-surface attribution affordance ("Using your OpenAI free
+// tier — 3 of 5 runs left today" + the depletion moment). Wired through
+// the same minimal named seams below (declaration, palette rows,
+// keyboard chord, scoped escape, state field, task-surface mount,
+// navigation close). Seams are distinct from every prior wave's.
+mod flauz_providers;
+use flauz_providers::FlauzProvidersShortcut;
 
 const WINDOW_WIDTH: f32 = 1_278.0;
 const WINDOW_HEIGHT: f32 = 818.0;
@@ -3787,10 +3798,14 @@ enum PaletteCommand {
     SaveReusableWorkflow,
     // ORCH-003: the recovery surface row.
     ResumeTaskWhereItLeftOff,
+    // PROV-001: the provider-accounts surface rows — the connect flow
+    // and the task-surface attribution affordance.
+    ConnectProviderAccount,
+    SeeWhichAccountATaskUses,
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 85] = [
+    const ALL: [Self; 87] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3877,6 +3892,9 @@ impl PaletteCommand {
         Self::SeeWhoIsWorking,
         Self::SaveReusableWorkflow,
         Self::ResumeTaskWhereItLeftOff,
+        // PROV-001: the provider-accounts surface rows.
+        Self::ConnectProviderAccount,
+        Self::SeeWhichAccountATaskUses,
     ];
 
     const fn title(self) -> &'static str {
@@ -3979,6 +3997,10 @@ impl PaletteCommand {
             // under the Workspace group; the state-conditional
             // visibility rides the recovery view-model seam).
             Self::ResumeTaskWhereItLeftOff => flauz_recovery::PALETTE_ROW_TITLE,
+            // PROV-001: the provider-accounts surface rows — the connect
+            // flow and the attribution affordance.
+            Self::ConnectProviderAccount => flauz_providers::PALETTE_ROW_CONNECT_TITLE,
+            Self::SeeWhichAccountATaskUses => flauz_providers::PALETTE_ROW_SEE_TITLE,
         }
     }
 
@@ -4085,6 +4107,9 @@ impl PaletteCommand {
             Self::SaveReusableWorkflow => flauz_save_workflow::PALETTE_ROW_DESCRIPTION,
             // ORCH-003: the resume row's description.
             Self::ResumeTaskWhereItLeftOff => flauz_recovery::PALETTE_ROW_DESCRIPTION,
+            // PROV-001: the provider-accounts surface rows' descriptions.
+            Self::ConnectProviderAccount => flauz_providers::PALETTE_ROW_CONNECT_DESCRIPTION,
+            Self::SeeWhichAccountATaskUses => flauz_providers::PALETTE_ROW_SEE_DESCRIPTION,
         }
     }
 
@@ -4127,6 +4152,10 @@ impl PaletteCommand {
             Self::SaveReusableWorkflow => Some("Ctrl+Alt+Shift+S"),
             // ORCH-003: the recovery chord.
             Self::ResumeTaskWhereItLeftOff => Some("Ctrl+Alt+Shift+R"),
+            // PROV-001: the provider-accounts surface chord (both rows
+            // ride it — the chord opens the surface).
+            Self::ConnectProviderAccount => Some("Ctrl+Alt+Shift+P"),
+            Self::SeeWhichAccountATaskUses => Some("Ctrl+Alt+Shift+P"),
             _ => None,
         }
     }
@@ -4293,6 +4322,9 @@ impl PaletteCommand {
             Self::SaveReusableWorkflow => IconName::Star,
             // ORCH-003: the resume row's icon.
             Self::ResumeTaskWhereItLeftOff => IconName::Undo2,
+            // PROV-001: the provider-accounts surface rows.
+            Self::ConnectProviderAccount => IconName::CircleUser,
+            Self::SeeWhichAccountATaskUses => IconName::CircleCheck,
         }
     }
 
@@ -4380,6 +4412,11 @@ impl PaletteCommand {
             Self::SeeWhoIsWorking | Self::SaveReusableWorkflow => PaletteGroup::WorkspaceShell,
             // ORCH-003: the resume row joins the Workspace group.
             Self::ResumeTaskWhereItLeftOff => PaletteGroup::WorkspaceShell,
+            // PROV-001: the provider-accounts surface rows join the same
+            // Workspace shell group.
+            Self::ConnectProviderAccount | Self::SeeWhichAccountATaskUses => {
+                PaletteGroup::WorkspaceShell
+            }
         }
     }
 
@@ -5083,6 +5120,16 @@ impl CommandPaletteView {
             PaletteCommand::ResumeTaskWhereItLeftOff => {
                 flauz_recovery::open_recovery_surface(workspace, window, cx);
             }
+            // PROV-001: the provider-accounts surface rows — the connect
+            // row opens the surface on the connect form; the see row
+            // surfaces the selected task's attribution line (or the
+            // honest not-yet guidance) and opens the panel.
+            PaletteCommand::ConnectProviderAccount => {
+                flauz_providers::open_providers_surface(workspace, window, cx);
+            }
+            PaletteCommand::SeeWhichAccountATaskUses => {
+                flauz_providers::see_which_account_a_task_uses(workspace, window, cx);
+            }
             PaletteCommand::SearchChats | PaletteCommand::SearchFiles => {}
         });
     }
@@ -5612,6 +5659,13 @@ pub fn run() {
                 // companion is needed). Focuses the recovery banner when
                 // there is something to pick up.
                 KeyBinding::new(&shortcut("alt-shift-r"), FlauzRecoveryShortcut, None),
+                // PROV-001: the providers chord (Ctrl+Alt+Shift+P — the
+                // letter family, verified conflict-free: only the
+                // unshifted Ctrl+Alt+P exists, for chat pinning; letters
+                // report the shift modifier truthfully, so no
+                // shifted-symbol companion is needed). Opens the
+                // provider-accounts surface from anywhere.
+                KeyBinding::new(&shortcut("alt-shift-p"), FlauzProvidersShortcut, None),
                 // Gate-fix r2 (F2 Gate B, d23 run-2/3 evidence): on
                 // shifted-keysym platforms the digit form of a Shift+N
                 // chord NEVER matches the physical main-row keys. Two GPUI
@@ -5682,6 +5736,12 @@ pub fn run() {
                 // Escape returns focus to the task surface through the
                 // 017 restore contract.
                 KeyBinding::new("escape", Escape, Some("FlauzRecovery")),
+                // PROV-001: the providers panel owns a scoped escape
+                // binding (the 019 family shape) — the panel auto-focuses
+                // its own handle on mount, so one Escape dismisses it
+                // through its focus path and restores focus (never a
+                // trap).
+                KeyBinding::new("escape", Escape, Some("FlauzProviders")),
                 // UX-003: the model-availability NUX modal's one-Escape
                 // contract — the modal auto-focuses its own handle on mount
                 // (the 019 request-once pattern), so this scoped binding
@@ -6451,6 +6511,11 @@ struct WorkspaceView {
     /// and the banner's focus bookkeeping. Additive UI state; F1 flows
     /// are unchanged.
     flauz_recovery: flauz_recovery::RecoveryState,
+    /// The provider-accounts state (PROV-001): the connect-flow state,
+    /// the connected account views, the routing-order view, the limits
+    /// view, the attribution view-model seam, and the panel's focus
+    /// bookkeeping. Additive UI state; F1 flows are unchanged.
+    flauz_providers: flauz_providers::ProvidersState,
     sidebar_visible: bool,
     sidebar_responsive: bool,
     shell_width_class: Option<ShellWidthClass>,
@@ -7685,6 +7750,7 @@ impl WorkspaceView {
             flauz_agents_view: flauz_agents_view::AgentsViewState::new(),
             flauz_save_workflow: flauz_save_workflow::SaveWorkflowState::new(window, cx),
             flauz_recovery: flauz_recovery::RecoveryState::new(cx),
+            flauz_providers: flauz_providers::ProvidersState::new(window, cx),
             sidebar_visible: true,
             sidebar_responsive: true,
             shell_width_class: None,
@@ -8345,6 +8411,15 @@ impl WorkspaceView {
         // release path restores focus through the 017 contract instead).
         if flauz_shell::action_closes_shell_surfaces(&action)
             && self.flauz_recovery.close_for_navigation()
+        {
+            cx.notify();
+        }
+        // PROV-001 registration seam: the same F1 navigation quietly
+        // closes the provider-accounts panel — the attribution view-model
+        // is state-driven and stays (the deliberate close path restores
+        // focus through the 017 contract instead).
+        if flauz_shell::action_closes_shell_surfaces(&action)
+            && self.flauz_providers.close_for_navigation()
         {
             cx.notify();
         }
@@ -19431,6 +19506,16 @@ impl WorkspaceView {
                             // needs the user; absent when there is nothing
                             // to recover — never a permanent banner).
                             .child(flauz_recovery::render_recovery_banner(self, window, cx))
+                            // PROV-001 registration seam: the provider-
+                            // accounts surface on the task surface — the
+                            // labeled control (the visible primary entry),
+                            // the state-driven attribution affordance
+                            // ("Using your OpenAI free tier — 3 of 5 runs
+                            // left today" / the depletion moment), and the
+                            // open accounts panel.
+                            .child(flauz_providers::render_providers_entry(
+                                self, window, cx,
+                            ))
                             .when_some(bedrock_workspace_notice, |workspace, notice| {
                                 workspace.child(notice)
                             })
@@ -45474,6 +45559,16 @@ impl Render for WorkspaceView {
             // line.
             .on_action(cx.listener(|this, _: &FlauzRecoveryShortcut, window, cx| {
                 flauz_recovery::open_recovery_surface(this, window, cx);
+            }))
+            // PROV-001 keyboard registration: the provider-accounts
+            // surface's direct chord (Ctrl+Alt+Shift+P). The listener
+            // lives on the workspace root next to the picker/gap/agents/
+            // save/recovery chord listeners (the d25 Gate-B lesson: a
+            // KeyBinding without an on_action listener dispatches into
+            // the void — the seam test pins this listener, not just the
+            // binding). The module owns the logic.
+            .on_action(cx.listener(|this, _: &FlauzProvidersShortcut, window, cx| {
+                flauz_providers::open_providers_surface(this, window, cx);
             }))
             .relative()
             .w_full()

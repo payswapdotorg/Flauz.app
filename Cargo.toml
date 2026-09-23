@@ -10,6 +10,7 @@ members = [
     "crates/flauz-context",
     "crates/flauz-exec",
     "crates/flauz-orch",
+    "crates/flauz-prov",
     "crates/flauz-world",
 ]
 exclude = ["third_party/gpui-component"]

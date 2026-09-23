@@ -1,0 +1,20 @@
+{
+  "v": 1,
+  "version": 5,
+  "order": "free_tier_first",
+  "provider_overrides": {
+    "openai": {
+      "preferred_account": "conn_01J8ZQ5V8K3T2B7N6X4R9DQPG7",
+      "order": null
+    }
+  },
+  "task_overrides": {
+    "task_01J8ZQ5V8K3T2B7N6X4R9DQPD3": {
+      "preferred_account": "conn_01J8ZQ5V8K3T2B7N6X4R9DQPF6"
+    }
+  },
+  "account_spend_limit": 100,
+  "workspace_spend_limit": 500,
+  "account_concurrency_limit": 2,
+  "workspace_concurrency_limit": 8
+}
