@@ -185,6 +185,10 @@ const SHARING_CHANGED_STATUS: &str = "Sharing changed — {line}";
 const SHARING_SYNC_NOTE: &str =
     "This applies while this workspace is open; it syncs to other devices once workspaces connect.";
 /// The permission-gated unavailable state (the CAP-001 WHY pattern).
+/// F10+ wiring note: the role-gated sharing denial copy; constructed when
+/// the real collaboration transport populates non-owner members (pinned by
+/// the module tests today).
+#[allow(dead_code)]
 const SHARING_CHANGE_UNAVAILABLE: &str = "You can't change this sharing — your role here is {role}. Ask an admin or the owner to \
      change it.";
 /// The command-palette row title (the members panel).
@@ -204,6 +208,9 @@ pub(crate) const KEYBOARD_CHORD_LABEL: &str = "Ctrl+Alt+Shift+U";
 const ATTENTION_ATTRIBUTION_LINE: &str = "{member} {need}";
 /// The default attribution need phrase (the work order's example
 /// shape).
+/// F10+ wiring note: the canonical need text for attention rows; callers
+/// pass it as `AttentionNeed::need` data once the transport wires rows.
+#[allow(dead_code)]
 const ATTENTION_NEED_REVIEW: &str = "needs your review";
 
 // ---------------------------------------------------------------------------
@@ -307,6 +314,10 @@ impl RoleView {
 
 /// One member's presence, in user words.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// F10+ wiring note: the presence vocabulary is constructed when the real
+/// transport populates member presence (the render path at
+/// `presence.line(...)` is live; the variants are pinned by tests today).
+#[allow(dead_code)]
 pub(crate) enum PresenceView {
     /// The member is viewing this task.
     Task,
@@ -463,6 +474,9 @@ impl SharingView {
     /// The permission-gated unavailable WHY (the named reason, in user
     /// words).
     #[must_use]
+    /// F10+ wiring note: populates `why_not` for non-owner members once the
+    /// transport wires them (pinned by the module tests today).
+    #[allow(dead_code)]
     pub(crate) fn why_not_for_role(role: RoleView) -> String {
         SHARING_CHANGE_UNAVAILABLE.replace("{role}", role.label())
     }
@@ -1191,7 +1205,9 @@ pub(crate) fn render_members_panel(
             .py_3()
             .text_xs()
             .text_color(cx.theme().muted_foreground)
-            .child(ESCAPE_HINT),
+            .child(format!(
+                "{KEYBOARD_CHORD_LABEL} opens this panel · {ESCAPE_HINT}"
+            )),
     );
     // The overlay backdrop: one click closes (the Activity overlay
     // precedent); the panel restores focus through the 017 contract.
@@ -1329,6 +1345,12 @@ fn render_invite_section(cx: &mut Context<WorkspaceView>) -> AnyElement {
                 .line_height(px(20.0))
                 .text_color(cx.theme().muted_foreground)
                 .child(INVITE_NOT_WIRED_BODY),
+        )
+        .child(
+            div()
+                .text_sm()
+                .font_weight(gpui::FontWeight::MEDIUM)
+                .child(ROLES_NOT_WIRED_TITLE),
         )
         .child(
             div()
