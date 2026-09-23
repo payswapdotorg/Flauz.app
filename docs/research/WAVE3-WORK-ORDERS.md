@@ -1,6 +1,9 @@
 # Wave 3 Work Orders — F6 Orchestration: Context Engine / Harness / Execution Graph
 
-> **Status: 0 of 3 DISPATCHED.** Shared-contract authority:
+> **Status: 1 of 3 MERGED** (ORCH-002 Worker A — PR #49, merge
+> cd59421, CI both platforms, deviations NONE; see
+> [evidence/w3-orch-002](evidence/w3-orch-002/ORCH-002-COMPLETION-REPORT.md)).
+> ORCH-003 Worker B + ORCH-004 Worker C: DISPATCHED 2026-09-23, generating. Shared-contract authority:
 > [F2-CONTRACT-KERNEL.md](F2-CONTRACT-KERNEL.md) (frozen) + the Wave-2
 > addendum in [WAVE2-WORK-ORDERS.md](WAVE2-WORK-ORDERS.md) (frozen) + the
 > **Wave-3 kernel addendum** below + the MERGED contract crates themselves
@@ -163,7 +166,12 @@ Integration notes: the engine is what ORCH-003's harness prepare-state
   ORCH-003 freezes against the e9bee81 surface + this order's public
   API). Keep the engine deterministic; the no-flauz-world-import rule
   holds (inputs as data).
-Status: DISPATCHED (2026-09-23)
+Status: MERGED (2026-09-23) — PR #49 (merge cd59421): worker commit a9401da
+  (bundle-verified, base 19d16d5ab416 exact — the worker resolved the
+  prompt's 39-char SHA typo to the true base, documented in its report).
+  Gates: fmt/clippy clean; flauz-context 83/83; CI GREEN both platforms.
+  Deviations: NONE. Evidence:
+  evidence/w3-orch-002/ORCH-002-COMPLETION-REPORT.md
 ```
 
 ---
