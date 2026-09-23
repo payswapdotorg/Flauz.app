@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the screenshot provided, here is the description of the bottom area and the requested text:\n\n**Bottom Area Description:**\nThe bottom of the application window features a status bar on the far left. Above the status bar, within the main content area, there is a notification banner (toast) at the bottom of the input section.\n\n**Status Bar Text:**\n> App-server online\n\n**Toast/Notification Text:**\n> This task is up to date — there's nothing to pick up right now.\n\n**Highlighted/Selected Text:**\nIn the left sidebar under \"Projects\", the following item is highlighted/selected:\n> Wave 3 gate anchor task",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790149243,
+  "id": "202609231540397e39e74d512c4ea0",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609231540397e39e74d512c4ea0",
+  "usage": {
+    "completion_tokens": 133,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1713,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 1846
+  }
+}

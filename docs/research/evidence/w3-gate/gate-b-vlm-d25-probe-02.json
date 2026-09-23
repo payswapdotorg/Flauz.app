@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Yes, there is a status toast/notification at the bottom. Its exact text is:\n\n\"Codex couldn't complete the request. Try again, or check the account and connection settings.\"",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790149362,
+  "id": "20260923154240a7089c1d585c4648",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260923154240a7089c1d585c4648",
+  "usage": {
+    "completion_tokens": 38,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1698,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1736
+  }
+}

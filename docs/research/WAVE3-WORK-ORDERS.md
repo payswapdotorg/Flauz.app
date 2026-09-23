@@ -1,12 +1,17 @@
 # Wave 3 Work Orders — F6 Orchestration: Context Engine / Harness / Execution Graph
 
-> **Status: 3 of 3 MERGED — Wave 3 DELIVERED** (ORCH-002 Worker A —
+> **Status: 3 of 3 MERGED — Wave 3 CLOSED 2026-09-23** (ORCH-002 Worker A —
 > PR #49, merge cd59421; ORCH-004 Worker C — PR #50, merge ef43a0e;
 > ORCH-003 Worker B — PR #51, merge 82ae6af; all CI both platforms,
 > deviations NONE; evidence:
 > [w3-orch-002](evidence/w3-orch-002/ORCH-002-COMPLETION-REPORT.md) +
 > [w3-orch-004](evidence/w3-orch-004/ORCH-004-COMPLETION-REPORT.md) +
-> [w3-orch-003](evidence/w3-orch-003/ORCH-003-COMPLETION-REPORT.md)).
+> [w3-orch-003](evidence/w3-orch-003/ORCH-003-COMPLETION-REPORT.md);
+> the wave gate record:
+> [WAVE3-GATE-RECORD.md](evidence/w3-gate/WAVE3-GATE-RECORD.md) —
+> Gates A/B/C green, incl. the Lead Gate-B gate-fix db79499: the
+> recovery chord's missing on_action listener, caught by scene d25,
+> fixed + seam-guarded).
 > Shared-contract authority:
 > [F2-CONTRACT-KERNEL.md](F2-CONTRACT-KERNEL.md) (frozen) + the Wave-2
 > addendum in [WAVE2-WORK-ORDERS.md](WAVE2-WORK-ORDERS.md) (frozen) + the

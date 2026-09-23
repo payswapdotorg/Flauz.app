@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is the precise description of the view:\n\n**Main Content Area (Reusable Workflows)**\n*   **List Title:** \"Reusable workflows\"\n*   **Subtitle:** \"Successful steps, saved so you can run them again\"\n*   **Empty State Title:** \"No reusable workflows yet\"\n*   **Empty State Body Text:** \"A reusable workflow remembers the successful steps of a task — exactly what ran — so you can run them again on a new task any time.\"\n*   **Guidance on Saving:** Under the heading \"What to do next\", the text reads: \"Finish a task successfully, then choose “Save as a reusable workflow” on it — the saved workflow appears here.\"\n\n**Navigation / Sidebar State**\nThe left sidebar displays the following structure and state:\n*   **Top Level Items:** New chat, Repository, Pull requests, Plugins, and **Workflows** (which appears to be the active parent category).\n*   **Workspace Section:**\n    *   Projects & tasks\n    *   **Reusable workflows** (This item is highlighted with a light grey background, indicating it is the currently selected view).\n    *   Artifacts\n    *   Activity\n*   **Projects Section:**\n    *   A project named \"**seed-ws**\" is expanded.\n    *   Inside this project, there is an active task titled \"**Wave 3 gate anchor task**\" marked as \"**now**\".\n*   **Chats Section:** Displays \"No chats\".\n*   **Bottom Section:** Terminal, Browser, Settings, and a status indicator showing \"App-server online\".\n\n**Other Visible Elements**\n*   **Top Bar:** Standard window controls (minimize, maximize, close) and menu items (File, Edit, View, Help). There is also a \"Back to your work\" link in the top right of the content area.\n*   **Footer/Toast Notification:** A banner at the bottom states: \"This task is up to date — there's nothing to pick up right now.\" with a \"Dismiss\" button.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790149963,
+  "id": "2026092315523588e72e972c254a95",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "2026092315523588e72e972c254a95",
+  "usage": {
+    "completion_tokens": 424,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1710,
+    "prompt_tokens_details": {
+      "cached_tokens": 2
+    },
+    "total_tokens": 2134
+  }
+}

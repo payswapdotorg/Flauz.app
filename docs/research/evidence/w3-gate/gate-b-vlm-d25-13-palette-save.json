@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Commands**\n\n*   **Save this task as a reusable workflow**\n    Remember the successful steps of this task so you can\n    `Ctrl+Alt+Shift+S`\n\nThe row **\"Save this task as a reusable workflow\"** is highlighted.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790149945,
+  "id": "20260923155218ea76a0b0541b401e",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260923155218ea76a0b0541b401e",
+  "usage": {
+    "completion_tokens": 52,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1698,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1750
+  }
+}

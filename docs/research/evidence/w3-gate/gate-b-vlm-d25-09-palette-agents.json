@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the command palette overlay visible in the image, here is the verbatim content of the row:\n\n**Row Content:**\n*   **Title:** See who is working on this task\n*   **Description:** Watch each agent's role, progress and what they're wa\n*   **Keyboard Chint (Hint):** Ctrl+Alt+Shift+7\n\n**Highlighted Row:**\nThe row **\"See who is working on this task\"** is highlighted (indicated by the light blue background).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790149921,
+  "id": "20260923155158ed01b4daf4c34db5",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20260923155158ed01b4daf4c34db5",
+  "usage": {
+    "completion_tokens": 105,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1705,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 1810
+  }
+}

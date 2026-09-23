@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "**Panel Heading (Verbatim):**\n`Wave 3 gate anchor`\n`/tmp/d10-seed-ws`\n\n**Entry Affordances/Labels (Verbatim):**\n- `Commit or push`\n- `Fork`\n- `Refresh Git`\n- `Changes`\n- `Outputs`\n- `Browser`\n- `Terminal`\n- `Computer`\n- `Context`\n- `Agents`\n- `Environments`\n- `Evidence`\n- `More`\n\n**Not-Wired / Empty-State Content (Verbatim):**\n\n*Status Line:*\n`Model: not chosen yet`\n\n*Capability Item:*\n`✱ Capabilities` `What a task can do — and what's missing when it can't`\n\n*Workflow Item:*\n`☆ Save as a reusable workflow` `Fauz can remember the successful steps so you can run them again`\n\n*Expanded Panel Header:*\n`Save as a reusable workflow`\n`Fauz can remember the successful steps so you can run them again`\n`← Back to your work`\n\n*Not-Wired State Title:*\n`☆ Saving isn't wired to live tasks yet`\n\n*Not-Wired State Body Text:*\n`When a task finishes successfully, the steps that actually ran — exactly what happened, nothing aspirational — can be saved here under a name you choose, together with the task's input and the resources it used.`\n\n*Next-Step Guidance (Verbatim):*\n`What to do next`\n`Finish a task successfully, then open this panel again — the run's real steps appear here once the run wiring lands.`\n`Escape closes this panel`\n\n**Keyboard Hints (Verbatim):**\n`Escape closes this panel`\n\n**Additional UI Elements (Verbatim):**\n\n*Bottom Input Area Placeholder:*\n`Ask Codex to change, inspect, or explain...`\n\n*Bottom Status Banner:*\n`This task is up to date — there's nothing to pick up right now.` `Dismiss`\n\n*Task Label (Bottom Right):*\n`Wave 3 gate anchor task` `Edit`",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790149938,
+  "id": "202609231552088ffc9501dc044a9c",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609231552088ffc9501dc044a9c",
+  "usage": {
+    "completion_tokens": 421,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1718,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2139
+  }
+}

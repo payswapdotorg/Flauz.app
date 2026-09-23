@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Based on the image provided, here is a precise description of the desktop app panel:\n\n**Panel Heading (Verbatim):**\n> Wave 3 gate anchor\n> /tmp/d10-seed-ws\n\n**Section Labels/Tabs Visible:**\n*   **Context** (Selected)\n*   Agents\n*   Environments\n*   Evidence\n*   More\n\n**Empty-State Title (Verbatim):**\n> No extra agents on this task yet\n\n**Empty-State Body Text (Verbatim):**\n> Extra agents let one task work in parallel: one agent researches while another analyzes, and an independent reviewer checks the results. Everything each one produces stays separate and attributed to its maker.\n\n**Next-Step Guidance (Verbatim):**\n> What to do next\n> Ask the agent in this conversation to split the work when a task has independent parts. Assigned agents, their roles and what they're waiting for appear here.\n>\n> Live agent progress is on its way\n> When a task runs with several agents, this panel shows each one's role and progress: who is working, who is waiting for another's notes, and whose results were checked by an independent reviewer. No agent is invented here before that wiring lands.\n> The panel is ready — the run data arrives with the multi-agent execution wiring. Ask in the conversation to split work with extra agents in the meantime.\n>\n> Model: not chosen yet\n\n**Additional Panel Content:**\n*   **Capabilities:** *What a task can do — and what’s missing when it can’t*\n*   **Save as a reusable workflow:** *Flauz can remember the successful steps so you can run them again*\n\n**Bottom Notification/Status Bar (Verbatim):**\n> This task is up to date — there's nothing to pick up right now. [Dismiss]\n\n*(Note: There are no specific keyboard hints visible at the very bottom of the main content area, only model selection dropdowns for \"GPT-5.6-Sol\", \"Low\", and \"Standard\".)*",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1790149904,
+  "id": "202609231551344c02250ee8c14886",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "202609231551344c02250ee8c14886",
+  "usage": {
+    "completion_tokens": 417,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1718,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 2135
+  }
+}
