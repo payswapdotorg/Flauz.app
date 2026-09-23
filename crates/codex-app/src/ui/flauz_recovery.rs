@@ -944,6 +944,22 @@ mod tests {
         );
         assert!(source.contains("Some(\"Ctrl+Alt+Shift+R\")"));
 
+        // The chord-listener seam (the d25 Gate-B lesson): a KeyBinding
+        // without an `.on_action` listener dispatches into the void —
+        // the chord silently no-ops while the palette row works. The
+        // listener must be registered on the workspace root next to the
+        // picker/gap/agents/save chord listeners.
+        let listener_form: String = "cx.listener(|this, _: &FlauzRecoveryShortcut, window, cx| { \
+             flauz_recovery::open_recovery_surface(this, window, cx); })"
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ");
+        assert!(
+            normalized.contains(&listener_form),
+            "the recovery chord must have an on_action listener that calls \
+             open_recovery_surface (the d25 Gate-B gate-fix)"
+        );
+
         // The scoped escape seam (the d19 discipline: one Escape
         // through the banner's own focus context, never a trap).
         assert!(source.contains("Some(\"FlauzRecovery\")"));

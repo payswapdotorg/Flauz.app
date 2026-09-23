@@ -45462,6 +45462,19 @@ impl Render for WorkspaceView {
                     flauz_save_workflow::open_save_flow(this, window, cx);
                 }),
             )
+            // ORCH-003 keyboard registration: the recovery surface
+            // (Ctrl+Alt+Shift+R). Gate-fix (Wave-3 Gate B, d25): the
+            // KeyBinding was registered but this listener was MISSING —
+            // the chord dispatched into the void while the palette row
+            // worked (it calls open_recovery_surface directly). The
+            // handler lives on the workspace root like the picker's, so
+            // the chord works whether or not the task surface is
+            // focused; with nothing to recover it surfaces the honest
+            // nothing-to-pick-up guidance through the command-status
+            // line.
+            .on_action(cx.listener(|this, _: &FlauzRecoveryShortcut, window, cx| {
+                flauz_recovery::open_recovery_surface(this, window, cx);
+            }))
             .relative()
             .w_full()
             .flex_1()
