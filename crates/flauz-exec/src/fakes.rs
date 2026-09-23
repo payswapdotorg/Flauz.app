@@ -827,6 +827,150 @@ pub fn fake_provider_connection() -> Result<ProviderConnection, ExecError> {
     )
 }
 
+/// The canonical identity of the context reference the default fake
+/// compiler returns (ORCH-003: the compile-seam conformance surface).
+pub const FAKE_CONTEXT_REF: &str = "ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPZ7";
+
+/// The fake context compiler (ORCH-003): the deterministic conformance
+/// surface for the [`ContextCompiler`](crate::harness::ContextCompiler)
+/// seam — the seam the EXISTING public `flauz-context` compile step is
+/// wired behind by the caller (and that ORCH-002's engine later
+/// replaces, same seam, same public types).
+///
+/// Returns the constructor's references in order, cycling when the
+/// sequence is longer than the supplied list. Deterministic, no I/O;
+/// records every input it compiled so tests can assert the seam was
+/// driven with the attached model/environment.
+#[derive(Debug, Default)]
+pub struct FakeContextCompiler {
+    refs: Vec<String>,
+    compiled: Mutex<Vec<crate::harness::ContextCompileInput>>,
+}
+
+impl FakeContextCompiler {
+    /// A fake compiler returning the fixed canonical context reference
+    /// [`FAKE_CONTEXT_REF`] for every compilation.
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            refs: vec![FAKE_CONTEXT_REF.to_owned()],
+            compiled: Mutex::new(Vec::new()),
+        }
+    }
+
+    /// A fake compiler cycling through the supplied canonical context
+    /// references (at least one).
+    pub fn with_refs(refs: Vec<String>) -> Result<Self, ExecError> {
+        if refs.is_empty() {
+            return Err(ExecError::invalid(
+                "the fake compiler needs at least one context reference",
+            ));
+        }
+        for reference in &refs {
+            crate::ensure_non_empty("context reference", reference)?;
+            crate::ensure_str_bound("context reference", reference, crate::MAX_REFERENCE_BYTES)?;
+        }
+        Ok(Self {
+            refs,
+            compiled: Mutex::new(Vec::new()),
+        })
+    }
+
+    /// The compile inputs the seam received, in order.
+    pub fn compiled_inputs(&self) -> Vec<crate::harness::ContextCompileInput> {
+        self.compiled
+            .lock()
+            .map(|inputs| inputs.clone())
+            .unwrap_or_default()
+    }
+}
+
+impl crate::harness::ContextCompiler for FakeContextCompiler {
+    fn compile(
+        &self,
+        input: &crate::harness::ContextCompileInput,
+    ) -> Result<crate::harness::ContextCompileOutput, ExecError> {
+        // The cycle position is the number of compilations already
+        // served: deterministic given the call sequence, no entropy.
+        let position = if let Ok(mut compiled) = self.compiled.lock() {
+            compiled.push(input.clone());
+            compiled.len() - 1
+        } else {
+            0
+        };
+        let reference = self.refs[position % self.refs.len()].clone();
+        Ok(crate::harness::ContextCompileOutput {
+            v: crate::ContractVersion,
+            context_ref: reference,
+        })
+    }
+}
+
+/// The fake harness observer (ORCH-003): the deterministic in-memory
+/// task-stream seam — records every [`HarnessEventRecord`] a
+/// [`TaskHarness`](crate::harness::TaskHarness) emits, in order, and
+/// validates each one on write (the fake store discipline). The
+/// recorded stream is what recovery replays: serialize the records,
+/// drop everything, reload, and the machine reconstructs from its OWN
+/// history alone.
+#[derive(Debug, Default)]
+pub struct FakeHarnessObserver {
+    records: Mutex<Vec<crate::harness::HarnessEventRecord>>,
+}
+
+impl FakeHarnessObserver {
+    /// An empty observer that has recorded no events.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// The records observed so far, in emission order.
+    pub fn records(&self) -> Vec<crate::harness::HarnessEventRecord> {
+        self.records
+            .lock()
+            .map(|records| records.clone())
+            .unwrap_or_default()
+    }
+
+    /// Replays the recorded stream through the recovery fold — the
+    /// serialize → drop → reload round-trip without the JSON step.
+    pub fn replay(&self) -> Result<crate::harness::ReplayedHarness, crate::harness::HarnessError> {
+        crate::harness::TaskHarness::replay(&self.records())
+    }
+}
+
+impl crate::harness::HarnessObserver for FakeHarnessObserver {
+    fn record(&self, record: &crate::harness::HarnessEventRecord) -> Result<(), ExecError> {
+        record
+            .validate()
+            .map_err(|error| ExecError::invalid(error.to_string()))?;
+        if let Ok(mut records) = self.records.lock() {
+            records.push(record.clone());
+        }
+        Ok(())
+    }
+}
+
+/// Builds a fake harness recovery brief (for tests and the wave gate):
+/// one kept artifact, one kept evidence, one kept memory item, and a
+/// compaction record summarizing two items — the J-03 disclosure
+/// surface's conformance data.
+pub fn fake_recovery_brief() -> Result<crate::harness::RecoveryBrief, crate::harness::HarnessError>
+{
+    Ok(crate::harness::RecoveryBrief {
+        kept: crate::harness::HarnessKeptRefs::new(
+            vec!["art_01J8ZQ5V8K3T2B7N6X4R9DQPA0".to_owned()],
+            vec!["evd_01J8ZQ5V8K3T2B7N6X4R9DQPC2".to_owned()],
+            vec!["mem_01J8ZQ5V8K3T2B7N6X4R9DQPB1".to_owned()],
+        )?,
+        compaction: Some(crate::harness::HarnessCompactionRecord::new(
+            "ctxsnap_01J8ZQ5V8K3T2B7N6X4R9DQPF5",
+            2,
+        )?),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
