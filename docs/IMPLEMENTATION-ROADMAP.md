@@ -408,3 +408,18 @@ REL-*   release
 
 Only the Tech Lead changes roadmap status. A worker report never closes a phase.
 A phase closes only after merged implementation plus acceptance evidence.
+
+
+## Execution sequencing amendment — 2026-09-23
+
+This amendment supersedes the original F10→F11→F12→F13 client sequencing for execution order while preserving the client contracts themselves.
+
+The first production gate requires formal verification of:
+
+- Linux desktop
+- Windows desktop
+- Web client
+
+macOS and Mobile are deliberately deferred until after that production gate closes. They remain approved target clients, but are not release prerequisites.
+
+The current operational handoff, exact main SHA, active work orders, Tech Lead ownership, and synchronization rules live in docs/ACTIVE-EXECUTION-STATE.md.
