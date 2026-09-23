@@ -34,6 +34,28 @@ gate record:
   v0.1.0-rc.14 — F1 CLOSED 2026-09-21 (closure record:
   `docs/research/evidence/f1-sweep/F1-CLOSURE-RECORD.md`).
 
+## Current release strategy — approved 2026-09-23
+
+The first production release is restricted to **Linux + Windows + Web**. macOS and Mobile are explicitly deferred until after formal production verification of those three clients.
+
+Operational ownership is documented in [docs/ACTIVE-EXECUTION-STATE.md](docs/ACTIVE-EXECUTION-STATE.md): Tech Lead #1 owns product/integration/mainline; Tech Lead #2 owns Linux/E2B dogfooding and current-main GUI verification.
+
+Release sequence:
+
+```
+Wave 4 (F7/F8/F9)
+  ↓
+remaining F6 depth required by production scenario
+  ↓
+Linux + Windows + Web client completion
+  ↓
+formal verification of all three
+  ↓
+production hardening + production release gate
+  ↓
+macOS + Mobile expansion
+```
+
 ## Approved platform direction
 
 After parity closure, implement in this order:
@@ -48,10 +70,11 @@ After parity closure, implement in this order:
 8. [ ] Provider-neutral parity labs and cross-environment execution validation. — **Wave 4 DISPATCHED 2026-09-23** (LAB-001: journey specs, the normalized evidence schema, the comparator, local + fake-remote adapters).
 9. [ ] Collaboration: shared task state, presence, shared sessions/environments, documents/sheets, collaborative code, private-vs-shared context. — **Wave 4 DISPATCHED 2026-09-23** (COL-001: membership/permissions with named denial, presence, private-vs-shared visibility, the two-actor simulation + the members surface; editors and real transport are F10+).
 10. [ ] Procedure library and learn → save → discover → run → deviation → improve lifecycle.
-11. [ ] macOS client adapter.
-12. [ ] Web client adapter.
-13. [ ] Mobile client adapter.
-14. [ ] Production hardening, signed releases, migrations, observability, recovery, and compatibility guarantees.
+11. [ ] Web client adapter — **required before first production release**.
+12. [ ] Formal verification gate — Linux + Windows + Web.
+13. [ ] Production hardening, signed releases, migrations, observability, recovery, outage handling, security review, and compatibility guarantees.
+14. [⏸] macOS client adapter — **deferred until after production verification**.
+15. [⏸] Mobile client adapter — **deferred until after production verification**.
 
 ## Frozen architectural decisions
 
