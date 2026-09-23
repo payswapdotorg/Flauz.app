@@ -1,0 +1,202 @@
+{
+  "v": 1,
+  "workspace": "ws_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+  "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "steps": [
+    {
+      "actor": {
+        "kind": "user",
+        "id": "ana"
+      },
+      "op": {
+        "kind": "write_shared_state",
+        "key": "brief",
+        "value": "The weekly brief — second draft",
+        "expected_version": 1,
+        "visibility": "workspace_shared"
+      },
+      "expected": {
+        "kind": "written",
+        "version": 2
+      }
+    },
+    {
+      "actor": {
+        "kind": "user",
+        "id": "dev"
+      },
+      "op": {
+        "kind": "request_access",
+        "surface": "members",
+        "action": "manage"
+      },
+      "expected": {
+        "kind": "denied",
+        "reason": "role_denied"
+      }
+    },
+    {
+      "actor": {
+        "kind": "user",
+        "id": "dev"
+      },
+      "op": {
+        "kind": "write_shared_state",
+        "key": "brief",
+        "value": "Dev's stale overwrite",
+        "expected_version": 1,
+        "visibility": "workspace_shared"
+      },
+      "expected": {
+        "kind": "denied",
+        "reason": "version_conflict"
+      }
+    },
+    {
+      "actor": {
+        "kind": "user",
+        "id": "dev"
+      },
+      "op": {
+        "kind": "read_projection"
+      },
+      "expected": {
+        "kind": "projection",
+        "keys": [
+          "brief"
+        ]
+      }
+    },
+    {
+      "actor": {
+        "kind": "user",
+        "id": "dev"
+      },
+      "op": {
+        "kind": "write_shared_state",
+        "key": "brief",
+        "value": "The weekly brief — third draft with Dev's analysis",
+        "expected_version": 2,
+        "visibility": "workspace_shared"
+      },
+      "expected": {
+        "kind": "written",
+        "version": 3
+      }
+    },
+    {
+      "actor": {
+        "kind": "user",
+        "id": "dev"
+      },
+      "op": {
+        "kind": "write_shared_state",
+        "key": "dev-notes",
+        "value": "Dev's private scratchpad",
+        "expected_version": 0,
+        "visibility": "member_private"
+      },
+      "expected": {
+        "kind": "written",
+        "version": 1
+      }
+    },
+    {
+      "actor": {
+        "kind": "user",
+        "id": "ana"
+      },
+      "op": {
+        "kind": "read_projection"
+      },
+      "expected": {
+        "kind": "projection",
+        "keys": [
+          "brief"
+        ]
+      }
+    },
+    {
+      "actor": {
+        "kind": "user",
+        "id": "dev"
+      },
+      "op": {
+        "kind": "update_presence",
+        "locator": {
+          "kind": "task",
+          "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1"
+        }
+      },
+      "expected": {
+        "kind": "presence_updated"
+      }
+    },
+    {
+      "actor": {
+        "kind": "user",
+        "id": "dev"
+      },
+      "op": {
+        "kind": "set_sharing",
+        "shared_filesystem": "write",
+        "memory": "workspace_shared",
+        "artifacts": "workspace_shared"
+      },
+      "expected": {
+        "kind": "denied",
+        "reason": "role_denied"
+      }
+    },
+    {
+      "actor": {
+        "kind": "user",
+        "id": "ana"
+      },
+      "op": {
+        "kind": "set_sharing",
+        "shared_filesystem": "read",
+        "memory": "workspace_shared",
+        "artifacts": "workspace_shared"
+      },
+      "expected": {
+        "kind": "sharing_read",
+        "shared_filesystem": "read",
+        "memory": "workspace_shared",
+        "artifacts": "workspace_shared"
+      }
+    },
+    {
+      "actor": {
+        "kind": "user",
+        "id": "ana"
+      },
+      "op": {
+        "kind": "request_access",
+        "surface": "members",
+        "action": "manage"
+      },
+      "expected": {
+        "kind": "allowed",
+        "via": "role_default"
+      }
+    },
+    {
+      "actor": {
+        "kind": "user",
+        "id": "ana"
+      },
+      "op": {
+        "kind": "write_shared_state",
+        "key": "dev-notes",
+        "value": "The owner cannot write another member's private note",
+        "expected_version": 1,
+        "visibility": "member_private"
+      },
+      "expected": {
+        "kind": "denied",
+        "reason": "private_record"
+      }
+    }
+  ]
+}

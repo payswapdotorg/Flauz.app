@@ -1,0 +1,16 @@
+{
+  "v": 1,
+  "workspace": "ws_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+  "member": {
+    "kind": "user",
+    "id": "dev"
+  },
+  "locator": {
+    "kind": "task",
+    "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1"
+  },
+  "freshness": {
+    "last_seen": "2026-09-23T10:00:00Z",
+    "stale_after_ms": 60000
+  }
+}

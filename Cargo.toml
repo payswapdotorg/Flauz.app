@@ -7,6 +7,7 @@ members = [
     "crates/codex-protocol",
     "crates/codex-storage",
     "crates/flauz-cap",
+    "crates/flauz-collab",
     "crates/flauz-context",
     "crates/flauz-exec",
     "crates/flauz-lab",

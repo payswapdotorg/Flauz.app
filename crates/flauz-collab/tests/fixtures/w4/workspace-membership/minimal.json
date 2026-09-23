@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "workspace": "ws_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+  "actor": {
+    "kind": "user",
+    "id": "dev"
+  },
+  "display_name": "Dev",
+  "role": "contributor"
+}

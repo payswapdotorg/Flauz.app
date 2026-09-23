@@ -1975,6 +1975,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "flauz-collab"
+version = "0.1.0-rc.14"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "flauz-context"
 version = "0.1.0-rc.14"
 dependencies = [

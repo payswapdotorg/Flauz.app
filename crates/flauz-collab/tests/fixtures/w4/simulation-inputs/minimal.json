@@ -1,0 +1,130 @@
+{
+  "v": 1,
+  "workspace": "ws_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+  "memberships": [
+    {
+      "v": 1,
+      "workspace": "ws_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+      "actor": {
+        "kind": "user",
+        "id": "ana"
+      },
+      "display_name": "Ana",
+      "role": "owner"
+    },
+    {
+      "v": 1,
+      "workspace": "ws_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+      "actor": {
+        "kind": "user",
+        "id": "dev"
+      },
+      "display_name": "Dev",
+      "role": "contributor"
+    }
+  ],
+  "grants": [],
+  "lattice": {
+    "v": 1,
+    "roles": [
+      {
+        "role": "owner",
+        "access": [
+          {
+            "surface": "tasks",
+            "level": "manage"
+          },
+          {
+            "surface": "provider_accounts",
+            "level": "manage"
+          },
+          {
+            "surface": "environments",
+            "level": "manage"
+          },
+          {
+            "surface": "members",
+            "level": "manage"
+          }
+        ]
+      },
+      {
+        "role": "admin",
+        "access": [
+          {
+            "surface": "tasks",
+            "level": "manage"
+          },
+          {
+            "surface": "provider_accounts",
+            "level": "manage"
+          },
+          {
+            "surface": "environments",
+            "level": "manage"
+          },
+          {
+            "surface": "members",
+            "level": "manage"
+          }
+        ]
+      },
+      {
+        "role": "contributor",
+        "access": [
+          {
+            "surface": "tasks",
+            "level": "contribute"
+          },
+          {
+            "surface": "provider_accounts",
+            "level": "read"
+          },
+          {
+            "surface": "environments",
+            "level": "contribute"
+          },
+          {
+            "surface": "members",
+            "level": "read"
+          }
+        ]
+      },
+      {
+        "role": "viewer",
+        "access": [
+          {
+            "surface": "tasks",
+            "level": "read"
+          },
+          {
+            "surface": "provider_accounts",
+            "level": "none"
+          },
+          {
+            "surface": "environments",
+            "level": "read"
+          },
+          {
+            "surface": "members",
+            "level": "read"
+          }
+        ]
+      }
+    ]
+  },
+  "entries": [],
+  "worktree": {
+    "v": 1,
+    "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+    "shared_filesystem": "off"
+  },
+  "context": {
+    "v": 1,
+    "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+    "memory": "member_private",
+    "artifacts": "workspace_shared"
+  },
+  "presence_stale_after_ms": 60000,
+  "now": "2026-09-23T10:00:00Z"
+}

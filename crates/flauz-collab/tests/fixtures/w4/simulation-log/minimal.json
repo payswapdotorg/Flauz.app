@@ -1,0 +1,50 @@
+{
+  "v": 1,
+  "workspace": "ws_01J8ZQ5V8K3T2B7N6X4R9DQPA0",
+  "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "records": [
+    {
+      "step": 0,
+      "actor": {
+        "kind": "user",
+        "id": "ana"
+      },
+      "op": {
+        "kind": "write_shared_state",
+        "key": "brief",
+        "value": "the weekly brief",
+        "expected_version": 0,
+        "visibility": "workspace_shared"
+      },
+      "outcome": {
+        "kind": "written",
+        "key": "brief",
+        "version": 1
+      }
+    },
+    {
+      "step": 1,
+      "actor": {
+        "kind": "user",
+        "id": "dev"
+      },
+      "op": {
+        "kind": "read_projection"
+      },
+      "outcome": {
+        "kind": "projection",
+        "rows": [
+          {
+            "key": "brief",
+            "owner": {
+              "kind": "user",
+              "id": "ana"
+            },
+            "visibility": "workspace_shared",
+            "version": 1
+          }
+        ]
+      }
+    }
+  ]
+}

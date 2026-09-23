@@ -162,6 +162,20 @@ use flauz_recovery::FlauzRecoveryShortcut;
 // navigation close). Seams are distinct from every prior wave's.
 mod flauz_providers;
 use flauz_providers::FlauzProvidersShortcut;
+// COL-001 (F2 Wave 4): the members + presence surface — the Workspace
+// member list (roles + presence in user words, "Dev is viewing this
+// task"), the honest not-wired invite/role states, the per-task sharing
+// posture WITH consequences ("Isolated copy — your files stay separate"
+// / "Shared files — everyone on this task can read and write them";
+// "Only me" / "The workspace"), the permission-gated WHY, and the
+// additive collaborator attribution on the EXISTING Activity rows.
+// Wired through the same minimal named seams below (declaration,
+// palette rows, keyboard chord, scoped escape, state field, title-bar
+// entry, task-surface mount, workspace-root panel mount, navigation
+// close, the Activity attribution line). Seams are distinct from every
+// prior wave's.
+mod flauz_members;
+use flauz_members::FlauzMembersShortcut;
 
 const WINDOW_WIDTH: f32 = 1_278.0;
 const WINDOW_HEIGHT: f32 = 818.0;
@@ -3802,10 +3816,13 @@ enum PaletteCommand {
     // and the task-surface attribution affordance.
     ConnectProviderAccount,
     SeeWhichAccountATaskUses,
+    // COL-001: the members + sharing surface rows.
+    SeeWhoIsOnWorkspace,
+    ChangeTaskSharing,
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 87] = [
+    const ALL: [Self; 89] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3895,6 +3912,9 @@ impl PaletteCommand {
         // PROV-001: the provider-accounts surface rows.
         Self::ConnectProviderAccount,
         Self::SeeWhichAccountATaskUses,
+        // COL-001: the members + sharing surface rows.
+        Self::SeeWhoIsOnWorkspace,
+        Self::ChangeTaskSharing,
     ];
 
     const fn title(self) -> &'static str {
@@ -4001,6 +4021,9 @@ impl PaletteCommand {
             // flow and the attribution affordance.
             Self::ConnectProviderAccount => flauz_providers::PALETTE_ROW_CONNECT_TITLE,
             Self::SeeWhichAccountATaskUses => flauz_providers::PALETTE_ROW_SEE_TITLE,
+            // COL-001: the members + sharing surface rows.
+            Self::SeeWhoIsOnWorkspace => flauz_members::PALETTE_ROW_TITLE,
+            Self::ChangeTaskSharing => flauz_members::PALETTE_ROW_SHARING_TITLE,
         }
     }
 
@@ -4110,6 +4133,9 @@ impl PaletteCommand {
             // PROV-001: the provider-accounts surface rows' descriptions.
             Self::ConnectProviderAccount => flauz_providers::PALETTE_ROW_CONNECT_DESCRIPTION,
             Self::SeeWhichAccountATaskUses => flauz_providers::PALETTE_ROW_SEE_DESCRIPTION,
+            // COL-001: the members + sharing rows' descriptions.
+            Self::SeeWhoIsOnWorkspace => flauz_members::PALETTE_ROW_DESCRIPTION,
+            Self::ChangeTaskSharing => flauz_members::PALETTE_ROW_SHARING_DESCRIPTION,
         }
     }
 
@@ -4156,6 +4182,10 @@ impl PaletteCommand {
             // ride it — the chord opens the surface).
             Self::ConnectProviderAccount => Some("Ctrl+Alt+Shift+P"),
             Self::SeeWhichAccountATaskUses => Some("Ctrl+Alt+Shift+P"),
+            // COL-001: the members chord (Ctrl+Alt+Shift+U — the letter
+            // family; the work order's suggested M was verified TAKEN by
+            // the model picker above, so U is the verified free letter).
+            Self::SeeWhoIsOnWorkspace => Some("Ctrl+Alt+Shift+U"),
             _ => None,
         }
     }
@@ -4325,6 +4355,9 @@ impl PaletteCommand {
             // PROV-001: the provider-accounts surface rows.
             Self::ConnectProviderAccount => IconName::CircleUser,
             Self::SeeWhichAccountATaskUses => IconName::CircleCheck,
+            // COL-001: the members + sharing rows' icons.
+            Self::SeeWhoIsOnWorkspace => IconName::User,
+            Self::ChangeTaskSharing => IconName::FolderOpen,
         }
     }
 
@@ -4417,6 +4450,8 @@ impl PaletteCommand {
             Self::ConnectProviderAccount | Self::SeeWhichAccountATaskUses => {
                 PaletteGroup::WorkspaceShell
             }
+            // COL-001: the members + sharing rows join the same group.
+            Self::SeeWhoIsOnWorkspace | Self::ChangeTaskSharing => PaletteGroup::WorkspaceShell,
         }
     }
 
@@ -4468,6 +4503,9 @@ impl PaletteCommand {
                 | Self::SeeWhoIsWorking
                 | Self::SaveReusableWorkflow
                 | Self::ResumeTaskWhereItLeftOff
+                // COL-001: the sharing row acts on the selected task (the
+                // members row is workspace-level — no chat needed).
+                | Self::ChangeTaskSharing
         )
     }
 
@@ -5130,6 +5168,16 @@ impl CommandPaletteView {
             PaletteCommand::SeeWhichAccountATaskUses => {
                 flauz_providers::see_which_account_a_task_uses(workspace, window, cx);
             }
+            // COL-001: the members + sharing surface rows' dispatch — the
+            // members row opens the workspace panel; the sharing row opens
+            // the per-task sharing surface (honest guidance with no chat
+            // selected).
+            PaletteCommand::SeeWhoIsOnWorkspace => {
+                flauz_members::open_members_panel(workspace, window, cx);
+            }
+            PaletteCommand::ChangeTaskSharing => {
+                flauz_members::open_sharing_surface(workspace, window, cx);
+            }
             PaletteCommand::SearchChats | PaletteCommand::SearchFiles => {}
         });
     }
@@ -5699,6 +5747,13 @@ pub fn run() {
                 KeyBinding::new(&shortcut("alt-shift-7"), FlauzAgentsViewShortcut, None),
                 KeyBinding::new(&shortcut("alt-&"), FlauzAgentsViewShortcut, None),
                 KeyBinding::new(&shortcut("alt-shift-s"), FlauzSaveWorkflowShortcut, None),
+                // COL-001: the members chord (Ctrl+Alt+Shift+U — the letter
+                // family, like the picker's M and the recovery's R; the
+                // work order's suggested M was verified TAKEN by the model
+                // picker, so U is the verified free letter — letters report
+                // the shift modifier truthfully, so no shifted-symbol
+                // companion is needed).
+                KeyBinding::new(&shortcut("alt-shift-u"), FlauzMembersShortcut, None),
                 KeyBinding::new("escape", Escape, Some("AboutDialog")),
                 KeyBinding::new("escape", Escape, Some("McpElicitation")),
                 KeyBinding::new("escape", Escape, Some("StructuredUserInput")),
@@ -5742,6 +5797,12 @@ pub fn run() {
                 // through its focus path and restores focus (never a
                 // trap).
                 KeyBinding::new("escape", Escape, Some("FlauzProviders")),
+                // COL-001: the members and sharing panels own a scoped
+                // escape binding (the 019 family shape + the d19
+                // discipline: never trapped) — each panel auto-focuses its
+                // own handle on mount, and one Escape closes it through
+                // the 017 restore contract.
+                KeyBinding::new("escape", Escape, Some("FlauzMembers")),
                 // UX-003: the model-availability NUX modal's one-Escape
                 // contract — the modal auto-focuses its own handle on mount
                 // (the 019 request-once pattern), so this scoped binding
@@ -6516,6 +6577,11 @@ struct WorkspaceView {
     /// view, the attribution view-model seam, and the panel's focus
     /// bookkeeping. Additive UI state; F1 flows are unchanged.
     flauz_providers: flauz_providers::ProvidersState,
+    /// The members surface state (COL-001): the roster/sharing view-model
+    /// seams, the additive collaborator attribution rows, the world-store
+    /// seam, and the panels' focus bookkeeping. Additive UI state; F1
+    /// flows are unchanged.
+    flauz_members: flauz_members::MembersState,
     sidebar_visible: bool,
     sidebar_responsive: bool,
     shell_width_class: Option<ShellWidthClass>,
@@ -7751,6 +7817,7 @@ impl WorkspaceView {
             flauz_save_workflow: flauz_save_workflow::SaveWorkflowState::new(window, cx),
             flauz_recovery: flauz_recovery::RecoveryState::new(cx),
             flauz_providers: flauz_providers::ProvidersState::new(window, cx),
+            flauz_members: flauz_members::MembersState::new(cx),
             sidebar_visible: true,
             sidebar_responsive: true,
             shell_width_class: None,
@@ -8420,6 +8487,14 @@ impl WorkspaceView {
         // focus through the 017 contract instead).
         if flauz_shell::action_closes_shell_surfaces(&action)
             && self.flauz_providers.close_for_navigation()
+        {
+            cx.notify();
+        }
+        // COL-001 registration seam: the same F1 navigation quietly closes
+        // the members and sharing panels (additive UI state; the deliberate
+        // close paths restore focus through the 017 contract instead).
+        if flauz_shell::action_closes_shell_surfaces(&action)
+            && self.flauz_members.close_for_navigation()
         {
             cx.notify();
         }
@@ -15346,7 +15421,11 @@ impl WorkspaceView {
                     .gap_1()
                     .pr_2()
                     .child(self.render_command_palette_entry_button(cx))
-                    .child(self.render_activity_view_bell_button(cx)),
+                    .child(self.render_activity_view_bell_button(cx))
+                    // COL-001 registration seam: the members button in the
+                    // title bar (layer 1's visible primary entry — the
+                    // WO-P2-018 bell precedent) opens the members panel.
+                    .child(flauz_members::render_members_entry_button(self, cx)),
             )
             .when(!cfg!(target_os = "macos"), |title_bar| {
                 title_bar
@@ -19514,6 +19593,11 @@ impl WorkspaceView {
                             // left today" / the depletion moment), and the
                             // open accounts panel.
                             .child(flauz_providers::render_providers_entry(self, window, cx))
+                            // COL-001 registration seam: the per-task sharing
+                            // entry (the labeled control + panel) on the task
+                            // surface — the picker/save-family neighborhood,
+                            // never hidden behind developer settings.
+                            .child(flauz_members::render_task_sharing_entry(self, window, cx))
                             .when_some(bedrock_workspace_notice, |workspace, notice| {
                                 workspace.child(notice)
                             })
@@ -41289,6 +41373,14 @@ impl WorkspaceView {
         let task_id = task.id.clone();
         let (status_icon, status_color) = task_status_icon(task.status, cx);
         let updated_at = relative_time(task.updated_at);
+        // COL-001 registration seam (the attention extension, Wave-4
+        // addendum §5): the additive collaborator attribution line,
+        // computed from the members module's attribution data before the
+        // row build. The row itself still derives from the ONE attention
+        // list (`needs_attention_task_ids`, via `activity_view_rows`) —
+        // additive data + an additive render line only: no second store,
+        // no parallel feed.
+        let attribution = flauz_members::attention_attribution_line(&self.flauz_members, &task.id);
         h_flex()
             .id(SharedString::from(format!("activity-view-row-{index}")))
             .min_h(px(40.0))
@@ -41307,14 +41399,31 @@ impl WorkspaceView {
             .tooltip(|window, cx| Tooltip::new(UNREAD_ATTENTION_DOT_TOOLTIP).build(window, cx))
             .child(Icon::new(status_icon).xsmall().text_color(status_color))
             .child(
-                div()
+                v_flex()
                     .flex_1()
                     .min_w_0()
-                    .text_sm()
-                    .truncate()
-                    // Medium weight mirrors the sidebar's unread row.
-                    .font_weight(gpui::FontWeight::MEDIUM)
-                    .child(task.title),
+                    .child(
+                        div()
+                            .text_sm()
+                            .truncate()
+                            // Medium weight mirrors the sidebar's unread row.
+                            .font_weight(gpui::FontWeight::MEDIUM)
+                            .child(task.title),
+                    )
+                    // The additive collaborator attribution line ("Ana
+                    // needs your review") — one extra line on the SAME
+                    // row, from the same attention flag; the attribution
+                    // data is wired by a later wave, and its absence
+                    // changes nothing.
+                    .when_some(attribution, |column, attribution| {
+                        column.child(
+                            div()
+                                .text_xs()
+                                .truncate()
+                                .text_color(cx.theme().muted_foreground)
+                                .child(attribution),
+                        )
+                    }),
             )
             // The same unread-attention dot the sidebar rows show
             // (WO-P2-008) — every row in this surface needs attention.
@@ -45568,6 +45677,16 @@ impl Render for WorkspaceView {
             .on_action(cx.listener(|this, _: &FlauzProvidersShortcut, window, cx| {
                 flauz_providers::open_providers_surface(this, window, cx);
             }))
+            // COL-001 keyboard registration: the members surface
+            // (Ctrl+Alt+Shift+U). The d25 Gate-B lesson is law: the
+            // listener lives on the workspace root next to the
+            // picker/gap/agents/save/recovery chord listeners, so the
+            // chord works whether or not the task surface is focused —
+            // a KeyBinding without this listener would dispatch into the
+            // void while the palette row worked.
+            .on_action(cx.listener(|this, _: &FlauzMembersShortcut, window, cx| {
+                flauz_members::open_members_panel(this, window, cx);
+            }))
             .relative()
             .w_full()
             .flex_1()
@@ -45741,6 +45860,13 @@ impl Render for WorkspaceView {
             // on bare Escape ahead of every other overlay (WO-P2-013).
             .when(self.state.activity_view_visible, |root| {
                 root.child(self.render_activity_view_overlay(cx))
+            })
+            // COL-001 registration seam: the members panel renders as a
+            // workspace-level overlay while open (the Activity overlay
+            // precedent); the task-surface sharing entry mounts on the
+            // task surface above.
+            .when(self.flauz_members.members_open(), |root| {
+                root.child(flauz_members::render_members_panel(self, window, cx))
             });
         v_flex()
             .size_full()
