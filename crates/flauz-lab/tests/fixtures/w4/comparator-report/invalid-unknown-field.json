@@ -1,0 +1,51 @@
+{
+  "v": 1,
+  "journey": "shell-discovery",
+  "reference_run": "flauz-lab-local-shell-discovery",
+  "candidate_run": "flauz-lab-fake-remote-shell-discovery",
+  "reference_provider": "flauz-lab-local",
+  "candidate_provider": "flauz-lab-fake-remote",
+  "steps": [
+    {
+      "kind": "matching",
+      "step": "settle-first-run"
+    },
+    {
+      "kind": "matching",
+      "step": "anchor-task"
+    },
+    {
+      "kind": "matching",
+      "step": "type-objective"
+    },
+    {
+      "kind": "matching",
+      "step": "submit-task"
+    },
+    {
+      "kind": "matching",
+      "step": "open-picker"
+    },
+    {
+      "kind": "matching",
+      "step": "close-picker"
+    },
+    {
+      "kind": "matching",
+      "step": "open-palette"
+    },
+    {
+      "kind": "matching",
+      "step": "palette-query"
+    },
+    {
+      "kind": "matching",
+      "step": "palette-land"
+    }
+  ],
+  "divergences": [],
+  "matching": 9,
+  "divergent": 0,
+  "missing": 0,
+  "generated_at": "2026-09-23T00:00:00Z"
+}

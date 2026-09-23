@@ -1,0 +1,406 @@
+{
+  "v": 1,
+  "id": "a11y-chord-ladder",
+  "title": "A11y chord ladder: digit and companion chords, bracket swap, PTY focus, the modal trap",
+  "surfaces": [
+    "agents-view",
+    "chat-list",
+    "confirmation-modals",
+    "task-surface",
+    "terminal-dock"
+  ],
+  "journeys": [
+    "J-01",
+    "J-07"
+  ],
+  "steps": [
+    {
+      "id": "settle-first-run",
+      "action": {
+        "kind": "key_chord",
+        "chord": "escape"
+      },
+      "probes": [
+        {
+          "id": "assert-first-run-dismissed",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "first-run-promo-modal",
+              "state": "closed"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "anchor-task",
+      "action": {
+        "kind": "key_chord",
+        "chord": "ctrl+n"
+      },
+      "probes": [
+        {
+          "id": "assert-composer-open",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "new-task-composer",
+              "state": "open"
+            }
+          }
+        },
+        {
+          "id": "frame-composer-open",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "composer-open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "type-objective",
+      "action": {
+        "kind": "type_text",
+        "text": "the a11y chord ladder task"
+      },
+      "probes": [
+        {
+          "id": "assert-objective-landed",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "text_landed",
+              "anchor": "new-task-composer",
+              "text": "the a11y chord ladder task"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "submit-task",
+      "action": {
+        "kind": "key_chord",
+        "chord": "ctrl+return"
+      },
+      "probes": [
+        {
+          "id": "assert-task-active",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "task-surface",
+              "state": "active"
+            }
+          }
+        },
+        {
+          "id": "assert-task-composer-focus",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "task-composer"
+            }
+          }
+        },
+        {
+          "id": "frame-task-surface",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "task-surface"
+          }
+        }
+      ]
+    },
+    {
+      "id": "agents-digit-chord",
+      "action": {
+        "kind": "key_chord",
+        "chord": "ctrl+alt+shift+7"
+      },
+      "probes": [
+        {
+          "id": "assert-agents-open",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "agents-view-panel",
+              "state": "open"
+            }
+          }
+        },
+        {
+          "id": "frame-agents-open",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "agents-open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "agents-close",
+      "action": {
+        "kind": "key_chord",
+        "chord": "escape"
+      },
+      "probes": [
+        {
+          "id": "assert-agents-close-focus",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "task-composer"
+            }
+          }
+        },
+        {
+          "id": "assert-agents-closed",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "agents-view-panel",
+              "state": "closed"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "agents-companion-chord",
+      "action": {
+        "kind": "key_chord",
+        "chord": "alt+^"
+      },
+      "probes": [
+        {
+          "id": "assert-agents-companion-open",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "agents-view-panel",
+              "state": "open"
+            }
+          }
+        },
+        {
+          "id": "frame-agents-companion-open",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "agents-companion-open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "agents-close-again",
+      "action": {
+        "kind": "key_chord",
+        "chord": "escape"
+      },
+      "probes": [
+        {
+          "id": "assert-agents-closed-again",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "agents-view-panel",
+              "state": "closed"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "bracket-swap-primary",
+      "action": {
+        "kind": "key_chord",
+        "chord": "ctrl+shift+]"
+      },
+      "probes": [
+        {
+          "id": "assert-bracket-moves-selection",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "chat-selection",
+              "state": "chat-one"
+            }
+          }
+        },
+        {
+          "id": "frame-bracket-primary",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "bracket-primary"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bracket-swap-alternate",
+      "action": {
+        "kind": "key_chord",
+        "chord": "ctrl+page_down"
+      },
+      "probes": [
+        {
+          "id": "assert-alternate-moves-selection",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "chat-selection",
+              "state": "chat-one"
+            }
+          }
+        },
+        {
+          "id": "frame-bracket-alternate",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "bracket-alternate"
+          }
+        }
+      ]
+    },
+    {
+      "id": "open-terminal",
+      "action": {
+        "kind": "key_chord",
+        "chord": "ctrl+`"
+      },
+      "probes": [
+        {
+          "id": "assert-terminal-focus",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "terminal-pty"
+            }
+          }
+        },
+        {
+          "id": "assert-terminal-open",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "terminal-dock",
+              "state": "open-live-pty"
+            }
+          }
+        },
+        {
+          "id": "frame-terminal-open",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "terminal-open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "trap-modal-open",
+      "action": {
+        "kind": "click_anchor",
+        "anchor": "clear-history-affordance"
+      },
+      "probes": [
+        {
+          "id": "assert-modal-focus",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "modal-cancel-button"
+            }
+          }
+        },
+        {
+          "id": "assert-modal-open",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "clear-confirmation-modal",
+              "state": "open"
+            }
+          }
+        },
+        {
+          "id": "frame-modal-open",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "modal-open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "trap-cycle",
+      "action": {
+        "kind": "key_chord",
+        "chord": "tab"
+      },
+      "probes": [
+        {
+          "id": "assert-trap-confined",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "focus_confined",
+              "anchors": [
+                "modal-cancel-button",
+                "modal-confirm-button"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "trap-close",
+      "action": {
+        "kind": "key_chord",
+        "chord": "escape"
+      },
+      "probes": [
+        {
+          "id": "assert-modal-closed",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "clear-confirmation-modal",
+              "state": "closed"
+            }
+          }
+        },
+        {
+          "id": "assert-trap-close-focus",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "task-composer"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

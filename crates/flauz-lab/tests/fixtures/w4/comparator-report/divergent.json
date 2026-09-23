@@ -1,0 +1,144 @@
+{
+  "v": 1,
+  "journey": "shell-discovery",
+  "reference_run": "flauz-lab-local-shell-discovery",
+  "candidate_run": "flauz-lab-fake-remote-shell-discovery",
+  "reference_provider": "flauz-lab-local",
+  "candidate_provider": "flauz-lab-fake-remote",
+  "steps": [
+    {
+      "kind": "matching",
+      "step": "settle-first-run"
+    },
+    {
+      "kind": "matching",
+      "step": "anchor-task"
+    },
+    {
+      "kind": "matching",
+      "step": "type-objective"
+    },
+    {
+      "kind": "matching",
+      "step": "submit-task"
+    },
+    {
+      "kind": "divergent",
+      "step": "open-picker"
+    },
+    {
+      "kind": "matching",
+      "step": "close-picker"
+    },
+    {
+      "kind": "matching",
+      "step": "open-palette"
+    },
+    {
+      "kind": "matching",
+      "step": "palette-query"
+    },
+    {
+      "kind": "matching",
+      "step": "palette-land"
+    }
+  ],
+  "divergences": [
+    {
+      "step": "open-picker",
+      "probe": "frame-picker-open",
+      "severity": "major",
+      "detail": {
+        "kind": "frame_anchors",
+        "moment": "picker-open",
+        "reference": [
+          {
+            "anchor": "agents-view-panel",
+            "state": "closed"
+          },
+          {
+            "anchor": "chat-selection",
+            "state": "chat-two"
+          },
+          {
+            "anchor": "clear-confirmation-modal",
+            "state": "closed"
+          },
+          {
+            "anchor": "command-palette",
+            "state": "closed"
+          },
+          {
+            "anchor": "first-run-promo-modal",
+            "state": "closed"
+          },
+          {
+            "anchor": "model-picker-panel",
+            "state": "open-empty"
+          },
+          {
+            "anchor": "new-task-composer",
+            "state": "closed"
+          },
+          {
+            "anchor": "palette-row-model-picker",
+            "state": "hidden"
+          },
+          {
+            "anchor": "task-surface",
+            "state": "active"
+          },
+          {
+            "anchor": "terminal-dock",
+            "state": "closed"
+          }
+        ],
+        "candidate": [
+          {
+            "anchor": "agents-view-panel",
+            "state": "closed"
+          },
+          {
+            "anchor": "chat-selection",
+            "state": "chat-two"
+          },
+          {
+            "anchor": "clear-confirmation-modal",
+            "state": "closed"
+          },
+          {
+            "anchor": "command-palette",
+            "state": "closed"
+          },
+          {
+            "anchor": "first-run-promo-modal",
+            "state": "closed"
+          },
+          {
+            "anchor": "model-picker-panel",
+            "state": "closed"
+          },
+          {
+            "anchor": "new-task-composer",
+            "state": "closed"
+          },
+          {
+            "anchor": "palette-row-model-picker",
+            "state": "hidden"
+          },
+          {
+            "anchor": "task-surface",
+            "state": "active"
+          },
+          {
+            "anchor": "terminal-dock",
+            "state": "closed"
+          }
+        ]
+      }
+    }
+  ],
+  "matching": 8,
+  "divergent": 1,
+  "missing": 0
+}

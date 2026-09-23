@@ -1,0 +1,21 @@
+{
+  "v": 1,
+  "findings": [
+    {
+      "id": "bracket-swap-chords",
+      "surface": "chat-list",
+      "description": "The previous/next chat chords (Ctrl+Shift+]/[) produced no selection move in the lab configuration while Ctrl+PageDown moved it positively; chord families must be re-evidenced positively per configuration (F1 a11y N6).",
+      "guard": {
+        "kind": "unguarded"
+      }
+    },
+    {
+      "id": "bracket-swap-chords",
+      "surface": "chat-list",
+      "description": "The previous/next chat chords (Ctrl+Shift+]/[) produced no selection move in the lab configuration while Ctrl+PageDown moved it positively; chord families must be re-evidenced positively per configuration (F1 a11y N6).",
+      "guard": {
+        "kind": "unguarded"
+      }
+    }
+  ]
+}

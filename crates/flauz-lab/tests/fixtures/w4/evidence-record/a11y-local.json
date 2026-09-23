@@ -1,0 +1,923 @@
+{
+  "v": 1,
+  "run": "flauz-lab-local-a11y-chord-ladder",
+  "journey": "a11y-chord-ladder",
+  "adapter": {
+    "provider_kind": "flauz-lab-local",
+    "family": "local",
+    "locality": "local",
+    "lab_surfaces": [
+      "browser.input",
+      "browser.navigation",
+      "computer.keyboard",
+      "computer.mouse",
+      "computer.screen",
+      "desktop.gui",
+      "filesystem.read",
+      "filesystem.write",
+      "git",
+      "snapshots",
+      "terminal"
+    ]
+  },
+  "steps": [
+    {
+      "step": "settle-first-run",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-first-run-dismissed",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "first-run-promo-modal",
+              "state": "closed"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "first-run-promo-modal",
+              "state": "closed"
+            },
+            "findings": [
+              "first-run-keyboard-swallowing"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "step": "anchor-task",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-composer-open",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "new-task-composer",
+              "state": "open"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "new-task-composer",
+              "state": "open"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-composer-open",
+          "result": {
+            "kind": "frame",
+            "moment": "composer-open",
+            "frame": "frame-0001",
+            "digest": "7bffd4a994425577",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-one"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "closed"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "open"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "inactive"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'composer-open' of journey 'a11y-chord-ladder': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0001.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "type-objective",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-objective-landed",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "text_landed",
+              "anchor": "new-task-composer",
+              "text": "the a11y chord ladder task"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "text",
+              "anchor": "new-task-composer",
+              "text": "the a11y chord ladder task"
+            },
+            "findings": []
+          }
+        }
+      ]
+    },
+    {
+      "step": "submit-task",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-task-active",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "task-surface",
+              "state": "active"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "task-surface",
+              "state": "active"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "assert-task-composer-focus",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "task-composer"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "focus",
+              "anchor": "task-composer"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-task-surface",
+          "result": {
+            "kind": "frame",
+            "moment": "task-surface",
+            "frame": "frame-0002",
+            "digest": "62532a203cb72c8c",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-two"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "closed"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "closed"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "active"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'task-surface' of journey 'a11y-chord-ladder': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0002.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "agents-digit-chord",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-agents-open",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "agents-view-panel",
+              "state": "open"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "agents-view-panel",
+              "state": "open"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-agents-open",
+          "result": {
+            "kind": "frame",
+            "moment": "agents-open",
+            "frame": "frame-0003",
+            "digest": "51fd9b4228d8df38",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "open"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-two"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "closed"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "closed"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "active"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'agents-open' of journey 'a11y-chord-ladder': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0003.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "agents-close",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-agents-close-focus",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "task-composer"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "focus",
+              "anchor": "task-composer"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "assert-agents-closed",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "agents-view-panel",
+              "state": "closed"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "agents-view-panel",
+              "state": "closed"
+            },
+            "findings": []
+          }
+        }
+      ]
+    },
+    {
+      "step": "agents-companion-chord",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-agents-companion-open",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "agents-view-panel",
+              "state": "open"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "agents-view-panel",
+              "state": "open"
+            },
+            "findings": [
+              "shifted-symbol-chord-companions"
+            ]
+          }
+        },
+        {
+          "probe": "frame-agents-companion-open",
+          "result": {
+            "kind": "frame",
+            "moment": "agents-companion-open",
+            "frame": "frame-0004",
+            "digest": "51fd9b4228d8df38",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "open"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-two"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "closed"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "closed"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "active"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'agents-companion-open' of journey 'a11y-chord-ladder': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0004.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "agents-close-again",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-agents-closed-again",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "agents-view-panel",
+              "state": "closed"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "agents-view-panel",
+              "state": "closed"
+            },
+            "findings": []
+          }
+        }
+      ]
+    },
+    {
+      "step": "bracket-swap-primary",
+      "outcome": {
+        "kind": "no_visible_change"
+      },
+      "probes": [
+        {
+          "probe": "assert-bracket-moves-selection",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "chat-selection",
+              "state": "chat-one"
+            },
+            "satisfied": false,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "chat-selection",
+              "state": "chat-two"
+            },
+            "findings": [
+              "bracket-swap-chords"
+            ]
+          }
+        },
+        {
+          "probe": "frame-bracket-primary",
+          "result": {
+            "kind": "frame",
+            "moment": "bracket-primary",
+            "frame": "frame-0005",
+            "digest": "62532a203cb72c8c",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-two"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "closed"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "closed"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "active"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'bracket-primary' of journey 'a11y-chord-ladder': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0005.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "bracket-swap-alternate",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-alternate-moves-selection",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "chat-selection",
+              "state": "chat-one"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "chat-selection",
+              "state": "chat-one"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-bracket-alternate",
+          "result": {
+            "kind": "frame",
+            "moment": "bracket-alternate",
+            "frame": "frame-0006",
+            "digest": "aa308a3f47b0d122",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-one"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "closed"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "closed"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "active"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "closed"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'bracket-alternate' of journey 'a11y-chord-ladder': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0006.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "open-terminal",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-terminal-focus",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "terminal-pty"
+            },
+            "satisfied": false,
+            "observed": {
+              "kind": "focus",
+              "anchor": "task-composer"
+            },
+            "findings": [
+              "pty-focus-transfer"
+            ]
+          }
+        },
+        {
+          "probe": "assert-terminal-open",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "terminal-dock",
+              "state": "open-live-pty"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "terminal-dock",
+              "state": "open-live-pty"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-terminal-open",
+          "result": {
+            "kind": "frame",
+            "moment": "terminal-open",
+            "frame": "frame-0007",
+            "digest": "d5ad457b16884845",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-one"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "closed"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "closed"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "active"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "open-live-pty"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'terminal-open' of journey 'a11y-chord-ladder': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0007.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "trap-modal-open",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-modal-focus",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "modal-cancel-button"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "focus",
+              "anchor": "modal-cancel-button"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "assert-modal-open",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "clear-confirmation-modal",
+              "state": "open"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "clear-confirmation-modal",
+              "state": "open"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "frame-modal-open",
+          "result": {
+            "kind": "frame",
+            "moment": "modal-open",
+            "frame": "frame-0008",
+            "digest": "9e430f008c7e36e9",
+            "anchors": [
+              {
+                "anchor": "agents-view-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "chat-selection",
+                "state": "chat-one"
+              },
+              {
+                "anchor": "clear-confirmation-modal",
+                "state": "open"
+              },
+              {
+                "anchor": "command-palette",
+                "state": "closed"
+              },
+              {
+                "anchor": "first-run-promo-modal",
+                "state": "closed"
+              },
+              {
+                "anchor": "model-picker-panel",
+                "state": "closed"
+              },
+              {
+                "anchor": "new-task-composer",
+                "state": "closed"
+              },
+              {
+                "anchor": "palette-row-model-picker",
+                "state": "hidden"
+              },
+              {
+                "anchor": "task-surface",
+                "state": "active"
+              },
+              {
+                "anchor": "terminal-dock",
+                "state": "open-live-pty"
+              }
+            ],
+            "vlm": {
+              "prompt": "Adjudicate the frame at moment 'modal-open' of journey 'a11y-chord-ladder': list the visible labeled controls, panels and affordances with their open/closed states.",
+              "read": "vlm-frame-0008.json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": "trap-cycle",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-trap-confined",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "focus_confined",
+              "anchors": [
+                "modal-cancel-button",
+                "modal-confirm-button"
+              ]
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "focus_cycle",
+              "anchors": [
+                "modal-cancel-button",
+                "modal-confirm-button"
+              ]
+            },
+            "findings": [
+              "modal-focus-traps"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "step": "trap-close",
+      "outcome": {
+        "kind": "applied"
+      },
+      "probes": [
+        {
+          "probe": "assert-modal-closed",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "clear-confirmation-modal",
+              "state": "closed"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "anchor",
+              "anchor": "clear-confirmation-modal",
+              "state": "closed"
+            },
+            "findings": []
+          }
+        },
+        {
+          "probe": "assert-trap-close-focus",
+          "result": {
+            "kind": "assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "task-composer"
+            },
+            "satisfied": true,
+            "observed": {
+              "kind": "focus",
+              "anchor": "task-composer"
+            },
+            "findings": []
+          }
+        }
+      ]
+    }
+  ]
+}

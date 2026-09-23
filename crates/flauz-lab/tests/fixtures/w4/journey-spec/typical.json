@@ -1,0 +1,312 @@
+{
+  "v": 1,
+  "id": "shell-discovery",
+  "title": "Shell discovery: anchor a task, open the model picker by chord and by palette",
+  "surfaces": [
+    "command-palette",
+    "model-picker",
+    "task-surface"
+  ],
+  "journeys": [
+    "J-01",
+    "J-13"
+  ],
+  "steps": [
+    {
+      "id": "settle-first-run",
+      "action": {
+        "kind": "key_chord",
+        "chord": "escape"
+      },
+      "probes": [
+        {
+          "id": "assert-first-run-dismissed",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "first-run-promo-modal",
+              "state": "closed"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "anchor-task",
+      "action": {
+        "kind": "key_chord",
+        "chord": "ctrl+n"
+      },
+      "probes": [
+        {
+          "id": "assert-composer-focus",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "new-task-composer"
+            }
+          }
+        },
+        {
+          "id": "assert-composer-open",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "new-task-composer",
+              "state": "open"
+            }
+          }
+        },
+        {
+          "id": "frame-composer-open",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "composer-open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "type-objective",
+      "action": {
+        "kind": "type_text",
+        "text": "the lab anchor task"
+      },
+      "probes": [
+        {
+          "id": "assert-objective-landed",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "text_landed",
+              "anchor": "new-task-composer",
+              "text": "the lab anchor task"
+            }
+          }
+        },
+        {
+          "id": "frame-typed-objective",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "typed-objective"
+          }
+        }
+      ]
+    },
+    {
+      "id": "submit-task",
+      "action": {
+        "kind": "key_chord",
+        "chord": "ctrl+return"
+      },
+      "probes": [
+        {
+          "id": "assert-task-active",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "task-surface",
+              "state": "active"
+            }
+          }
+        },
+        {
+          "id": "assert-task-composer-focus",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "task-composer"
+            }
+          }
+        },
+        {
+          "id": "frame-task-surface",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "task-surface"
+          }
+        }
+      ]
+    },
+    {
+      "id": "open-picker",
+      "action": {
+        "kind": "key_chord",
+        "chord": "ctrl+alt+shift+m"
+      },
+      "probes": [
+        {
+          "id": "assert-picker-focus",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "model-picker-panel"
+            }
+          }
+        },
+        {
+          "id": "assert-picker-open",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "model-picker-panel",
+              "state": "open-empty"
+            }
+          }
+        },
+        {
+          "id": "frame-picker-open",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "picker-open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "close-picker",
+      "action": {
+        "kind": "key_chord",
+        "chord": "escape"
+      },
+      "probes": [
+        {
+          "id": "assert-focus-returns",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "task-composer"
+            }
+          }
+        },
+        {
+          "id": "assert-picker-closed",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "model-picker-panel",
+              "state": "closed"
+            }
+          }
+        },
+        {
+          "id": "frame-picker-closed",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "picker-closed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "open-palette",
+      "action": {
+        "kind": "key_chord",
+        "chord": "ctrl+k"
+      },
+      "probes": [
+        {
+          "id": "assert-palette-input-focus",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "palette-input"
+            }
+          }
+        },
+        {
+          "id": "assert-palette-open",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "command-palette",
+              "state": "open"
+            }
+          }
+        },
+        {
+          "id": "frame-palette-open",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "palette-open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "palette-query",
+      "action": {
+        "kind": "type_text",
+        "text": "choose a model"
+      },
+      "probes": [
+        {
+          "id": "assert-palette-row-visible",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "palette-row-model-picker",
+              "state": "visible"
+            }
+          }
+        },
+        {
+          "id": "frame-palette-row",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "palette-row"
+          }
+        }
+      ]
+    },
+    {
+      "id": "palette-land",
+      "action": {
+        "kind": "key_chord",
+        "chord": "return"
+      },
+      "probes": [
+        {
+          "id": "assert-picker-landed",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "anchor_state",
+              "anchor": "model-picker-panel",
+              "state": "open-empty"
+            }
+          }
+        },
+        {
+          "id": "assert-picker-landed-focus",
+          "probe": {
+            "kind": "state_assertion",
+            "assertion": {
+              "kind": "focus_on",
+              "anchor": "model-picker-panel"
+            }
+          }
+        },
+        {
+          "id": "frame-picker-landed",
+          "probe": {
+            "kind": "frame_capture",
+            "moment": "picker-landed"
+          }
+        }
+      ]
+    }
+  ]
+}
