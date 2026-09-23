@@ -1,12 +1,13 @@
 # Wave 3 Work Orders — F6 Orchestration: Context Engine / Harness / Execution Graph
 
-> **Status: 2 of 3 MERGED** (ORCH-002 Worker A — PR #49, merge
-> cd59421; ORCH-004 Worker C — PR #50, merge ef43a0e; both CI both
-> platforms, deviations NONE; evidence:
+> **Status: 3 of 3 MERGED — Wave 3 DELIVERED** (ORCH-002 Worker A —
+> PR #49, merge cd59421; ORCH-004 Worker C — PR #50, merge ef43a0e;
+> ORCH-003 Worker B — PR #51, merge 82ae6af; all CI both platforms,
+> deviations NONE; evidence:
 > [w3-orch-002](evidence/w3-orch-002/ORCH-002-COMPLETION-REPORT.md) +
-> [w3-orch-004](evidence/w3-orch-004/ORCH-004-COMPLETION-REPORT.md)).
-> ORCH-003 Worker B: delivered + gated (PR #51, CI running on the
-> gate-fix head de4b792). Shared-contract authority:
+> [w3-orch-004](evidence/w3-orch-004/ORCH-004-COMPLETION-REPORT.md) +
+> [w3-orch-003](evidence/w3-orch-003/ORCH-003-COMPLETION-REPORT.md)).
+> Shared-contract authority:
 > [F2-CONTRACT-KERNEL.md](F2-CONTRACT-KERNEL.md) (frozen) + the Wave-2
 > addendum in [WAVE2-WORK-ORDERS.md](WAVE2-WORK-ORDERS.md) (frozen) + the
 > **Wave-3 kernel addendum** below + the MERGED contract crates themselves
@@ -285,7 +286,14 @@ Integration notes: ORCH-002's engine later replaces the compile seam's
   internals (same public types). The harness is what ORCH-004's graph
   nodes drive (a node's execution = a harness run); keep the HarnessState
   exportable as plain data for ORCH-004's view-model.
-Status: DISPATCHED (2026-09-23)
+Status: MERGED (2026-09-23) — PR #51 (merge 82ae6af): worker commit 6b50a3c
+  + Lead gate-fix de4b792 (the recovery seam-test include path, the
+  PR-46 lesson). CI green both platforms at de4b792; the merge resolved
+  ui.rs as the additive union (ORCH-003's recovery seams + main's
+  ORCH-002/ORCH-004 seams; palette ALL 85). Local gates at the merge:
+  fmt clean; clippy -p codex-app --all-targets 0 errors; clippy/test -p
+  flauz-exec clean + 106/106 (81 lib + 11 conformance + 2 dynamics +
+  12 harness dynamics). Deviations: NONE.
 ```
 
 ---
@@ -406,7 +414,10 @@ Integration notes: the graph is pure data + evaluator (no engine
   the ORCH-003 harness with fake runtimes at the merged binary. The
   Procedure record is the F10 library's foundation — keep the minimal
   version honest (steps = what actually ran, never aspirational).
-Status: DISPATCHED (2026-09-23)
+Status: MERGED (2026-09-23) — PR #50 (merge ef43a0e, evidence 8da4468):
+  worker commit 63fd9e0 + Lead gate-fix b662c4f (the flauz-orch
+  Cargo.lock entry, the CAP-001 precedent). CI green both platforms.
+  Deviations: NONE.
 ```
 
 ---
