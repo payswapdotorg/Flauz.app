@@ -1,7 +1,7 @@
 # Active Execution State
 
-**Updated:** 2026-09-23
-**Current main:** ae2c8c9 (code head 526d53c — the Wave-4 merge)
+**Updated:** 2026-09-25
+**Current main:** 3546201 (the Wave-5 merge — LEASE-001 PR #55 + TAKE-001 PR #56)
 
 This file is the repository's operational handoff for the active Tech Leads. It does not override the architecture constitution or work-order contracts; it records the current execution state and sequencing decisions.
 
@@ -13,7 +13,8 @@ F2 Canonical contracts + shell       ✅ CLOSED
 Wave 2 / F3-F5 fabric foundation     ✅ DELIVERED
 Wave 3 / F6 orchestration            ✅ CLOSED
 Wave 4 / F7-F9                       ✅ CLOSED 2026-09-23 (gate record: docs/research/evidence/w4-gate/WAVE4-GATE-RECORD.md)
-Remaining F6 orchestration depth     ▶ NEXT (per the sequencing below)
+Wave 5 / F6 depth (leases + takeover) ✅ CLOSED 2026-09-25 (gate record: docs/research/evidence/w5-gate/WAVE5-GATE-RECORD.md)
+Wave 6 / F11 Web client              ▶ NEXT (per the sequencing below)
 Web / Windows / Linux formal verify  ▶ REQUIRED BEFORE PRODUCTION
 Production                           ⬜
 macOS                                ⏸ DEFERRED UNTIL AFTER PRODUCTION
@@ -128,8 +129,8 @@ Major waves must include the applicable J-01..J-18 journeys and at least one dom
 
 1. ✅ Merge/gate PROV-001 + LAB-001 + COL-001 (3/3 merged 2026-09-23)
 2. ✅ Run the Wave-4 three-fabric integration gate (Gates A/B/C green)
-3. ▶ Complete the remaining F6 orchestration depth required for the production scenario
-4. Finish Web client
+3. ✅ Complete the remaining F6 orchestration depth (Wave 5 CLOSED: LEASE-001 + TAKE-001)
+4. ▶ Finish Web client (Wave 6: WEB-001 foundation → WEB-002 capability surfaces)
 5. Bring Linux + Windows + Web to formal verification readiness
 6. Run formal production verification across all three
 7. Close production hardening/release gates
