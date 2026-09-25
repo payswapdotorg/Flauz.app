@@ -1,0 +1,35 @@
+[package]
+name = "flauz-web-gateway"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "WEB-001: WebSocket-to-app-server bridge and static web hosting for the Flauz web client"
+
+[dependencies]
+axum = { version = "0.8", features = ["ws"] }
+codex-platform = { path = "../codex-platform" }
+codex-protocol = { path = "../codex-protocol" }
+crossbeam-channel = { workspace = true }
+futures = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "sync", "time", "net"] }
+
+[dev-dependencies]
+tempfile = "3"
+tokio-tungstenite = "0.30"
+
+[lib]
+name = "flauz_web_gateway"
+path = "src/lib.rs"
+
+[[bin]]
+name = "flauz-web-gateway"
+path = "src/main.rs"
+
+[[bin]]
+name = "flauz-fake-app-server"
+path = "src/bin/flauz_fake_app_server.rs"

@@ -1,0 +1,59 @@
+{
+  "journey_id": "J-04",
+  "journey_name": "Discover a capability gap (named error + unlock path, web foundation variant)",
+  "product_journey": "Agent needs a capability → task-visible named explanation → recovery action; never a silent no-op.",
+  "steps": [
+    {
+      "step_id": "s1",
+      "action": "start a task that needs a missing capability (gpu)",
+      "frames": [
+        "frames/01-named-capability-gap.png"
+      ],
+      "assertions": [
+        {
+          "id": "a1",
+          "kind": "state",
+          "state_key": "capability.error_names_cause",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
+        },
+        {
+          "id": "a2",
+          "kind": "state",
+          "state_key": "capability.error_names_recovery",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
+        },
+        {
+          "id": "a3",
+          "kind": "state",
+          "state_key": "capability.silent_noop",
+          "observation": "visible",
+          "expected": "visible",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s2",
+      "action": "open the session's Environments surface for the unlock path",
+      "frames": [
+        "frames/02-environments-unlock-path.png"
+      ],
+      "assertions": [
+        {
+          "id": "a4",
+          "kind": "state",
+          "state_key": "capability.unlock_path_named",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
+        }
+      ]
+    }
+  ],
+  "outcome": "pass",
+  "finished_at": "2026-09-25T07:03:33.975Z"
+}

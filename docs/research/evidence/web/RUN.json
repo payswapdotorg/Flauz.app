@@ -1,0 +1,397 @@
+{
+  "v": 1,
+  "kind": "flauz.web-lab.run",
+  "run_id": "webrun_mugm6t6p",
+  "adapter": {
+    "provider_kind": "flauz-web-lab",
+    "family": "local",
+    "locality": "local",
+    "lab_surfaces": [
+      "web.shell",
+      "web.connection",
+      "web.sessions",
+      "web.composer",
+      "web.approvals"
+    ],
+    "transport": "mock-gateway (Node; the worker sandbox lacks the Rust toolchain — the Lead reruns with the real gateway via --gateway)",
+    "browser": "chromium 145.0.7632.6 (headless)"
+  },
+  "started_at": "2026-09-25T07:03:28.321Z",
+  "journeys": [
+    {
+      "journey_id": "J-01",
+      "journey_name": "Start any project (web foundation variant)",
+      "product_journey": "Workspace → New Project/Task → describe objective → start → live session with success state; palette fallback discoverable.",
+      "steps": [
+        {
+          "step_id": "s1",
+          "action": "open the served web app and sign in",
+          "frames": [
+            "frames/01-signed-in.png"
+          ],
+          "assertions": [
+            {
+              "id": "a1",
+              "kind": "state",
+              "state_key": "connection.state",
+              "observation": "connected",
+              "expected": "connected",
+              "verdict": "pass"
+            }
+          ]
+        },
+        {
+          "step_id": "s2",
+          "action": "see the workspace home with the primary Start-a-new-task entry",
+          "frames": [
+            "frames/02-workspace-empty.png"
+          ],
+          "assertions": [
+            {
+              "id": "a2",
+              "kind": "state",
+              "state_key": "workspace.empty_state",
+              "observation": "visible",
+              "expected": "visible",
+              "verdict": "pass"
+            },
+            {
+              "id": "a3",
+              "kind": "state",
+              "state_key": "workspace.primary_entry",
+              "observation": "visible",
+              "expected": "visible",
+              "verdict": "pass"
+            }
+          ]
+        },
+        {
+          "step_id": "s3",
+          "action": "open the command palette with Ctrl+K and find the new-task command",
+          "frames": [
+            "frames/03-palette.png"
+          ],
+          "assertions": [
+            {
+              "id": "a4",
+              "kind": "state",
+              "state_key": "palette.fallback",
+              "observation": "reachable",
+              "expected": "reachable",
+              "verdict": "pass"
+            }
+          ]
+        },
+        {
+          "step_id": "s4",
+          "action": "describe the objective in plain language and start the task",
+          "frames": [
+            "frames/04-session-live.png"
+          ],
+          "assertions": [
+            {
+              "id": "a5",
+              "kind": "state",
+              "state_key": "session.connected_state",
+              "observation": "connected",
+              "expected": "connected",
+              "verdict": "pass"
+            }
+          ]
+        },
+        {
+          "step_id": "s5",
+          "action": "see the success state with the next-step affordance",
+          "frames": [
+            "frames/05-session-success.png"
+          ],
+          "assertions": [
+            {
+              "id": "a6",
+              "kind": "state",
+              "state_key": "session.success_state",
+              "observation": "visible",
+              "expected": "visible",
+              "verdict": "pass"
+            },
+            {
+              "id": "a7",
+              "kind": "state",
+              "state_key": "session.next_step_affordance",
+              "observation": "present",
+              "expected": "present",
+              "verdict": "pass"
+            }
+          ]
+        }
+      ],
+      "outcome": "pass",
+      "finished_at": "2026-09-25T07:03:30.134Z"
+    },
+    {
+      "journey_id": "J-02",
+      "journey_name": "Understand what the agent knows (web foundation variant)",
+      "product_journey": "Task → Context indicator → Context Inspector → current objective and activity, honestly scoped.",
+      "steps": [
+        {
+          "step_id": "s1",
+          "action": "open the session's Context inspector from the task surface",
+          "frames": [
+            "frames/01-context-inspector.png"
+          ],
+          "assertions": [
+            {
+              "id": "a1",
+              "kind": "state",
+              "state_key": "context.inspector",
+              "observation": "visible",
+              "expected": "visible",
+              "verdict": "pass"
+            },
+            {
+              "id": "a2",
+              "kind": "state",
+              "state_key": "context.objective_present",
+              "observation": "present",
+              "expected": "present",
+              "verdict": "pass"
+            }
+          ]
+        },
+        {
+          "step_id": "s2",
+          "action": "the context surface names its honest foundation scope",
+          "frames": [
+            "frames/02-context-honest-scope.png"
+          ],
+          "assertions": [
+            {
+              "id": "a3",
+              "kind": "state",
+              "state_key": "context.honest_scope",
+              "observation": "named",
+              "expected": "named",
+              "verdict": "pass"
+            }
+          ]
+        }
+      ],
+      "outcome": "pass",
+      "finished_at": "2026-09-25T07:03:30.590Z"
+    },
+    {
+      "journey_id": "J-03",
+      "journey_name": "Recover/continue after disconnection (kill → named state → restart → recover)",
+      "product_journey": "Connection drops → named disconnection state → gateway restarts → reconnect → state recovers.",
+      "steps": [
+        {
+          "step_id": "s1",
+          "action": "return to the workspace with a live connection",
+          "frames": [
+            "frames/01-connected.png"
+          ],
+          "assertions": [
+            {
+              "id": "a1",
+              "kind": "state",
+              "state_key": "connection.state",
+              "observation": "connected",
+              "expected": "connected",
+              "verdict": "pass"
+            }
+          ]
+        },
+        {
+          "step_id": "s2",
+          "action": "kill the gateway process",
+          "frames": [
+            "frames/02-named-disconnection.png"
+          ],
+          "assertions": [
+            {
+              "id": "a2",
+              "kind": "state",
+              "state_key": "connection.state",
+              "observation": "reconnecting",
+              "expected": "reconnecting",
+              "verdict": "pass"
+            },
+            {
+              "id": "a3",
+              "kind": "state",
+              "state_key": "connection.reason_named",
+              "observation": "named",
+              "expected": "named",
+              "verdict": "pass"
+            }
+          ]
+        },
+        {
+          "step_id": "s3",
+          "action": "restart the gateway and watch the browser reconnect",
+          "frames": [
+            "frames/03-reconnected.png"
+          ],
+          "assertions": [
+            {
+              "id": "a4",
+              "kind": "state",
+              "state_key": "connection.state",
+              "observation": "connected",
+              "expected": "connected",
+              "verdict": "pass"
+            }
+          ]
+        },
+        {
+          "step_id": "s4",
+          "action": "verify the workspace state recovered (sessions list restored)",
+          "frames": [
+            "frames/04-recovered-workspace.png"
+          ],
+          "assertions": [
+            {
+              "id": "a5",
+              "kind": "state",
+              "state_key": "workspace.sessions_recovered",
+              "observation": "restored",
+              "expected": "restored",
+              "verdict": "pass"
+            }
+          ]
+        }
+      ],
+      "outcome": "pass",
+      "finished_at": "2026-09-25T07:03:32.922Z"
+    },
+    {
+      "journey_id": "J-04",
+      "journey_name": "Discover a capability gap (named error + unlock path, web foundation variant)",
+      "product_journey": "Agent needs a capability → task-visible named explanation → recovery action; never a silent no-op.",
+      "steps": [
+        {
+          "step_id": "s1",
+          "action": "start a task that needs a missing capability (gpu)",
+          "frames": [
+            "frames/01-named-capability-gap.png"
+          ],
+          "assertions": [
+            {
+              "id": "a1",
+              "kind": "state",
+              "state_key": "capability.error_names_cause",
+              "observation": "named",
+              "expected": "named",
+              "verdict": "pass"
+            },
+            {
+              "id": "a2",
+              "kind": "state",
+              "state_key": "capability.error_names_recovery",
+              "observation": "named",
+              "expected": "named",
+              "verdict": "pass"
+            },
+            {
+              "id": "a3",
+              "kind": "state",
+              "state_key": "capability.silent_noop",
+              "observation": "visible",
+              "expected": "visible",
+              "verdict": "pass"
+            }
+          ]
+        },
+        {
+          "step_id": "s2",
+          "action": "open the session's Environments surface for the unlock path",
+          "frames": [
+            "frames/02-environments-unlock-path.png"
+          ],
+          "assertions": [
+            {
+              "id": "a4",
+              "kind": "state",
+              "state_key": "capability.unlock_path_named",
+              "observation": "named",
+              "expected": "named",
+              "verdict": "pass"
+            }
+          ]
+        }
+      ],
+      "outcome": "pass",
+      "finished_at": "2026-09-25T07:03:33.975Z"
+    },
+    {
+      "journey_id": "J-05",
+      "journey_name": "Add another environment/site (honest foundation empty state)",
+      "product_journey": "Task → Environments → Add environment/site — the surface is discoverable with a truthful not-yet state (WEB-002 owns the flows).",
+      "steps": [
+        {
+          "step_id": "s1",
+          "action": "open the Environments drawer from the session surface",
+          "frames": [
+            "frames/01-environments-empty.png"
+          ],
+          "assertions": [
+            {
+              "id": "a1",
+              "kind": "state",
+              "state_key": "environments.surface",
+              "observation": "visible",
+              "expected": "visible",
+              "verdict": "pass"
+            },
+            {
+              "id": "a2",
+              "kind": "state",
+              "state_key": "environments.empty_state",
+              "observation": "honest",
+              "expected": "honest",
+              "verdict": "pass"
+            },
+            {
+              "id": "a3",
+              "kind": "state",
+              "state_key": "environments.next_step",
+              "observation": "named",
+              "expected": "named",
+              "verdict": "pass"
+            }
+          ]
+        },
+        {
+          "step_id": "s2",
+          "action": "verify the keyboard path (Ctrl+/ shortcuts sheet, Escape restore)",
+          "frames": [
+            "frames/02-keyboard-sheet.png"
+          ],
+          "assertions": [
+            {
+              "id": "a4",
+              "kind": "state",
+              "state_key": "keyboard.shortcuts_sheet",
+              "observation": "visible",
+              "expected": "visible",
+              "verdict": "pass"
+            },
+            {
+              "id": "a5",
+              "kind": "state",
+              "state_key": "keyboard.escape_closes",
+              "observation": "closed",
+              "expected": "closed",
+              "verdict": "pass"
+            }
+          ]
+        }
+      ],
+      "outcome": "pass",
+      "finished_at": "2026-09-25T07:03:34.182Z"
+    }
+  ],
+  "finished_at": "2026-09-25T07:03:34.182Z",
+  "outcome": "pass",
+  "failed_journeys": []
+}

@@ -1,0 +1,67 @@
+{
+  "journey_id": "J-05",
+  "journey_name": "Add another environment/site (honest foundation empty state)",
+  "product_journey": "Task → Environments → Add environment/site — the surface is discoverable with a truthful not-yet state (WEB-002 owns the flows).",
+  "steps": [
+    {
+      "step_id": "s1",
+      "action": "open the Environments drawer from the session surface",
+      "frames": [
+        "frames/01-environments-empty.png"
+      ],
+      "assertions": [
+        {
+          "id": "a1",
+          "kind": "state",
+          "state_key": "environments.surface",
+          "observation": "visible",
+          "expected": "visible",
+          "verdict": "pass"
+        },
+        {
+          "id": "a2",
+          "kind": "state",
+          "state_key": "environments.empty_state",
+          "observation": "honest",
+          "expected": "honest",
+          "verdict": "pass"
+        },
+        {
+          "id": "a3",
+          "kind": "state",
+          "state_key": "environments.next_step",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s2",
+      "action": "verify the keyboard path (Ctrl+/ shortcuts sheet, Escape restore)",
+      "frames": [
+        "frames/02-keyboard-sheet.png"
+      ],
+      "assertions": [
+        {
+          "id": "a4",
+          "kind": "state",
+          "state_key": "keyboard.shortcuts_sheet",
+          "observation": "visible",
+          "expected": "visible",
+          "verdict": "pass"
+        },
+        {
+          "id": "a5",
+          "kind": "state",
+          "state_key": "keyboard.escape_closes",
+          "observation": "closed",
+          "expected": "closed",
+          "verdict": "pass"
+        }
+      ]
+    }
+  ],
+  "outcome": "pass",
+  "finished_at": "2026-09-25T07:03:34.182Z"
+}
