@@ -1,0 +1,76 @@
+{
+  "journey_id": "J-06",
+  "journey_name": "Coordinate browser + terminal + sandbox (web variant: the honest topology)",
+  "product_journey": "Task → Environments → the runtime's execution context is visible, the produced artifacts are linked to the task, and the multi-environment gap is named.",
+  "steps": [
+    {
+      "step_id": "s1",
+      "action": "start a task that produces a reported artifact",
+      "frames": [
+        "frames/01-task-started.png"
+      ],
+      "assertions": [
+        {
+          "id": "a1",
+          "kind": "state",
+          "state_key": "task.turn_ran",
+          "observation": "ran",
+          "expected": "ran",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s2",
+      "action": "open the Environments surface: the execution context and the honest topology",
+      "frames": [
+        "frames/02-environments-topology.png"
+      ],
+      "assertions": [
+        {
+          "id": "a2",
+          "kind": "state",
+          "state_key": "environments.execution_context",
+          "observation": "visible",
+          "expected": "visible",
+          "verdict": "pass"
+        },
+        {
+          "id": "a3",
+          "kind": "state",
+          "state_key": "environments.topology_gap_named",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s3",
+      "action": "open the Artifacts surface: the produced artifact is linked to the task",
+      "frames": [
+        "frames/03-artifacts-linked.png"
+      ],
+      "assertions": [
+        {
+          "id": "a4",
+          "kind": "state",
+          "state_key": "artifacts.file_change_reported",
+          "observation": "reported",
+          "expected": "reported",
+          "verdict": "pass"
+        },
+        {
+          "id": "a5",
+          "kind": "state",
+          "state_key": "artifacts.agent_message_reported",
+          "observation": "reported",
+          "expected": "reported",
+          "verdict": "pass"
+        }
+      ]
+    }
+  ],
+  "outcome": "pass",
+  "finished_at": "2026-09-25T11:00:41.971Z"
+}

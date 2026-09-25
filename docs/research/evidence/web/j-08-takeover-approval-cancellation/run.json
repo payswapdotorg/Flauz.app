@@ -1,0 +1,107 @@
+{
+  "journey_id": "J-08",
+  "journey_name": "Human takeover / handoff + cancellation (named records, never auto-resolved)",
+  "product_journey": "Task → the agent requests a decision → a NAMED approval record arrives (aria-live) → the user decides → the decision stays a named record; a watched turn cancelled by the user says so.",
+  "steps": [
+    {
+      "step_id": "s1",
+      "action": "start a task that needs a decision mid-turn (install)",
+      "frames": [
+        "frames/01-approval-arrives.png"
+      ],
+      "assertions": [
+        {
+          "id": "a1",
+          "kind": "state",
+          "state_key": "approval.record_arrives",
+          "observation": "arrived",
+          "expected": "arrived",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s2",
+      "action": "the record never auto-resolves (§6 conflict-honesty)",
+      "frames": [],
+      "assertions": [
+        {
+          "id": "a2",
+          "kind": "state",
+          "state_key": "approval.never_auto_resolved",
+          "observation": "open",
+          "expected": "open",
+          "verdict": "pass"
+        },
+        {
+          "id": "a3",
+          "kind": "state",
+          "state_key": "approval.announced",
+          "observation": "polite",
+          "expected": "polite",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s3",
+      "action": "the user decides; the decision stays a named record",
+      "frames": [
+        "frames/02-decision-record.png"
+      ],
+      "assertions": [
+        {
+          "id": "a4",
+          "kind": "state",
+          "state_key": "approval.decision_recorded",
+          "observation": "named_record",
+          "expected": "named_record",
+          "verdict": "pass"
+        },
+        {
+          "id": "a5",
+          "kind": "state",
+          "state_key": "approval.outcome_attributed",
+          "observation": "approved",
+          "expected": "approved",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s4",
+      "action": "cancel a watched turn: the cancelled state is named (propagation honesty)",
+      "frames": [
+        "frames/03-cancelled-named.png"
+      ],
+      "assertions": [
+        {
+          "id": "a6",
+          "kind": "state",
+          "state_key": "turn.stop_control",
+          "observation": "visible",
+          "expected": "visible",
+          "verdict": "pass"
+        },
+        {
+          "id": "a7",
+          "kind": "state",
+          "state_key": "turn.cancelled_named",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
+        },
+        {
+          "id": "a8",
+          "kind": "state",
+          "state_key": "turn.cancelled_names_reason",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
+        }
+      ]
+    }
+  ],
+  "outcome": "pass",
+  "finished_at": "2026-09-25T11:00:45.556Z"
+}

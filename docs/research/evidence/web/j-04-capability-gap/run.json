@@ -1,6 +1,6 @@
 {
   "journey_id": "J-04",
-  "journey_name": "Discover a capability gap (named error + unlock path, web foundation variant)",
+  "journey_name": "Discover a capability gap (named error + unlock path, web capability variant)",
   "product_journey": "Agent needs a capability → task-visible named explanation → recovery action; never a silent no-op.",
   "steps": [
     {
@@ -50,10 +50,35 @@
           "observation": "named",
           "expected": "named",
           "verdict": "pass"
+        },
+        {
+          "id": "a5",
+          "kind": "state",
+          "state_key": "capability.gap_protocol_derived",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s3",
+      "action": "open the Skills surface: the locked-skill unlock path",
+      "frames": [
+        "frames/03-skills-unlock-path.png"
+      ],
+      "assertions": [
+        {
+          "id": "a6",
+          "kind": "state",
+          "state_key": "capability.skill_unlock_path_named",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
         }
       ]
     }
   ],
   "outcome": "pass",
-  "finished_at": "2026-09-25T07:03:33.975Z"
+  "finished_at": "2026-09-25T11:00:39.842Z"
 }

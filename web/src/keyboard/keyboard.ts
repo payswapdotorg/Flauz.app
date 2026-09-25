@@ -2,17 +2,24 @@
 // trap + restoration (the F1 017 focus law), and roving list focus.
 
 import { useEffect, type RefObject } from "react";
+import type { StringKey } from "../strings/en";
 
 export interface KeyboardShortcut {
   id: string;
   chord: string;
-  descriptionKey: "shortcuts.palette" | "shortcuts.shortcuts" | "shortcuts.escape";
+  descriptionKey: StringKey;
 }
 
 export const KEYBOARD_SHORTCUTS: KeyboardShortcut[] = [
   { id: "palette", chord: "Ctrl+K", descriptionKey: "shortcuts.palette" },
   { id: "shortcuts", chord: "Ctrl+/", descriptionKey: "shortcuts.shortcuts" },
   { id: "escape", chord: "Esc", descriptionKey: "shortcuts.escape" },
+  { id: "rail.context", chord: "Ctrl+Alt+Shift+1", descriptionKey: "shortcuts.rail.context" },
+  { id: "rail.environments", chord: "Ctrl+Alt+Shift+2", descriptionKey: "shortcuts.rail.environments" },
+  { id: "rail.model", chord: "Ctrl+Alt+Shift+3", descriptionKey: "shortcuts.rail.model" },
+  { id: "rail.skills", chord: "Ctrl+Alt+Shift+4", descriptionKey: "shortcuts.rail.skills" },
+  { id: "rail.collaborators", chord: "Ctrl+Alt+Shift+5", descriptionKey: "shortcuts.rail.collaborators" },
+  { id: "rail.artifacts", chord: "Ctrl+Alt+Shift+6", descriptionKey: "shortcuts.rail.artifacts" },
 ];
 
 /** Installs a global keydown handler (skips when the user is typing in

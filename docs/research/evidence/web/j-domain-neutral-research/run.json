@@ -1,0 +1,86 @@
+{
+  "journey_id": "DOMAIN-NEUTRAL",
+  "journey_name": "The domain-neutral research scenario (a non-code workflow across the capability surfaces)",
+  "product_journey": "A garden-planning research task (no code): pick the model at compose time, reference a skill, read the produced items, see the collaboration gap named — the shared acceptance law.",
+  "steps": [
+    {
+      "step_id": "s1",
+      "action": "compose a non-code research objective and pick the model at compose time",
+      "frames": [
+        "frames/01-compose-with-model.png",
+        "frames/02-research-task.png"
+      ],
+      "assertions": [
+        {
+          "id": "a1",
+          "kind": "state",
+          "state_key": "neutral.compose_model_choice",
+          "observation": "chosen",
+          "expected": "chosen",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s2",
+      "action": "reference a skill for the research (the protocol's own input variant)",
+      "frames": [
+        "frames/03-skill-referenced.png"
+      ],
+      "assertions": [
+        {
+          "id": "a2",
+          "kind": "state",
+          "state_key": "neutral.skill_referenced",
+          "observation": "referenced",
+          "expected": "referenced",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s3",
+      "action": "the runtime reports the research items (non-code artifacts)",
+      "frames": [
+        "frames/04-items.png"
+      ],
+      "assertions": [
+        {
+          "id": "a3",
+          "kind": "state",
+          "state_key": "neutral.items_reported",
+          "observation": "reported",
+          "expected": "reported",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s4",
+      "action": "the model and collaboration surfaces stay honest on the research task",
+      "frames": [
+        "frames/05-honest-surfaces.png"
+      ],
+      "assertions": [
+        {
+          "id": "a4",
+          "kind": "state",
+          "state_key": "neutral.model_reported",
+          "observation": "reported",
+          "expected": "reported",
+          "verdict": "pass"
+        },
+        {
+          "id": "a5",
+          "kind": "state",
+          "state_key": "neutral.collab_gap_named",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
+        }
+      ]
+    }
+  ],
+  "outcome": "pass",
+  "finished_at": "2026-09-25T11:00:59.097Z"
+}

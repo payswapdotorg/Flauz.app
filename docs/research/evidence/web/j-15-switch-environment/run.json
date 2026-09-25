@@ -1,0 +1,75 @@
+{
+  "journey_id": "J-15",
+  "journey_name": "Switch execution environment without losing work (web variant: cwd + the named gap)",
+  "product_journey": "Task → Environment → the compatible-environment switch is a named gap with its recovery path; the working-directory control rides the protocol and is reflected.",
+  "steps": [
+    {
+      "step_id": "s1",
+      "action": "open the Environments surface: the remote-switch gap is named",
+      "frames": [
+        "frames/01-environment-gap.png"
+      ],
+      "assertions": [
+        {
+          "id": "a1",
+          "kind": "state",
+          "state_key": "environment.switch_gap_named",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s2",
+      "action": "set the working directory for the next turn (the protocol's own control)",
+      "frames": [
+        "frames/02-cwd-applied.png"
+      ],
+      "assertions": [
+        {
+          "id": "a2",
+          "kind": "state",
+          "state_key": "environment.cwd_applied",
+          "observation": "applied",
+          "expected": "applied",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s3",
+      "action": "send the next turn — the same task continues",
+      "frames": [],
+      "assertions": [
+        {
+          "id": "a3",
+          "kind": "state",
+          "state_key": "environment.same_task_continues",
+          "observation": "same_task",
+          "expected": "same_task",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s4",
+      "action": "the runtime reports the new working directory (recovery/reload path)",
+      "frames": [
+        "frames/03-cwd-reflected.png"
+      ],
+      "assertions": [
+        {
+          "id": "a4",
+          "kind": "state",
+          "state_key": "environment.cwd_reflected",
+          "observation": "reflected",
+          "expected": "reflected",
+          "verdict": "pass"
+        }
+      ]
+    }
+  ],
+  "outcome": "pass",
+  "finished_at": "2026-09-25T11:00:52.787Z"
+}

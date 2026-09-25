@@ -20,11 +20,17 @@ import {
   nextBackoffDelay,
   type ConnectionState,
 } from "./connection";
+import {
+  buildSkillReferenceInput,
+  buildTurnStart,
+  type ModelChoice,
+} from "./turnParams";
+import { extractSessionItems, type SessionItem } from "./items";
 import { createTranslator, type Translator } from "../strings/en";
 
 export interface TimelineEntry {
   id: string;
-  kind: "turn_started" | "turn_completed" | "message" | "command" | "notice";
+  kind: "turn_started" | "turn_completed" | "turn_cancelled" | "message" | "command" | "notice";
   text: string;
   at: number;
 }
@@ -35,6 +41,8 @@ export interface ApprovalCard {
 }
 
 export type SessionsLoadState = "unloaded" | "loading" | "ready" | "error";
+
+export type ItemsLoadState = "unloaded" | "loading" | "ready" | "error";
 
 export interface AppState {
   connection: ConnectionState;
@@ -47,9 +55,24 @@ export interface AppState {
   currentSession: ThreadSummary | null;
   currentSessionState: "unloaded" | "loading" | "ready" | "error";
   currentSessionError: string | null;
+  /** The session's reported model/effort (thread/resume result). */
+  currentSessionModel: string | null;
+  currentSessionEffort: string | null;
+  /** The items the app-server reports for the session's turns. */
+  sessionItems: SessionItem[];
+  sessionItemsState: ItemsLoadState;
+  sessionItemsError: string | null;
+  /** True while a turn runs on the current session (named, live). */
+  turnRunning: boolean;
+  /** The model/provider choice riding the next turn/start. */
+  modelChoice: ModelChoice;
+  /** The working directory riding the next turn/start. */
+  turnCwd: string | null;
   timeline: TimelineEntry[];
   approvals: ApprovalCard[];
   liveMessage: string | null;
+  /** A transient, named product notice (role=status strip). */
+  notice: string | null;
 }
 
 type AppAction =
@@ -65,7 +88,15 @@ type AppAction =
   | { type: "timeline_entry"; entry: TimelineEntry }
   | { type: "approval_new"; request: PendingServerRequest }
   | { type: "approval_resolved"; id: number | string; outcome: ApprovalCard["resolved"] }
-  | { type: "live_message"; message: string | null };
+  | { type: "live_message"; message: string | null }
+  | { type: "model_choice_set"; model: string | null; effort: string | null }
+  | { type: "turn_cwd_set"; cwd: string | null }
+  | { type: "session_model_read"; model: string | null; effort: string | null }
+  | { type: "session_items_load_started" }
+  | { type: "session_items_loaded"; items: SessionItem[] }
+  | { type: "session_items_error"; error: string }
+  | { type: "turn_state"; running: boolean }
+  | { type: "notice_set"; message: string | null };
 
 const MAX_TIMELINE_ENTRIES = 200;
 const MAX_APPROVALS = 16;
@@ -94,6 +125,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
         currentSession: null,
         currentSessionState: "loading",
         currentSessionError: null,
+        currentSessionModel: null,
+        currentSessionEffort: null,
+        sessionItems: [],
+        sessionItemsState: "unloaded",
+        sessionItemsError: null,
+        turnRunning: false,
         timeline: [],
         liveMessage: null,
       };
@@ -104,6 +141,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
         currentSession: null,
         currentSessionState: "unloaded",
         currentSessionError: null,
+        currentSessionModel: null,
+        currentSessionEffort: null,
+        sessionItems: [],
+        sessionItemsState: "unloaded",
+        sessionItemsError: null,
+        turnRunning: false,
         timeline: [],
         liveMessage: null,
       };
@@ -116,6 +159,20 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
     case "session_error":
       return { ...state, currentSessionState: "error", currentSessionError: action.error };
+    case "model_choice_set":
+      return { ...state, modelChoice: { model: action.model, effort: action.effort } };
+    case "turn_cwd_set":
+      return { ...state, turnCwd: action.cwd };
+    case "session_model_read":
+      return { ...state, currentSessionModel: action.model, currentSessionEffort: action.effort };
+    case "session_items_load_started":
+      return { ...state, sessionItemsState: "loading", sessionItemsError: null };
+    case "session_items_loaded":
+      return { ...state, sessionItemsState: "ready", sessionItems: action.items, sessionItemsError: null };
+    case "session_items_error":
+      return { ...state, sessionItemsState: "error", sessionItemsError: action.error };
+    case "turn_state":
+      return { ...state, turnRunning: action.running };
     case "timeline_entry":
       return {
         ...state,
@@ -144,6 +201,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
     case "live_message":
       return { ...state, liveMessage: action.message };
+    case "notice_set":
+      return { ...state, notice: action.message };
     default:
       return state;
   }
@@ -161,9 +220,18 @@ function initialAppState(): AppState {
     currentSession: null,
     currentSessionState: "unloaded",
     currentSessionError: null,
+    currentSessionModel: null,
+    currentSessionEffort: null,
+    sessionItems: [],
+    sessionItemsState: "unloaded",
+    sessionItemsError: null,
+    turnRunning: false,
+    modelChoice: { model: null, effort: null },
+    turnCwd: null,
     timeline: [],
     approvals: [],
     liveMessage: null,
+    notice: null,
   };
 }
 
@@ -186,6 +254,13 @@ export interface FlauzApp {
   signInWithChatGpt: () => Promise<void>;
   signInWithApiKey: (apiKey: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** The capability surfaces (WEB-002). */
+  setModelChoice: (model: string | null, effort: string | null) => void;
+  setTurnCwd: (cwd: string | null) => void;
+  refreshSessionItems: () => void;
+  interruptTurn: () => void;
+  referenceSkill: (name: string, path: string, note: string | null) => Promise<void>;
+  setNotice: (message: string | null) => void;
 }
 
 const AppContext = createContext<FlauzApp | null>(null);
@@ -215,6 +290,14 @@ export function FlauzAppProvider({ children }: { children: ReactNode }) {
   const sessionRef = useRef<GatewaySession | null>(null);
   const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const attemptRef = useRef(0);
+  /** The notification listener closes over this ref (never stale state). */
+  const currentThreadRef = useRef<string | null>(null);
+  currentThreadRef.current = state.currentSessionId;
+  /** True once the artifacts surface has been loaded at least once. */
+  const itemsSeenRef = useRef(false);
+  itemsSeenRef.current = state.sessionItemsState !== "unloaded";
+  /** The latest items refresher (called through the ref — never stale). */
+  const refreshSessionItemsRef = useRef<() => void>(() => {});
   const t = useMemo(() => createTranslator("en"), []);
 
   const clearRetryTimer = () => {
@@ -345,7 +428,11 @@ export function FlauzAppProvider({ children }: { children: ReactNode }) {
         // the account state.
         void resyncAfterRecovery();
       } else if (event.method === "turn/started") {
-        const turn = (event.params as { turn?: { id?: string } }).turn;
+        const turn = (event.params as { turn?: { id?: string }; threadId?: string }).turn;
+        const threadId = (event.params as { threadId?: string }).threadId ?? null;
+        if (threadId !== null && threadId === currentThreadRef.current) {
+          dispatch({ type: "turn_state", running: true });
+        }
         dispatch({
           type: "timeline_entry",
           entry: {
@@ -356,16 +443,28 @@ export function FlauzAppProvider({ children }: { children: ReactNode }) {
           },
         });
       } else if (event.method === "turn/completed") {
-        const params = event.params as { turn?: { id?: string; status?: string } };
+        const params = event.params as { turn?: { id?: string; status?: string; error?: { message?: string } }; threadId?: string };
+        const threadId = params.threadId ?? null;
+        if (threadId !== null && threadId === currentThreadRef.current) {
+          dispatch({ type: "turn_state", running: false });
+          if (itemsSeenRef.current) {
+            void refreshSessionItemsRef.current();
+          }
+        }
+        const status = params.turn?.status ?? "unknown";
+        const isCancelled = status === "cancelled" || status === "interrupted" || status === "aborted";
         dispatch({
           type: "timeline_entry",
           entry: {
             id: `completed-${params.turn?.id ?? Math.random().toString(36).slice(2)}`,
-            kind: params.turn?.status === "completed" ? "turn_completed" : "notice",
-            text:
-              params.turn?.status === "completed"
+            kind: isCancelled ? "turn_cancelled" : status === "completed" ? "turn_completed" : "notice",
+            text: isCancelled
+              ? t("session.turn.cancelled", {
+                  reason: params.turn?.error?.message ? `${status} (${params.turn.error.message})` : status,
+                })
+              : status === "completed"
                 ? t("session.turn.completed")
-                : t("session.turn.failed", { reason: params.turn?.status ?? "unknown" }),
+                : t("session.turn.failed", { reason: status }),
             at: Date.now(),
           },
         });
@@ -419,6 +518,8 @@ export function FlauzAppProvider({ children }: { children: ReactNode }) {
       })
       .then((result) => {
         dispatch({ type: "session_loaded", thread: result.thread });
+        // The session's reported model/effort (the protocol's own truth).
+        dispatch({ type: "session_model_read", model: result.model ?? null, effort: result.reasoningEffort ?? null });
       })
       .catch((error: unknown) => {
         dispatch({
@@ -437,6 +538,22 @@ export function FlauzAppProvider({ children }: { children: ReactNode }) {
     loadSession(threadId);
   };
 
+  // A session opened while the gateway was still attaching fails with a
+  // named "connecting" error; once the bridge (re)attaches, the load
+  // retries — a reload or a reconnect must never leave the task surface
+  // silently stuck (the recovery law).
+  useEffect(() => {
+    if (
+      state.connection.supervisorState === "connected" &&
+      state.currentSessionId !== null &&
+      (state.currentSessionState === "error" || state.currentSessionState === "unloaded") &&
+      sessionRef.current !== null
+    ) {
+      loadSession(state.currentSessionId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.connection.supervisorState, state.currentSessionId, state.currentSessionState]);
+
   const startTask = async (objective: string) => {
     const session = sessionRef.current;
     if (session === null) {
@@ -446,10 +563,10 @@ export function FlauzAppProvider({ children }: { children: ReactNode }) {
     // Reset the session surface BEFORE the turn so streamed events land
     // in a clean timeline, then start the task, navigate, and load.
     dispatch({ type: "session_opened", sessionId: threadId });
-    await session.request("turn/start", {
-      threadId,
-      input: [{ type: "text", text: objective }],
-    });
+    await session.request(
+      "turn/start",
+      buildTurnStart(threadId, [{ type: "text", text: objective }], state.modelChoice, state.turnCwd),
+    );
     window.location.hash = `#/session/${encodeURIComponent(threadId)}`;
     loadSession(threadId);
     void refreshSessions();
@@ -461,10 +578,10 @@ export function FlauzAppProvider({ children }: { children: ReactNode }) {
     if (session === null || threadId === null) {
       return;
     }
-    await session.request("turn/start", {
-      threadId,
-      input: [{ type: "text", text: message }],
-    });
+    await session.request(
+      "turn/start",
+      buildTurnStart(threadId, [{ type: "text", text: message }], state.modelChoice, state.turnCwd),
+    );
     dispatch({
       type: "timeline_entry",
       entry: { id: `user-${Date.now()}`, kind: "notice", text: message, at: Date.now() },
@@ -529,6 +646,95 @@ export function FlauzAppProvider({ children }: { children: ReactNode }) {
     void resyncAfterRecovery();
   };
 
+  const refreshSessionItems = () => {
+    const session = sessionRef.current;
+    const threadId = currentThreadRef.current;
+    if (session === null || threadId === null) {
+      return;
+    }
+    dispatch({ type: "session_items_load_started" });
+    void session
+      .request("thread/turns/list", { threadId, limit: 20, sortDirection: "desc" })
+      .then((result) => {
+        dispatch({ type: "session_items_loaded", items: extractSessionItems(result.data) });
+      })
+      .catch((error: unknown) => {
+        dispatch({
+          type: "session_items_error",
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
+  };
+  refreshSessionItemsRef.current = refreshSessionItems;
+
+  const interruptTurn = () => {
+    const session = sessionRef.current;
+    const threadId = currentThreadRef.current;
+    if (session === null || threadId === null) {
+      return;
+    }
+    // The named stop: the user-visible state stays "stopping" until the
+    // protocol's turn/completed lands with the cancelled status (the
+    // cancellation-propagation honesty law — never a silent no-op).
+    dispatch({
+      type: "timeline_entry",
+      entry: { id: `interrupt-${Date.now()}`, kind: "notice", text: t("session.interrupting"), at: Date.now() },
+    });
+    void session
+      .request("turn/interrupt", { threadId })
+      .catch((error: unknown) => {
+        dispatch({
+          type: "timeline_entry",
+          entry: {
+            id: `interrupt-error-${Date.now()}`,
+            kind: "notice",
+            text: t("session.interrupt.failed", {
+              reason: error instanceof Error ? error.message : String(error),
+            }),
+            at: Date.now(),
+          },
+        });
+      });
+  };
+
+  const referenceSkill = async (name: string, path: string, note: string | null) => {
+    const session = sessionRef.current;
+    const threadId = currentThreadRef.current;
+    if (session === null || threadId === null) {
+      return;
+    }
+    await session.request(
+      "turn/start",
+      buildTurnStart(
+        threadId,
+        buildSkillReferenceInput(name, path, note),
+        state.modelChoice,
+        state.turnCwd,
+      ),
+    );
+    dispatch({
+      type: "timeline_entry",
+      entry: {
+        id: `skill-${Date.now()}`,
+        kind: "notice",
+        text: t("skills.reference.sent", { name }),
+        at: Date.now(),
+      },
+    });
+  };
+
+  const setModelChoice = (model: string | null, effort: string | null) => {
+    dispatch({ type: "model_choice_set", model, effort });
+  };
+
+  const setTurnCwd = (cwd: string | null) => {
+    dispatch({ type: "turn_cwd_set", cwd });
+  };
+
+  const setNotice = (message: string | null) => {
+    dispatch({ type: "notice_set", message });
+  };
+
   const app: FlauzApp = {
     state,
     t,
@@ -557,6 +763,12 @@ export function FlauzAppProvider({ children }: { children: ReactNode }) {
     signInWithChatGpt,
     signInWithApiKey,
     signOut,
+    setModelChoice,
+    setTurnCwd,
+    refreshSessionItems,
+    interruptTurn,
+    referenceSkill,
+    setNotice,
   };
 
   return <AppContext.Provider value={app}>{children}</AppContext.Provider>;

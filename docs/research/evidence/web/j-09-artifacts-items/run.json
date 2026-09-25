@@ -1,0 +1,89 @@
+{
+  "journey_id": "J-09",
+  "journey_name": "Understand what happened (web variant: the artifacts/items record)",
+  "product_journey": "Task → Artifacts → the items the runtime reports, labeled by their own type — agent messages, commands, file changes — with the documents/sheets gap named.",
+  "steps": [
+    {
+      "step_id": "s1",
+      "action": "open the Artifacts surface from the task rail",
+      "frames": [
+        "frames/01-artifacts-items.png"
+      ],
+      "assertions": [
+        {
+          "id": "a1",
+          "kind": "state",
+          "state_key": "artifacts.surface",
+          "observation": "visible",
+          "expected": "visible",
+          "verdict": "pass"
+        },
+        {
+          "id": "a2",
+          "kind": "state",
+          "state_key": "artifacts.items_listed",
+          "observation": "listed",
+          "expected": "listed",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s2",
+      "action": "the items are labeled by their own protocol type",
+      "frames": [],
+      "assertions": [
+        {
+          "id": "a3",
+          "kind": "state",
+          "state_key": "artifacts.kind_labels",
+          "observation": "labeled",
+          "expected": "labeled",
+          "verdict": "pass"
+        },
+        {
+          "id": "a4",
+          "kind": "state",
+          "state_key": "artifacts.types_carried",
+          "observation": "carried",
+          "expected": "carried",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s3",
+      "action": "refreshing re-reads the honest record",
+      "frames": [],
+      "assertions": [
+        {
+          "id": "a5",
+          "kind": "state",
+          "state_key": "artifacts.refresh",
+          "observation": "works",
+          "expected": "works",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s4",
+      "action": "the documents/sheets gap is named with its recovery path",
+      "frames": [
+        "frames/02-artifacts-gap.png"
+      ],
+      "assertions": [
+        {
+          "id": "a6",
+          "kind": "state",
+          "state_key": "artifacts.gap_named",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
+        }
+      ]
+    }
+  ],
+  "outcome": "pass",
+  "finished_at": "2026-09-25T11:00:54.542Z"
+}

@@ -1,13 +1,13 @@
 {
   "journey_id": "J-05",
-  "journey_name": "Add another environment/site (honest foundation empty state)",
-  "product_journey": "Task → Environments → Add environment/site — the surface is discoverable with a truthful not-yet state (WEB-002 owns the flows).",
+  "journey_name": "Add another environment/site (named gap + the protocol's own control)",
+  "product_journey": "Task → Environments → the surface is discoverable, the named gap is honest, and the per-turn working-directory control rides the protocol.",
   "steps": [
     {
       "step_id": "s1",
       "action": "open the Environments drawer from the session surface",
       "frames": [
-        "frames/01-environments-empty.png"
+        "frames/01-environments-surface.png"
       ],
       "assertions": [
         {
@@ -21,17 +21,25 @@
         {
           "id": "a2",
           "kind": "state",
-          "state_key": "environments.empty_state",
-          "observation": "honest",
-          "expected": "honest",
+          "state_key": "environments.reported_cwd",
+          "observation": "reported",
+          "expected": "reported",
           "verdict": "pass"
         },
         {
           "id": "a3",
           "kind": "state",
-          "state_key": "environments.next_step",
-          "observation": "named",
-          "expected": "named",
+          "state_key": "environments.named_gap",
+          "observation": "honest",
+          "expected": "honest",
+          "verdict": "pass"
+        },
+        {
+          "id": "a4",
+          "kind": "state",
+          "state_key": "environments.cwd_control",
+          "observation": "present",
+          "expected": "present",
           "verdict": "pass"
         }
       ]
@@ -44,7 +52,7 @@
       ],
       "assertions": [
         {
-          "id": "a4",
+          "id": "a5",
           "kind": "state",
           "state_key": "keyboard.shortcuts_sheet",
           "observation": "visible",
@@ -52,7 +60,7 @@
           "verdict": "pass"
         },
         {
-          "id": "a5",
+          "id": "a6",
           "kind": "state",
           "state_key": "keyboard.escape_closes",
           "observation": "closed",
@@ -63,5 +71,5 @@
     }
   ],
   "outcome": "pass",
-  "finished_at": "2026-09-25T07:03:34.182Z"
+  "finished_at": "2026-09-25T11:00:40.226Z"
 }

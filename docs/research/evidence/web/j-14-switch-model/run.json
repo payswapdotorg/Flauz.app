@@ -1,0 +1,93 @@
+{
+  "journey_id": "J-14",
+  "journey_name": "Switch model without losing work (the choice rides the turn's own fields)",
+  "product_journey": "Task → Model → choose another model/effort → the next turn rides it → the same task continues with the reported model updated.",
+  "steps": [
+    {
+      "step_id": "s1",
+      "action": "open the Model surface: the current model is reported",
+      "frames": [
+        "frames/01-model-current.png"
+      ],
+      "assertions": [
+        {
+          "id": "a1",
+          "kind": "state",
+          "state_key": "model.current_reported",
+          "observation": "reported",
+          "expected": "reported",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s2",
+      "action": "choose the model and effort for the next turn",
+      "frames": [
+        "frames/02-model-chosen.png"
+      ],
+      "assertions": [
+        {
+          "id": "a2",
+          "kind": "state",
+          "state_key": "model.choice_applied",
+          "observation": "applied",
+          "expected": "applied",
+          "verdict": "pass"
+        },
+        {
+          "id": "a3",
+          "kind": "state",
+          "state_key": "model.effort_applied",
+          "observation": "applied",
+          "expected": "applied",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s3",
+      "action": "send the next turn — the same task continues",
+      "frames": [
+        "frames/03-turn-rode-choice.png"
+      ],
+      "assertions": [
+        {
+          "id": "a4",
+          "kind": "state",
+          "state_key": "model.same_task_continues",
+          "observation": "same_task",
+          "expected": "same_task",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s4",
+      "action": "the runtime now reports the chosen model (recovery/reload path)",
+      "frames": [
+        "frames/04-model-switched-same-task.png"
+      ],
+      "assertions": [
+        {
+          "id": "a5",
+          "kind": "state",
+          "state_key": "model.switch_reflected",
+          "observation": "reflected",
+          "expected": "reflected",
+          "verdict": "pass"
+        },
+        {
+          "id": "a6",
+          "kind": "state",
+          "state_key": "model.task_continuity",
+          "observation": "same_task",
+          "expected": "same_task",
+          "verdict": "pass"
+        }
+      ]
+    }
+  ],
+  "outcome": "pass",
+  "finished_at": "2026-09-25T11:00:49.308Z"
+}
