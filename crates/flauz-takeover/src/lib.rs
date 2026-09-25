@@ -111,11 +111,9 @@ pub mod refs;
 pub mod takeover;
 pub mod time;
 
-pub use crate::approval::{
-    ApprovalDecision, ApprovalGate, DecisionEffect, DENIAL_FAILURE_PREFIX,
-};
+pub use crate::approval::{ApprovalDecision, ApprovalGate, DENIAL_FAILURE_PREFIX, DecisionEffect};
 pub use crate::cancel::{
-    CancelledWhat, CancellationRecord, DependentResolution, DependentTerminal, GraphNode,
+    CancellationRecord, CancelledWhat, DependentResolution, DependentTerminal, GraphNode,
     GraphShape, Propagation, propagate_cancellation,
 };
 pub use crate::events::{

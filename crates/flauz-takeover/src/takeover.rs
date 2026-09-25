@@ -30,7 +30,7 @@ use crate::TakeoverError;
 use crate::TakeoverVersion;
 use crate::refs::{ActorRef, AgentRef, ArtifactRef, NodeName, TaskRef};
 use crate::time::Timestamp;
-use crate::{ensure_explanation, ensure_list_bound, ensure_name, MAX_PRESERVED_ARTIFACTS};
+use crate::{MAX_PRESERVED_ARTIFACTS, ensure_explanation, ensure_list_bound, ensure_name};
 
 /// What the human took over: one node of the task's graph, or the
 /// run as a whole.
@@ -159,7 +159,11 @@ impl TakeoverRecord {
             ));
         }
         ensure_explanation("takeover reason", reason)?;
-        ensure_list_bound("preserved artifacts", preserved.len(), MAX_PRESERVED_ARTIFACTS)?;
+        ensure_list_bound(
+            "preserved artifacts",
+            preserved.len(),
+            MAX_PRESERVED_ARTIFACTS,
+        )?;
         let mut seen = std::collections::BTreeSet::new();
         for artifact in &preserved {
             artifact.artifact.validate()?;
@@ -459,10 +463,8 @@ mod tests {
         assert!(serialized.contains("\"human\":{"));
         assert!(serialized.contains("\"from_agent\":\"agent_"));
         assert!(
-            serde_json::from_str::<TakeoverRecord>(
-                &serialized.replace("\"taken_at\"", "\"at\"")
-            )
-            .is_err(),
+            serde_json::from_str::<TakeoverRecord>(&serialized.replace("\"taken_at\"", "\"at\""))
+                .is_err(),
             "unknown fields are rejected"
         );
         let run_scope_serialized = ok(serde_json::to_string(&TakeoverScope::Run));

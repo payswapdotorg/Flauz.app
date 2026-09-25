@@ -43,9 +43,7 @@ use crate::TakeoverError;
 use crate::TakeoverVersion;
 use crate::refs::{ActorRef, ArtifactRef, NodeName, TaskRef};
 use crate::time::Timestamp;
-use crate::{
-    ensure_explanation, ensure_list_bound, MAX_DEPENDENCIES, MAX_GRAPH_NODES,
-};
+use crate::{MAX_DEPENDENCIES, MAX_GRAPH_NODES, ensure_explanation, ensure_list_bound};
 
 /// What was cancelled: one node, or the run as a whole.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -342,12 +340,12 @@ impl Propagation {
     /// the honesty check is the reason).
     #[must_use]
     pub fn every_dependent_terminal(&self) -> bool {
-        self.dependents.iter().all(|dependent| {
-            match &dependent.terminal {
+        self.dependents
+            .iter()
+            .all(|dependent| match &dependent.terminal {
                 DependentTerminal::Cancelled { reason }
                 | DependentTerminal::BlockedResolved { reason } => !reason.is_empty(),
-            }
-        })
+            })
     }
 }
 
@@ -388,9 +386,7 @@ pub fn propagate_cancellation(
                 .iter()
                 .position(|entry| &entry.node == node)
                 .ok_or_else(|| {
-                    TakeoverError::invalid(format!(
-                        "the cancelled node {node} is not in the graph"
-                    ))
+                    TakeoverError::invalid(format!("the cancelled node {node} is not in the graph"))
                 })?;
             // The blast radius: the transitive closure over depends_on
             // (a node is in the radius when it depends on the cancelled
@@ -410,9 +406,7 @@ pub fn propagate_cancellation(
                                 .nodes
                                 .iter()
                                 .position(|other| &other.node == dependency)
-                                .is_some_and(|dependency_index| {
-                                    radius.contains(&dependency_index)
-                                })
+                                .is_some_and(|dependency_index| radius.contains(&dependency_index))
                     });
                     if touches_radius {
                         radius.insert(index);
@@ -430,11 +424,11 @@ pub fn propagate_cancellation(
                     .depends_on
                     .iter()
                     .find(|dependency| {
-                        dependency == node
+                        *dependency == node
                             || graph
                                 .nodes
                                 .iter()
-                                .position(|other| &other.node == dependency)
+                                .position(|other| &other.node == *dependency)
                                 .is_some_and(|dependency_index| radius.contains(&dependency_index))
                     })
                     .cloned()
@@ -452,7 +446,12 @@ pub fn propagate_cancellation(
                         entry.artifacts.clone(),
                     )
                 } else {
-                    (DependentTerminal::Cancelled { reason: reason.clone() }, Vec::new())
+                    (
+                        DependentTerminal::Cancelled {
+                            reason: reason.clone(),
+                        },
+                        Vec::new(),
+                    )
                 };
                 dependents.push(DependentResolution {
                     v: TakeoverVersion,
@@ -547,8 +546,8 @@ mod tests {
 
     #[test]
     fn the_graph_shape_is_validated_as_data() {
-        assert!(research_graph().validate().is_ok());
-        assert!(finished_dependent_graph().validate().is_ok());
+        assert!(ok(research_graph()).validate().is_ok());
+        assert!(ok(finished_dependent_graph()).validate().is_ok());
         // Unknown dependency.
         let bad = GraphShape::new(vec![GraphNode {
             node: ok(NodeName::parse("report")),
@@ -594,7 +593,10 @@ mod tests {
         assert_eq!(propagation.dependents.len(), 2);
         assert_eq!(propagation.dependents[0].node.as_str(), "analysis");
         assert_eq!(
-            propagation.dependents[0].waited_on.as_ref().map(NodeName::as_str),
+            propagation.dependents[0]
+                .waited_on
+                .as_ref()
+                .map(NodeName::as_str),
             Some("research")
         );
         assert!(matches!(
@@ -603,7 +605,10 @@ mod tests {
         ));
         assert_eq!(propagation.dependents[1].node.as_str(), "report");
         assert_eq!(
-            propagation.dependents[1].waited_on.as_ref().map(NodeName::as_str),
+            propagation.dependents[1]
+                .waited_on
+                .as_ref()
+                .map(NodeName::as_str),
             Some("analysis")
         );
         assert!(matches!(

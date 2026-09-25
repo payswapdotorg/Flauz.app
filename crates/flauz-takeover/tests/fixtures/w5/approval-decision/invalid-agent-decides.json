@@ -15,7 +15,7 @@
     "kind": "agent",
     "id": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPG6"
   },
-  "decided_at": "2026-09-23T15:12:00Z",
+  "decided_at": "2026-09-23T15:04:00Z",
   "effect": {
     "kind": "node_proceeds",
     "node": "environment-setup"

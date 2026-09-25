@@ -111,9 +111,7 @@ mod tests {
         let reloaded: Timestamp = ok(serde_json::from_str(&serialized));
         assert_eq!(reloaded, moment);
         assert!(Timestamp::parse("2026-09-23 15:04:00").is_err());
-        assert!(
-            ok(Timestamp::parse("2026-09-23T15:05:00Z")).is_after(&moment)
-        );
+        assert!(ok(Timestamp::parse("2026-09-23T15:05:00Z")).is_after(&moment));
         assert!(moment.is_before(&ok(Timestamp::parse("2026-09-23T15:05:00Z"))));
     }
 }

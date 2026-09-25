@@ -28,7 +28,7 @@
 
 use crate::TakeoverError;
 use crate::approval::ApprovalGate;
-use crate::cancel::{CancelledWhat, CancellationRecord, GraphNode, GraphShape};
+use crate::cancel::{CancellationRecord, CancelledWhat, GraphNode, GraphShape};
 use crate::refs::{ActorRef, AgentRef, ArtifactRef, NodeName, TaskRef};
 use crate::takeover::{PreservedArtifact, TakeoverRecord, TakeoverScope};
 use crate::time::Timestamp;
@@ -137,7 +137,6 @@ pub fn fake_node(slot: usize) -> NodeName {
 /// The canonical approval gate (the work order's exact example): the
 /// environment-setup step blocks with the named need — "approve the
 /// environment switch" — with the consequence of each side stated.
-#[must_use]
 pub fn env_switch_gate() -> Result<ApprovalGate, TakeoverError> {
     ApprovalGate::new(
         fake_task(),
@@ -157,9 +156,7 @@ pub fn env_switch_gate() -> Result<ApprovalGate, TakeoverError> {
 pub fn ana_takes_over_research() -> TakeoverRecord {
     ok(TakeoverRecord::new(
         fake_task(),
-        TakeoverScope::Node {
-            node: fake_node(0),
-        },
+        TakeoverScope::Node { node: fake_node(0) },
         fake_actors().dev_agent,
         fake_actors().ana,
         now(),
@@ -174,7 +171,6 @@ pub fn ana_takes_over_research() -> TakeoverRecord {
 /// The canonical propagation graph: the research → analysis → report
 /// chain, research running with its notes already attributed, nothing
 /// finished.
-#[must_use]
 pub fn research_graph() -> Result<GraphShape, TakeoverError> {
     GraphShape::new(vec![
         GraphNode {
@@ -202,7 +198,6 @@ pub fn research_graph() -> Result<GraphShape, TakeoverError> {
 /// finished (their waits had cleared through research's kept notes;
 /// their own work is attributed) before the research step was
 /// cancelled — the blocked-resolved family.
-#[must_use]
 pub fn finished_dependent_graph() -> Result<GraphShape, TakeoverError> {
     GraphShape::new(vec![
         GraphNode {
@@ -240,28 +235,24 @@ fn node_cancellation(slot: usize, reason: &str) -> Result<CancellationRecord, Ta
 
 /// The leaf cancellation of the propagation matrix: the report step
 /// (nothing waits on it).
-#[must_use]
 pub fn cancel_leaf_node() -> Result<CancellationRecord, TakeoverError> {
     node_cancellation(2, "the report is not needed anymore")
 }
 
 /// The mid-node cancellation of the propagation matrix: the analysis
 /// step (the report waits on it).
-#[must_use]
 pub fn cancel_mid_run_node() -> Result<CancellationRecord, TakeoverError> {
     node_cancellation(1, "the analysis is going the wrong way")
 }
 
 /// The root cancellation of the propagation matrix: the research
 /// step (analysis and report wait on it, transitively).
-#[must_use]
 pub fn cancel_root_node() -> Result<CancellationRecord, TakeoverError> {
     node_cancellation(0, "the research direction changed")
 }
 
 /// The run cancellation of the propagation matrix: the whole run
 /// (every non-finished node is named).
-#[must_use]
 pub fn cancel_run() -> Result<CancellationRecord, TakeoverError> {
     CancellationRecord::new(
         fake_task(),
@@ -293,14 +284,18 @@ pub fn propagation_matrix() -> Vec<PropagationCase> {
     let graphs = [research_graph(), finished_dependent_graph()];
     let mut cases = Vec::new();
     for graph in graphs {
+        let graph = ok(graph);
         for record in [
             cancel_leaf_node(),
             cancel_mid_run_node(),
             cancel_root_node(),
             cancel_run(),
         ] {
-            let (record, graph) = (ok(record), ok(graph));
-            cases.push(PropagationCase { record, graph });
+            let record = ok(record);
+            cases.push(PropagationCase {
+                record,
+                graph: graph.clone(),
+            });
         }
     }
     cases

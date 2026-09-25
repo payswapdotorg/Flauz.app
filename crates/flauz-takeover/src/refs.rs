@@ -29,7 +29,7 @@ use std::fmt;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::{TakeoverError, MAX_ACTOR_ID_BYTES, ensure_name, ensure_non_empty, ensure_str_bound};
+use crate::{MAX_ACTOR_ID_BYTES, TakeoverError, ensure_name, ensure_non_empty, ensure_str_bound};
 
 /// Length of the ULID part of a canonical identifier (kernel §2).
 const ULID_LEN: usize = 26;
@@ -305,6 +305,7 @@ impl ActorRef {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::MAX_NODE_NAME_BYTES;
 
     fn ok<T, E: std::fmt::Display>(result: Result<T, E>) -> T {
         match result {
@@ -345,7 +346,10 @@ mod tests {
         ];
         for value in invalid {
             assert!(TaskRef::parse(value).is_err(), "{value:?} must be rejected");
-            assert!(AgentRef::parse(value).is_err(), "{value:?} must be rejected");
+            assert!(
+                AgentRef::parse(value).is_err(),
+                "{value:?} must be rejected"
+            );
             assert!(
                 ArtifactRef::parse(value).is_err(),
                 "{value:?} must be rejected"
@@ -361,7 +365,10 @@ mod tests {
         assert!(NodeName::parse("environment-setup").is_ok());
         assert!(NodeName::parse("").is_err(), "empty names are rejected");
         let long = "x".repeat(MAX_NODE_NAME_BYTES + 1);
-        assert!(NodeName::parse(&long).is_err(), "over-long names are rejected");
+        assert!(
+            NodeName::parse(&long).is_err(),
+            "over-long names are rejected"
+        );
         let bounded = "x".repeat(MAX_NODE_NAME_BYTES);
         assert!(NodeName::parse(&bounded).is_ok());
     }

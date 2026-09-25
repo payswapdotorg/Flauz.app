@@ -261,13 +261,13 @@ impl DependentCancelledPayload {
 
 #[cfg(test)]
 mod tests {
-use super::*;
-use crate::cancel::DependentTerminal;
-use crate::fakes::{
-    ana_takes_over_research, cancel_mid_run_node, env_switch_gate, fake_task, now, research_graph,
-};
-use crate::propagate_cancellation;
-use crate::refs::ActorRef;
+    use super::*;
+    use crate::cancel::DependentTerminal;
+    use crate::fakes::{
+        ana_takes_over_research, cancel_mid_run_node, env_switch_gate, fake_task, now,
+        research_graph,
+    };
+    use crate::propagate_cancellation;
     use crate::refs::ActorRef;
 
     fn ok<T, E: std::fmt::Display>(result: Result<T, E>) -> T {
@@ -299,14 +299,22 @@ use crate::refs::ActorRef;
             let (entity, verb) = ok(text.split_once('.').ok_or("missing the dot"));
             assert!(!entity.is_empty());
             assert!(!verb.contains('.'));
-            assert!(entity.chars().next().is_some_and(|c| c.is_ascii_lowercase()));
+            assert!(
+                entity
+                    .chars()
+                    .next()
+                    .is_some_and(|c| c.is_ascii_lowercase())
+            );
             assert!(verb.chars().next().is_some_and(|c| c.is_ascii_lowercase()));
-            assert!(entity
-                .chars()
-                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_'));
-            assert!(verb
-                .chars()
-                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_'));
+            assert!(
+                entity
+                    .chars()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
+            );
+            assert!(
+                verb.chars()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
+            );
         }
     }
 
@@ -369,10 +377,7 @@ use crate::refs::ActorRef;
         let serialized = ok(serde_json::to_string(&payload));
         let reloaded: CancelledPayload = ok(serde_json::from_str(&serialized));
         assert_eq!(reloaded, payload);
-        let propagation = ok(propagate_cancellation(
-            &cancellation,
-            &ok(research_graph()),
-        ));
+        let propagation = ok(propagate_cancellation(&cancellation, &ok(research_graph())));
         let dependent = propagation.dependents[0].clone();
         let payload = ok(DependentCancelledPayload::new(fake_task(), dependent));
         let serialized = ok(serde_json::to_string(&payload));

@@ -25,9 +25,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::TakeoverError;
 use crate::TakeoverVersion;
+use crate::ensure_explanation;
 use crate::refs::{ActorRef, AgentRef, NodeName, TaskRef};
 use crate::time::Timestamp;
-use crate::ensure_explanation;
 
 /// The prefix of an honest denial's failure reason (the named
 /// consequence the node fails with — the UI and the conformance tests
@@ -309,7 +309,10 @@ impl ApprovalDecision {
         Ok(())
     }
 
-    const fn effect(&self) -> &DecisionEffect {
+    /// The attributed effect of this decision — the honest consequence
+    /// the node suffers (proceeds, or fails with the named denial reason).
+    /// Public for the conformance suite's denial-consequence assertions.
+    pub const fn effect(&self) -> &DecisionEffect {
         match self {
             Self::Approved { effect, .. } | Self::Denied { effect, .. } => effect,
         }

@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 use flauz_takeover::approval::{ApprovalDecision, ApprovalGate, DecisionEffect};
 use flauz_takeover::cancel::{
-    CancelledWhat, CancellationRecord, DependentTerminal, GraphShape, Propagation,
+    CancellationRecord, CancelledWhat, DependentTerminal, GraphShape, Propagation,
     propagate_cancellation,
 };
 use flauz_takeover::events::{
@@ -206,11 +206,13 @@ fn invalid_fixtures_fail_strict_parses_or_validation() {
 /// artifacts of the projection, never hand-staged shapes.
 #[test]
 fn propagation_fixtures_are_the_projection_output_over_their_inputs() {
-    let graph: GraphShape =
-        test_ok(serde_json::from_str(&read_fixture("graph-shape/typical.json")));
+    let graph: GraphShape = test_ok(serde_json::from_str(&read_fixture(
+        "graph-shape/typical.json",
+    )));
 
-    let leaf: CancellationRecord =
-        test_ok(serde_json::from_str(&read_fixture("cancellation-record/node.json")));
+    let leaf: CancellationRecord = test_ok(serde_json::from_str(&read_fixture(
+        "cancellation-record/node.json",
+    )));
     // The node fixture is the MID cancellation (analysis); the leaf
     // and root fixtures pin their own records from the same family.
     let leaf_record = test_ok(CancellationRecord::new(
@@ -231,8 +233,9 @@ fn propagation_fixtures_are_the_projection_output_over_their_inputs() {
         leaf.actor.clone(),
         leaf.cancelled_at,
     ));
-    let run_record: CancellationRecord =
-        test_ok(serde_json::from_str(&read_fixture("cancellation-record/run.json")));
+    let run_record: CancellationRecord = test_ok(serde_json::from_str(&read_fixture(
+        "cancellation-record/run.json",
+    )));
 
     for (relative, record) in [
         ("propagation/leaf.json", &leaf_record),
@@ -278,7 +281,11 @@ fn the_takeover_round_trip_law() {
         "reviewed the sandbox credentials and approved the switch",
         HandbackOutcome::AgentResumes,
     ));
-    assert_eq!(handback.human(), &takeover.human, "the handback is attributed");
+    assert_eq!(
+        handback.human(),
+        &takeover.human,
+        "the handback is attributed"
+    );
     assert_eq!(handback.stream_task(), takeover.stream_task());
 
     // 4. The projection law: the agent resumes with EXACTLY the
@@ -291,11 +298,13 @@ fn the_takeover_round_trip_law() {
     // 5. The committed fixtures are this round-trip: the handback
     //    fixture EQUALS the handback constructed over the takeover
     //    fixture.
-    let takeover_fixture: TakeoverRecord =
-        test_ok(serde_json::from_str(&read_fixture("takeover-record/typical.json")));
+    let takeover_fixture: TakeoverRecord = test_ok(serde_json::from_str(&read_fixture(
+        "takeover-record/typical.json",
+    )));
     assert_eq!(takeover_fixture, takeover);
-    let handback_fixture: HandbackRecord =
-        test_ok(serde_json::from_str(&read_fixture("handback-record/typical.json")));
+    let handback_fixture: HandbackRecord = test_ok(serde_json::from_str(&read_fixture(
+        "handback-record/typical.json",
+    )));
     assert_eq!(handback_fixture, handback);
 }
 
@@ -332,11 +341,15 @@ fn the_approval_space_is_honest() {
 
     // Deny: the node fails honestly with the denial as its reason —
     // never a silent proceed.
-    let denied = test_ok(ApprovalDecision::deny(gate.clone(), actors.ana.clone(), now()));
+    let denied = test_ok(ApprovalDecision::deny(
+        gate.clone(),
+        actors.ana.clone(),
+        now(),
+    ));
     match denied.effect() {
         DecisionEffect::NodeFailed { reason, .. } => {
             assert_eq!(
-                *reason,
+                reason.as_str(),
                 "Declined by the human: this step stops with your decision recorded as the reason"
             );
         }
@@ -356,15 +369,20 @@ fn the_approval_space_is_honest() {
     );
 
     // The committed decision fixtures are these two decisions.
-    let approved_fixture: ApprovalDecision =
-        test_ok(serde_json::from_str(&read_fixture("approval-decision/approved.json")));
+    let approved_fixture: ApprovalDecision = test_ok(serde_json::from_str(&read_fixture(
+        "approval-decision/approved.json",
+    )));
     assert_eq!(approved_fixture, approved);
-    let denied_fixture: ApprovalDecision =
-        test_ok(serde_json::from_str(&read_fixture("approval-decision/denied.json")));
+    let denied_fixture: ApprovalDecision = test_ok(serde_json::from_str(&read_fixture(
+        "approval-decision/denied.json",
+    )));
     assert_eq!(denied_fixture, denied);
 
     // The payloads ride the same vocabulary.
-    assert_eq!(EventKind::ApprovalRequested.as_str(), "task.approval_requested");
+    assert_eq!(
+        EventKind::ApprovalRequested.as_str(),
+        "task.approval_requested"
+    );
     assert_eq!(EventKind::ApprovalDecided.as_str(), "task.approval_decided");
     test_ok(ApprovalRequestedPayload::new(test_ok(env_switch_gate())));
     test_ok(ApprovalDecidedPayload::new(approved));
@@ -388,12 +406,18 @@ fn the_propagation_matrix_names_every_dependent() {
         );
         // Dependents are named in the graph's node order, never twice.
         let mut order: Vec<&str> = graph.nodes.iter().map(|node| node.node.as_str()).collect();
-        let mut named: Vec<&str> = propagation
+        let named: Vec<&str> = propagation
             .dependents
             .iter()
             .map(|dependent| dependent.node.as_str())
             .collect();
-        assert_eq!(named.len(), named.iter().collect::<std::collections::BTreeSet<_>>().len());
+        assert_eq!(
+            named.len(),
+            named
+                .iter()
+                .collect::<std::collections::BTreeSet<_>>()
+                .len()
+        );
         order.retain(|candidate| named.contains(candidate));
         assert_eq!(named, order, "dependents follow the graph's node order");
         // Every dependent's terminal state carries the reason.
@@ -487,7 +511,7 @@ fn no_credential_material_in_serialized_state() {
     haystack.push_str(&test_ok(serde_json::to_string(&decision)));
     let dependent_payload = test_ok(DependentCancelledPayload::new(
         fake_task(),
-        test_ok(flauz_takeover::cancel::DependentResolution {
+        flauz_takeover::cancel::DependentResolution {
             v: TakeoverVersion,
             node: test_ok(flauz_takeover::NodeName::parse("analysis")),
             waited_on: Some(test_ok(flauz_takeover::NodeName::parse("research"))),
@@ -495,7 +519,7 @@ fn no_credential_material_in_serialized_state() {
                 reason: "the research direction changed".to_owned(),
             },
             kept: Vec::new(),
-        }),
+        },
     ));
     haystack.push_str(&test_ok(serde_json::to_string(&dependent_payload)));
     test_ok(CancelledPayload::new(test_ok(cancel_run())));
