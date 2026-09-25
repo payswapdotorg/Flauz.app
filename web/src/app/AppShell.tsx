@@ -1,6 +1,7 @@
-// The app shell (WEB-001): layout, navigation, theming, keyboard map,
-// routing (hash router), overlays, the always-truthful connection
-// banner, and the sticky footer.
+// The app shell (WEB-001 foundation, WEB-002 capability wiring): layout,
+// navigation, theming, keyboard map, routing (hash router), overlays,
+// the always-truthful connection banner, the notice strip, and the
+// capability-surface palette fallback (never the sole mechanism).
 
 import { useCallback, useEffect, useState } from "react";
 import { useFlauzApp } from "../state/app";
@@ -13,6 +14,7 @@ import { SessionView } from "./SessionView";
 import { SignInView } from "./SignInView";
 import { CommandPalette, type PaletteCommand } from "./CommandPalette";
 import { ShortcutsOverlay } from "./ShortcutsOverlay";
+import type { StringKey } from "../strings/en";
 
 type Route = { name: "home" } | { name: "newtask" } | { name: "session"; threadId: string };
 
@@ -28,8 +30,20 @@ function parseHash(hash: string): Route {
   return { name: "home" };
 }
 
+/** The capability panels in rail order (the Ctrl+Alt+Shift+1..6 chords). */
+const PANEL_CHORD_ORDER = [
+  "context",
+  "environments",
+  "model",
+  "skills",
+  "collaborators",
+  "artifacts",
+] as const;
+
+type ChordPanel = (typeof PANEL_CHORD_ORDER)[number];
+
 export function AppShell() {
-  const { state, t } = useFlauzApp();
+  const { state, t, setNotice } = useFlauzApp();
   const { theme, toggleTheme } = useTheme();
   const [route, setRoute] = useState<Route>(() =>
     typeof window === "undefined" ? { name: "home" } : parseHash(window.location.hash),
@@ -62,22 +76,50 @@ export function AppShell() {
     }
   }, [route, state.currentSessionId, openSession]);
 
+  /** Opens a capability panel on the current task (the palette fallback). */
+  const openCapabilityPanel = useCallback(
+    (panel: ChordPanel, surfaceLabelKey: StringKey) => {
+      if (state.currentSessionId !== null) {
+        window.location.hash = `#/session/${encodeURIComponent(state.currentSessionId)}`;
+        // The panel event must land AFTER the session view mounts (the
+        // hash change is asynchronous); a short delay guarantees the
+        // order from any route.
+        window.setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("flauz:open-panel", { detail: { panel } }));
+        }, 60);
+      } else {
+        // No task is open: the surface is task-scoped, so the palette
+        // names where to go instead of silently doing nothing.
+        setNotice(t("palette.noSession", { surface: t(surfaceLabelKey).toLowerCase() }));
+      }
+    },
+    [state.currentSessionId, setNotice, t],
+  );
+
   const onGlobalKey = useCallback(
     (event: KeyboardEvent) => {
       const isPalette = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k";
       const isShortcuts = (event.ctrlKey || event.metaKey) && event.key === "/";
+      const isPanelChord =
+        event.ctrlKey && event.altKey && event.shiftKey && /^[1-6]$/.test(event.key);
       if (isPalette) {
         event.preventDefault();
         setPaletteOpen((open) => !open);
       } else if (isShortcuts) {
         event.preventDefault();
         setShortcutsOpen((open) => !open);
+      } else if (isPanelChord && state.currentSessionId !== null) {
+        event.preventDefault();
+        const panel = PANEL_CHORD_ORDER[Number(event.key) - 1];
+        if (panel !== undefined) {
+          window.dispatchEvent(new CustomEvent("flauz:open-panel", { detail: { panel } }));
+        }
       } else if (event.key === "Escape") {
         setPaletteOpen(false);
         setShortcutsOpen(false);
       }
     },
-    [],
+    [state.currentSessionId],
   );
   useGlobalKeys(onGlobalKey);
 
@@ -90,6 +132,31 @@ export function AppShell() {
 
   const paletteCommands: PaletteCommand[] = [
     { id: "newtask", labelKey: "palette.command.newtask", run: navigateToNewTask },
+    {
+      id: "environments",
+      labelKey: "palette.command.environments",
+      run: () => openCapabilityPanel("environments", "rail.environments"),
+    },
+    {
+      id: "model",
+      labelKey: "palette.command.model",
+      run: () => openCapabilityPanel("model", "rail.model"),
+    },
+    {
+      id: "skills",
+      labelKey: "palette.command.skills",
+      run: () => openCapabilityPanel("skills", "rail.skills"),
+    },
+    {
+      id: "collaborators",
+      labelKey: "palette.command.collaborators",
+      run: () => openCapabilityPanel("collaborators", "rail.collaborators"),
+    },
+    {
+      id: "artifacts",
+      labelKey: "palette.command.artifacts",
+      run: () => openCapabilityPanel("artifacts", "rail.artifacts"),
+    },
   ];
 
   return (
@@ -118,6 +185,15 @@ export function AppShell() {
         </button>
       </header>
       <ConnectionBanner />
+      {state.notice === null ? null : (
+        <div className="flauz-notice" role="status" data-testid="notice-strip">
+          <span>{state.notice}</span>
+          <span className="flauz-header-spacer" />
+          <button type="button" className="flauz-button" onClick={() => setNotice(null)}>
+            {t("notice.dismiss")}
+          </button>
+        </div>
+      )}
       <div className="flauz-main">
         <nav className="flauz-nav" aria-label={t("workspace.title")}>
           <button

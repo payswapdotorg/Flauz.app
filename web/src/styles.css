@@ -522,12 +522,287 @@ textarea.flauz-input {
   flex: none;
 }
 
+/* ————————————————————————— WEB-002 capability surfaces ————————————————————————— */
+
+.flauz-session-split {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+}
+
+.flauz-session-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.flauz-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.flauz-rail-button {
+  min-height: 40px;
+  font-size: 13.5px;
+}
+
+.flauz-rail-button[aria-pressed="true"] {
+  background: var(--flauz-accent-soft);
+  border-color: var(--flauz-accent);
+}
+
+.flauz-button-interrupt {
+  border-color: var(--flauz-danger);
+  color: var(--flauz-danger);
+}
+
+.flauz-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px;
+  font-size: 13px;
+  background: var(--flauz-accent-soft);
+  color: var(--flauz-accent);
+  border-bottom: 1px solid var(--flauz-border);
+}
+
+.flauz-panel-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.flauz-panel-title:focus-visible {
+  outline: 2px solid var(--flauz-focus);
+  outline-offset: 2px;
+}
+
+.flauz-panel-description {
+  color: var(--flauz-text-muted);
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.flauz-panel-section-title {
+  font-size: 13px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--flauz-text-muted);
+  margin: 14px 0 6px;
+}
+
+.flauz-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.flauz-kv {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+}
+
+.flauz-kv-key {
+  font-size: 12px;
+  color: var(--flauz-text-muted);
+}
+
+.flauz-kv-value {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+
+.flauz-kv-list {
+  margin: 0;
+}
+
+.flauz-kv-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--flauz-border);
+  font-size: 13.5px;
+}
+
+.flauz-kv-row dt {
+  color: var(--flauz-text-muted);
+}
+
+.flauz-kv-row dd {
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.flauz-gap {
+  border: 1px dashed var(--flauz-warning);
+  background: var(--flauz-warning-soft);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 16px;
+}
+
+.flauz-gap-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+  color: var(--flauz-warning);
+  margin: 0 0 8px;
+  font-size: 13.5px;
+}
+
+.flauz-gap-badge {
+  font-size: 10.5px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 1px solid var(--flauz-warning);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+.flauz-gap-list {
+  margin: 0;
+}
+
+.flauz-gap-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 5px 0;
+}
+
+.flauz-gap-row + .flauz-gap-row {
+  border-top: 1px solid var(--flauz-border);
+}
+
+.flauz-gap-row dt {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--flauz-text-muted);
+}
+
+.flauz-gap-row dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.flauz-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--flauz-border);
+  border-radius: 8px;
+}
+
+.flauz-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--flauz-border);
+  font-size: 13px;
+}
+
+.flauz-item:last-child {
+  border-bottom: 0;
+}
+
+.flauz-item-kind {
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--flauz-text-muted);
+}
+
+.flauz-item-kind[data-item-type="agentMessage"] {
+  color: var(--flauz-accent);
+}
+
+.flauz-item-kind[data-item-type="fileChange"] {
+  color: var(--flauz-warning);
+}
+
+.flauz-item-kind[data-item-type="commandExecution"] {
+  color: var(--flauz-ok);
+}
+
+.flauz-item-body {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.flauz-approvals {
+  margin: 0;
+}
+
+.flauz-approval-decided {
+  border-color: var(--flauz-border);
+  background: var(--flauz-surface-muted);
+}
+
+.flauz-approval-decided .flauz-approval-title {
+  color: var(--flauz-text-muted);
+  font-weight: 600;
+  font-size: 13px;
+  margin: 0;
+}
+
+.flauz-newtask-model {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.flauz-newtask-model-editor {
+  border: 1px solid var(--flauz-border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 8px;
+  background: var(--flauz-surface-muted);
+}
+
 @media (max-width: 860px) {
+  /* The workspace navigation stays reachable on mobile as a horizontal
+     strip (major entries are never hidden behind keyboard-only paths). */
   .flauz-nav {
-    display: none;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: 0;
+    border-bottom: 1px solid var(--flauz-border);
+    padding: 8px 12px;
+  }
+  .flauz-main {
+    flex-direction: column;
+  }
+  .flauz-session-split {
+    flex-direction: column;
   }
   .flauz-side {
-    display: none;
+    width: 100%;
+    border-left: 0;
+    border-top: 1px solid var(--flauz-border);
+    max-height: 60vh;
   }
   .flauz-content {
     padding: 16px 14px 32px;

@@ -1,0 +1,281 @@
+{
+  "journey_id": "A11Y",
+  "journey_name": "The accessibility/responsive pass (keyboard-only drives, aria assertions, mobile + desktop captures)",
+  "product_journey": "Every capability surface is keyboard-complete (tab/enter/escape with focus restoration), aria-truthful, and responsive from mobile to desktop width.",
+  "steps": [
+    {
+      "step_id": "s1",
+      "action": "the palette names the task-scoped surfaces when no task is open",
+      "frames": [
+        "frames/01-palette-no-session.png"
+      ],
+      "assertions": [
+        {
+          "id": "a1",
+          "kind": "state",
+          "state_key": "a11y.palette_no_session_named",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s2",
+      "action": "keyboard-only: tab to the task rail and open every capability surface with Enter",
+      "frames": [
+        "frames/02-keyboard-rail.png"
+      ],
+      "assertions": [
+        {
+          "id": "a2",
+          "kind": "state",
+          "state_key": "a11y.rail_group_label",
+          "observation": "labeled",
+          "expected": "labeled",
+          "verdict": "pass"
+        },
+        {
+          "id": "a3-context-button",
+          "kind": "state",
+          "state_key": "a11y.context-button.opens_by_keyboard",
+          "observation": "opens",
+          "expected": "opens",
+          "verdict": "pass"
+        },
+        {
+          "id": "a4-context-button",
+          "kind": "state",
+          "state_key": "a11y.context-button.escape_closes",
+          "observation": "closed",
+          "expected": "closed",
+          "verdict": "pass"
+        },
+        {
+          "id": "a5-context-button",
+          "kind": "state",
+          "state_key": "a11y.context-button.focus_restored",
+          "observation": "restored",
+          "expected": "restored",
+          "verdict": "pass"
+        },
+        {
+          "id": "a3-environments-button",
+          "kind": "state",
+          "state_key": "a11y.environments-button.opens_by_keyboard",
+          "observation": "opens",
+          "expected": "opens",
+          "verdict": "pass"
+        },
+        {
+          "id": "a4-environments-button",
+          "kind": "state",
+          "state_key": "a11y.environments-button.escape_closes",
+          "observation": "closed",
+          "expected": "closed",
+          "verdict": "pass"
+        },
+        {
+          "id": "a5-environments-button",
+          "kind": "state",
+          "state_key": "a11y.environments-button.focus_restored",
+          "observation": "restored",
+          "expected": "restored",
+          "verdict": "pass"
+        },
+        {
+          "id": "a3-model-button",
+          "kind": "state",
+          "state_key": "a11y.model-button.opens_by_keyboard",
+          "observation": "opens",
+          "expected": "opens",
+          "verdict": "pass"
+        },
+        {
+          "id": "a4-model-button",
+          "kind": "state",
+          "state_key": "a11y.model-button.escape_closes",
+          "observation": "closed",
+          "expected": "closed",
+          "verdict": "pass"
+        },
+        {
+          "id": "a5-model-button",
+          "kind": "state",
+          "state_key": "a11y.model-button.focus_restored",
+          "observation": "restored",
+          "expected": "restored",
+          "verdict": "pass"
+        },
+        {
+          "id": "a3-skills-button",
+          "kind": "state",
+          "state_key": "a11y.skills-button.opens_by_keyboard",
+          "observation": "opens",
+          "expected": "opens",
+          "verdict": "pass"
+        },
+        {
+          "id": "a4-skills-button",
+          "kind": "state",
+          "state_key": "a11y.skills-button.escape_closes",
+          "observation": "closed",
+          "expected": "closed",
+          "verdict": "pass"
+        },
+        {
+          "id": "a5-skills-button",
+          "kind": "state",
+          "state_key": "a11y.skills-button.focus_restored",
+          "observation": "restored",
+          "expected": "restored",
+          "verdict": "pass"
+        },
+        {
+          "id": "a3-collaborators-button",
+          "kind": "state",
+          "state_key": "a11y.collaborators-button.opens_by_keyboard",
+          "observation": "opens",
+          "expected": "opens",
+          "verdict": "pass"
+        },
+        {
+          "id": "a4-collaborators-button",
+          "kind": "state",
+          "state_key": "a11y.collaborators-button.escape_closes",
+          "observation": "closed",
+          "expected": "closed",
+          "verdict": "pass"
+        },
+        {
+          "id": "a5-collaborators-button",
+          "kind": "state",
+          "state_key": "a11y.collaborators-button.focus_restored",
+          "observation": "restored",
+          "expected": "restored",
+          "verdict": "pass"
+        },
+        {
+          "id": "a3-artifacts-button",
+          "kind": "state",
+          "state_key": "a11y.artifacts-button.opens_by_keyboard",
+          "observation": "opens",
+          "expected": "opens",
+          "verdict": "pass"
+        },
+        {
+          "id": "a4-artifacts-button",
+          "kind": "state",
+          "state_key": "a11y.artifacts-button.escape_closes",
+          "observation": "closed",
+          "expected": "closed",
+          "verdict": "pass"
+        },
+        {
+          "id": "a5-artifacts-button",
+          "kind": "state",
+          "state_key": "a11y.artifacts-button.focus_restored",
+          "observation": "restored",
+          "expected": "restored",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s3",
+      "action": "aria truth: gap cards are notes, rail buttons carry pressed state",
+      "frames": [],
+      "assertions": [
+        {
+          "id": "a6",
+          "kind": "state",
+          "state_key": "a11y.gap_role_note",
+          "observation": "note",
+          "expected": "note",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s4",
+      "action": "responsive: the surfaces render at mobile width (375px)",
+      "frames": [
+        "frames/03-mobile-environments-drawer.png",
+        "frames/03-mobile-model-panel.png",
+        "frames/03-mobile-skills-panel.png",
+        "frames/03-mobile-collaborators-panel.png",
+        "frames/03-mobile-artifacts-panel.png",
+        "frames/04-mobile-shell.png"
+      ],
+      "assertions": [
+        {
+          "id": "a7-environments-drawer",
+          "kind": "state",
+          "state_key": "a11y.environments-drawer.mobile_width",
+          "observation": "full_width",
+          "expected": "full_width",
+          "verdict": "pass"
+        },
+        {
+          "id": "a7-model-panel",
+          "kind": "state",
+          "state_key": "a11y.model-panel.mobile_width",
+          "observation": "full_width",
+          "expected": "full_width",
+          "verdict": "pass"
+        },
+        {
+          "id": "a7-skills-panel",
+          "kind": "state",
+          "state_key": "a11y.skills-panel.mobile_width",
+          "observation": "full_width",
+          "expected": "full_width",
+          "verdict": "pass"
+        },
+        {
+          "id": "a7-collaborators-panel",
+          "kind": "state",
+          "state_key": "a11y.collaborators-panel.mobile_width",
+          "observation": "full_width",
+          "expected": "full_width",
+          "verdict": "pass"
+        },
+        {
+          "id": "a7-artifacts-panel",
+          "kind": "state",
+          "state_key": "a11y.artifacts-panel.mobile_width",
+          "observation": "full_width",
+          "expected": "full_width",
+          "verdict": "pass"
+        },
+        {
+          "id": "a8",
+          "kind": "state",
+          "state_key": "a11y.mobile_nav_visible",
+          "observation": "visible",
+          "expected": "visible",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s5",
+      "action": "responsive: back at desktop width (1280px)",
+      "frames": [
+        "frames/05-desktop-model-panel.png"
+      ],
+      "assertions": [
+        {
+          "id": "a9",
+          "kind": "state",
+          "state_key": "a11y.desktop_side_panel",
+          "observation": "side_panel",
+          "expected": "side_panel",
+          "verdict": "pass"
+        }
+      ]
+    }
+  ],
+  "outcome": "pass",
+  "finished_at": "2026-09-25T11:01:08.995Z"
+}

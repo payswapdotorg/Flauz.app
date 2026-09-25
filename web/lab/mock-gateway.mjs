@@ -1,10 +1,12 @@
-// WEB-001 — the web parity-lab mock gateway.
+// WEB-002 — the web parity-lab mock gateway.
 //
 // A faithful Node implementation of the flauz-web-gateway WebSocket
 // contract (session.claim handshake, denial laws, gateway.state events,
 // transparent JSON-RPC bridging) hosting an in-process fake app-server
-// that implements the WEB-001 protocol slice with the app-server wire
-// dialect ({method,id,params} / {id,result|error}, no jsonrpc field).
+// that implements the frozen protocol slice (the schema snapshot's
+// methods — NO methods the snapshot does not carry, so the lab evidences
+// the named gaps honestly) with the app-server wire dialect
+// ({method,id,params} / {id,result|error}, no jsonrpc field).
 //
 // The WORKER SANDBOX LACKS THE RUST TOOLCHAIN (honestly declared in the
 // WEB-001 report): this mock stands in for the Rust gateway so the
@@ -44,10 +46,16 @@ function defaultState() {
     logins: {},
     threads: [],
     turns: {},
+    // The per-thread execution choices the client sent (model/effort/
+    // cwd — the reflection the capability surfaces assert against).
+    threadExec: {},
   };
 }
 
 let state = defaultState();
+
+// The running (pending) long turns, in memory only — never persisted.
+const pendingTurns = new Map();
 
 async function loadState() {
   if (STATE_FILE === "" || !existsSync(STATE_FILE)) {
@@ -85,13 +93,31 @@ function threadSummary(thread) {
     parentThreadId: null,
     preview: thread.preview,
     name: thread.name,
-    cwd: "/tmp/flauz-lab",
+    cwd: thread.cwd ?? "/tmp/flauz-lab",
     createdAt: thread.createdAt,
     updatedAt: thread.updatedAt,
     recencyAt: thread.updatedAt,
     status: {},
     gitInfo: null,
     turns: [],
+  };
+}
+
+/** Reflects the execution choices the client rode on its turns (the
+ * protocol's own model/effort reporting on thread/resume). */
+function reportedExec(threadId) {
+  const exec = state.threadExec[threadId] ?? {};
+  return {
+    model: typeof exec.model === "string" ? exec.model : "gpt-5.6-sol",
+    reasoningEffort: typeof exec.effort === "string" ? exec.effort : "high",
+  };
+}
+
+function turnsPage(threadId) {
+  return {
+    data: (state.turns[threadId] ?? []).map((entry) => ({ id: entry.id, item: entry })),
+    nextCursor: null,
+    backwardsCursor: null,
   };
 }
 
@@ -169,29 +195,26 @@ function handleAppServerRequest(socket, request) {
         return;
       }
       thread.updatedAt = nowSeconds();
+      const exec = reportedExec(thread.id);
       respond({
         thread: threadSummary(thread),
-        initialTurnsPage: {
-          data: (state.turns[thread.id] ?? []).map((entry) => ({ id: entry.id, item: entry })),
-          nextCursor: null,
-          backwardsCursor: null,
-        },
-        model: "gpt-5.6-sol",
-        reasoningEffort: "high",
+        initialTurnsPage: turnsPage(thread.id),
+        model: exec.model,
+        reasoningEffort: exec.reasoningEffort,
         serviceTier: null,
       });
       return;
     }
     case "thread/turns/list":
-      respond({
-        data: (state.turns[String(params?.threadId)] ?? []).map((entry) => ({ id: entry.id, item: entry })),
-        nextCursor: null,
-        backwardsCursor: null,
-      });
+      respond(turnsPage(String(params?.threadId)));
       return;
     case "turn/start": {
       const text = Array.isArray(params?.input)
-        ? params.input.map((item) => (item?.type === "text" ? item.text : `[${item?.type}]`)).join(" ")
+        ? params.input
+            .map((item) =>
+              item?.type === "text" ? item.text : item?.type === "skill" ? `@${item.name}` : `[${item?.type}]`,
+            )
+            .join(" ")
         : "";
       // A named capability-gap failure when the objective asks for a
       // capability the runtime cannot provide (J-04): the failure is a
@@ -216,8 +239,40 @@ function handleAppServerRequest(socket, request) {
         state.turns[thread.id] = [];
       }
       thread.updatedAt = nowSeconds();
+      // The execution choices the client rode on this turn (the
+      // model/effort/cwd reflection the capability surfaces assert
+      // against — the protocol's own fields, never invented ones).
+      const previousExec = state.threadExec[thread.id] ?? {};
+      const requestedCwd = typeof params?.cwd === "string" && params.cwd.trim() !== "" ? params.cwd.trim() : null;
+      state.threadExec[thread.id] = {
+        model:
+          typeof params?.model === "string" && params.model.trim() !== ""
+            ? params.model.trim()
+            : (previousExec.model ?? null),
+        effort:
+          typeof params?.effort === "string" && params.effort.trim() !== ""
+            ? params.effort.trim()
+            : (previousExec.effort ?? null),
+        cwd: requestedCwd ?? (previousExec.cwd ?? null),
+      };
+      if (requestedCwd !== null) {
+        thread.cwd = requestedCwd;
+      }
       const turnId = `turn-${Date.now().toString(36)}`;
       notify("turn/started", { threadId: thread.id, turn: { id: turnId, status: "running" } });
+      // A long-running turn: completes only after several seconds, and
+      // honours turn/interrupt with a NAMED cancelled terminal state
+      // (the cancellation-propagation honesty law).
+      if (text.toLowerCase().includes("long")) {
+        const timer = setTimeout(() => {
+          pendingTurns.delete(thread.id);
+          notify("turn/completed", { threadId: thread.id, turn: { id: turnId, status: "completed" } });
+        }, 4000);
+        pendingTurns.set(thread.id, { timer, turnId, threadId: thread.id });
+        persistState();
+        respond({ threadId: thread.id, turn: { id: turnId, status: "running" } });
+        return;
+      }
       // The agent needs a decision mid-turn (the approval path).
       if (text.toLowerCase().includes("install")) {
         socket.send(
@@ -237,14 +292,40 @@ function handleAppServerRequest(socket, request) {
         item: { type: "agentMessage", text: message },
       });
       state.turns[thread.id].push({ id: `${turnId}-m`, type: "agentMessage", text: message });
+      // A command the runtime executed (an install turn reports the
+      // command it ran — the artifacts surface's command item).
+      if (text.toLowerCase().includes("install")) {
+        const commandItem = { id: `${turnId}-c`, type: "commandExecution", command: "npm install --no-audit" };
+        notify("item/completed", { threadId: thread.id, turnId, item: { type: commandItem.type, command: commandItem.command } });
+        state.turns[thread.id].push(commandItem);
+      }
+      // A file the runtime changed (a planning/calendar turn reports the
+      // file change — the artifacts surface's file-change item).
+      if (text.toLowerCase().includes("calendar") || text.toLowerCase().includes("report")) {
+        const fileItem = { id: `${turnId}-f`, type: "fileChange", text: "garden-plan.md — 14 lines changed" };
+        notify("item/completed", { threadId: thread.id, turnId, item: { type: fileItem.type, text: fileItem.text } });
+        state.turns[thread.id].push(fileItem);
+      }
       persistState();
       notify("turn/completed", { threadId: thread.id, turn: { id: turnId, status: "completed" } });
       respond({ threadId: thread.id, turn: { id: turnId, status: "completed" } });
       return;
     }
-    case "turn/interrupt":
+    case "turn/interrupt": {
+      const pending = pendingTurns.get(String(params?.threadId));
+      if (pending !== undefined) {
+        clearTimeout(pending.timer);
+        pendingTurns.delete(String(params?.threadId));
+        // The named cancelled terminal state — cancellation is never a
+        // silent disappearance and never a fake failure.
+        notify("turn/completed", {
+          threadId: pending.threadId,
+          turn: { id: pending.turnId, status: "cancelled", error: { message: "stopped by you from the web client" } },
+        });
+      }
       respond({});
       return;
+    }
     default:
       respondError(-32601, `method not found: ${method}`);
       return;
