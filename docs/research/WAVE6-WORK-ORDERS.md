@@ -1,8 +1,9 @@
 # Wave 6 Work Orders — F11: Web Client (production-gate client #3)
 
-> **Status: DISPATCHED 2026-09-25 (WEB-001 Worker A — base = main @
-> 35462017c25c120618e7cc9dc4924d3d97b1bb73)** — TAKE-001 merged (PR #56, main 3546201);
-> the Lead final-pin checklist passed (landed surface verified against §6).
+> **Status: WEB-001 MERGED (PR #57, main e99941e); WEB-002 DISPATCHED 2026-09-25
+> (Worker B — base = main @ e99941e6e0d85304168068c694045a63fae51d98)** — the WEB-001 landed surface verified
+> against §6 before the WEB-002 pin; WEB-002 is re-aimed at the landed
+> gateway/client shapes per the work order's integration notes.
 >
 > **Lead final-pin checklist (all must pass before dispatch):**
 > 1. TAKE-001 merged through its PR; main advanced past `b346895`.
@@ -194,7 +195,7 @@ Acceptance criteria: J-06..J-18 web variants applicable to these surfaces
          (journey evidence per the kernel addendum §8); conflict-honesty and
          takeover laws visible on every approval/cancellation surface (§6);
          responsive + keyboard + screen-reader pass evidenced
-Status: DRAFT (Lead pins at dispatch; REAIMED after WEB-001's landed shape)
+Status: DISPATCHED 2026-09-25 (base e99941e6e0d85304168068c694045a63fae51d98; re-aimed at the landed WEB-001 surface)
 ```
 
 ## Dispatch notes (Lead-only)
