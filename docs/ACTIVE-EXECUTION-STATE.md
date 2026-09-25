@@ -1,7 +1,7 @@
 # Active Execution State
 
 **Updated:** 2026-09-25
-**Current main:** 3546201 (the Wave-5 merge — LEASE-001 PR #55 + TAKE-001 PR #56)
+**Current main:** f5e2a5c (the Wave-6 merge — WEB-001 PR #57 + WEB-002 PR #58)
 
 This file is the repository's operational handoff for the active Tech Leads. It does not override the architecture constitution or work-order contracts; it records the current execution state and sequencing decisions.
 
@@ -14,8 +14,8 @@ Wave 2 / F3-F5 fabric foundation     ✅ DELIVERED
 Wave 3 / F6 orchestration            ✅ CLOSED
 Wave 4 / F7-F9                       ✅ CLOSED 2026-09-23 (gate record: docs/research/evidence/w4-gate/WAVE4-GATE-RECORD.md)
 Wave 5 / F6 depth (leases + takeover) ✅ CLOSED 2026-09-25 (gate record: docs/research/evidence/w5-gate/WAVE5-GATE-RECORD.md)
-Wave 6 / F11 Web client              ▶ NEXT (per the sequencing below)
-Web / Windows / Linux formal verify  ▶ REQUIRED BEFORE PRODUCTION
+Wave 6 / F11 Web client              ✅ CLOSED 2026-09-25 (gate record: docs/research/evidence/w6-gate/WAVE6-GATE-RECORD.md)
+Web / Windows / Linux formal verify  ▶ NEXT (readiness then formal verify, per the sequencing below)
 Production                           ⬜
 macOS                                ⏸ DEFERRED UNTIL AFTER PRODUCTION
 Mobile                               ⏸ DEFERRED UNTIL AFTER PRODUCTION
@@ -23,9 +23,11 @@ Mobile                               ⏸ DEFERRED UNTIL AFTER PRODUCTION
 Wave 4 closed at the merged gate: PROV-001 (PR #53), LAB-001 (PR #52),
 COL-001 (PR #54) — 3/3 merged, deviations NONE ×3, the 19-step harness
 green (the three-fabric scenario), the d26 lab scenes VLM-adjudicated,
-CI green both platforms. The next active work is the remaining F6
-orchestration depth (leases/conflict handling + human takeover), then
-the Web client.
+CI green both platforms. Wave 6 closed at the merged gate: WEB-001
+(PR #57, the gateway + shell foundation) + WEB-002 (PR #58, the
+capability surfaces) — deviations NONE ×2, protocol-derived capability
+truth, 13 lab journeys ×3, CI green both platforms. The next active
+work is formal-verification readiness for Linux + Windows + Web.
 
 ## Release sequencing decision
 
@@ -35,7 +37,9 @@ Wave 4  ✅ CLOSED
   ↓
 F7 + F8 + F9 gate  ✅ GREEN 2026-09-23
   ↓
-remaining F6 depth needed  ▶ NEXT
+remaining F6 depth  ✅ CLOSED 2026-09-25 (Wave 5)
+  ↓
+Web client (Wave 6)  ✅ CLOSED 2026-09-25
   ↓
 ┌────────────┼────────────┐
 ↓            ↓            ↓
@@ -130,8 +134,8 @@ Major waves must include the applicable J-01..J-18 journeys and at least one dom
 1. ✅ Merge/gate PROV-001 + LAB-001 + COL-001 (3/3 merged 2026-09-23)
 2. ✅ Run the Wave-4 three-fabric integration gate (Gates A/B/C green)
 3. ✅ Complete the remaining F6 orchestration depth (Wave 5 CLOSED: LEASE-001 + TAKE-001)
-4. ▶ Finish Web client (Wave 6: WEB-001 foundation → WEB-002 capability surfaces)
-5. Bring Linux + Windows + Web to formal verification readiness
+4. ✅ Finish Web client (Wave 6 CLOSED: WEB-001 PR #57 + WEB-002 PR #58, 2026-09-25)
+5. ▶ Bring Linux + Windows + Web to formal verification readiness
 6. Run formal production verification across all three
 7. Close production hardening/release gates
 8. Ship production release

@@ -1,9 +1,16 @@
 # Wave 6 Work Orders — F11: Web Client (production-gate client #3)
 
-> **Status: WEB-001 MERGED (PR #57, main e99941e); WEB-002 DISPATCHED 2026-09-25
-> (Worker B — base = main @ e99941e6e0d85304168068c694045a63fae51d98)** — the WEB-001 landed surface verified
-> against §6 before the WEB-002 pin; WEB-002 is re-aimed at the landed
-> gateway/client shapes per the work order's integration notes.
+> **Status: WAVE 6 CLOSED 2026-09-25 — WEB-001 MERGED (PR #57, main
+> e99941e) + WEB-002 MERGED (PR #58, main f5e2a5c). Gate record:
+> [WAVE6-GATE-RECORD.md](evidence/w6-gate/WAVE6-GATE-RECORD.md).
+> Both WOs: deviations NONE, CI green both platforms, lab journeys
+> evidenced (WEB-001: 5/5 ×3; WEB-002: 13/13 ×3). The named protocol
+> gaps + their recovery paths are recorded in the gate record.**
+>
+> Historical dispatch status: WEB-001 dispatched 2026-09-25 (base
+> 3546201, Worker A); WEB-002 dispatched 2026-09-25 (base d953edd,
+> Worker B — attempt 1 died mid-stream, auto-recovered; attempt 2
+> delivered).
 >
 > **Lead final-pin checklist (all must pass before dispatch):**
 > 1. TAKE-001 merged through its PR; main advanced past `b346895`.
