@@ -132,8 +132,7 @@ const DECLINE_LABEL: &str = "Decline";
 const DECLINE_SIDE: &str = "If you decline: {deny_consequence}";
 /// The success line after approving (the attributed outcome + the
 /// resume state).
-const DECISION_APPROVED_STATUS: &str =
-    "Decision made — approved. {approve_consequence}";
+const DECISION_APPROVED_STATUS: &str = "Decision made — approved. {approve_consequence}";
 /// The success line after declining (the attributed outcome + the
 /// honest stop).
 const DECISION_DECLINED_STATUS: &str = "Decision made — declined. {deny_consequence}";
@@ -1235,13 +1234,7 @@ fn render_needs_you_row(
                             .primary()
                             .on_click(cx.listener(
                                 move |this, _, window, cx| {
-                                    decide_approval(
-                                        this,
-                                        &task_id_for_approve,
-                                        true,
-                                        window,
-                                        cx,
-                                    );
+                                    decide_approval(this, &task_id_for_approve, true, window, cx);
                                 },
                             )),
                         )
@@ -1256,13 +1249,7 @@ fn render_needs_you_row(
                             .ghost()
                             .on_click(cx.listener(
                                 move |this, _, window, cx| {
-                                    decide_approval(
-                                        this,
-                                        &task_id_for_decline,
-                                        false,
-                                        window,
-                                        cx,
-                                    );
+                                    decide_approval(this, &task_id_for_decline, false, window, cx);
                                 },
                             )),
                         ),
@@ -1342,17 +1329,15 @@ fn render_needs_you_row(
             )
         } else {
             affordance.child(
-                Button::new(SharedString::from(format!(
-                    "flauz-takeover-begin-{index}"
-                )))
-                .label(TAKEOVER_LABEL)
-                .icon(IconName::ArrowRight)
-                .tooltip(TAKEOVER_PRESERVED_NOTE)
-                .small()
-                .primary()
-                .on_click(cx.listener(move |this, _, window, cx| {
-                    begin_takeover(this, &task_id_for_takeover, window, cx);
-                })),
+                Button::new(SharedString::from(format!("flauz-takeover-begin-{index}")))
+                    .label(TAKEOVER_LABEL)
+                    .icon(IconName::ArrowRight)
+                    .tooltip(TAKEOVER_PRESERVED_NOTE)
+                    .small()
+                    .primary()
+                    .on_click(cx.listener(move |this, _, window, cx| {
+                        begin_takeover(this, &task_id_for_takeover, window, cx);
+                    })),
             )
         };
         card = card.child(affordance);
@@ -1385,9 +1370,11 @@ fn render_needs_you_row(
                         .tooltip(step_consequence.clone())
                         .small()
                         .ghost()
-                        .on_click(cx.listener(move |this, _, window, cx| {
-                            cancel_step(this, &task_id_for_step, window, cx);
-                        })),
+                        .on_click(cx.listener(
+                            move |this, _, window, cx| {
+                                cancel_step(this, &task_id_for_step, window, cx);
+                            },
+                        )),
                     )
                     .child(
                         Button::new(SharedString::from(format!(
@@ -1397,9 +1384,11 @@ fn render_needs_you_row(
                         .tooltip(run_consequence.clone())
                         .small()
                         .ghost()
-                        .on_click(cx.listener(move |this, _, window, cx| {
-                            cancel_run_for_task(this, &task_id_for_run, window, cx);
-                        })),
+                        .on_click(cx.listener(
+                            move |this, _, window, cx| {
+                                cancel_run_for_task(this, &task_id_for_run, window, cx);
+                            },
+                        )),
                     ),
             )
             .child(
@@ -1543,10 +1532,10 @@ mod tests {
         assert_eq!(
             ApprovalCardView {
                 need: "approve the environment switch".to_owned(),
-                approve_consequence:
-                    "moving to the remote sandbox will re-run the setup steps".to_owned(),
-                deny_consequence:
-                    "this step stops with your decision recorded as the reason".to_owned(),
+                approve_consequence: "moving to the remote sandbox will re-run the setup steps"
+                    .to_owned(),
+                deny_consequence: "this step stops with your decision recorded as the reason"
+                    .to_owned(),
             }
             .headline(),
             "Needs you: approve the environment switch — moving to the remote sandbox will \
@@ -1670,8 +1659,8 @@ mod tests {
         assert!(ApprovalCardView::new("a need", "a", "").is_none());
         let card = ApprovalCardView {
             need: "approve the environment switch".to_owned(),
-            approve_consequence:
-                "moving to the remote sandbox will re-run the setup steps".to_owned(),
+            approve_consequence: "moving to the remote sandbox will re-run the setup steps"
+                .to_owned(),
             deny_consequence: "this step stops with your decision recorded as the reason"
                 .to_owned(),
         };
@@ -1705,7 +1694,11 @@ mod tests {
             "Market scan",
             "If you decline: this step stops with your decision recorded as the reason",
         );
-        log.record(TAKEOVER_STARTED_EVENT_TYPE, "Market scan", TAKEOVER_PRESERVED_NOTE);
+        log.record(
+            TAKEOVER_STARTED_EVENT_TYPE,
+            "Market scan",
+            TAKEOVER_PRESERVED_NOTE,
+        );
         log.record(
             DEPENDENT_CANCELLED_EVENT_TYPE,
             "Market scan",
@@ -1743,9 +1736,11 @@ mod tests {
         assert!(source.contains("flauz_takeover::PALETTE_ROW_TITLE"));
         assert!(source.contains("flauz_takeover::PALETTE_ROW_TAKEOVER_TITLE"));
         assert!(source.contains("flauz_takeover::open_needs_you_panel(workspace, window, cx)"));
-        assert!(source.contains(
-            "flauz_takeover::open_needs_you_panel_for_takeover(workspace, window, cx)"
-        ));
+        assert!(
+            source.contains(
+                "flauz_takeover::open_needs_you_panel_for_takeover(workspace, window, cx)"
+            )
+        );
 
         // The keyboard chord seam (Ctrl+Alt+Shift+Y — the letter
         // family, verified conflict-free: the letter family in use is
@@ -1822,7 +1817,10 @@ mod tests {
 
         // Every TAKE-001 seam is tagged.
         let seam_tags = source.matches("TAKE-001").count();
-        assert!(seam_tags >= 10, "each seam is tagged TAKE-001 (found {seam_tags})");
+        assert!(
+            seam_tags >= 10,
+            "each seam is tagged TAKE-001 (found {seam_tags})"
+        );
     }
 
     /// The attention extension is ADDITIVE-ONLY (the COL-001
