@@ -235,8 +235,7 @@ reason and the recovery path. Never silently narrowed; never fabricated.
 | A11Y (per client) | FV-L20 | FV-W12 | FV-E13 |
 | Fresh-machine/packaging slice | FV-L21 | (release.yml archive smoke — standing) | FV-E00 (gateway security slice) |
 
-**Arithmetic:** 18 journeys × 3 lanes = 54 cells → 33 scene cells +
-21 N/A cells (each with its named reason in §4). Linux 21 scenes,
+**Arithmetic:** 18 journeys × 3 lanes = 54 cells → 40 scene cells + 14 N/A cells (each with its named reason in §4). Linux 21 scenes,
 Windows 12 scenes + standing gates, Web 14 scenes (incl. FV-E00).
 Every J-01..J-18 appears on at least one lane (J-18 appears as N/A-everywhere
 with the named no-surface reason — the honest bound, per addendum §4).

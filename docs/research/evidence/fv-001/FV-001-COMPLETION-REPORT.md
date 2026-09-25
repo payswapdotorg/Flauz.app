@@ -209,7 +209,7 @@ DO apply, run verbatim:
 | A11Y | FV-L20 | FV-W12 | FV-E13 |
 | FR/PKG + gateway-security | FV-L21 | release.yml smoke (standing) | FV-E00 |
 
-54 journey-cells = 33 scene cells + 21 N/A cells, every N/A with its named
+54 journey-cells = 40 scene cells + 14 N/A cells, every N/A with its named
 reason (catalog §4).
 
 ## Acceptance-criteria evidence (map each bullet)
