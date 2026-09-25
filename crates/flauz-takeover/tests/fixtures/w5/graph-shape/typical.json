@@ -1,0 +1,29 @@
+{
+  "v": 1,
+  "nodes": [
+    {
+      "node": "research",
+      "depends_on": [],
+      "finished": false,
+      "artifacts": [
+        "art_01J8ZQ5V8K3T2B7N6X4R9DQPH7"
+      ]
+    },
+    {
+      "node": "analysis",
+      "depends_on": [
+        "research"
+      ],
+      "finished": false,
+      "artifacts": []
+    },
+    {
+      "node": "report",
+      "depends_on": [
+        "analysis"
+      ],
+      "finished": false,
+      "artifacts": []
+    }
+  ]
+}

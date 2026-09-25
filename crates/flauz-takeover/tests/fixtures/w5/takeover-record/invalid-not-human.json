@@ -1,0 +1,16 @@
+{
+  "v": 1,
+  "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "scope": {
+    "kind": "node",
+    "node": "research"
+  },
+  "from_agent": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPG6",
+  "human": {
+    "kind": "agent",
+    "id": "user_ana"
+  },
+  "taken_at": "2026-09-23T15:04:00Z",
+  "reason": "an agent cannot take over a turn",
+  "preserved": []
+}

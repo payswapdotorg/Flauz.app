@@ -14,6 +14,7 @@ members = [
     "crates/flauz-lease",
     "crates/flauz-orch",
     "crates/flauz-prov",
+    "crates/flauz-takeover",
     "crates/flauz-world",
 ]
 exclude = ["third_party/gpui-component"]

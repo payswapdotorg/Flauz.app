@@ -1,0 +1,19 @@
+{
+  "v": 1,
+  "cancellation": {
+    "v": 1,
+    "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+    "what": {
+      "kind": "node",
+      "node": "report"
+    },
+    "reason": "the report is not needed anymore",
+    "actor": {
+      "kind": "user",
+      "id": "user_ana"
+    },
+    "cancelled_at": "2026-09-23T15:04:00Z"
+  },
+  "dependents": [],
+  "kept_work": []
+}

@@ -189,6 +189,22 @@ use flauz_members::FlauzMembersShortcut;
 // every prior wave's.
 mod flauz_conflicts;
 use flauz_conflicts::FlauzConflictsShortcut;
+// TAKE-001 (F2 Wave 5): the needs-you review surface (J-17) — the
+// approval card with the consequence of each side ("Needs you:
+// approve the environment switch — moving to the remote sandbox will
+// re-run the setup steps"), the takeover affordance ("Take over this
+// step" — the agent's state preserved + the handback path), the
+// cancellation affordances with the downstream truth ("Cancelled —
+// the research step it waited on was cancelled"), the task-surface
+// decision affordance, and the additive needs-you KIND attribution on
+// the EXISTING Activity rows. Wired through the same minimal named
+// seams below (declaration, palette rows, keyboard chord, scoped
+// escape, state field, title-bar entry, task-surface mount,
+// workspace-root panel mount, navigation close, the chord listener,
+// the Activity attention kind line). Seams are distinct from every
+// prior wave's.
+mod flauz_takeover;
+use flauz_takeover::FlauzTakeoverShortcut;
 
 const WINDOW_WIDTH: f32 = 1_278.0;
 const WINDOW_HEIGHT: f32 = 818.0;
@@ -3835,10 +3851,13 @@ enum PaletteCommand {
     // LEASE-001: the resource-conflicts surface rows.
     SeeWhoIsUsingWhat,
     ResolveResourceConflict,
+    // TAKE-001: the needs-you review surface rows.
+    SeeWhatNeedsYou,
+    TakeOverARunningStep,
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 91] = [
+    const ALL: [Self; 93] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3934,6 +3953,9 @@ impl PaletteCommand {
         // LEASE-001: the resource-conflicts surface rows.
         Self::SeeWhoIsUsingWhat,
         Self::ResolveResourceConflict,
+        // TAKE-001: the needs-you review surface rows.
+        Self::SeeWhatNeedsYou,
+        Self::TakeOverARunningStep,
     ];
 
     const fn title(self) -> &'static str {
@@ -4046,6 +4068,9 @@ impl PaletteCommand {
             // LEASE-001: the resource-conflicts surface rows.
             Self::SeeWhoIsUsingWhat => flauz_conflicts::PALETTE_ROW_TITLE,
             Self::ResolveResourceConflict => flauz_conflicts::PALETTE_ROW_RESOLVE_TITLE,
+            // TAKE-001: the needs-you review surface rows.
+            Self::SeeWhatNeedsYou => flauz_takeover::PALETTE_ROW_TITLE,
+            Self::TakeOverARunningStep => flauz_takeover::PALETTE_ROW_TAKEOVER_TITLE,
         }
     }
 
@@ -4161,6 +4186,9 @@ impl PaletteCommand {
             // LEASE-001: the resource-conflicts rows' descriptions.
             Self::SeeWhoIsUsingWhat => flauz_conflicts::PALETTE_ROW_DESCRIPTION,
             Self::ResolveResourceConflict => flauz_conflicts::PALETTE_ROW_RESOLVE_DESCRIPTION,
+            // TAKE-001: the needs-you rows' descriptions.
+            Self::SeeWhatNeedsYou => flauz_takeover::PALETTE_ROW_DESCRIPTION,
+            Self::TakeOverARunningStep => flauz_takeover::PALETTE_ROW_TAKEOVER_DESCRIPTION,
         }
     }
 
@@ -4219,6 +4247,14 @@ impl PaletteCommand {
             // chord opens the panel).
             Self::SeeWhoIsUsingWhat => Some("Ctrl+Alt+Shift+L"),
             Self::ResolveResourceConflict => Some("Ctrl+Alt+Shift+L"),
+            // TAKE-001: the needs-you chord (Ctrl+Alt+Shift+Y — the
+            // letter family, verified conflict-free: the letters in
+            // use are M (model picker), R (recovery), P (providers),
+            // S (save flow), U (members) and L (conflicts), plus the
+            // digits 1-7; Y is the verified free letter — both rows
+            // ride it, the chord opens the panel).
+            Self::SeeWhatNeedsYou => Some("Ctrl+Alt+Shift+Y"),
+            Self::TakeOverARunningStep => Some("Ctrl+Alt+Shift+Y"),
             _ => None,
         }
     }
@@ -4396,6 +4432,11 @@ impl PaletteCommand {
             // TriangleAlert for conflict resolution).
             Self::SeeWhoIsUsingWhat => IconName::Globe,
             Self::ResolveResourceConflict => IconName::TriangleAlert,
+            // TAKE-001: the needs-you rows' icons (Bell for the
+            // attention surface — the Activity bell precedent; User
+            // for the takeover — the human stepping in).
+            Self::SeeWhatNeedsYou => IconName::Bell,
+            Self::TakeOverARunningStep => IconName::User,
         }
     }
 
@@ -4493,6 +4534,9 @@ impl PaletteCommand {
             // LEASE-001: the resource-conflicts rows join the shell group
             // (the members precedent).
             Self::SeeWhoIsUsingWhat | Self::ResolveResourceConflict => PaletteGroup::WorkspaceShell,
+            // TAKE-001: the needs-you rows join the same shell group
+            // (the conflicts precedent).
+            Self::SeeWhatNeedsYou | Self::TakeOverARunningStep => PaletteGroup::WorkspaceShell,
         }
     }
 
@@ -5229,6 +5273,17 @@ impl CommandPaletteView {
             PaletteCommand::ResolveResourceConflict => {
                 flauz_conflicts::open_conflicts_panel_for_resolution(workspace, window, cx);
             }
+            // TAKE-001: the needs-you review surface rows' dispatch —
+            // the see row opens the workspace panel; the take-over row
+            // opens it and surfaces the honest nothing-to-take-over
+            // guidance when no step can be taken over (the WO-P2-012
+            // pattern).
+            PaletteCommand::SeeWhatNeedsYou => {
+                flauz_takeover::open_needs_you_panel(workspace, window, cx);
+            }
+            PaletteCommand::TakeOverARunningStep => {
+                flauz_takeover::open_needs_you_panel_for_takeover(workspace, window, cx);
+            }
             PaletteCommand::SearchChats | PaletteCommand::SearchFiles => {}
         });
     }
@@ -5811,6 +5866,12 @@ pub fn run() {
                 // companion is needed). Opens the resource-conflicts
                 // panel from anywhere.
                 KeyBinding::new(&shortcut("alt-shift-l"), FlauzConflictsShortcut, None),
+                // TAKE-001: the needs-you chord (Ctrl+Alt+Shift+Y — the
+                // letter family, verified conflict-free: the letters in
+                // use are M, R, P, S, U and L; letters report the shift
+                // modifier truthfully, so no shifted-symbol companion is
+                // needed). Opens the needs-you panel from anywhere.
+                KeyBinding::new(&shortcut("alt-shift-y"), FlauzTakeoverShortcut, None),
                 KeyBinding::new("escape", Escape, Some("AboutDialog")),
                 KeyBinding::new("escape", Escape, Some("McpElicitation")),
                 KeyBinding::new("escape", Escape, Some("StructuredUserInput")),
@@ -5866,6 +5927,12 @@ pub fn run() {
                 // on mount, and one Escape closes it through the 017
                 // restore contract.
                 KeyBinding::new("escape", Escape, Some("FlauzConflicts")),
+                // TAKE-001: the needs-you panel owns a scoped escape
+                // binding (the 019 family shape + the d19 discipline:
+                // never trapped) — the panel auto-focuses its own
+                // handle on mount, and one Escape closes it through the
+                // 017 restore contract.
+                KeyBinding::new("escape", Escape, Some("FlauzTakeover")),
                 // UX-003: the model-availability NUX modal's one-Escape
                 // contract — the modal auto-focuses its own handle on mount
                 // (the 019 request-once pattern), so this scoped binding
@@ -6650,6 +6717,11 @@ struct WorkspaceView {
     /// and the panel's focus bookkeeping. Additive UI state; F1 flows
     /// are unchanged.
     flauz_conflicts: flauz_conflicts::ConflictsState,
+    /// The needs-you surface state (TAKE-001): the needs-you view-model
+    /// seam, the per-task decision affordances, the attention
+    /// extension's kind rows, the world-store seam, and the panel's
+    /// focus bookkeeping. Additive UI state; F1 flows are unchanged.
+    flauz_takeover: flauz_takeover::TakeoverState,
     sidebar_visible: bool,
     sidebar_responsive: bool,
     shell_width_class: Option<ShellWidthClass>,
@@ -7887,6 +7959,7 @@ impl WorkspaceView {
             flauz_providers: flauz_providers::ProvidersState::new(window, cx),
             flauz_members: flauz_members::MembersState::new(cx),
             flauz_conflicts: flauz_conflicts::ConflictsState::new(cx),
+            flauz_takeover: flauz_takeover::TakeoverState::new(cx),
             sidebar_visible: true,
             sidebar_responsive: true,
             shell_width_class: None,
@@ -8572,6 +8645,14 @@ impl WorkspaceView {
         // close path restores focus through the 017 contract instead).
         if flauz_shell::action_closes_shell_surfaces(&action)
             && self.flauz_conflicts.close_for_navigation()
+        {
+            cx.notify();
+        }
+        // TAKE-001 registration seam: the same F1 navigation quietly
+        // closes the needs-you panel (additive UI state; the deliberate
+        // close path restores focus through the 017 contract instead).
+        if flauz_shell::action_closes_shell_surfaces(&action)
+            && self.flauz_takeover.close_for_navigation()
         {
             cx.notify();
         }
@@ -15507,7 +15588,12 @@ impl WorkspaceView {
                     // in the title bar (layer 1's visible primary entry —
                     // the WO-P2-018 bell/members precedent) opens the
                     // resource-conflicts panel.
-                    .child(flauz_conflicts::render_conflicts_entry_button(self, cx)),
+                    .child(flauz_conflicts::render_conflicts_entry_button(self, cx))
+                    // TAKE-001 registration seam: the needs-you button
+                    // in the title bar (layer 1's visible primary entry —
+                    // the WO-P2-018 bell/members/conflicts precedent)
+                    // opens the needs-you review panel.
+                    .child(flauz_takeover::render_needs_you_entry_button(self, cx)),
             )
             .when(!cfg!(target_os = "macos"), |title_bar| {
                 title_bar
@@ -19686,6 +19772,14 @@ impl WorkspaceView {
                             // browser — 2nd in line"), absent otherwise,
                             // opening the conflicts panel.
                             .child(flauz_conflicts::render_task_resource_affordance(
+                                self, window, cx,
+                            ))
+                            // TAKE-001 registration seam: the task-surface
+                            // decision affordance — a state-driven line when
+                            // THIS task needs a decision ("Needs your
+                            // decision — approve the environment switch"),
+                            // absent otherwise, opening the needs-you panel.
+                            .child(flauz_takeover::render_task_decision_affordance(
                                 self, window, cx,
                             ))
                             .when_some(bedrock_workspace_notice, |workspace, notice| {
@@ -41471,6 +41565,15 @@ impl WorkspaceView {
         // additive data + an additive render line only: no second store,
         // no parallel feed.
         let attribution = flauz_members::attention_attribution_line(&self.flauz_members, &task.id);
+        // TAKE-001 registration seam (the attention extension, the
+        // COL-001 precedent): the additive needs-you KIND line — which
+        // kind of need waits on the local user ("Approval gate —
+        // approve the environment switch"), computed from the takeover
+        // module's kind rows. The row itself still derives from the ONE
+        // attention list — additive data + an additive render line
+        // only: no second store, no parallel feed.
+        let kind_attribution =
+            flauz_takeover::attention_kind_attribution_line(&self.flauz_takeover, &task.id);
         h_flex()
             .id(SharedString::from(format!("activity-view-row-{index}")))
             .min_h(px(40.0))
@@ -41512,6 +41615,21 @@ impl WorkspaceView {
                                 .truncate()
                                 .text_color(cx.theme().muted_foreground)
                                 .child(attribution),
+                        )
+                    })
+                    // The additive needs-you KIND line (TAKE-001, the
+                    // COL-001 precedent) — one extra line on the SAME
+                    // row ("Approval gate — approve the environment
+                    // switch"), from the same attention flag; the kind
+                    // rows are wired by a later wave, and their absence
+                    // changes nothing.
+                    .when_some(kind_attribution, |column, kind_attribution| {
+                        column.child(
+                            div()
+                                .text_xs()
+                                .truncate()
+                                .text_color(cx.theme().muted_foreground)
+                                .child(kind_attribution),
                         )
                     }),
             )
@@ -45788,6 +45906,17 @@ impl Render for WorkspaceView {
             .on_action(cx.listener(|this, _: &FlauzConflictsShortcut, window, cx| {
                 flauz_conflicts::open_conflicts_panel(this, window, cx);
             }))
+            // TAKE-001 keyboard registration: the needs-you surface
+            // (Ctrl+Alt+Shift+Y). The d25 Gate-B lesson is law: the
+            // listener lives on the workspace root next to the
+            // picker/gap/agents/save/recovery/providers/members/conflicts
+            // chord listeners, so the chord works whether or not the
+            // task surface is focused — a KeyBinding without this
+            // listener would dispatch into the void while the palette
+            // row worked.
+            .on_action(cx.listener(|this, _: &FlauzTakeoverShortcut, window, cx| {
+                flauz_takeover::open_needs_you_panel(this, window, cx);
+            }))
             .relative()
             // (Ctrl+Alt+Shift+L). The d25 Gate-B lesson is law: the
             // listener lives on the workspace root next to the
@@ -45986,6 +46115,13 @@ impl Render for WorkspaceView {
             // affordance mounts on the task surface above.
             .when(self.flauz_conflicts.conflicts_open(), |root| {
                 root.child(flauz_conflicts::render_conflicts_panel(self, window, cx))
+            })
+            // TAKE-001 registration seam: the needs-you panel renders
+            // as a workspace-level overlay while open (the
+            // members/conflicts overlay precedent); the task-surface
+            // decision affordance mounts on the task surface above.
+            .when(self.flauz_takeover.panel_open(), |root| {
+                root.child(flauz_takeover::render_needs_you_panel(self, window, cx))
             });
         v_flex()
             .size_full()

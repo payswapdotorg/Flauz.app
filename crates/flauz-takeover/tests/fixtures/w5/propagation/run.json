@@ -1,0 +1,49 @@
+{
+  "v": 1,
+  "cancellation": {
+    "v": 1,
+    "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+    "what": {
+      "kind": "run"
+    },
+    "reason": "stopping here — the plan changed",
+    "actor": {
+      "kind": "user",
+      "id": "user_ana"
+    },
+    "cancelled_at": "2026-09-23T15:04:00Z"
+  },
+  "dependents": [
+    {
+      "v": 1,
+      "node": "research",
+      "waited_on": null,
+      "terminal": {
+        "kind": "cancelled",
+        "reason": "stopping here — the plan changed"
+      },
+      "kept": []
+    },
+    {
+      "v": 1,
+      "node": "analysis",
+      "waited_on": null,
+      "terminal": {
+        "kind": "cancelled",
+        "reason": "stopping here — the plan changed"
+      },
+      "kept": []
+    },
+    {
+      "v": 1,
+      "node": "report",
+      "waited_on": null,
+      "terminal": {
+        "kind": "cancelled",
+        "reason": "stopping here — the plan changed"
+      },
+      "kept": []
+    }
+  ],
+  "kept_work": []
+}
