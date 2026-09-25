@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "node": "environment-setup",
+  "need": "approve the environment switch",
+  "approve_consequence": "moving to the remote sandbox will re-run the setup steps",
+  "deny_consequence": "",
+  "requested_by": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPG6",
+  "requested_at": "2026-09-23T15:04:00Z"
+}

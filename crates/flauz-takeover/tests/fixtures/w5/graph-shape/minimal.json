@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "nodes": [
+    {
+      "node": "research",
+      "depends_on": [],
+      "finished": false,
+      "artifacts": []
+    }
+  ]
+}

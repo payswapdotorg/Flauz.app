@@ -1,0 +1,24 @@
+{
+  "kind": "denied",
+  "v": 1,
+  "gate": {
+    "v": 1,
+    "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+    "node": "environment-setup",
+    "need": "approve the environment switch",
+    "approve_consequence": "moving to the remote sandbox will re-run the setup steps",
+    "deny_consequence": "this step stops with your decision recorded as the reason",
+    "requested_by": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPG6",
+    "requested_at": "2026-09-23T15:04:00Z"
+  },
+  "decided_by": {
+    "kind": "user",
+    "id": "user_ana"
+  },
+  "decided_at": "2026-09-23T15:04:00Z",
+  "effect": {
+    "kind": "node_failed",
+    "node": "environment-setup",
+    "reason": "Declined by the human: this step stops with your decision recorded as the reason"
+  }
+}

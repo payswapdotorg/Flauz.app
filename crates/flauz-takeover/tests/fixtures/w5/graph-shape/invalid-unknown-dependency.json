@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "nodes": [
+    {
+      "node": "analysis",
+      "depends_on": [
+        "ghost"
+      ],
+      "finished": false,
+      "artifacts": []
+    }
+  ]
+}

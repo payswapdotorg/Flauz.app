@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "task": "task_01J8ZQ5V8K3T2B7N6X4R9DQPB1",
+  "scope": {
+    "kind": "run"
+  },
+  "from_agent": "agent_01J8ZQ5V8K3T2B7N6X4R9DQPG6",
+  "human": {
+    "kind": "user",
+    "id": "user_ana"
+  },
+  "taken_at": "2026-09-23T15:04:00Z",
+  "reason": "I will drive this run",
+  "preserved": []
+}
