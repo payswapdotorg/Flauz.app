@@ -768,13 +768,12 @@ pub(crate) fn begin_takeover(
     };
     let mut updated = rows;
     let mut flipped = false;
-    if let Some(entry) = updated.iter_mut().find(|row| row.task_id == task_id) {
-        if let Some(takeover) = entry.takeover.as_mut() {
-            if !takeover.active {
-                takeover.active = true;
-                flipped = true;
-            }
-        }
+    if let Some(entry) = updated.iter_mut().find(|row| row.task_id == task_id)
+        && let Some(takeover) = entry.takeover.as_mut()
+        && !takeover.active
+    {
+        takeover.active = true;
+        flipped = true;
     }
     if !flipped {
         return;
@@ -807,13 +806,12 @@ pub(crate) fn hand_back(
     };
     let mut updated = rows;
     let mut handed_back = false;
-    if let Some(entry) = updated.iter_mut().find(|row| row.task_id == task_id) {
-        if let Some(takeover) = entry.takeover.as_mut() {
-            if takeover.active {
-                takeover.active = false;
-                handed_back = true;
-            }
-        }
+    if let Some(entry) = updated.iter_mut().find(|row| row.task_id == task_id)
+        && let Some(takeover) = entry.takeover.as_mut()
+        && takeover.active
+    {
+        takeover.active = false;
+        handed_back = true;
     }
     if !handed_back {
         return;
