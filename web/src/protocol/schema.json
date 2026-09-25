@@ -1,0 +1,579 @@
+{
+  "v": 1,
+  "kind": "flauz.app-server-schema",
+  "source": "CODEX_APP_SERVER_SCHEMA_EXPERIMENTAL=1 export (initial snapshot assembled from the frozen codex-protocol client surface at Flauz base 0bbccc24 because the worker sandbox lacked the codex binary; regenerate from the real export with: CODEX_RS_CODEX_BIN=<binary> npm run protocol:export && npm run protocol:generate)",
+  "envelope": {
+    "request": {
+      "type": "object",
+      "properties": {
+        "method": { "type": "string" },
+        "id": { "type": "number" },
+        "params": { "description": "Method-specific params; absent when the method takes none." }
+      },
+      "required": ["method", "id"]
+    },
+    "notification": {
+      "type": "object",
+      "properties": {
+        "method": { "type": "string" },
+        "params": { "description": "Method-specific params; may be absent." }
+      },
+      "required": ["method"]
+    },
+    "response": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "oneOf": [{ "type": "number" }, { "type": "string" }],
+          "description": "The id of the request this frame answers."
+        },
+        "result": { "description": "Present on success." },
+        "error": { "$ref": "#/definitions/RpcError" }
+      },
+      "required": ["id"]
+    }
+  },
+  "definitions": {
+    "RpcError": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "number" },
+        "message": { "type": "string" }
+      },
+      "required": ["code", "message"]
+    },
+    "Account": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "apiKey" }
+          },
+          "required": ["type"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "chatgpt" },
+            "email": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+            "planType": { "type": "string" }
+          },
+          "required": ["type", "planType"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "amazonBedrock" },
+            "usesCodexManagedCredentials": { "type": "boolean" }
+          },
+          "required": ["type", "usesCodexManagedCredentials"]
+        }
+      ]
+    },
+    "ThreadSummary": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sessionId": { "type": "string" },
+        "forkedFromId": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "parentThreadId": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "preview": { "type": "string" },
+        "name": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "cwd": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" },
+        "recencyAt": { "oneOf": [{ "type": "number" }, { "type": "null" }] },
+        "status": { "description": "Thread status payload (surface-shape varies by app-server version)." },
+        "gitInfo": { "description": "Git state payload when present." },
+        "turns": { "type": "array", "items": { "description": "Bounded turn entries." } }
+      },
+      "required": ["id", "sessionId", "preview", "cwd", "createdAt", "updatedAt"]
+    },
+    "TurnsPage": {
+      "type": "object",
+      "properties": {
+        "data": { "type": "array", "items": { "description": "Turn or item entries (shape varies by kind)." } },
+        "nextCursor": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+        "backwardsCursor": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+      },
+      "required": ["data"]
+    },
+    "Turn": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "status": { "type": "string" },
+        "error": { "description": "Structured error payload when the turn failed." }
+      },
+      "required": ["id", "status"]
+    },
+    "UserInput": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "text" },
+            "text": { "type": "string" },
+            "textElements": { "type": "array", "items": { "description": "Structured text elements." } }
+          },
+          "required": ["type", "text"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "localImage" },
+            "path": { "type": "string" },
+            "detail": { "type": "string" }
+          },
+          "required": ["type", "path"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "mention" },
+            "name": { "type": "string" },
+            "path": { "type": "string" }
+          },
+          "required": ["type", "name", "path"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "skill" },
+            "name": { "type": "string" },
+            "path": { "type": "string" }
+          },
+          "required": ["type", "name", "path"]
+        }
+      ]
+    },
+    "ApprovalDecision": {
+      "enum": ["accept", "acceptForSession", "decline", "cancel"]
+    }
+  },
+  "methods": {
+    "account/read": {
+      "kind": "request",
+      "params": {
+        "type": "object",
+        "properties": {
+          "refreshToken": { "type": "boolean", "description": "Refresh the account token server-side." }
+        }
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "account": { "oneOf": [{ "$ref": "#/definitions/Account" }, { "type": "null" }] },
+          "requiresOpenaiAuth": { "type": "boolean" }
+        },
+        "required": ["requiresOpenaiAuth"]
+      }
+    },
+    "account/login/start": {
+      "kind": "request",
+      "params": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": { "const": "apiKey" },
+              "apiKey": { "type": "string", "description": "The API key (never logged, never stored by the web client)." }
+            },
+            "required": ["type", "apiKey"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "const": "chatgpt" },
+              "codexStreamlinedLogin": { "type": "boolean" },
+              "useHostedLoginSuccessPage": { "type": "boolean" },
+              "appBrand": { "enum": ["codex", "chatgpt"] }
+            },
+            "required": ["type"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "const": "chatgptDeviceCode" }
+            },
+            "required": ["type"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "const": "amazonBedrock" },
+              "apiKey": { "type": "string" },
+              "region": { "type": "string" }
+            },
+            "required": ["type", "apiKey", "region"]
+          }
+        ]
+      },
+      "result": {
+        "oneOf": [
+          { "type": "object", "properties": { "type": { "const": "apiKey" } }, "required": ["type"] },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "const": "chatgpt" },
+              "loginId": { "type": "string" },
+              "authUrl": { "type": "string", "description": "The external authorization URL to open." }
+            },
+            "required": ["type", "loginId", "authUrl"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "const": "chatgptDeviceCode" },
+              "loginId": { "type": "string" },
+              "verificationUrl": { "type": "string" },
+              "userCode": { "type": "string" }
+            },
+            "required": ["type", "loginId", "verificationUrl", "userCode"]
+          },
+          { "type": "object", "properties": { "type": { "const": "chatgptAuthTokens" } }, "required": ["type"] },
+          { "type": "object", "properties": { "type": { "const": "amazonBedrock" } }, "required": ["type"] }
+        ]
+      }
+    },
+    "account/login/cancel": {
+      "kind": "request",
+      "params": {
+        "type": "object",
+        "properties": {
+          "loginId": { "type": "string" }
+        },
+        "required": ["loginId"]
+      },
+      "result": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    "account/logout": {
+      "kind": "request",
+      "result": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    "getAuthStatus": {
+      "kind": "request",
+      "params": {
+        "type": "object",
+        "properties": {
+          "includeToken": { "type": "boolean" },
+          "refreshToken": { "type": "boolean" }
+        },
+        "required": ["includeToken", "refreshToken"]
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "authMethod": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+          "authToken": {
+            "oneOf": [{ "type": "string" }, { "type": "null" }],
+            "description": "Auth token when requested; the web client never requests it and never logs it."
+          },
+          "accountId": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+          "requiresOpenaiAuth": { "type": "boolean" }
+        },
+        "required": ["requiresOpenaiAuth"]
+      }
+    },
+    "thread/list": {
+      "kind": "request",
+      "params": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "number" },
+          "sortKey": { "const": "recency_at" },
+          "sortDirection": { "const": "desc" },
+          "useStateDbOnly": { "type": "boolean", "description": "Must be true (the state-DB-only law)." },
+          "cursor": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+          "archived": { "type": "boolean" },
+          "cwd": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+          "searchTerm": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+        },
+        "required": ["limit", "sortKey", "sortDirection", "useStateDbOnly"]
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/definitions/ThreadSummary" } },
+          "nextCursor": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+          "backwardsCursor": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+        },
+        "required": ["data"]
+      }
+    },
+    "thread/search": {
+      "kind": "request",
+      "params": {
+        "type": "object",
+        "properties": {
+          "cursor": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+          "limit": { "type": "number" },
+          "sortKey": { "const": "recency_at" },
+          "sortDirection": { "const": "desc" },
+          "sourceKinds": { "type": "array", "items": { "type": "string" } },
+          "archived": { "type": "boolean" },
+          "searchTerm": { "type": "string" }
+        },
+        "required": ["searchTerm"]
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "thread": { "$ref": "#/definitions/ThreadSummary" },
+                "snippet": { "type": "string" }
+              },
+              "required": ["thread", "snippet"]
+            }
+          },
+          "nextCursor": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+        },
+        "required": ["data"]
+      }
+    },
+    "thread/read": {
+      "kind": "request",
+      "params": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" },
+          "includeTurns": { "type": "boolean" }
+        },
+        "required": ["threadId", "includeTurns"]
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "thread": { "$ref": "#/definitions/ThreadSummary" }
+        },
+        "required": ["thread"]
+      }
+    },
+    "thread/resume": {
+      "kind": "request",
+      "params": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" },
+          "excludeTurns": { "type": "boolean" },
+          "initialTurnsPage": {
+            "type": "object",
+            "properties": {
+              "cursor": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+              "limit": { "type": "number" },
+              "sortDirection": { "enum": ["asc", "desc"] },
+              "itemsView": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+            },
+            "required": ["limit", "sortDirection"]
+          }
+        },
+        "required": ["threadId"]
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "thread": { "$ref": "#/definitions/ThreadSummary" },
+          "initialTurnsPage": { "oneOf": [{ "$ref": "#/definitions/TurnsPage" }, { "type": "null" }] },
+          "model": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+          "reasoningEffort": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+          "serviceTier": { "description": "The thread's service tier when reported." }
+        },
+        "required": ["thread"]
+      }
+    },
+    "thread/turns/list": {
+      "kind": "request",
+      "params": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" },
+          "limit": { "type": "number" },
+          "sortDirection": { "enum": ["asc", "desc"] },
+          "cursor": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+          "itemsView": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+        },
+        "required": ["threadId", "limit", "sortDirection"]
+      },
+      "result": { "$ref": "#/definitions/TurnsPage" }
+    },
+    "turn/start": {
+      "kind": "request",
+      "params": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" },
+          "input": { "type": "array", "items": { "$ref": "#/definitions/UserInput" } },
+          "clientUserMessageId": { "type": "string" },
+          "cwd": { "type": "string" },
+          "model": { "type": "string" },
+          "effort": { "type": "string" },
+          "summary": { "type": "string" }
+        },
+        "required": ["threadId", "input"]
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" },
+          "turn": { "$ref": "#/definitions/Turn" }
+        }
+      }
+    },
+    "turn/interrupt": {
+      "kind": "request",
+      "params": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" }
+        },
+        "required": ["threadId"]
+      },
+      "result": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    "account/login/completed": {
+      "kind": "notification",
+      "params": { "description": "The login-completed payload (surface-shape varies by app-server version)." }
+    },
+    "turn/started": {
+      "kind": "notification",
+      "params": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" },
+          "turn": { "$ref": "#/definitions/Turn" }
+        },
+        "required": ["turn"]
+      }
+    },
+    "turn/completed": {
+      "kind": "notification",
+      "params": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" },
+          "turn": { "$ref": "#/definitions/Turn" }
+        },
+        "required": ["turn"]
+      }
+    },
+    "item/agentMessage/delta": {
+      "kind": "notification",
+      "params": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" },
+          "turnId": { "type": "string" },
+          "itemId": { "type": "string" },
+          "delta": { "type": "string" }
+        },
+        "required": ["delta"]
+      }
+    },
+    "item/completed": {
+      "kind": "notification",
+      "params": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" },
+          "turnId": { "type": "string" },
+          "item": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "text": { "type": "string" },
+              "command": { "type": "string" }
+            },
+            "required": ["type"]
+          }
+        },
+        "required": ["item"]
+      }
+    },
+    "error": {
+      "kind": "notification",
+      "params": {
+        "type": "object",
+        "properties": {
+          "error": { "$ref": "#/definitions/RpcError" }
+        }
+      }
+    },
+    "thread/status/changed": {
+      "kind": "notification",
+      "params": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" },
+          "status": { "description": "The new thread status payload." }
+        }
+      }
+    },
+    "item/commandExecution/requestApproval": {
+      "kind": "serverRequest",
+      "params": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" },
+          "turnId": { "type": "string" },
+          "itemId": { "type": "string" },
+          "command": { "type": "string" },
+          "cwd": { "type": "string" }
+        },
+        "required": ["command"]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "decision": { "$ref": "#/definitions/ApprovalDecision" }
+        },
+        "required": ["decision"]
+      }
+    },
+    "item/fileChange/requestApproval": {
+      "kind": "serverRequest",
+      "params": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" },
+          "turnId": { "type": "string" },
+          "itemId": { "type": "string" },
+          "changeSummary": { "type": "string" }
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "decision": { "$ref": "#/definitions/ApprovalDecision" }
+        },
+        "required": ["decision"]
+      }
+    },
+    "item/permissions/requestApproval": {
+      "kind": "serverRequest",
+      "params": {
+        "type": "object",
+        "properties": {
+          "threadId": { "type": "string" },
+          "turnId": { "type": "string" },
+          "details": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "response": {
+        "description": "Permission profile selection; the WEB-001 shell declines with a named error instead of fabricating a profile."
+      }
+    }
+  }
+}

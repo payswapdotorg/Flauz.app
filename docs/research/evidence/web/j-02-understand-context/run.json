@@ -1,0 +1,51 @@
+{
+  "journey_id": "J-02",
+  "journey_name": "Understand what the agent knows (web foundation variant)",
+  "product_journey": "Task → Context indicator → Context Inspector → current objective and activity, honestly scoped.",
+  "steps": [
+    {
+      "step_id": "s1",
+      "action": "open the session's Context inspector from the task surface",
+      "frames": [
+        "frames/01-context-inspector.png"
+      ],
+      "assertions": [
+        {
+          "id": "a1",
+          "kind": "state",
+          "state_key": "context.inspector",
+          "observation": "visible",
+          "expected": "visible",
+          "verdict": "pass"
+        },
+        {
+          "id": "a2",
+          "kind": "state",
+          "state_key": "context.objective_present",
+          "observation": "present",
+          "expected": "present",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s2",
+      "action": "the context surface names its honest foundation scope",
+      "frames": [
+        "frames/02-context-honest-scope.png"
+      ],
+      "assertions": [
+        {
+          "id": "a3",
+          "kind": "state",
+          "state_key": "context.honest_scope",
+          "observation": "named",
+          "expected": "named",
+          "verdict": "pass"
+        }
+      ]
+    }
+  ],
+  "outcome": "pass",
+  "finished_at": "2026-09-25T07:03:30.590Z"
+}

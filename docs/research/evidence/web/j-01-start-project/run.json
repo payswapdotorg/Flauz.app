@@ -1,0 +1,110 @@
+{
+  "journey_id": "J-01",
+  "journey_name": "Start any project (web foundation variant)",
+  "product_journey": "Workspace → New Project/Task → describe objective → start → live session with success state; palette fallback discoverable.",
+  "steps": [
+    {
+      "step_id": "s1",
+      "action": "open the served web app and sign in",
+      "frames": [
+        "frames/01-signed-in.png"
+      ],
+      "assertions": [
+        {
+          "id": "a1",
+          "kind": "state",
+          "state_key": "connection.state",
+          "observation": "connected",
+          "expected": "connected",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s2",
+      "action": "see the workspace home with the primary Start-a-new-task entry",
+      "frames": [
+        "frames/02-workspace-empty.png"
+      ],
+      "assertions": [
+        {
+          "id": "a2",
+          "kind": "state",
+          "state_key": "workspace.empty_state",
+          "observation": "visible",
+          "expected": "visible",
+          "verdict": "pass"
+        },
+        {
+          "id": "a3",
+          "kind": "state",
+          "state_key": "workspace.primary_entry",
+          "observation": "visible",
+          "expected": "visible",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s3",
+      "action": "open the command palette with Ctrl+K and find the new-task command",
+      "frames": [
+        "frames/03-palette.png"
+      ],
+      "assertions": [
+        {
+          "id": "a4",
+          "kind": "state",
+          "state_key": "palette.fallback",
+          "observation": "reachable",
+          "expected": "reachable",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s4",
+      "action": "describe the objective in plain language and start the task",
+      "frames": [
+        "frames/04-session-live.png"
+      ],
+      "assertions": [
+        {
+          "id": "a5",
+          "kind": "state",
+          "state_key": "session.connected_state",
+          "observation": "connected",
+          "expected": "connected",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s5",
+      "action": "see the success state with the next-step affordance",
+      "frames": [
+        "frames/05-session-success.png"
+      ],
+      "assertions": [
+        {
+          "id": "a6",
+          "kind": "state",
+          "state_key": "session.success_state",
+          "observation": "visible",
+          "expected": "visible",
+          "verdict": "pass"
+        },
+        {
+          "id": "a7",
+          "kind": "state",
+          "state_key": "session.next_step_affordance",
+          "observation": "present",
+          "expected": "present",
+          "verdict": "pass"
+        }
+      ]
+    }
+  ],
+  "outcome": "pass",
+  "finished_at": "2026-09-25T07:03:30.134Z"
+}
