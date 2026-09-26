@@ -1,0 +1,8 @@
+fvl14-01-entry.png 564aa5874d6cd2230291106390e7dfdb
+fvl14-02-members-panel.png 564aa5874d6cd2230291106390e7dfdb
+fvl14-03-members-detail.png 564aa5874d6cd2230291106390e7dfdb
+fvl14-04-members-closed.png 564aa5874d6cd2230291106390e7dfdb
+fvl14-05-palette-sharing.png 5bcb1574a0be99dd88b70c15ba82c999
+fvl14-05b-sharing-surface.png b29af5c93b60b91a9a0ef094845f1200
+fvl14-06-sharing-detail.png 5bcb1574a0be99dd88b70c15ba82c999
+fvl14-07-settle.png 564aa5874d6cd2230291106390e7dfdb

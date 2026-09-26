@@ -1,0 +1,28 @@
+[02:31:14] scene fv-l08 (journey J-07) run fv_20260926T023114Z_21706 starting at 2026-09-26T02:31:14Z
+[02:31:14] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:31:14] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:31:14] binary: /home/z/Flauz.app/target/release/codexrs
+[02:31:14] evidence dir: docs/research/evidence/fv-gate/linux/fv-l08
+[02:31:18] app launched: pid 21770 on display :131 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:31:29] UI rendered after 10s (frame 79025 bytes)
+[02:31:31] window focused: 0x400001
+[02:31:33] --- [01] entry baseline
+[02:31:34] frame fvl08-01-entry 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:31:34] --- [02] anchor task
+[02:31:44] frame fvl08-02-task-surface 85214 bytes md5 fbfa87f3a08a8f8947596cb11bed5ab5
+[02:31:44] --- [03] Ctrl+Alt+Shift+7 — the agents view (honest empty + delegation body + the not-wired line)
+[02:31:48] frame fvl08-03-agents-view 130593 bytes md5 ec19bf99e3a2b625191821f54c4c0834
+[02:31:48] chord frame md5: ec19bf99e3a2b625191821f54c4c0834
+[02:31:50] frame fvl08-04-agents-detail 130593 bytes md5 ec19bf99e3a2b625191821f54c4c0834
+[02:31:50] --- [05] scoped Escape — the view closes; the task surface stands
+[02:31:52] frame fvl08-05-agents-closed 85196 bytes md5 b75dd5d359c62735586c7097048f2202
+[02:31:52] --- [06] palette row 'See who is working on this task' + Return lands the same panel
+[02:31:58] frame fvl08-06-palette-row 93641 bytes md5 7123bf6ebeaf9bd49b2f5f3bd396bd2e
+[02:32:01] frame fvl08-06b-palette-landed 132869 bytes md5 7be5eb5530d78a9283699b0d730ea8ac
+[02:32:01] palette-landed frame md5: 7be5eb5530d78a9283699b0d730ea8ac
+[02:32:01] --- [07] frame-compare: the chord frame vs the palette frame (expect pixel-identical)
+[02:32:01] FRAME-COMPARE: md5 differs (ec19bf99e3a2b625191821f54c4c0834 vs 7be5eb5530d78a9283699b0d730ea8ac) — the Lead adjudicates pixel-identity (settle jitter is the known d-series cause)
+[02:32:03] --- [08] Escape settle — final frame
+[02:32:05] frame fvl08-08-settle 87897 bytes md5 c8056cb6c916c25fc82aef74306e1937
+[02:32:05] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:32:05] scene fv-l08 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l08

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=codexRS
+Comment=Native Codex desktop client
+Exec="/home/z/Flauz.app/target/release/codexrs"
+Terminal=false
+Categories=Development;

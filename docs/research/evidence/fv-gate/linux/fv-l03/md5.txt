@@ -1,0 +1,8 @@
+fvl03-01-entry.png 564aa5874d6cd2230291106390e7dfdb
+fvl03-02-task-surface.png 19caebd7149d33c5448281a25ae6baa3
+fvl03-02b-task-surface-settled.png 0ab11de10c9c3adc32c3871f14641077
+fvl03-03-recovery-guidance.png 0ab11de10c9c3adc32c3871f14641077
+fvl03-04-banner-free.png e7fe86ab55c6c2331918a5303c67356c
+fvl03-05-palette-recovery-row.png 5e044d0e56ebe1d69ce1c12586e00501
+fvl03-06-palette-landed-same-guidance.png faf326f944a02dde000b72ddb5ef9166
+fvl03-07-settle.png b25519796056caa26dc04c413f4b2071

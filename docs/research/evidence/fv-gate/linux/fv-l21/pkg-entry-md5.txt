@@ -1,0 +1,2 @@
+e3a558ac5ba7fb0e7d781b8005a3300f  /tmp/fvl21-pkg-home.F8qqHd/.local/share/applications/com.codexrs.CodexRS.desktop
+e3a558ac5ba7fb0e7d781b8005a3300f

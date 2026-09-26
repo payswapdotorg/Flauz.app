@@ -1,0 +1,8 @@
+fvl08-01-entry.png 564aa5874d6cd2230291106390e7dfdb
+fvl08-02-task-surface.png fbfa87f3a08a8f8947596cb11bed5ab5
+fvl08-03-agents-view.png ec19bf99e3a2b625191821f54c4c0834
+fvl08-04-agents-detail.png ec19bf99e3a2b625191821f54c4c0834
+fvl08-05-agents-closed.png b75dd5d359c62735586c7097048f2202
+fvl08-06-palette-row.png 7123bf6ebeaf9bd49b2f5f3bd396bd2e
+fvl08-06b-palette-landed.png 7be5eb5530d78a9283699b0d730ea8ac
+fvl08-08-settle.png c8056cb6c916c25fc82aef74306e1937

@@ -1,0 +1,25 @@
+[02:35:37] scene fv-l14 (journey J-13) run fv_20260926T023537Z_24885 starting at 2026-09-26T02:35:37Z
+[02:35:37] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:35:37] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:35:37] binary: /home/z/Flauz.app/target/release/codexrs
+[02:35:37] evidence dir: docs/research/evidence/fv-gate/linux/fv-l14
+[02:35:42] app launched: pid 24927 on display :128 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:35:52] UI rendered after 10s (frame 79025 bytes)
+[02:35:54] window focused: 0x400001
+[02:35:57] --- [01] entry baseline
+[02:35:57] frame fvl14-01-entry 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:35:57] --- [02] Ctrl+Alt+Shift+U — the members panel ('Just you' + both not-wired states)
+[02:35:59] frame fvl14-02-members-panel 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:35:59] --- [03] settle/detail frame
+[02:36:01] frame fvl14-03-members-detail 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:36:01] --- [04] scoped Escape — the members panel closes
+[02:36:03] frame fvl14-04-members-closed 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:36:03] --- [05] palette 'Change a task's sharing' + Return lands the sharing surface
+[02:36:09] frame fvl14-05-palette-sharing 66079 bytes md5 5bcb1574a0be99dd88b70c15ba82c999
+[02:36:12] frame fvl14-05b-sharing-surface 66046 bytes md5 b29af5c93b60b91a9a0ef094845f1200
+[02:36:12] --- [06] settle/detail frame (the three sections + the honest sync note readable)
+[02:36:15] frame fvl14-06-sharing-detail 66079 bytes md5 5bcb1574a0be99dd88b70c15ba82c999
+[02:36:15] --- [07] Escape — the sharing surface closes; final settle
+[02:36:17] frame fvl14-07-settle 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:36:17] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:36:17] scene fv-l14 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l14

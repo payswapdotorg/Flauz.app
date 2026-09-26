@@ -1,0 +1,10 @@
+fvl19-01-entry.png 564aa5874d6cd2230291106390e7dfdb
+fvl19-02-objective-typed.png 37fe2908914244e66be67b448b489c20
+fvl19-03-task-surface.png 18fd6e008f13643258c5b98983bf3fe4
+fvl19-03b-task-surface-settled.png 18fd6e008f13643258c5b98983bf3fe4
+fvl19-04-model-picker.png 802821ecc3b03ae53eb2ac1b5d84206a
+fvl19-05-status-panel.png 2676139d1c6c13219b7a85cd4080b3fc
+fvl19-06a-environments-honest.png 1724f16e9a4d06d5af79610b95599e21
+fvl19-06b-evidence-honest.png 306bb0dbcaecdc59d9365f975de5db1b
+fvl19-07-save-affordance-visible.png 2676139d1c6c13219b7a85cd4080b3fc
+fvl19-08-settle.png 2676139d1c6c13219b7a85cd4080b3fc

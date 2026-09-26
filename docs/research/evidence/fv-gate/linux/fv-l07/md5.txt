@@ -1,0 +1,9 @@
+fvl07-01-entry.png 564aa5874d6cd2230291106390e7dfdb
+fvl07-02-seeded-chat-timeline.png 564aa5874d6cd2230291106390e7dfdb
+fvl07-03-terminal-dock-open.png a55b491bf7c99d869ea2adb1088da0cb
+fvl07-04a-pty-typed.png a55b491bf7c99d869ea2adb1088da0cb
+fvl07-04b-pty-echo.png a55b491bf7c99d869ea2adb1088da0cb
+fvl07-05-terminal-dock-closed.png a55b491bf7c99d869ea2adb1088da0cb
+fvl07-06-browser-panel-honest.png 3acf07e7521b5cca2d0c878b766f5d3a
+fvl07-06b-browser-detail.png 3acf07e7521b5cca2d0c878b766f5d3a
+fvl07-07-browser-closed.png 3acf07e7521b5cca2d0c878b766f5d3a

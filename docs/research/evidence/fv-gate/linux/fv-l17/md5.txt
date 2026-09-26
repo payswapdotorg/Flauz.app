@@ -1,0 +1,8 @@
+fvl17-01-entry.png 564aa5874d6cd2230291106390e7dfdb
+fvl17-02-task-surface.png a14436abe5e3dc2b9565fc61df0f7510
+fvl17-03-conflicts-panel.png 9e986d2515f26304a21b33f159751d2e
+fvl17-04-conflicts-detail.png 9e986d2515f26304a21b33f159751d2e
+fvl17-05-panel-closed.png a14436abe5e3dc2b9565fc61df0f7510
+fvl17-06-palette-row.png cdff7ba17d48d0ec1d6573a288e9d0a1
+fvl17-06b-palette-landed.png 7298819301cb159a23870a35f4b9e713
+fvl17-07-settle.png 22578967590afe5259fa195ef87a8e89

@@ -1,0 +1,22 @@
+[02:32:05] scene fv-l09 (journey J-08) run fv_20260926T023205Z_22342 starting at 2026-09-26T02:32:05Z
+[02:32:05] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:32:05] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:32:05] binary: /home/z/Flauz.app/target/release/codexrs
+[02:32:05] evidence dir: docs/research/evidence/fv-gate/linux/fv-l09
+[02:32:10] app launched: pid 22389 on display :136 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:32:21] UI rendered after 10s (frame 79025 bytes)
+[02:32:23] window focused: 0x400001
+[02:32:25] --- [01] entry baseline
+[02:32:25] frame fvl09-01-entry 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:32:25] --- [02] anchor task
+[02:32:36] frame fvl09-02-task-surface 85190 bytes md5 842cd8563e6e17dc235e2986fda147f7
+[02:32:36] --- [03] Ctrl+Alt+Shift+Y — the needs-you panel (the honest quiet state + what-lands-here)
+[02:32:39] frame fvl09-03-needs-you-panel 114188 bytes md5 d23b9976595351dcab7de017946c90c3
+[02:32:41] frame fvl09-04-needs-you-detail 114188 bytes md5 d23b9976595351dcab7de017946c90c3
+[02:32:41] --- [05] scoped Escape — the panel closes (one Escape, the 017 restore contract)
+[02:32:43] frame fvl09-05-panel-closed 85190 bytes md5 842cd8563e6e17dc235e2986fda147f7
+[02:32:43] --- [06] the title-bar needs-you entry (visible in chrome — the WO-P2-018 layer-1 entry)
+[02:32:46] frame fvl09-06-titlebar-entry-visible 116835 bytes md5 8cb6cde66911d98ab53f00dc67a68354
+[02:32:47] RUN NOTE (catalog gap X-3): the needs-you panel renders its honest view-model — live approval/takeover data is future wiring; the approval-card consequence pair, the takeover/handback copy, and the cancellation affordances are unit-pinned at this base (flauz_takeover.rs copy constants + the module's tests); this scene never invents approval data
+[02:32:47] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:32:47] scene fv-l09 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l09

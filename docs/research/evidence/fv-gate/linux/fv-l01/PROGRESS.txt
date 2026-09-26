@@ -1,0 +1,35 @@
+[02:24:56] scene fv-l01 (journey J-01) run fv_20260926T022456Z_11162 starting at 2026-09-26T02:24:56Z
+[02:24:56] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:24:56] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:24:56] binary: /home/z/Flauz.app/target/release/codexrs
+[02:24:56] evidence dir: docs/research/evidence/fv-gate/linux/fv-l01
+[02:25:01] app launched: pid 11209 on display :128 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:25:12] UI rendered after 10s (frame 79025 bytes)
+[02:25:14] window focused: 0x400001
+[02:25:14] --- [01] wake click already applied by the boot loop — first frame (entry surface, fresh profile)
+[02:25:14] frame fvl01-01-entry 79025 bytes md5 6634e44d68eb3f81e6ab948f2f03629c
+[02:25:14] --- [02] promo modal (if fresh profile) dismissed with ONE Escape (the UX-003 contract)
+[02:25:16] frame fvl01-02-after-one-escape 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:25:18] frame fvl01-02b-typed-probe 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:25:20] --- [03] Ctrl+K palette open (title-bar entry visible in chrome)
+[02:25:23] frame fvl01-03-palette-open 72372 bytes md5 8953e7301e8ec9798d460c1dca17c0ce
+[02:25:23] --- [04] palette new-task row (type-ahead filter)
+[02:25:25] frame fvl01-04-palette-newtask-row 65748 bytes md5 9d4ebf48db5f501b1b751601b27fa63c
+[02:25:27] --- [05] Ctrl+N new-task entry + objective typed
+[02:25:30] frame fvl01-05-new-task-surface 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:25:33] frame fvl01-05b-objective-typed 66430 bytes md5 f1375cf5d727f09b109078a1108ecdc9
+[02:25:33] --- [06] Ctrl+Return submit — the task surface lands (objective echoed)
+[02:25:40] frame fvl01-06-task-surface 85781 bytes md5 6146735cb17e8378a0d07bae01edf238
+[02:25:43] frame fvl01-06b-task-surface-settled 85781 bytes md5 6146735cb17e8378a0d07bae01edf238
+[02:25:43] --- [07] Ctrl+Alt+1 — Projects & tasks surface
+[02:25:47] frame fvl01-07-nav-projects-tasks 69548 bytes md5 068f409f8116673adf87c8aef79453d6
+[02:25:47] --- [08] Ctrl+Alt+2 — Reusable workflows surface
+[02:25:50] frame fvl01-08-nav-reusable-workflows 71815 bytes md5 2da92b5ea5951058d58dcd8e718bc89b
+[02:25:50] --- [09] Ctrl+Alt+3 — Artifacts surface
+[02:25:52] frame fvl01-09-nav-artifacts 73776 bytes md5 2c3d20237cd733f7c5478f2743c39c19
+[02:25:52] --- [10] Ctrl+Alt+4 — Activity surface
+[02:25:55] frame fvl01-10-nav-activity 72522 bytes md5 e098628aea40fb17ee0753a450cf07a2
+[02:25:55] --- [11] Escape settle — final frame (return to the task surface)
+[02:25:57] frame fvl01-11-settle 88454 bytes md5 e5c87accd3b424e2e0c160921954ecdd
+[02:25:57] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:25:57] scene fv-l01 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l01

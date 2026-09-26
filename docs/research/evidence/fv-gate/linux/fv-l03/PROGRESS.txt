@@ -1,0 +1,25 @@
+[02:26:47] scene fv-l03 (journey J-03) run fv_20260926T022647Z_12897 starting at 2026-09-26T02:26:47Z
+[02:26:47] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:26:47] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:26:47] binary: /home/z/Flauz.app/target/release/codexrs
+[02:26:47] evidence dir: docs/research/evidence/fv-gate/linux/fv-l03
+[02:26:52] app launched: pid 13029 on display :138 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:27:03] UI rendered after 10s (frame 79025 bytes)
+[02:27:05] window focused: 0x400001
+[02:27:07] --- [01] entry baseline
+[02:27:07] frame fvl03-01-entry 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:27:07] --- [02] anchor task created (an up-to-date task — nothing to pick up)
+[02:27:20] frame fvl03-02-task-surface 84660 bytes md5 19caebd7149d33c5448281a25ae6baa3
+[02:27:23] frame fvl03-02b-task-surface-settled 84645 bytes md5 0ab11de10c9c3adc32c3871f14641077
+[02:27:23] --- [03] Ctrl+Alt+Shift+R on the up-to-date task — the honest nothing-to-pick-up guidance (command-status line), NO banner
+[02:27:26] frame fvl03-03-recovery-guidance 84645 bytes md5 0ab11de10c9c3adc32c3871f14641077
+[02:27:26] --- [04] the task-surface frame is banner-free (compare vs the 02b settled surface)
+[02:27:29] frame fvl03-04-banner-free 88879 bytes md5 e7fe86ab55c6c2331918a5303c67356c
+[02:27:29] --- [05] palette: 'Resume this task where it left off' filters
+[02:27:35] frame fvl03-05-palette-recovery-row 92897 bytes md5 5e044d0e56ebe1d69ce1c12586e00501
+[02:27:35] --- [06] Return lands the same guidance (frame-compare vs 03)
+[02:27:37] frame fvl03-06-palette-landed-same-guidance 87662 bytes md5 faf326f944a02dde000b72ddb5ef9166
+[02:27:39] --- [07] Escape settle — final frame
+[02:27:41] frame fvl03-07-settle 87676 bytes md5 b25519796056caa26dc04c413f4b2071
+[02:27:41] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:27:42] scene fv-l03 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l03

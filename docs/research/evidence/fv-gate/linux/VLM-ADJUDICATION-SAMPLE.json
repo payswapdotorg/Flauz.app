@@ -1,0 +1,112 @@
+{
+ "kind": "flauz.fv.linux.vlm-sample",
+ "sha": "4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3",
+ "ts": "2026-09-26T02:56:50.255Z",
+ "verdicts": [
+  {
+   "scene": "fv-l01",
+   "frame": "fvl01-11-settle.png",
+   "verdict": "(1) Yes, a real application window is rendered. (2) Flauz \"Untitled task\" configuration view. (3) Yes, an error overlay at the bottom states: \"Codex couldn't complete the request.\""
+  },
+  {
+   "scene": "fv-l02",
+   "frame": "fvl02-07-status-closed.png",
+   "verdict": "(1) Yes. (2) Codex application login screen. (3) No."
+  },
+  {
+   "scene": "fv-l03",
+   "frame": "fvl03-07-settle.png",
+   "verdict": "(1) Yes. (2) GitHub Copilot workspace interface. (3) No."
+  },
+  {
+   "scene": "fv-l04",
+   "frame": "fvl04-05b-retry-1-again.png",
+   "verdict": "(1) Yes. (2) Codex application sign-in screen. (3) No visible errors or artifacts."
+  },
+  {
+   "scene": "fv-l05",
+   "frame": "fvl05-08-settle.png",
+   "verdict": "(1) Yes. (2) Flauz task configuration interface. (3) Yes, an error overlay at the bottom states \"Codex couldn't complete the request.\""
+  },
+  {
+   "scene": "fv-l06",
+   "frame": "fvl06-07-environments-closed.png",
+   "verdict": "(1) Yes. (2) Codex sign-in screen. (3) No."
+  },
+  {
+   "scene": "fv-l07",
+   "frame": "fvl07-07-browser-closed.png",
+   "verdict": "(1) Yes. (2) Codex application sign-in screen. (3) No visible crashes or errors; a \"Dismiss\" banner is present at the bottom."
+  },
+  {
+   "scene": "fv-l08",
+   "frame": "fvl08-08-settle.png",
+   "verdict": "(1) Yes. (2) Flauz app task configuration view. (3) Yes, an error overlay at the bottom states \"Codex couldn't complete the request.\""
+  },
+  {
+   "scene": "fv-l09",
+   "frame": "fvl09-06-titlebar-entry-visible.png",
+   "verdict": "(1) Yes. (2) Flauz.app task view with \"What needs you\" panel and error toast. (3) Yes, a red error toast at the bottom: \"Codex couldn't complete the request.\""
+  },
+  {
+   "scene": "fv-l10",
+   "frame": "fvl10-09b-export-done.png",
+   "verdict": "(1) Yes, a real application window is rendered. (2) Codex (OpenAI) desktop client login screen. (3) No visible crashes or errors; a \"Copy as Markdown\" search overlay is present."
+  },
+  {
+   "scene": "fv-l11",
+   "frame": "fvl11-07-settle.png",
+   "verdict": "(1) Yes. (2) Flauz.app task configuration interface. (3) Yes, an error overlay at the bottom states \"Codex couldn't complete the request.\""
+  },
+  {
+   "scene": "fv-l12",
+   "frame": "fvl12-05-settle.png",
+   "verdict": "(1) Yes. (2) Codex login/start screen. (3) No."
+  },
+  {
+   "scene": "fv-l13",
+   "frame": "fvl13-06-settle.png",
+   "verdict": "(1) Yes, a real application window is rendered. (2) Flauz task configuration interface. (3) Yes, a \"Codex couldn't complete the request\" error overlay is visible at the bottom."
+  },
+  {
+   "scene": "fv-l14",
+   "frame": "fvl14-07-settle.png",
+   "verdict": "(1) Yes. (2) Codex application sign-in screen. (3) No."
+  },
+  {
+   "scene": "fv-l15",
+   "frame": "fvl15-06-composer-model-selector.png",
+   "verdict": "(1) Yes. (2) Flauz task configuration interface. (3) Yes, an error overlay at the bottom states \"Codex couldn't complete the request.\""
+  },
+  {
+   "scene": "fv-l16",
+   "frame": "fvl16-08-settle.png",
+   "verdict": "(1) Yes, a real application window is rendered. (2) Codex (OpenAI) desktop client login screen. (3) No visible crashes or errors; the interface is clean and fully rendered."
+  },
+  {
+   "scene": "fv-l17",
+   "frame": "fvl17-07-settle.png",
+   "verdict": "(1) Yes. (2) Flauz task configuration interface with a request error toast. (3) Yes, an error overlay at the bottom states \"Codex couldn't complete the request.\""
+  },
+  {
+   "scene": "fv-l18",
+   "frame": "fvl18-09-settle.png",
+   "verdict": "(1) Yes. (2) Codex sign-in screen. (3) No visible errors or artifacts; the application appears to be functioning correctly."
+  },
+  {
+   "scene": "fv-l19",
+   "frame": "fvl19-08-settle.png",
+   "verdict": "(1) Yes, a real application window is rendered. (2) It shows the \"Research seasonal planting calendars\" task view with an error message. (3) Yes, there is an error overlay at the bottom stating \"Codex couldn't complete the request.\""
+  },
+  {
+   "scene": "fv-l20",
+   "frame": "fvl20-09z-ladder-final.png",
+   "verdict": "(1) Yes. (2) Flauz application task view. (3) No."
+  },
+  {
+   "scene": "fv-l21",
+   "frame": "fvl21-06-about-closed.png",
+   "verdict": "(1) Yes. (2) CodexRS welcome screen with no workspace selected. (3) No visible crash or error; only a \"Select a workspace\" informational toast."
+  }
+ ]
+}

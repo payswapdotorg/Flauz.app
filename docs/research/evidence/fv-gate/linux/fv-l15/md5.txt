@@ -1,0 +1,6 @@
+fvl15-01-entry.png 564aa5874d6cd2230291106390e7dfdb
+fvl15-02-task-surface-composer-selector.png 82d47e7e17f2d99d71c809c2c515014b
+fvl15-03-model-picker-empty.png c5781bc095db3aa94af91f30fc161ff0
+fvl15-04-model-picker-detail.png c5781bc095db3aa94af91f30fc161ff0
+fvl15-05-picker-closed.png bbc76751f85a80b23696a7f621a7d8a4
+fvl15-06-composer-model-selector.png d70a3a7485e56a379d12496b9b64b54d

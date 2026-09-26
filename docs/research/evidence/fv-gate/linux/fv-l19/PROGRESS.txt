@@ -1,0 +1,29 @@
+[02:39:32] scene fv-l19 (journey DOMAIN-NEUTRAL) run fv_20260926T023932Z_27869 starting at 2026-09-26T02:39:32Z
+[02:39:32] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:39:32] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:39:32] binary: /home/z/Flauz.app/target/release/codexrs
+[02:39:32] evidence dir: docs/research/evidence/fv-gate/linux/fv-l19
+[02:39:37] app launched: pid 27918 on display :139 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:39:47] UI rendered after 10s (frame 79025 bytes)
+[02:39:49] window focused: 0x400001
+[02:39:51] --- [01] entry baseline
+[02:39:52] frame fvl19-01-entry 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:39:52] --- [02] new task: the non-code objective typed (no code)
+[02:39:58] frame fvl19-02-objective-typed 66907 bytes md5 37fe2908914244e66be67b448b489c20
+[02:39:58] --- [03] the objective echoed on the task surface (Ctrl+Return submit)
+[02:40:05] frame fvl19-03-task-surface 87731 bytes md5 18fd6e008f13643258c5b98983bf3fe4
+[02:40:08] frame fvl19-03b-task-surface-settled 87731 bytes md5 18fd6e008f13643258c5b98983bf3fe4
+[02:40:08] --- [04] the model picker visit (the honest empty, domain-neutral)
+[02:40:11] frame fvl19-04-model-picker 119853 bytes md5 802821ecc3b03ae53eb2ac1b5d84206a
+[02:40:12] --- [05] the status surface visit (the /status panel)
+[02:40:17] frame fvl19-05-status-panel 91967 bytes md5 2676139d1c6c13219b7a85cd4080b3fc
+[02:40:19] --- [06] the artifacts/evidence honest states (the rails)
+[02:40:22] frame fvl19-06a-environments-honest 108476 bytes md5 1724f16e9a4d06d5af79610b95599e21
+[02:40:26] frame fvl19-06b-evidence-honest 106986 bytes md5 306bb0dbcaecdc59d9365f975de5db1b
+[02:40:28] --- [07] the save affordance visible post-success-path (the task-surface entry)
+[02:40:31] frame fvl19-07-save-affordance-visible 91967 bytes md5 2676139d1c6c13219b7a85cd4080b3fc
+[02:40:31] --- [08] Escape settle — final frame
+[02:40:33] frame fvl19-08-settle 91967 bytes md5 2676139d1c6c13219b7a85cd4080b3fc
+[02:40:33] DOMAIN-NEUTRAL LAW (PJ §6): every visited surface must answer in domain-neutral language — no repo/branch/test vocabulary on these surfaces; the VLM read checks each frame
+[02:40:33] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:40:33] scene fv-l19 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l19
