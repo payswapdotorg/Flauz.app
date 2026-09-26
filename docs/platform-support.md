@@ -228,3 +228,63 @@ The two data boundaries are independent:
 
 Never point development tests at a live `CODEX_HOME`. Create an isolated
 directory and keep fixtures free of credentials and user history.
+
+## The state database upgrade story
+
+codexRS keeps its own UI state in one SQLite database, `state.sqlite3` under
+`CODEX_RS_DATA_DIR` (see Runtime directories above). The file's
+`PRAGMA user_version` header records its schema version. A build that opens an
+older database migrates it forward automatically, one committed transaction
+per step, before any state is read; the user never runs a migration command.
+
+The guarantee — an old `state.sqlite3` opens on a new build with its rows
+intact — is enforced by tests, not convention:
+`crates/codex-storage/tests/migrations.rs` (with the hand-authored fixtures in
+`crates/codex-storage/tests/fixtures/`) builds a fixture database at every
+version the migrator knows — including the empty database, the current
+version, and one version beyond it — opens it through the real `Store::open`
+path, and asserts the resulting schema and every seeded row. A failure there
+is a product defect that blocks the release (a focused fix work order, never
+a silent fix inside the suite).
+
+What migrates (every row below is a passing test with preserved-row
+assertions):
+
+| Database version | What the upgrade does | Preserved rows (asserted) |
+| --- | --- | --- |
+| v0 — empty/fresh | creates the whole schema | — (nothing existed) |
+| v1 | adds `browser_downloads`, `workspace_folders`, `browsing_history`; adds the `name` and `pinned` columns to `recent_workspaces` | UI preferences, recent workspaces (with NULL name / unpinned defaults) |
+| v2 | adds `workspace_folders`, `browsing_history`; adds `name`/`pinned` to `recent_workspaces` | the above plus browser-download records |
+| v3 | adds `workspace_folders`, `browsing_history` | the above plus workspace names and pinned flags |
+| v4 | adds `browsing_history` | the above plus related workspace folders |
+| v5 — current | nothing; opens unchanged | the above plus browsing history |
+
+An interrupted upgrade (crash, power loss) leaves the database at the last
+committed step, and the next open resumes from there — the v3 and v4 fixtures
+are exactly that intermediate state, and their tests are the proof.
+
+What never migrates:
+
+- The official Codex home (`CODEX_HOME`, default `~/.codex`) is owned by the
+  app-server; codexRS storage never opens, reads, or rewrites it (see Runtime
+  directories above).
+- Nothing ever migrates down. A `state.sqlite3` written by a NEWER build is
+  refused on open with the named error
+  `storage schema version <N> is newer than this build`; its schema version
+  and rows are left exactly as they were. The refusal — never a silent
+  downgrade, never a rewrite — is covered by the same test suite.
+
+Backup recommendation: each migration step is a single committed transaction,
+but it does rewrite the file in place — before upgrading to a new build, copy
+the data directory (or at least `state.sqlite3`) somewhere safe. That copy is
+also the only way back to an older build: an older build refuses the newer
+database by design.
+
+The downgrade refusal, precisely: every build embeds the highest schema
+version it understands (currently 5). On open it compares the file's
+`PRAGMA user_version`; a strictly larger value fails with
+`StoreError::UnsupportedSchema(version)` — the user-visible text is exactly
+`storage schema version <N> is newer than this build` — before any schema or
+row is touched. Recovery: upgrade to the build that wrote the file (or newer),
+or restore the backup taken before the upgrade. The same honest-refusal law as
+the archive verification story above: refuse loudly, never guess.
