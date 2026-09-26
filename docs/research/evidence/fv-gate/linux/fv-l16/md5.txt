@@ -1,0 +1,9 @@
+fvl16-01-entry.png 564aa5874d6cd2230291106390e7dfdb
+fvl16-02-seeded-git-chat.png 564aa5874d6cd2230291106390e7dfdb
+fvl16-03-work-locally-footer.png 564aa5874d6cd2230291106390e7dfdb
+fvl16-04-work-location-picker.png 564aa5874d6cd2230291106390e7dfdb
+fvl16-05-worktree-forked.png 564aa5874d6cd2230291106390e7dfdb
+fvl16-05b-fork-settled.png 564aa5874d6cd2230291106390e7dfdb
+fvl16-06-post-fork-task-surface.png 564aa5874d6cd2230291106390e7dfdb
+fvl16-07-environments-honest.png 564aa5874d6cd2230291106390e7dfdb
+fvl16-08-settle.png 564aa5874d6cd2230291106390e7dfdb

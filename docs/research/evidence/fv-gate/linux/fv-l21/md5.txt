@@ -1,0 +1,7 @@
+fvl21-01-entry.png 564aa5874d6cd2230291106390e7dfdb
+fvl21-02-open-folder-offer.png 564aa5874d6cd2230291106390e7dfdb
+fvl21-03-no-workspace-guard.png 7b1968600d3b9881a284bfff14e10bcc
+fvl21-04a-help-menu-open.png e1dd56685110eaac07cb4b746e82f75c
+fvl21-04b-about-menu-clicked.png 7ac1cf1f02e39b2e3dfbb7a43d54425f
+fvl21-05-about-open.png 7ac1cf1f02e39b2e3dfbb7a43d54425f
+fvl21-06-about-closed.png 7ac1cf1f02e39b2e3dfbb7a43d54425f

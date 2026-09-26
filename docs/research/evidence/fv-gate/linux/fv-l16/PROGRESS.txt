@@ -1,0 +1,30 @@
+[02:36:58] scene fv-l16 (journey J-15) run fv_20260926T023658Z_26072 starting at 2026-09-26T02:36:58Z
+[02:36:58] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:36:58] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:36:58] binary: /home/z/Flauz.app/target/release/codexrs
+[02:36:58] evidence dir: docs/research/evidence/fv-gate/linux/fv-l16
+[02:36:58] donor state seeded: /tmp/d10-home.fv003/.local/share/codexRS/state.sqlite3 -> /tmp/fv-fv-l16-data.VHx0ZA/state.sqlite3
+[02:37:03] app launched: pid 26131 on display :134 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:37:14] UI rendered after 10s (frame 79025 bytes)
+[02:37:16] window focused: 0x400001
+[02:37:18] --- [01] entry baseline (seeded donor state)
+[02:37:18] frame fvl16-01-entry 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:37:18] --- [02] select the seeded git chat
+[02:37:23] frame fvl16-02-seeded-git-chat 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:37:23] --- [03] the composer 'Work locally' affordance (settle frame — the footer)
+[02:37:25] frame fvl16-03-work-locally-footer 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:37:25] --- [04] open the work-location dropdown (keyboard: Tab reaches the affordance; Enter opens the menu)
+[02:37:28] frame fvl16-04-work-location-picker 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:37:28] the picker must show 'Continue in' + 'Work locally' (checked) + 'New worktree' + 'Create a copy of your local project to work in parallel' (ui.rs:26333-26356)
+[02:37:28] --- [05] select 'New worktree' (arrow-down + Enter) — the fork explanation stands; the worktree is created
+[02:37:38] frame fvl16-05-worktree-forked 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:37:41] frame fvl16-05b-fork-settled 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:37:41] --- [06] the post-fork task surface (settle frame)
+[02:37:43] frame fvl16-06-post-fork-task-surface 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:37:43] --- [07] Ctrl+Alt+Shift+3 — the environments rail honest state
+[02:37:47] frame fvl16-07-environments-honest 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:37:48] --- [08] Escape settle — final frame
+[02:37:51] frame fvl16-08-settle 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:37:51] RUN NOTE: the fork state transfer is recorded in the frames 05-06 (the task continues in the fork); the 20 MiB transfer contract is unit-anchored at this base (the catalog's named bound — no live size probe is authored; the Lead reads the fork evidence from the frames + app.log)
+[02:37:51] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:37:51] scene fv-l16 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l16

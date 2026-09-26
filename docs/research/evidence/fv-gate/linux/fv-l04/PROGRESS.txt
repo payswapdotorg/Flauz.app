@@ -1,0 +1,32 @@
+[02:27:43] scene fv-l04 (journey J-03) run fv_20260926T022743Z_14703 starting at 2026-09-26T02:27:43Z
+[02:27:43] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:27:43] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:27:43] binary: /home/z/Flauz.app/target/release/codexrs
+[02:27:43] evidence dir: docs/research/evidence/fv-gate/linux/fv-l04
+[02:27:48] app launched: pid 15854 on display :127 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:27:59] UI rendered after 10s (frame 79025 bytes)
+[02:28:01] window focused: 0x400001
+[02:28:03] --- [01] baseline footer (App-server online)
+[02:28:10] frame fvl04-01-online 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:28:10] footer baseline captured (expect 'App-server online' — ui.rs:16277)
+[02:28:10] --- [02] kill the supervised app-server child mid-session
+[02:28:10] supervised child pid: 15888
+[02:28:10] child killed
+[02:28:10] --- [03] footer retry cadence frames (Reconnecting… → Retry 1 in 1s → … cap)
+[02:28:12] frame fvl04-03a-reconnecting 53210 bytes md5 104c4ebc6b2cba827e4e189a91863552
+[02:28:15] frame fvl04-03b-retry-1 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:28:19] frame fvl04-03c-retry-2 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:28:28] frame fvl04-03d-retry-n 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:28:40] frame fvl04-03e-cap-holds 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:28:40] --- [04] let a retry succeed — auto-return online
+[02:28:40] waiting for the retry to succeed (the app respawns the supervised child from the pinned runtime)
+[02:28:40] respawned child pid: 16792 (after ~5s)
+[02:28:49] frame fvl04-04-online-again 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:28:49] --- [05] kill again — the timer restarts at attempt 1
+[02:28:49] second kill: child pid 16792
+[02:28:51] frame fvl04-05a-reconnecting-again 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:28:55] frame fvl04-05b-retry-1-again 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:28:55] --- [06] log extract archived (bounded app.log tail)
+[02:28:55] app.log tail (16 KiB bound) archived as app-tail.log
+[02:28:55] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:28:55] scene fv-l04 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l04

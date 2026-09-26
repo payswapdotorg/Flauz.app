@@ -1,0 +1,24 @@
+[02:33:38] scene fv-l11 (journey J-10) run fv_20260926T023338Z_23438 starting at 2026-09-26T02:33:38Z
+[02:33:38] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:33:38] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:33:38] binary: /home/z/Flauz.app/target/release/codexrs
+[02:33:38] evidence dir: docs/research/evidence/fv-gate/linux/fv-l11
+[02:33:42] app launched: pid 23480 on display :131 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:33:53] UI rendered after 10s (frame 79025 bytes)
+[02:33:55] window focused: 0x400001
+[02:33:57] --- [01] entry baseline
+[02:33:58] frame fvl11-01-entry 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:33:58] --- [02] anchor task (the affordance rides the task surface)
+[02:34:08] frame fvl11-02-task-surface-affordance 84407 bytes md5 65841708ecfb77600327c695c0113eae
+[02:34:08] --- [03] the task-surface affordance visible (settle frame for the VLM read of the affordance + description)
+[02:34:12] frame fvl11-03-affordance-settle 84407 bytes md5 65841708ecfb77600327c695c0113eae
+[02:34:12] --- [04] Ctrl+Alt+Shift+S — the save panel (the honest not-wired state)
+[02:34:14] frame fvl11-04-save-panel-not-wired 114606 bytes md5 8711243a023ee08ffe77941a0c622401
+[02:34:14] --- [05] settle/detail frame (the not-wired body + next-step + escape hint readable)
+[02:34:16] frame fvl11-05-save-panel-detail 116815 bytes md5 2e12ceffe7ec8991589f4e901408b8c0
+[02:34:16] --- [06] scoped Escape — the panel closes (the task surface stands)
+[02:34:18] frame fvl11-06-panel-closed 87090 bytes md5 df45236f7bfa07a606d7641dacf53d43
+[02:34:18] --- [07] Escape settle — final frame
+[02:34:21] frame fvl11-07-settle 87090 bytes md5 df45236f7bfa07a606d7641dacf53d43
+[02:34:21] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:34:21] scene fv-l11 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l11

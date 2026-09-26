@@ -1,0 +1,30 @@
+[02:43:49] scene fv-l21 (journey FR/PKG) run fv_20260926T024349Z_30277 starting at 2026-09-26T02:43:49Z
+[02:43:49] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:43:49] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:43:49] binary: /home/z/Flauz.app/target/release/codexrs
+[02:43:49] evidence dir: docs/research/evidence/fv-gate/linux/fv-l21
+[02:43:53] app launched: pid 30332 on display :129 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:44:04] UI rendered after 10s (frame 79025 bytes)
+[02:44:06] window focused: 0x400001
+[02:44:08] --- [01] entry baseline (fresh profile — the fresh-machine contract)
+[02:44:09] frame fvl21-01-entry 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:44:09] --- [02] the empty-workspace 'Open folder' offer (Ctrl+O fires the affordance; the picker is the documented L-5 bound)
+[02:44:11] frame fvl21-02-open-folder-offer 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:44:13] --- [03] the honest no-workspace guard (Ctrl+P → 'Select a workspace before searching files.')
+[02:44:16] frame fvl21-03-no-workspace-guard 66583 bytes md5 7b1968600d3b9881a284bfff14e10bcc
+[02:44:17] --- [04] the Help menu → 'About codexRS' (the fr1d placement-law clicks — this scene's one named pointer exception: menus)
+[02:44:17] POINTER EXCEPTION (named): the Help dropdown menu drive uses the FR-BINDING fr1d calibrated placement (Help (375,65) → About (416,275) at 1440x900); every other leg is keyboard-only
+[02:44:19] frame fvl21-04a-help-menu-open 79788 bytes md5 e1dd56685110eaac07cb4b746e82f75c
+[02:44:22] frame fvl21-04b-about-menu-clicked 58615 bytes md5 7ac1cf1f02e39b2e3dfbb7a43d54425f
+[02:44:22] --- [05] the About window open — xwininfo Width 380 / Height 360 exactly (the FR-1 contract)
+[02:44:22] About window geometry: Width 380 / Height 360 (expect 380 / 360 exactly — ui.rs:214-215)
+[02:44:22] FR-1 GEOMETRY: PASS (380x360)
+[02:44:22] frame fvl21-05-about-open 58615 bytes md5 7ac1cf1f02e39b2e3dfbb7a43d54425f
+[02:44:22] --- [06] the About window closes via Escape (the scoped AboutDialog binding)
+[02:44:24] frame fvl21-06-about-closed 58615 bytes md5 7ac1cf1f02e39b2e3dfbb7a43d54425f
+[02:44:24] --- [07] (separate process run) --install-desktop-entry: created once; the second run leaves it UNCHANGED
+[02:44:24] PKG-2: entry created at /tmp/fvl21-pkg-home.F8qqHd/.local/share/applications/com.codexrs.CodexRS.desktop
+[02:44:25] PKG-2 NEVER-OVERWRITES: PASS (second run left the entry byte-identical)
+[02:44:25] RUN NOTE (catalog gap L-5): no native folder picker on Xvfb (no portal backend) — FR-3's picker step stays the documented headless bound; the honest no-workspace guard + the offer affordance are the verifiable truth
+[02:44:25] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:44:25] scene fv-l21 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l21

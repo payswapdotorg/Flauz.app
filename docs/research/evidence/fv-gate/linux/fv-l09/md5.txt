@@ -1,0 +1,6 @@
+fvl09-01-entry.png 564aa5874d6cd2230291106390e7dfdb
+fvl09-02-task-surface.png 842cd8563e6e17dc235e2986fda147f7
+fvl09-03-needs-you-panel.png d23b9976595351dcab7de017946c90c3
+fvl09-04-needs-you-detail.png d23b9976595351dcab7de017946c90c3
+fvl09-05-panel-closed.png 842cd8563e6e17dc235e2986fda147f7
+fvl09-06-titlebar-entry-visible.png 8cb6cde66911d98ab53f00dc67a68354

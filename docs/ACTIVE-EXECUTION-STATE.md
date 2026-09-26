@@ -1,7 +1,7 @@
 # Active Execution State
 
-**Updated:** 2026-09-25
-**Current main:** f5e2a5c (the Wave-6 merge — WEB-001 PR #57 + WEB-002 PR #58)
+**Updated:** 2026-09-26
+**Current main:** 4ed0a0c (the Wave-6 merge — WEB-001 PR #57 + WEB-002 PR #58)
 
 This file is the repository's operational handoff for the active Tech Leads. It does not override the architecture constitution or work-order contracts; it records the current execution state and sequencing decisions.
 
@@ -15,7 +15,7 @@ Wave 3 / F6 orchestration            ✅ CLOSED
 Wave 4 / F7-F9                       ✅ CLOSED 2026-09-23 (gate record: docs/research/evidence/w4-gate/WAVE4-GATE-RECORD.md)
 Wave 5 / F6 depth (leases + takeover) ✅ CLOSED 2026-09-25 (gate record: docs/research/evidence/w5-gate/WAVE5-GATE-RECORD.md)
 Wave 6 / F11 Web client              ✅ CLOSED 2026-09-25 (gate record: docs/research/evidence/w6-gate/WAVE6-GATE-RECORD.md)
-Web / Windows / Linux formal verify  ▶ NEXT (readiness then formal verify, per the sequencing below)
+Web / Windows / Linux formal verify  ▶ EXECUTED 2026-09-26 (FV-001 PR #59 + FV-002 PR #60 + the FV-003 Lead passes at 4ed0a0c: Linux 21/21 GREEN, Windows CI journey-smoke GREEN, Web 1/14 + the named W-AUTH gap — gate record: docs/research/evidence/fv-gate/FV-GATE-RECORD.md)
 Production                           ⬜
 macOS                                ⏸ DEFERRED UNTIL AFTER PRODUCTION
 Mobile                               ⏸ DEFERRED UNTIL AFTER PRODUCTION

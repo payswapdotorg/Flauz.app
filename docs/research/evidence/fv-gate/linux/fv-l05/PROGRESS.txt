@@ -1,0 +1,28 @@
+[02:28:56] scene fv-l05 (journey J-04) run fv_20260926T022856Z_19345 starting at 2026-09-26T02:28:56Z
+[02:28:56] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:28:56] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:28:56] binary: /home/z/Flauz.app/target/release/codexrs
+[02:28:56] evidence dir: docs/research/evidence/fv-gate/linux/fv-l05
+[02:29:01] app launched: pid 19601 on display :120 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:29:13] UI rendered after 10s (frame 79025 bytes)
+[02:29:15] window focused: 0x400001
+[02:29:17] --- [01] entry baseline
+[02:29:17] frame fvl05-01-entry 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:29:17] --- [02] anchor task (the capability affordance rides the task context)
+[02:29:29] frame fvl05-02-task-surface 85021 bytes md5 42b77d3090095d495ef1a2b041ad277a
+[02:29:29] --- [03] Ctrl+Alt+Shift+6 — the capability panel (subtitle + the five-dimension pre-wiring copy)
+[02:29:32] frame fvl05-03-capability-panel 115687 bytes md5 f3800226e38557735a394b7ad9c78983
+[02:29:32] chord frame md5: f3800226e38557735a394b7ad9c78983
+[02:29:34] frame fvl05-04-capability-detail 115687 bytes md5 f3800226e38557735a394b7ad9c78983
+[02:29:34] --- [05] scoped Escape — the panel closes (the task surface stands)
+[02:29:36] frame fvl05-05-panel-closed 85021 bytes md5 42b77d3090095d495ef1a2b041ad277a
+[02:29:36] --- [06] palette row 'Why is a capability unavailable?' + Return lands the SAME panel
+[02:29:43] frame fvl05-06-palette-row 93410 bytes md5 5bd0b9d5e9091513d812e353297abed3
+[02:29:46] frame fvl05-06b-palette-landed 117990 bytes md5 a88a71ee4bee8e58b8bd4f6eeffd3fc3
+[02:29:46] palette-landed frame md5: a88a71ee4bee8e58b8bd4f6eeffd3fc3
+[02:29:46] --- [07] frame-compare: the chord frame vs the palette-row frame (expect pixel-identical)
+[02:29:46] FRAME-COMPARE: md5 differs (f3800226e38557735a394b7ad9c78983 vs a88a71ee4bee8e58b8bd4f6eeffd3fc3) — the Lead adjudicates pixel-identity (settle jitter is the known d-series cause; see the w4-gate d26 record)
+[02:29:47] --- [08] Escape settle — final frame
+[02:29:50] frame fvl05-08-settle 87703 bytes md5 b1ff248d481e60c0cd6c5fbeebc6c15d
+[02:29:50] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:29:50] scene fv-l05 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l05

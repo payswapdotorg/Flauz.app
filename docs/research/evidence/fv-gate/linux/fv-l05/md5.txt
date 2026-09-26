@@ -1,0 +1,8 @@
+fvl05-01-entry.png 564aa5874d6cd2230291106390e7dfdb
+fvl05-02-task-surface.png 42b77d3090095d495ef1a2b041ad277a
+fvl05-03-capability-panel.png f3800226e38557735a394b7ad9c78983
+fvl05-04-capability-detail.png f3800226e38557735a394b7ad9c78983
+fvl05-05-panel-closed.png 42b77d3090095d495ef1a2b041ad277a
+fvl05-06-palette-row.png 5bd0b9d5e9091513d812e353297abed3
+fvl05-06b-palette-landed.png a88a71ee4bee8e58b8bd4f6eeffd3fc3
+fvl05-08-settle.png b1ff248d481e60c0cd6c5fbeebc6c15d

@@ -1,0 +1,24 @@
+[02:34:54] scene fv-l13 (journey J-12) run fv_20260926T023454Z_24356 starting at 2026-09-26T02:34:54Z
+[02:34:54] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:34:54] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:34:54] binary: /home/z/Flauz.app/target/release/codexrs
+[02:34:54] evidence dir: docs/research/evidence/fv-gate/linux/fv-l13
+[02:34:59] app launched: pid 24399 on display :133 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:35:10] UI rendered after 10s (frame 79025 bytes)
+[02:35:12] window focused: 0x400001
+[02:35:14] --- [01] entry baseline
+[02:35:14] frame fvl13-01-entry 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:35:14] --- [02] anchor task
+[02:35:25] frame fvl13-02-task-surface 84834 bytes md5 f2a6258d0f27043ae6bf900aec11c4d0
+[02:35:25] --- [03] Ctrl+Alt+Shift+S — the save panel (the deviation promise inside the not-wired state)
+[02:35:28] frame fvl13-03-save-panel-deviation-promise 114881 bytes md5 fd047d7433089dc776b04185b5df908a
+[02:35:29] frame fvl13-03b-save-panel-detail 114881 bytes md5 fd047d7433089dc776b04185b5df908a
+[02:35:29] --- [04] Escape — the panel closes
+[02:35:32] frame fvl13-04-panel-closed 84851 bytes md5 563cf12c0e107527153842d622be3a66
+[02:35:32] --- [05] Ctrl+Alt+2 — the workflows list's empty state
+[02:35:35] frame fvl13-05-workflows-empty 72325 bytes md5 a7d81dcaf45dd8af4e2b101039cd20cc
+[02:35:35] --- [06] Escape settle — final frame
+[02:35:37] frame fvl13-06-settle 87513 bytes md5 fcf57bcfd08f783efdf74cc6cfdbe3c3
+[02:35:37] RUN NOTE (catalog §4 J-12 / gap X-2): the full run/deviation/improve loop is N/A — not wired on any client at this base; this scene verifies the honest not-wired states (the deviation promise + the empty list) exactly as the catalog's honest-state slice defines
+[02:35:37] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:35:37] scene fv-l13 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l13

@@ -1,0 +1,34 @@
+[02:38:43] scene fv-l18 (journey J-17) run fv_20260926T023843Z_27300 starting at 2026-09-26T02:38:43Z
+[02:38:43] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:38:43] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:38:43] binary: /home/z/Flauz.app/target/release/codexrs
+[02:38:43] evidence dir: docs/research/evidence/fv-gate/linux/fv-l18
+[02:38:43] donor state seeded: /tmp/d10-home.fv003/.local/share/codexRS/state.sqlite3 -> /tmp/fv-fv-l18-data.clZCkZ/state.sqlite3
+[02:38:47] app launched: pid 27351 on display :128 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:38:58] UI rendered after 10s (frame 79025 bytes)
+[02:39:00] window focused: 0x400001
+[02:39:02] --- [01] entry baseline (seeded donor state)
+[02:39:03] frame fvl18-01-entry 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:39:03] --- [02] select the first seeded chat
+[02:39:08] frame fvl18-02-chat-selected 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:39:08] --- [03] Ctrl+Shift+U — mark unread ('Chat marked unread' + the dot + the label)
+[02:39:10] frame fvl18-03-marked-unread 66373 bytes md5 b99e6ce9e70d86840cd1b004a2a155ea
+[02:39:10] --- [04] Ctrl+Alt+A — the jump lands selection on the flagged chat with the dot cleared (visit clears)
+[02:39:13] frame fvl18-04-jump-cleared 65454 bytes md5 2a8f4f8b15bf81c98a8f8c8dd3d69a7c
+[02:39:13] --- [05] re-flag then Shift+Escape — clear-all honest count ('Cleared unread indicators for 1 chat')
+[02:39:15] frame fvl18-05a-reflagged 66373 bytes md5 b99e6ce9e70d86840cd1b004a2a155ea
+[02:39:18] frame fvl18-05b-clear-all 64979 bytes md5 bf574768a880abc086ee4bd54549d8e9
+[02:39:18] --- [06] Ctrl+Alt+U — the Activity view
+[02:39:21] frame fvl18-06-activity-view 71145 bytes md5 0b71d0ea34672693c6993b3cad8e52dc
+[02:39:21] --- [07] the Activity view keyboard probes (up/down/enter/escape)
+[02:39:22] frame fvl18-07a-activity-up 71145 bytes md5 0b71d0ea34672693c6993b3cad8e52dc
+[02:39:23] frame fvl18-07b-activity-down 71145 bytes md5 0b71d0ea34672693c6993b3cad8e52dc
+[02:39:25] frame fvl18-07c-activity-enter 71145 bytes md5 0b71d0ea34672693c6993b3cad8e52dc
+[02:39:27] frame fvl18-07d-activity-escape 64979 bytes md5 bf574768a880abc086ee4bd54549d8e9
+[02:39:27] --- [08] Ctrl+Alt+4 — the Activity surface (the workspace surface)
+[02:39:30] frame fvl18-08-activity-surface 64979 bytes md5 bf574768a880abc086ee4bd54549d8e9
+[02:39:30] --- [09] Escape settle — final frame
+[02:39:32] frame fvl18-09-settle 64979 bytes md5 bf574768a880abc086ee4bd54549d8e9
+[02:39:32] RUN NOTE: the needs-you extension rows render their row shape when seeded; with no live escalations the honest quiet state renders (catalog gap X-3 — named; never invented)
+[02:39:32] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:39:32] scene fv-l18 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l18

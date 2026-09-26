@@ -1,0 +1,14 @@
+fvl01-01-entry.png 6634e44d68eb3f81e6ab948f2f03629c
+fvl01-02-after-one-escape.png 564aa5874d6cd2230291106390e7dfdb
+fvl01-02b-typed-probe.png 564aa5874d6cd2230291106390e7dfdb
+fvl01-03-palette-open.png 8953e7301e8ec9798d460c1dca17c0ce
+fvl01-04-palette-newtask-row.png 9d4ebf48db5f501b1b751601b27fa63c
+fvl01-05-new-task-surface.png 564aa5874d6cd2230291106390e7dfdb
+fvl01-05b-objective-typed.png f1375cf5d727f09b109078a1108ecdc9
+fvl01-06-task-surface.png 6146735cb17e8378a0d07bae01edf238
+fvl01-06b-task-surface-settled.png 6146735cb17e8378a0d07bae01edf238
+fvl01-07-nav-projects-tasks.png 068f409f8116673adf87c8aef79453d6
+fvl01-08-nav-reusable-workflows.png 2da92b5ea5951058d58dcd8e718bc89b
+fvl01-09-nav-artifacts.png 2c3d20237cd733f7c5478f2743c39c19
+fvl01-10-nav-activity.png e098628aea40fb17ee0753a450cf07a2
+fvl01-11-settle.png e5c87accd3b424e2e0c160921954ecdd

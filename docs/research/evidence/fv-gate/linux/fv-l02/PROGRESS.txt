@@ -1,0 +1,27 @@
+[02:25:58] scene fv-l02 (journey J-02) run fv_20260926T022558Z_12032 starting at 2026-09-26T02:25:58Z
+[02:25:58] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:25:58] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:25:58] binary: /home/z/Flauz.app/target/release/codexrs
+[02:25:58] evidence dir: docs/research/evidence/fv-gate/linux/fv-l02
+[02:25:58] donor state seeded: /tmp/d10-home.fv003/.local/share/codexRS/state.sqlite3 -> /tmp/fv-fv-l02-data.lnnNvb/state.sqlite3
+[02:26:02] app launched: pid 12086 on display :125 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:26:14] UI rendered after 10s (frame 79025 bytes)
+[02:26:16] window focused: 0x400001
+[02:26:18] --- [01] entry baseline (seeded donor state — chats present)
+[02:26:20] frame fvl02-01-entry 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:26:20] --- [02] select the seeded chat (keyboard focus walk: Tab into the chat list, Enter selects)
+[02:26:26] frame fvl02-02-seeded-chat-selected 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:26:26] --- [03] Ctrl+Alt+Shift+1 — the task-rail Context section (the honest 'on its way' state)
+[02:26:29] frame fvl02-03-context-section 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:26:32] frame fvl02-03b-context-detail 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:26:32] --- [04] Escape — the Context section closes (frame returns to the task surface)
+[02:26:35] frame fvl02-04-context-closed 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:26:35] --- [05] type /status + Enter on the seeded chat — the composer status panel
+[02:26:37] frame fvl02-05-status-typed 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:26:41] frame fvl02-05b-status-panel 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:26:41] --- [06] settle frame (the Session row + the context-usage row readable)
+[02:26:43] frame fvl02-06-status-settled 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:26:43] --- [07] Escape — the status panel closes cleanly (frame returns to the task surface)
+[02:26:46] frame fvl02-07-status-closed 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:26:46] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:26:46] scene fv-l02 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l02

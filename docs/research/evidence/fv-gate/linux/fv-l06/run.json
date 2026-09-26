@@ -1,0 +1,18 @@
+{
+  "v": 1,
+  "kind": "flauz.fv.linux-scene.run",
+  "scene_id": "fv-l06",
+  "journey_id": "J-05/J-06",
+  "run_id": "fv_20260926T022951Z_20667",
+  "pinned_base": "7f660c00407a5741eee975b2274570a200ff576b",
+  "sha": "4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3",
+  "binary": "/home/z/Flauz.app/target/release/codexrs",
+  "runtime": "/home/z/parity-lab/runtime/codex",
+  "donor_state": null,
+  "display": ":125",
+  "started_at": "2026-09-26T02:29:51Z",
+  "finished_at": "2026-09-26T02:30:30Z",
+  "frame_manifest": "md5.txt",
+  "action_log": "PROGRESS.txt",
+  "app_log": "app.log"
+}

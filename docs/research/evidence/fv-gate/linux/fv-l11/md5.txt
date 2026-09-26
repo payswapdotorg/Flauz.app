@@ -1,0 +1,7 @@
+fvl11-01-entry.png 564aa5874d6cd2230291106390e7dfdb
+fvl11-02-task-surface-affordance.png 65841708ecfb77600327c695c0113eae
+fvl11-03-affordance-settle.png 65841708ecfb77600327c695c0113eae
+fvl11-04-save-panel-not-wired.png 8711243a023ee08ffe77941a0c622401
+fvl11-05-save-panel-detail.png 2e12ceffe7ec8991589f4e901408b8c0
+fvl11-06-panel-closed.png df45236f7bfa07a606d7641dacf53d43
+fvl11-07-settle.png df45236f7bfa07a606d7641dacf53d43

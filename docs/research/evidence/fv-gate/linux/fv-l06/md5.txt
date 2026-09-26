@@ -1,0 +1,8 @@
+fvl06-01-entry.png 564aa5874d6cd2230291106390e7dfdb
+fvl06-02-terminal-status.png a55b491bf7c99d869ea2adb1088da0cb
+fvl06-03-terminal-dismissed.png a55b491bf7c99d869ea2adb1088da0cb
+fvl06-04-browser-status.png 3acf07e7521b5cca2d0c878b766f5d3a
+fvl06-05-browser-dismissed.png 3acf07e7521b5cca2d0c878b766f5d3a
+fvl06-06-environments-empty.png 3acf07e7521b5cca2d0c878b766f5d3a
+fvl06-06b-environments-detail.png 3acf07e7521b5cca2d0c878b766f5d3a
+fvl06-07-environments-closed.png 3acf07e7521b5cca2d0c878b766f5d3a

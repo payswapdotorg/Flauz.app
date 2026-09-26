@@ -1,0 +1,77 @@
+{
+  "journey_id": "GATEWAY-SECURITY",
+  "journey_name": "The gateway security slice (W6 I-11/I-12: loopback bind, healthz, traversal refusal, relative-only SPA fallback)",
+  "product_journey": "The gateway boots with the default localhost bind; /healthz is ok; //etc/passwd is refused with 404 (never file content); the SPA fallback serves only relative in-app routes.",
+  "steps": [
+    {
+      "step_id": "s1",
+      "action": "the gateway answers /healthz (ok, with its bind reported)",
+      "frames": [],
+      "assertions": [
+        {
+          "id": "a1",
+          "kind": "state",
+          "state_key": "gateway.healthz_ok",
+          "observation": "ok",
+          "expected": "ok",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s2",
+      "action": "the bind is the documented localhost default (or the run's documented override)",
+      "frames": [],
+      "assertions": [
+        {
+          "id": "a2",
+          "kind": "state",
+          "state_key": "gateway.bind_loopback",
+          "observation": "loopback",
+          "expected": "loopback",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s3",
+      "action": "the //etc/passwd traversal probe is refused (404, never file content)",
+      "frames": [],
+      "assertions": [
+        {
+          "id": "a3",
+          "kind": "state",
+          "state_key": "gateway.traversal_refused",
+          "observation": "refused_404",
+          "expected": "refused_404",
+          "verdict": "pass"
+        },
+        {
+          "id": "a3b",
+          "kind": "state",
+          "state_key": "gateway.traversal_no_file_content",
+          "observation": "no_file_content",
+          "expected": "no_file_content",
+          "verdict": "pass"
+        }
+      ]
+    },
+    {
+      "step_id": "s4",
+      "action": "a relative in-app route serves the SPA shell (the fallback is relative-only)",
+      "frames": [],
+      "assertions": [
+        {
+          "id": "a4",
+          "kind": "state",
+          "state_key": "gateway.spa_fallback_relative_only",
+          "observation": "shell_served",
+          "expected": "shell_served",
+          "verdict": "pass"
+        }
+      ]
+    }
+  ],
+  "outcome": "pass",
+  "finished_at": "2026-09-26T02:54:13.344Z"
+}

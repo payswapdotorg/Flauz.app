@@ -1,0 +1,26 @@
+[02:37:52] scene fv-l17 (journey J-16) run fv_20260926T023752Z_26618 starting at 2026-09-26T02:37:52Z
+[02:37:52] pinned base (authored/calibrated): 7f660c00407a5741eee975b2274570a200ff576b
+[02:37:52] executing SHA: 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3
+[02:37:52] binary: /home/z/Flauz.app/target/release/codexrs
+[02:37:52] evidence dir: docs/research/evidence/fv-gate/linux/fv-l17
+[02:37:56] app launched: pid 26665 on display :129 (isolated HOME/CODEX_HOME/CODEX_RS_DATA_DIR)
+[02:38:08] UI rendered after 10s (frame 79025 bytes)
+[02:38:10] window focused: 0x400001
+[02:38:12] --- [01] entry baseline
+[02:38:12] frame fvl17-01-entry 65917 bytes md5 564aa5874d6cd2230291106390e7dfdb
+[02:38:12] --- [02] anchor task
+[02:38:23] frame fvl17-02-task-surface 83838 bytes md5 a14436abe5e3dc2b9565fc61df0f7510
+[02:38:23] --- [03] Ctrl+Alt+Shift+L — the conflicts panel (the honest empty + the not-wired note)
+[02:38:26] frame fvl17-03-conflicts-panel 114086 bytes md5 9e986d2515f26304a21b33f159751d2e
+[02:38:26] --- [04] settle/detail frame
+[02:38:27] frame fvl17-04-conflicts-detail 114086 bytes md5 9e986d2515f26304a21b33f159751d2e
+[02:38:27] --- [05] scoped Escape — the panel closes
+[02:38:30] frame fvl17-05-panel-closed 83838 bytes md5 a14436abe5e3dc2b9565fc61df0f7510
+[02:38:30] --- [06] palette row 'See who is using what' + Return lands the same panel
+[02:38:35] frame fvl17-06-palette-row 92134 bytes md5 cdff7ba17d48d0ec1d6573a288e9d0a1
+[02:38:38] frame fvl17-06b-palette-landed 117530 bytes md5 7298819301cb159a23870a35f4b9e713
+[02:38:40] --- [07] Escape settle — final frame
+[02:38:42] frame fvl17-07-settle 87328 bytes md5 22578967590afe5259fa195ef87a8e89
+[02:38:42] RUN NOTE (catalog gap X-3): the conflicts panel renders its honest view-models — the Free/held/queue/escalation states are unit-pinned copy (flauz_conflicts.rs module tests at this base); live lease wiring is future work; this scene verifies the honest panel state and never invents contention data
+[02:38:42] run.json lineage written (sha 4ed0a0c8dbafdc2598ff5c421169f4a4a935b9e3)
+[02:38:42] scene fv-l17 COMPLETE — evidence in docs/research/evidence/fv-gate/linux/fv-l17
