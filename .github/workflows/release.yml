@@ -253,6 +253,84 @@ jobs:
           cd dist
           sha256sum ./*.zip ./*.tar.gz > SHA256SUMS.txt
 
+      - name: Validate checksum manifest coverage (REL-001)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dist
+          # REL-001: the checksum manifest must cover every packaged archive
+          # (one SHA256SUMS entry per artifact). GNU sha256sum writes
+          # "<64-hex>" + a two-character separator (two spaces in text mode,
+          # space + "*" in binary mode) + the name, so the name starts at
+          # column 67.
+          shopt -s nullglob
+          archives=(./*.zip ./*.tar.gz)
+          if [[ ${#archives[@]} -eq 0 ]]; then
+            echo "::error::[REL-001] no packaged archives found in dist/ — refusing to publish an empty checksum manifest" >&2
+            exit 1
+          fi
+          expected="$(printf '%s\n' "${archives[@]#./}" | sort)"
+          covered="$(cut -c 67- SHA256SUMS.txt | sed -e 's|^\./||' -e '/^$/d' | sort)"
+          if [[ "${expected}" != "${covered}" ]]; then
+            echo "::error::[REL-001] SHA256SUMS.txt does not cover every packaged artifact (expected < vs > covered):" >&2
+            diff <(printf '%s\n' "${expected}") <(printf '%s\n' "${covered}") >&2 || true
+            exit 1
+          fi
+          echo "[REL-001] checksum manifest covers every packaged artifact: ${archives[*]}"
+
+      - name: Sign release checksums (GPG-ready, REL-001)
+        shell: bash
+        env:
+          FLAUZ_RELEASE_SIGNING_KEY: ${{ secrets.FLAUZ_RELEASE_SIGNING_KEY }}
+          FLAUZ_RELEASE_SIGNING_KEY_PASSPHRASE: ${{ secrets.FLAUZ_RELEASE_SIGNING_KEY_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          cd dist
+          # REL-001: the GPG-ready detached-signature step. Honest bound: no
+          # signing key exists in this environment, so the detached signature
+          # is SKIPPED with a NAMED log line — never a faked signature, never
+          # a failed build. Recovery path: the operator provisions the
+          # FLAUZ_RELEASE_SIGNING_KEY repository secret (an ASCII-armored
+          # OpenPGP private key; optional FLAUZ_RELEASE_SIGNING_KEY_PASSPHRASE
+          # for its passphrase) and re-runs this release workflow.
+          if [[ -z "${FLAUZ_RELEASE_SIGNING_KEY:-}" ]]; then
+            echo "[REL-001] SIGNING-SKIPPED: the release signing key secret FLAUZ_RELEASE_SIGNING_KEY is absent in this environment — no detached signature is produced (none is faked; the build is not failed). The published SHA256SUMS.txt remains the integrity oracle for every archive. Recovery path: the operator provisions the FLAUZ_RELEASE_SIGNING_KEY secret and re-runs this release workflow."
+            echo "::warning::[REL-001] signing key absent — detached signature skipped (named gap; see docs/platform-support.md, Linux distribution strategy)"
+            exit 0
+          fi
+          command -v gpg >/dev/null 2>&1 || {
+            echo "::error::[REL-001] FLAUZ_RELEASE_SIGNING_KEY is configured but gpg is not installed on the runner — cannot produce the detached signature" >&2
+            exit 1
+          }
+          signing_home="$(mktemp -d)"
+          cleanup() { rm -rf -- "${signing_home}"; }
+          trap cleanup EXIT
+          # The credential law: key material is piped in through stdin and is
+          # never echoed to the log.
+          if ! printf '%s' "${FLAUZ_RELEASE_SIGNING_KEY}" | gpg --homedir "${signing_home}" --batch --quiet --import 2>/dev/null; then
+            echo "::error::[REL-001] gpg failed to import FLAUZ_RELEASE_SIGNING_KEY — is the secret an ASCII-armored OpenPGP private key?" >&2
+            exit 1
+          fi
+          key_id="$(gpg --homedir "${signing_home}" --batch --quiet --list-secret-keys --with-colons 2>/dev/null | awk -F: '$1 == "fpr" {print $10; exit}' || true)"
+          if [[ -z "${key_id}" ]]; then
+            echo "::error::[REL-001] no OpenPGP secret key found inside FLAUZ_RELEASE_SIGNING_KEY" >&2
+            exit 1
+          fi
+          if [[ -n "${FLAUZ_RELEASE_SIGNING_KEY_PASSPHRASE:-}" ]]; then
+            gpg --homedir "${signing_home}" --batch --yes --quiet \
+              --pinentry-mode loopback --passphrase-fd 3 \
+              --local-user "${key_id}" --armor --detach-sign SHA256SUMS.txt \
+              3<<< "${FLAUZ_RELEASE_SIGNING_KEY_PASSPHRASE}"
+          else
+            gpg --homedir "${signing_home}" --batch --yes --quiet \
+              --local-user "${key_id}" --armor --detach-sign SHA256SUMS.txt
+          fi
+          if ! gpg --homedir "${signing_home}" --batch --quiet --verify SHA256SUMS.txt.asc SHA256SUMS.txt >/dev/null 2>&1; then
+            echo "::error::[REL-001] the produced detached signature failed its round-trip verification — nothing is signed off from this step" >&2
+            exit 1
+          fi
+          echo "[REL-001] SIGNATURE-PRODUCED: SHA256SUMS.txt.asc (signing key ${key_id}) — published with the release assets"
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}

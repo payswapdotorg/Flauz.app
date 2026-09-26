@@ -165,6 +165,57 @@ text, input, launch, persistent app approvals, overlay, or interruption
 monitoring. Pure Wayland without XWayland remains unavailable; a portal-backed
 selection path is future work.
 
+## Linux distribution strategy
+
+Every distribution channel is named here with its status and its recovery
+path. The release workflow publishes, per tag: the archives
+(`codexrs-<tag>-linux-x86_64.tar.gz` and the Windows
+`codexrs-<tag>-windows-x86_64.zip`), `SHA256SUMS.txt` with one SHA-256 entry
+per packaged archive, and — once the signing key is provisioned — the
+detached signature `SHA256SUMS.txt.asc`.
+
+| Channel | Status | Recovery path |
+| --- | --- | --- |
+| Portable `tar.gz` + `SHA256SUMS.txt` | **Supported** — the release channel (Ubuntu 24.04 CI builds, packages, and desktop-smokes it) | n/a — supported; verify every download as described below |
+| Detached OpenPGP signature (`SHA256SUMS.txt.asc`) | **Scaffolded, not yet produced** — the workflow signs automatically once the key exists and skips with a named log line otherwise (never a fake signature, never a failed build) | The operator provisions the `FLAUZ_RELEASE_SIGNING_KEY` repository secret (an ASCII-armored OpenPGP private key; optional `FLAUZ_RELEASE_SIGNING_KEY_PASSPHRASE`) and re-runs the release workflow |
+| AppImage | **Not shipped — under evaluation** | The CI environment has no AppImage toolchain today (`appimagetool`/`linuxdeploy` are not installed; the honest environment bound). Recovery: add the toolchain and a packaging step to CI, run the desktop startup smoke against the AppImage, then decide against the parity matrix |
+| `.deb` package | **Not shipped — under evaluation** | CI has no deb packaging path today (`cargo-deb` is not a dependency and no packaging step exists) and no apt repository exists to distribute through (the honest environment bound). Recovery: choose `cargo-deb` or a manual `dpkg-deb` step, decide the apt repository question, then wire it into the release workflow |
+| Snap / Flatpak | **Not evaluated** | Out of current scope; revisit after the tar.gz channel carries signatures |
+| Source build | **Supported** | See the Linux build dependencies above |
+
+Until the signing key is provisioned, the checksum manifest detects
+corruption and accidental mismatch after download; it is not an independent
+publisher signature (the release notes state the same bound). The manifest
+and the archives travel over the same channel, so a determined
+man-in-the-middle could alter both; the detached signature closes exactly
+that gap once the key exists.
+
+### Verifying a downloaded archive
+
+Download the archive and `SHA256SUMS.txt` (and, when published,
+`SHA256SUMS.txt.asc`) from the same GitHub release, then, from the directory
+holding them:
+
+```bash
+# with the repository script (from a checkout of this repository); it also
+# verifies the detached signature when one is present next to the manifest
+bash scripts/verify_release_archive.sh codexrs-<tag>-linux-x86_64.tar.gz SHA256SUMS.txt
+
+# or directly, without a checkout (the --ignore-missing flag lets you verify
+# only the archives you downloaded)
+sha256sum --check --ignore-missing SHA256SUMS.txt
+
+# when SHA256SUMS.txt.asc is published, after importing the publisher's
+# public key
+gpg --verify SHA256SUMS.txt.asc SHA256SUMS.txt
+```
+
+`scripts/verify_release_archive.sh` hard-fails with a named message when the
+manifest is malformed, when it has no (or duplicate) entries for the archive,
+when the checksum does not match, or when a present signature does not
+verify. Do not extract, run, or enable Computer Use from an archive that
+failed verification.
+
 ## Runtime directories
 
 The two data boundaries are independent:
