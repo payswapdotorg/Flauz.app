@@ -14,7 +14,23 @@
 //              station): e.g.
 //              node lab/journeys.mjs --gateway "target/debug/flauz-web-gateway --web-root dist"
 //
+// FV-002 (Wave 7) — the formal-pass manifest mode (ADDITIVE: without
+// --manifest the driver's behavior is unchanged):
+//   --manifest <path>  run the FV web scenes from the manifest
+//              (web/lab/fv-manifest.json — the FV-CATALOG §3 rows:
+//              journey id, gateway mode=real, assertions, ×3 runs, the
+//              fv-gate evidence root). The manifest REQUIRES the real
+//              gateway (mock captures are NOT formal evidence, the
+//              Wave-7 addendum §1) and resolves its port from the
+//              manifest's gateway block. FV-E00 (the gateway security
+//              slice) runs as a manifest scene: /healthz, the
+//              //etc/passwd traversal refusal, the relative-only SPA
+//              fallback.
+//   --scene <id>  filter to one manifest scene (e.g. fv-e01)
+//   --runs <n>   override the per-scene run count (the ×3 convention)
+//
 // Usage: node lab/journeys.mjs [--gateway "<command>"] [--out <dir>] [--keep-state]
+//       node lab/journeys.mjs --manifest web/lab/fv-manifest.json [--scene <id>] [--runs <n>]
 
 import { spawn } from "node:child_process";
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -33,9 +49,77 @@ function flagValue(name, fallback) {
   const index = args.indexOf(name);
   return index !== -1 && args[index + 1] !== undefined ? args[index + 1] : fallback;
 }
-const GATEWAY_COMMAND = flagValue("--gateway", "");
-const OUT_ROOT = flagValue("--out", EVIDENCE_ROOT_DEFAULT);
-const PORT = Number(flagValue("--port", "8791"));
+// FV-002 (additive flags): the manifest mode. loadManifest() hard-fails
+// with a named message when the manifest is missing or invalid; without
+// --manifest these resolve exactly as before (the default behavior is
+// unchanged).
+const MANIFEST_PATH = flagValue("--manifest", "");
+const SCENE_FILTER = flagValue("--scene", "");
+const RUNS_OVERRIDE = flagValue("--runs", "");
+
+function loadManifest(path) {
+  const resolved = import("node:path").then((p) => p.resolve(WEB_ROOT, path));
+  return resolved.then((absolute) =>
+    import("node:fs/promises")
+      .then((fs) => fs.readFile(absolute, "utf8"))
+      .catch(() => {
+        throw new Error(`the FV manifest is missing or unreadable: ${absolute} (author it per web/lab/fv-manifest.json — the FV-002 delivery)`);
+      })
+      .then((text) => {
+        try {
+          return JSON.parse(text);
+        } catch (error) {
+          throw new Error(`the FV manifest is not valid JSON: ${absolute} (${error.message})`);
+        }
+      }),
+  );
+}
+
+const manifest = MANIFEST_PATH !== "" ? await loadManifest(MANIFEST_PATH) : null;
+
+function resolveGatewayCommand() {
+  const explicit = flagValue("--gateway", "");
+  if (explicit !== "") {
+    return explicit;
+  }
+  if (manifest !== null) {
+    const gateway = manifest.gateway ?? {};
+    if (gateway.mode !== "real") {
+      throw new Error(`the FV manifest requires gateway mode=real (mock-gateway captures are NOT formal evidence — the Wave-7 addendum §1); got mode ${JSON.stringify(gateway.mode)}`);
+    }
+    if (typeof gateway.command !== "string" || gateway.command.trim() === "") {
+      throw new Error("the FV manifest's gateway.command is empty — fix web/lab/fv-manifest.json (the real Rust gateway command, e.g. target/debug/flauz-web-gateway --web-root dist)");
+    }
+    return gateway.command;
+  }
+  return "";
+}
+
+function resolvePort() {
+  const explicit = flagValue("--port", "");
+  if (explicit !== "") {
+    return Number(explicit);
+  }
+  if (manifest !== null && Number.isFinite(Number(manifest.gateway?.port))) {
+    return Number(manifest.gateway.port);
+  }
+  return 8791;
+}
+
+function resolveOutRoot() {
+  const explicit = flagValue("--out", "");
+  if (explicit !== "") {
+    return explicit;
+  }
+  if (manifest !== null && typeof manifest.evidence_root === "string" && manifest.evidence_root !== "") {
+    return import("node:path").then((p) => p.resolve(WEB_ROOT, "..", manifest.evidence_root));
+  }
+  return EVIDENCE_ROOT_DEFAULT;
+}
+
+const GATEWAY_COMMAND = resolveGatewayCommand();
+const OUT_ROOT = await resolveOutRoot();
+const PORT = resolvePort();
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 const stateDir = `${HERE}/.run`;
@@ -56,8 +140,16 @@ async function startGateway() {
     });
   } else {
     usingMock = false;
+    // FV-002 harness fix (disclosed in the FV-002 completion report): the
+    // real-gateway spawn path previously called rest.split(" ") on the
+    // already-split token array (`rest` is an array — `[command, ...rest]`
+    // of GATEWAY_COMMAND.split(" ")), which throws
+    // "rest.split is not a function" on EVERY --gateway run, so the
+    // real-transport flag (and the FV manifest lane) could never start.
+    // The fix passes the token array itself — identical intent, harness
+    // code only (no journey behavior change, no product source).
     const [command, ...rest] = GATEWAY_COMMAND.split(" ");
-    gateway = spawn(command, [...rest.split(" ").filter(Boolean), ...(usingMock ? [] : [])], {
+    gateway = spawn(command, rest.filter(Boolean), {
       cwd: WEB_ROOT,
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -800,9 +892,253 @@ const jA11y = {
 };
 
 // ---------------------------------------------------------------------------
+// FV-002 (Wave 7) — the FV-E00 gateway security scene + the manifest
+// run mode (ADDITIVE: reachable only through --manifest; the default
+// journey list above is unchanged).
+//
+// CALIBRATION (2026-09-25, verified against the pinned base
+// 7f660c00407a5741eee975b2274570a200ff576b):
+//   - the gateway's default bind is 127.0.0.1:8610 (flauz-web-gateway
+//     main.rs:18 "Bind address (default 127.0.0.1:8610, localhost-only)";
+//     a non-loopback bind requires --session-token-file, main.rs:19)
+//   - /healthz answers 200 with the health payload { v, kind, status:
+//     "ok", bind, uptimeMs, sessions } (server.rs:137 + static_files.rs
+//     health_payload :182-191 — liveness and session count only, no
+//     credentials)
+//   - "//etc/passwd" is a REFUSAL (404, never file content): the
+//     protocol-relative form must never be treated as an in-app route
+//     (static_files.rs safe_relative_path :102-131 — the 2026-09-25
+//     Lead gate fix: it used to SPA-serve the shell with 200)
+//   - the SPA fallback serves ONLY relative in-app routes (the
+//     extension-less unknown path serves index.html; missing assets
+//     404; traversal/absolute/backslash/NUL forms all refuse)
+
+const je00 = {
+  id: "fv-e00-gateway-security",
+  journeyId: "GATEWAY-SECURITY",
+  name: "The gateway security slice (W6 I-11/I-12: loopback bind, healthz, traversal refusal, relative-only SPA fallback)",
+  productJourney: "The gateway boots with the default localhost bind; /healthz is ok; //etc/passwd is refused with 404 (never file content); the SPA fallback serves only relative in-app routes.",
+  async drive({ record, step, assert }) {
+    let entry = step("the gateway answers /healthz (ok, with its bind reported)");
+    const health = await fetch(`${BASE_URL}/healthz`)
+      .then((response) => response.json().catch(() => null))
+      .catch(() => null);
+    assert(entry, "a1", "gateway.healthz_ok", health !== null && health.status === "ok" ? "ok" : "unreachable", "ok");
+
+    entry = step("the bind is the documented localhost default (or the run's documented override)");
+    const bind = typeof health?.bind === "string" ? health.bind : "";
+    const loopback = bind.startsWith("127.0.0.1:") || bind.startsWith("[::1]:") || bind.startsWith("localhost:");
+    assert(entry, "a2", "gateway.bind_loopback", bind === "" ? "unreported" : (loopback ? "loopback" : bind), "loopback");
+
+    entry = step("the //etc/passwd traversal probe is refused (404, never file content)");
+    const traversal = await fetch(`${BASE_URL}//etc/passwd`).catch(() => null);
+    const traversalStatus = traversal === null ? "unreachable" : String(traversal.status);
+    let traversalBody = "";
+    if (traversal !== null) {
+      traversalBody = await traversal.text().catch(() => "");
+    }
+    assert(entry, "a3", "gateway.traversal_refused", traversalStatus === "404" ? "refused_404" : traversalStatus, "refused_404");
+    const leakedRoot = traversalBody.includes("root:") ? "file_content" : "no_file_content";
+    assert(entry, "a3b", "gateway.traversal_no_file_content", leakedRoot, "no_file_content");
+
+    entry = step("a relative in-app route serves the SPA shell (the fallback is relative-only)");
+    const shell = await fetch(`${BASE_URL}/tasks`).catch(() => null);
+    const shellStatus = shell === null ? "unreachable" : String(shell.status);
+    let shellIsApp = false;
+    if (shell !== null && shell.ok) {
+      const body = await shell.text().catch(() => "");
+      shellIsApp = body.includes("<!DOCTYPE html") || body.includes("<html");
+    }
+    assert(entry, "a4", "gateway.spa_fallback_relative_only", shellStatus === "200" && shellIsApp ? "shell_served" : shellStatus, "shell_served");
+  },
+};
+
+// The FV manifest scene runner: every requested scene runs `runs` times
+// (the w6 ×3 convention — the scene passes only when every run passes);
+// each run lands under <evidence_root>/<scene-id>/run-<n>/ with the
+// parity-lab record schema.
+
+// Manifest-path only: after a restart kill, wait for the gateway port to
+// actually free (a SIGKILL'd listener can leave the bind briefly held;
+// the tight per-run restart would otherwise race into EADDRINUSE).
+async function waitForPortFree(timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      await fetch(`${BASE_URL}/healthz`, { signal: AbortSignal.timeout(250) });
+    } catch {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+  throw new Error(`the gateway port did not free within ${timeoutMs}ms after the restart kill — a stale gateway is still answering ${BASE_URL}/healthz`);
+}
+
+async function runManifestMode() {
+  if (GATEWAY_COMMAND === "") {
+    throw new Error("the FV manifest mode requires the real gateway (mode=real) — no --gateway command resolved (see web/lab/fv-manifest.json gateway.command)");
+  }
+  // Hard-fail with NAMED messages when the lane's prerequisites are
+  // missing (the Wave-7 addendum §7 law — never a raw spawn error, never
+  // silent): the real gateway binary, the real web build (web/dist).
+  const path = await import("node:path");
+  const fs = await import("node:fs/promises");
+  const [gatewayCommand] = GATEWAY_COMMAND.split(" ");
+  const gatewayAbsolute = path.resolve(WEB_ROOT, gatewayCommand);
+  await fs.access(gatewayAbsolute).catch(() => {
+    throw new Error(`the real gateway binary is missing: ${gatewayAbsolute} — build it first (cargo build -p flauz-web-gateway; the Lead station has the toolchain — addendum §8), then rerun the FV manifest lane`);
+  });
+  const webRoot = manifest.gateway?.web_root;
+  if (typeof webRoot === "string" && webRoot !== "") {
+    const distAbsolute = path.resolve(WEB_ROOT, "..", webRoot);
+    await fs.access(distAbsolute).catch(() => {
+      throw new Error(`the real web build is missing: ${distAbsolute} — build it first (npm run build in web/), then rerun the FV manifest lane`);
+    });
+  }
+  const driverJourneys = new Map([
+    ["fv-e00-gateway-security", je00],
+    ["j-01-start-project", j01],
+    ["j-02-understand-context", j02],
+    ["j-03-recover-reconnect", j03],
+    ["j-04-capability-gap", j04],
+    ["j-05-add-environment", j05],
+    ["j-06-cross-environment", j06],
+    ["j-08-takeover-approval-cancellation", j08],
+    ["j-09-artifacts-items", j09art],
+    ["j-13-collaborate", j13],
+    ["j-14-switch-model", j14],
+    ["j-15-switch-environment", j15],
+    ["j-domain-neutral-research", jNeutral],
+    ["j-a11y-responsive", jA11y],
+  ]);
+  const scenes = Array.isArray(manifest.scenes) ? manifest.scenes : [];
+  if (scenes.length === 0) {
+    throw new Error("the FV manifest declares no scenes — fix web/lab/fv-manifest.json (every catalog web scene FV-E00..FV-E13 must appear)");
+  }
+  const defaultRuns = Number.isFinite(Number(manifest.runs)) && Number(manifest.runs) > 0 ? Number(manifest.runs) : 1;
+  // The suite is SEQUENTIAL (the journeys were authored that way: j-02
+  // opens the Context inspector on the session j-01 created, and so on),
+  // so a filtered rerun runs the manifest PREFIX through the requested
+  // scene — every scene stays runnable, every record stays honest.
+  const filterIndex = scenes.findIndex((scene) => scene.id === SCENE_FILTER);
+  const requested = SCENE_FILTER === "" ? scenes : (filterIndex === -1 ? [] : scenes.slice(0, filterIndex + 1));
+  if (requested.length === 0) {
+    throw new Error(`the FV manifest scene filter matched nothing (--scene ${JSON.stringify(SCENE_FILTER)}); known ids: ${scenes.map((scene) => scene.id).join(", ")}`);
+  }
+  for (const scene of requested) {
+    if (!driverJourneys.has(scene.driver_journey)) {
+      throw new Error(`the FV manifest scene ${scene.id} names an unknown driver_journey ${JSON.stringify(scene.driver_journey)} — fix web/lab/fv-manifest.json (known: ${[...driverJourneys.keys()].join(", ")})`);
+    }
+  }
+  const runsPerScene = new Map(requested.map((scene) => {
+    const runs = RUNS_OVERRIDE !== "" && Number.isFinite(Number(RUNS_OVERRIDE)) && Number(RUNS_OVERRIDE) > 0
+      ? Number(RUNS_OVERRIDE)
+      : Number.isFinite(Number(scene.runs)) && Number(scene.runs) > 0
+        ? Number(scene.runs)
+        : defaultRuns;
+    return [scene.id, runs];
+  }));
+  const maxRuns = Math.max(...runsPerScene.values());
+
+  await rm(stateDir, { recursive: true, force: true });
+  await mkdir(stateDir, { recursive: true });
+
+  const browser = await chromium.launch({ headless: true });
+  run.adapter.browser = `chromium ${browser.version()} (headless)`;
+  run.adapter.transport = "flauz-web-gateway (real; FV manifest mode)";
+
+  // The w6 ×3 convention = N green RUNS, each equivalent to a fresh driver
+  // invocation of the sequential suite: a freshly started gateway (fresh
+  // supervised runtime), a fresh isolated CODEX_HOME (set on the driver's
+  // own environment so every gateway spawn in the run — including the
+  // journeys' own kill/restart legs — inherits it), and a fresh browser
+  // context in which the requested scenes run in manifest order, sharing
+  // the run's page exactly as the classic suite does (j-02 opens the
+  // Context inspector on the session j-01 created). Scene N's evidence
+  // lands under <evidence_root>/<scene-id>/run-<n>/.
+  const failures = [];
+  const sceneOutcomes = new Map(requested.map((scene) => [scene.id, "pass"]));
+  for (let attempt = 1; attempt <= maxRuns; attempt += 1) {
+    if (gateway !== null) {
+      killGateway();
+      await waitForPortFree();
+    }
+    const runHome = `${stateDir}/codex-home-run-${attempt}`;
+    await mkdir(runHome, { recursive: true });
+    process.env.CODEX_HOME = runHome;
+    await startGateway();
+    const runContext = await browser.newContext({ viewport: { width: 1280, height: 860 } });
+    const runPage = await runContext.newPage();
+    runPage.on("console", (message) => {
+      if (message.type() === "error") {
+        process.stderr.write(`[browser:err] ${message.text()}\n`);
+      }
+    });
+    try {
+      for (const scene of requested) {
+        const runs = runsPerScene.get(scene.id) ?? defaultRuns;
+        if (attempt > runs) {
+          continue;
+        }
+        const journey = driverJourneys.get(scene.driver_journey);
+        // The run-scoped directory reuses recordJourney's writer
+        // unchanged: the wrapped definition's id carries
+        // scene-id/run-<n>, so the record lands under
+        // <evidence_root>/<scene-id>/run-<n>/.
+        const runScoped = { ...journey, id: `${scene.id}/run-${attempt}` };
+        try {
+          const record = await recordJourney(runPage, runScoped);
+          process.stdout.write(`fv:   ${scene.id} run ${attempt}/${runs} → ${record.outcome}\n`);
+          if (record.outcome !== "pass") {
+            sceneOutcomes.set(scene.id, "fail");
+          }
+        } catch (error) {
+          sceneOutcomes.set(scene.id, "fail");
+          process.stderr.write(`fv:   ${scene.id} run ${attempt}/${runs} CRASHED: ${error.message}\n`);
+        }
+      }
+    } finally {
+      await runContext.close().catch(() => {});
+      killGateway();
+      await waitForPortFree().catch(() => {});
+    }
+  }
+  for (const scene of requested) {
+    process.stdout.write(`fv: scene ${scene.id} → ${sceneOutcomes.get(scene.id)}\n`);
+    if (sceneOutcomes.get(scene.id) !== "pass") {
+      failures.push(scene.id);
+    }
+  }
+
+  run.finished_at = new Date().toISOString();
+  run.kind = "flauz.web-fv.run";
+  run.outcome = failures.length === 0 ? "pass" : "fail";
+  run.failed_scenes = failures;
+  run.manifest = {
+    pinned_base: manifest.pinned_base ?? null,
+    gateway_mode: manifest.gateway?.mode ?? null,
+    runs: defaultRuns,
+    scenes_requested: requested.map((scene) => scene.id),
+  };
+  await mkdir(OUT_ROOT, { recursive: true });
+  await writeFile(`${OUT_ROOT}/RUN.json`, `${JSON.stringify(run, null, 2)}\n`, "utf8");
+
+  await browser.close();
+  killGateway();
+  process.stdout.write(
+    `fv: run ${run.run_id} → ${run.outcome}${failures.length === 0 ? "" : ` (failed: ${failures.join(", ")})`}\n`,
+  );
+  process.exit(failures.length === 0 ? 0 : 1);
+}
+
+// ---------------------------------------------------------------------------
 // The run.
 
 async function main() {
+  if (manifest !== null) {
+    await runManifestMode();
+    return;
+  }
   await rm(stateDir, { recursive: true, force: true });
   await mkdir(stateDir, { recursive: true });
   await rm(OUT_ROOT, { recursive: true, force: true });

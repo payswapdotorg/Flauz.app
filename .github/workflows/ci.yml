@@ -110,6 +110,29 @@ jobs:
           ZED_HEADLESS: "1"
         run: bash scripts/linux_desktop_smoke.sh target/release/codexrs
 
+      - name: Install the pinned Codex CLI for the FV journey smoke
+        if: runner.os == 'Windows'
+        shell: pwsh
+        continue-on-error: true
+        run: npm install --global @openai/codex@0.146.0-alpha.3.1
+
+      - name: Windows FV journey smoke (FV-002 harness)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        timeout-minutes: 25
+        run: |
+          $root = Join-Path $env:RUNNER_TEMP 'fv-windows-evidence'
+          & scripts/windows_fv_smoke.ps1 -Binary target/release/codexrs.exe -EvidenceRoot $root
+
+      - name: Upload FV Windows journey-smoke evidence
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v7
+        with:
+          name: fv-windows-journey-smoke-${{ github.run_id }}
+          path: ${{ runner.temp }}/fv-windows-evidence
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Save Cargo build cache
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.cargo-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
