@@ -141,6 +141,21 @@ fv_begin() {
   export PATH="/home/z/parity-lab/sysroot/usr/bin:/home/z/.local/desktop-tools/usr/bin:${PATH}"
   export LD_LIBRARY_PATH="/home/z/parity-lab/sysroot/usr/lib/x86_64-linux-gnu:/home/z/sysroot/prefix/usr/lib/x86_64-linux-gnu:/home/z/.local/desktop-tools/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
 
+  # The lavapipe ICD (Lead gate-fix 2026-09-26): the sysroot path is the
+  # d-series default, but the station rebuild (Task 115) moved the ICD to
+  # the labbin extract — resolve the FIRST existing path and hard-fail with
+  # a named message when none exists (addendum §7; the old hardcode let the
+  # app die with an opaque GPU panic and the scene ran on black frames).
+  FV_LVP="${VK_ICD_FILENAMES:-}"
+  if [ ! -f "$FV_LVP" ]; then
+    for _icd in \
+      /home/z/parity-lab/sysroot/usr/share/vulkan/icd.d/lvp_icd.json \
+      /home/z/parity-lab/labbin/extract/usr/share/vulkan/icd.d/lvp_icd.json; do
+      if [ -f "$_icd" ]; then FV_LVP="$_icd"; break; fi
+    done
+  fi
+  [ -f "$FV_LVP" ] || fv_fail "the lavapipe Vulkan ICD is missing (tried the sysroot + labbin extract paths; VK_ICD_FILENAMES='${VK_ICD_FILENAMES:-unset}') — the GPUI window cannot render without the software Vulkan device (the E2B §1.5 lab law)"
+
   # One display per scene run (the d-series :12x family; the scene id
   # hashes to a stable number so re-runs clean up their own display).
   FV_DISP=":$(( ( $(echo "$FV_SCENE_ID" | cksum | cut -d' ' -f1) % 20 ) + 120 ))"
@@ -155,7 +170,7 @@ fv_begin() {
   pgrep -x picom >/dev/null || fv_fail "picom did not start on display $FV_DISP — check $FV_OUT/picom.log (the sealed LINUX_GUI_LAB recipe requires the compositor)"
 
   DISPLAY="$FV_DISP" LIBGL_ALWAYS_SOFTWARE=1 \
-    VK_ICD_FILENAMES="/home/z/parity-lab/sysroot/usr/share/vulkan/icd.d/lvp_icd.json" \
+    VK_ICD_FILENAMES="$FV_LVP" \
     HOME="$FV_HOME" XDG_RUNTIME_DIR="$FV_HOME/xdg" \
     CODEX_RS_DATA_DIR="$FV_DATA" \
     CODEX_HOME="$FV_DATA/codex-home" \
@@ -183,7 +198,14 @@ fv_begin() {
   done
   rm -f "$FV_OUT/_probe.png"
   if [ "$FV_RENDERED" != "1" ]; then
-    say "WARN: no >30KB frame in 150s — running the scene anyway (honest bound; the Lead adjudicates the frames)"
+    # Lead gate-fix 2026-09-26: a DEAD app is a hard failure, not an honest
+    # bound — the old WARN path produced COMPLETE scenes over black frames
+    # (a no-fabrication hazard). The soft path stays only for a LIVE app
+    # whose first frame is merely small.
+    if ! kill -0 "$FV_APP_PID" 2>/dev/null; then
+      fv_fail "the app exited during the boot wait (no frame ever rendered) — app.log tail: $(tail -c 400 "$FV_OUT/app.log" 2>/dev/null | tr '\n' ' ')"
+    fi
+    say "WARN: no >30KB frame in 150s but the app is alive — running the scene anyway (honest bound; the Lead adjudicates the frames)"
   fi
   sleep 2
 
