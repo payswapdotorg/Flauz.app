@@ -1,0 +1,222 @@
+{
+  "v": 1,
+  "kind": "flauz.web-fv.manifest",
+  "pinned_base": "7f660c00407a5741eee975b2274570a200ff576b",
+  "driver": "node web/lab/journeys.mjs --manifest web/lab/fv-manifest.json",
+  "notes": "FV-002 (Wave 7): the web formal-pass manifest. Freezes the FV-CATALOG \u00a73 scenes as runner inputs: journey id, gateway mode=real (the --gateway command), the per-scene assertion set (the existing lab assertions), \u00d73 runs (the w6 convention). Mock-gateway captures are NOT formal evidence (addendum \u00a71) \u2014 the manifest requires the real Rust gateway. E-1 bound (named): the supervised runtime is unauthenticated in the lab; live-turn depth is bounded to honest states, exactly like Linux L-1. Path law: the gateway command is relative to the driver's spawn cwd (web/) \u2014 ../target/debug/flauz-web-gateway is the repo-root cargo target; --web-root dist is web/dist relative to the same cwd. Execution order: the scenes array is the suite's sequential execution order (the classic driver order \u2014 j-01..j-06, j-08, j-13..j-15, j-09, DOMAIN-NEUTRAL, A11Y; the journeys share one page per run, e.g. j-02 opens the Context inspector on the session j-01 created); a --scene filter runs the manifest prefix through the requested scene.",
+  "gateway": {
+    "mode": "real",
+    "command": "../target/debug/flauz-web-gateway --web-root dist",
+    "bind": "127.0.0.1",
+    "port": 8610,
+    "web_root": "web/dist"
+  },
+  "runs": 3,
+  "evidence_root": "docs/research/evidence/fv-gate/web",
+  "scenes": [
+    {
+      "id": "fv-e00",
+      "journey_id": "GATEWAY-SECURITY",
+      "driver_journey": "fv-e00-gateway-security",
+      "runs": 3,
+      "assertions": [
+        "gateway.bind_loopback",
+        "gateway.healthz_ok",
+        "gateway.traversal_refused",
+        "gateway.spa_fallback_relative_only"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e00"
+    },
+    {
+      "id": "fv-e01",
+      "journey_id": "J-01",
+      "driver_journey": "j-01-start-project",
+      "runs": 3,
+      "assertions": [
+        "connection.state",
+        "workspace.empty_state",
+        "workspace.primary_entry",
+        "palette.fallback",
+        "session.connected_state",
+        "session.success_state",
+        "session.next_step_affordance"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e01"
+    },
+    {
+      "id": "fv-e02",
+      "journey_id": "J-02",
+      "driver_journey": "j-02-understand-context",
+      "runs": 3,
+      "assertions": [
+        "context.inspector",
+        "context.objective_present",
+        "context.honest_scope"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e02"
+    },
+    {
+      "id": "fv-e03",
+      "journey_id": "J-03",
+      "driver_journey": "j-03-recover-reconnect",
+      "runs": 3,
+      "assertions": [
+        "connection.state",
+        "connection.reason_named",
+        "workspace.sessions_recovered"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e03"
+    },
+    {
+      "id": "fv-e04",
+      "journey_id": "J-04",
+      "driver_journey": "j-04-capability-gap",
+      "runs": 3,
+      "assertions": [
+        "capability.error_names_cause",
+        "capability.error_names_recovery",
+        "capability.silent_noop",
+        "capability.unlock_path_named",
+        "capability.gap_protocol_derived",
+        "capability.skill_unlock_path_named"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e04"
+    },
+    {
+      "id": "fv-e05",
+      "journey_id": "J-05",
+      "driver_journey": "j-05-add-environment",
+      "runs": 3,
+      "assertions": [
+        "environments.surface",
+        "environments.reported_cwd",
+        "environments.named_gap",
+        "environments.cwd_control",
+        "keyboard.shortcuts_sheet",
+        "keyboard.escape_closes"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e05"
+    },
+    {
+      "id": "fv-e06",
+      "journey_id": "J-06",
+      "driver_journey": "j-06-cross-environment",
+      "runs": 3,
+      "assertions": [
+        "task.turn_ran",
+        "environments.execution_context",
+        "environments.topology_gap_named",
+        "artifacts.file_change_reported",
+        "artifacts.agent_message_reported"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e06"
+    },
+    {
+      "id": "fv-e07",
+      "journey_id": "J-08",
+      "driver_journey": "j-08-takeover-approval-cancellation",
+      "runs": 3,
+      "assertions": [
+        "approval.record_arrives",
+        "approval.never_auto_resolved",
+        "approval.announced",
+        "approval.decision_recorded",
+        "approval.outcome_attributed",
+        "turn.stop_control",
+        "turn.cancelled_named",
+        "turn.cancelled_names_reason"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e07"
+    },
+    {
+      "id": "fv-e09",
+      "journey_id": "J-13",
+      "driver_journey": "j-13-collaborate",
+      "runs": 3,
+      "assertions": [
+        "collab.surface",
+        "collab.gap_named",
+        "collab.contract_shapes_named",
+        "collab.shared_decisions_truthful",
+        "collab.privacy_law_stated",
+        "collab.palette_fallback"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e09"
+    },
+    {
+      "id": "fv-e10",
+      "journey_id": "J-14",
+      "driver_journey": "j-14-switch-model",
+      "runs": 3,
+      "assertions": [
+        "model.current_reported",
+        "model.choice_applied",
+        "model.effort_applied",
+        "model.same_task_continues",
+        "model.switch_reflected",
+        "model.task_continuity"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e10"
+    },
+    {
+      "id": "fv-e11",
+      "journey_id": "J-15",
+      "driver_journey": "j-15-switch-environment",
+      "runs": 3,
+      "assertions": [
+        "environment.switch_gap_named",
+        "environment.cwd_applied",
+        "environment.same_task_continues",
+        "environment.cwd_reflected"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e11"
+    },
+    {
+      "id": "fv-e08",
+      "journey_id": "J-09",
+      "driver_journey": "j-09-artifacts-items",
+      "runs": 3,
+      "assertions": [
+        "artifacts.surface",
+        "artifacts.items_listed",
+        "artifacts.kind_labels",
+        "artifacts.types_carried",
+        "artifacts.refresh",
+        "artifacts.gap_named"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e08"
+    },
+    {
+      "id": "fv-e12",
+      "journey_id": "DOMAIN-NEUTRAL",
+      "driver_journey": "j-domain-neutral-research",
+      "runs": 3,
+      "assertions": [
+        "neutral.compose_model_choice",
+        "neutral.skill_referenced",
+        "neutral.items_reported",
+        "neutral.model_reported",
+        "neutral.collab_gap_named"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e12"
+    },
+    {
+      "id": "fv-e13",
+      "journey_id": "A11Y",
+      "driver_journey": "j-a11y-responsive",
+      "runs": 3,
+      "assertions": [
+        "a11y.palette_no_session_named",
+        "a11y.rail_group_label",
+        "a11y.rail_button.opens_by_keyboard",
+        "a11y.rail_button.escape_closes",
+        "a11y.rail_button.focus_restored",
+        "a11y.gap_role_note",
+        "a11y.panel.mobile_width",
+        "a11y.mobile_nav_visible",
+        "a11y.desktop_side_panel"
+      ],
+      "evidence_dir": "docs/research/evidence/fv-gate/web/fv-e13"
+    }
+  ]
+}
