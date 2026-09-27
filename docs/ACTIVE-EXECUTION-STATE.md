@@ -1,7 +1,8 @@
 # Active Execution State
 
 **Updated:** 2026-09-27  
-**Current main:** `fb5c8620b32e` (MIG-002 merged; PR #64)  
+**Last product-code main baseline:** `fb5c8620b32e` (MIG-002 merged; PR #64)  
+**Current HEAD rule:** verify with `git rev-parse HEAD`; subsequent documentation-only reconciliation commits may advance HEAD without changing the product-code baseline.  
 **Role:** This file is the current operational state for autonomous execution. It supersedes stale historical handoffs, old chat summaries, and pre-gate roadmap snapshots.
 
 ## Current product state
