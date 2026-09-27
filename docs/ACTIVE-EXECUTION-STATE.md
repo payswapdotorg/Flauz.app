@@ -1,144 +1,166 @@
 # Active Execution State
 
-**Updated:** 2026-09-26
-**Current main:** 4ed0a0c (the Wave-6 merge — WEB-001 PR #57 + WEB-002 PR #58)
-
-This file is the repository's operational handoff for the active Tech Leads. It does not override the architecture constitution or work-order contracts; it records the current execution state and sequencing decisions.
+**Updated:** 2026-09-27  
+**Current main:** `fb5c8620b32e` (MIG-002 merged; PR #64)  
+**Role:** This file is the current operational state for autonomous execution. It supersedes stale historical handoffs, old chat summaries, and pre-gate roadmap snapshots.
 
 ## Current product state
 
-F0 Governance                         ✅
-F1 Codex Desktop parity              ✅ CLOSED
-F2 Canonical contracts + shell       ✅ CLOSED
-Wave 2 / F3-F5 fabric foundation     ✅ DELIVERED
-Wave 3 / F6 orchestration            ✅ CLOSED
-Wave 4 / F7-F9                       ✅ CLOSED 2026-09-23 (gate record: docs/research/evidence/w4-gate/WAVE4-GATE-RECORD.md)
-Wave 5 / F6 depth (leases + takeover) ✅ CLOSED 2026-09-25 (gate record: docs/research/evidence/w5-gate/WAVE5-GATE-RECORD.md)
-Wave 6 / F11 Web client              ✅ CLOSED 2026-09-25 (gate record: docs/research/evidence/w6-gate/WAVE6-GATE-RECORD.md)
-Web / Windows / Linux formal verify  ▶ EXECUTED 2026-09-26 (FV-001 PR #59 + FV-002 PR #60 + the FV-003 Lead passes at 4ed0a0c: Linux 21/21 GREEN, Windows CI journey-smoke GREEN, Web 1/14 + the named W-AUTH gap — gate record: docs/research/evidence/fv-gate/FV-GATE-RECORD.md)
-Production                           ⬜
-macOS                                ⏸ DEFERRED UNTIL AFTER PRODUCTION
-Mobile                               ⏸ DEFERRED UNTIL AFTER PRODUCTION
+F0 Governance                         ✅  
+F1 Codex Desktop parity              ✅ CLOSED  
+F2 Canonical contracts + shell       ✅ CLOSED  
+Wave 2 / F3-F5 fabric foundation     ✅ DELIVERED  
+Wave 3 / F6 orchestration            ✅ CLOSED  
+Wave 4 / F7-F9                       ✅ CLOSED 2026-09-23  
+Wave 5 / F6 depth                    ✅ CLOSED 2026-09-25  
+Wave 6 / F11 Web client              ✅ CLOSED 2026-09-25  
+Wave 7 / formal verification         ✅ EXECUTED 2026-09-26, Web remains W-AUTH-bound  
+Wave 8 / production hardening        ▶ ACTIVE  
+Wave 8b / production follow-through  ▶ ACTIVE  
+Production release                   ⬜  
+macOS                                ⏸ DEFERRED UNTIL AFTER PRODUCTION  
+Mobile                               ⏸ DEFERRED UNTIL AFTER PRODUCTION  
 
-Wave 4 closed at the merged gate: PROV-001 (PR #53), LAB-001 (PR #52),
-COL-001 (PR #54) — 3/3 merged, deviations NONE ×3, the 19-step harness
-green (the three-fabric scenario), the d26 lab scenes VLM-adjudicated,
-CI green both platforms. Wave 6 closed at the merged gate: WEB-001
-(PR #57, the gateway + shell foundation) + WEB-002 (PR #58, the
-capability surfaces) — deviations NONE ×2, protocol-derived capability
-truth, 13 lab journeys ×3, CI green both platforms. The next active
-work is formal-verification readiness for Linux + Windows + Web.
+## Verified current-main facts
 
-## Release sequencing decision
+- Current `main` is `fb5c8620b32e`.
+- REL-001 is merged (PR #62).
+- SEC-001 is merged (PR #63).
+- MIG-002 is merged (PR #64).
+- OBS-001 is not present as a merged mainline change yet.
+- No merged UPD-001 branch is present.
+- No merged COMP-001 branch is present.
+- Wave-7 gate record at `4ed0a0c` records:
+  - Linux: 21/21 GREEN.
+  - Windows: journey-smoke GREEN within CI bounds.
+  - Web: 1/14 GREEN; E01-E13 blocked by named environment gap W-AUTH.
+- Any production-gate decision must account for changes made after the FV pin. Do not silently treat the older FV pin as equivalent to current main; rerun affected evidence when a change can invalidate it.
 
-The first production release is deliberately restricted to the three clients that must be formally verified first:
+## Production sequence
 
-Wave 4  ✅ CLOSED
+```
+Wave 7 formal verification
   ↓
-F7 + F8 + F9 gate  ✅ GREEN 2026-09-23
+Wave 8 production hardening
   ↓
-remaining F6 depth  ✅ CLOSED 2026-09-25 (Wave 5)
+Wave 8b follow-through
   ↓
-Web client (Wave 6)  ✅ CLOSED 2026-09-25
+recover W-AUTH
   ↓
-┌────────────┼────────────┐
-↓            ↓            ↓
-Linux        Windows      Web
-└────────────┼────────────┘
-             ↓
-FORMAL PRODUCTION VERIFY
-             ↓
-PRODUCTION
-             ↓
-┌────────────┴────────────┐
-↓                         ↓
-macOS                     Mobile
-DEFERRED                  DEFERRED
-
-macOS and Mobile are not prerequisites for the first production release. They become post-production expansion clients and receive their own formal verification after production.
-
-## Tech Lead #1 — product/integration authority
-
-TL #1 owns:
-- architecture and contract integrity;
-- current main;
-- Wave-4 integration;
-- remaining orchestration depth;
-- provider/model/runtime integration;
-- Web client;
-- production hardening;
-- formal release gates for Linux, Windows and Web;
-- integration of product fixes discovered by TL #2.
-
-TL #1 must not treat a worker report as phase completion. Closure requires merged implementation plus acceptance evidence.
-
-## Tech Lead #2 — Linux/E2B verification authority
-
-TL #2 owns:
-- real Linux GUI dogfooding;
-- E2B Desktop provisioning and GUI interaction;
-- J-01..J-18 current-main verification;
-- Linux-specific regression detection;
-- GUI/accessibility/discoverability evidence;
-- E2B verification tooling;
-- focused product-fix PRs when a reproducible defect belongs in Flauz.
-
-TL #2 must test the exact current main SHA, not a long-lived stale product branch.
-
-Historical Linux-lane branches and evidence remain valuable investigation history, but are not alternative product truth.
-
-## Synchronization law
-
-current main
+complete authenticated Web FV scenes
   ↓
-fresh E2B Desktop
+reconcile current-main verification after post-FV changes
   ↓
-real GUI interaction
+production release audit
   ↓
-defect / verification result
+production release
   ↓
-focused PR if product fix is required
+post-production macOS
   ↓
-merge to main
-  ↓
-fresh E2B environment
-  ↓
-rerun affected journey
+post-production Mobile
+```
 
-A Linux defect is closed only after the fix is merged to main and verified again in a fresh E2B Desktop environment.
+## Active work orders
 
-## Current Linux verification expectations
+### OBS-001 — observability
+Expected output:
+- credential-scrubbed diagnostics export;
+- palette + CLI path;
+- allowlist-based export;
+- provider-outage behavior record;
+- unit tests and station evidence.
 
-Reconcile the historical Linux evidence with current main.
+Acceptance:
+- no secret leakage;
+- named fields only;
+- palette and CLI both work;
+- outage states documented against evidence;
+- CI green.
 
-Known historical findings include the GPUI/X11/lavapipe rendering issue (L-002), runtime/environment incompatibilities, silent no-ops, draft loss, raw protocol errors, toast persistence and other UX defects. Each must be reclassified against current main rather than assumed still open or fixed.
+### COMP-001 — protocol compatibility
+Expected output:
+- `docs/PROTOCOL-COMPATIBILITY.md`;
+- generated-schema freeze verification/extension;
+- version semantics and compatibility matrix;
+- `cargo test -p codex-protocol` green.
 
-The E2B harness must never embed credentials in clone URLs, logs, actions or evidence.
+Acceptance:
+- every frozen surface mapped to an enforcing test;
+- additive-only policy explicit;
+- version semantics evidenced;
+- CI green.
 
-## Shared acceptance law
+### UPD-001 — update check
+Expected output:
+- notify-only release check;
+- once-per-day cadence;
+- settings switch;
+- truthful update / current / failed states;
+- tests.
 
-Every major capability must be:
-discoverable
-→ usable
-→ observable
-→ recoverable
-→ truthful on failure
-→ evidenced
+Acceptance:
+- never auto-download/install;
+- offline failure is truthful;
+- disabled setting prevents fetch;
+- CI green.
 
-The command palette is a fallback, never the sole discovery mechanism.
+### WEB-REL — web release channel
+Blocked until W-AUTH is recovered and the authenticated web formal-pass scenes are rerun.
 
-Major waves must include the applicable J-01..J-18 journeys and at least one domain-neutral non-software-development scenario.
+## Autonomous dispatch rules
 
-## Immediate execution order
+1. Read this file plus the relevant work-order file before acting.
+2. Confirm `git rev-parse HEAD` equals the repository's current `main` before beginning a new work order.
+3. Never infer completion from a worker message alone.
+4. Closure requires:
+   - implementation merged to `main`;
+   - work-order acceptance tests green;
+   - required evidence archived;
+   - current-state file updated with the new SHA.
+5. Pairwise-disjoint work orders may run concurrently, subject to actual worker/platform capacity.
+6. A blocked platform operation must not cause speculative repository changes.
+7. Keep all secrets out of commits, URLs, logs, reports, and evidence.
+8. When a work order discovers a product defect, create a focused fix order rather than silently changing scope.
+9. After a product-source change that can affect a formal/production-verification surface:
+   - identify the affected evidence;
+   - rerun it against the new main SHA;
+   - update the gate record.
+10. When no active work order remains, stop dispatching and produce a release-readiness reconciliation rather than inventing another wave.
 
-1. ✅ Merge/gate PROV-001 + LAB-001 + COL-001 (3/3 merged 2026-09-23)
-2. ✅ Run the Wave-4 three-fabric integration gate (Gates A/B/C green)
-3. ✅ Complete the remaining F6 orchestration depth (Wave 5 CLOSED: LEASE-001 + TAKE-001)
-4. ✅ Finish Web client (Wave 6 CLOSED: WEB-001 PR #57 + WEB-002 PR #58, 2026-09-25)
-5. ▶ Bring Linux + Windows + Web to formal verification readiness
-6. Run formal production verification across all three
-7. Close production hardening/release gates
-8. Ship production release
-9. Start macOS and Mobile expansion
+## Worker model
 
-When uncertainty exists, inspect current main, the authoritative roadmap, the active work order, and the latest gate record before continuing. Never use an old chat handoff as the source of truth.
+Use up to three concurrent workers where the work is genuinely disjoint:
+
+- Worker A: production/release/pipeline track.
+- Worker B: diagnostics/observability/product support track.
+- Worker C: security/compatibility/release-audit track.
+
+The Lead owns:
+- work-order selection;
+- source-of-truth validation;
+- integration;
+- merge/gate decisions;
+- production readiness;
+- current-state updates.
+
+## External station/platform blockers
+
+These are not repository facts and must be rechecked at execution time:
+- worker capacity/service availability;
+- W-AUTH credentials/session;
+- signing-key availability;
+- deployed release feed/infrastructure;
+- production deployment credentials.
+
+When one of these is unavailable, record the named gap and recovery action in the repo; do not fabricate success.
+
+## Stop conditions
+
+Stop autonomous execution when:
+- all active production work orders are merged and gated;
+- W-AUTH is recovered and authenticated Web FV completes;
+- current-main production verification has been reconciled;
+- production release checklist is green or has named operator-owned gaps;
+- macOS/Mobile are still intentionally deferred.
+
+At that point TL #1 becomes a maintenance/release-review role rather than a continuously running implementation lead.
