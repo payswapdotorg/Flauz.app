@@ -17,6 +17,7 @@ use codex_protocol::ClientInfo;
 mod backend;
 mod diagnostics;
 mod ui;
+mod update_check;
 
 fn main() -> ExitCode {
     match run() {
