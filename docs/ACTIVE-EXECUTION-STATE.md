@@ -1,7 +1,7 @@
 # Active Execution State
 
-**Updated:** 2026-09-27  
-**Last product-code main baseline:** `fb5c8620b32e` (MIG-002 merged; PR #64)  
+**Updated:** 2026-09-28  
+**Last product-code main baseline:** `5cbfbd838c11` (COMP-001 merged; PR #65)  
 **Current HEAD rule:** verify with `git rev-parse HEAD`; subsequent documentation-only reconciliation commits may advance HEAD without changing the product-code baseline.  
 **Role:** This file is the current operational state for autonomous execution. It supersedes stale historical handoffs, old chat summaries, and pre-gate roadmap snapshots.
 
@@ -24,13 +24,13 @@ Mobile                               ⏸ DEFERRED UNTIL AFTER PRODUCTION
 
 ## Verified current-main facts
 
-- Current `main` is `fb5c8620b32e`.
+- Current `main` is `5cbfbd838c11`.
 - REL-001 is merged (PR #62).
 - SEC-001 is merged (PR #63).
 - MIG-002 is merged (PR #64).
+- COMP-001 is merged (PR #65): `docs/PROTOCOL-COMPATIBILITY.md` is the compat law; the initialize-with-capabilities freeze test is green on main.
 - OBS-001 is not present as a merged mainline change yet.
 - No merged UPD-001 branch is present.
-- No merged COMP-001 branch is present.
 - Wave-7 gate record at `4ed0a0c` records:
   - Linux: 21/21 GREEN.
   - Windows: journey-smoke GREEN within CI bounds.
@@ -76,19 +76,6 @@ Acceptance:
 - named fields only;
 - palette and CLI both work;
 - outage states documented against evidence;
-- CI green.
-
-### COMP-001 — protocol compatibility
-Expected output:
-- `docs/PROTOCOL-COMPATIBILITY.md`;
-- generated-schema freeze verification/extension;
-- version semantics and compatibility matrix;
-- `cargo test -p codex-protocol` green.
-
-Acceptance:
-- every frozen surface mapped to an enforcing test;
-- additive-only policy explicit;
-- version semantics evidenced;
 - CI green.
 
 ### UPD-001 — update check
