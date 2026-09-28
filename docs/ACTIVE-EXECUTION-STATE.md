@@ -1,7 +1,7 @@
 # Active Execution State
 
 **Updated:** 2026-09-28  
-**Last product-code main baseline:** `5cbfbd838c11` (COMP-001 merged; PR #65)  
+**Last product-code main baseline:** `84b9c64aeb62` (OBS-001 merged; PR #66)  
 **Current HEAD rule:** verify with `git rev-parse HEAD`; subsequent documentation-only reconciliation commits may advance HEAD without changing the product-code baseline.  
 **Role:** This file is the current operational state for autonomous execution. It supersedes stale historical handoffs, old chat summaries, and pre-gate roadmap snapshots.
 
@@ -24,13 +24,13 @@ Mobile                               ⏸ DEFERRED UNTIL AFTER PRODUCTION
 
 ## Verified current-main facts
 
-- Current `main` is `5cbfbd838c11`.
+- Current `main` is `84b9c64aeb62`.
 - REL-001 is merged (PR #62).
 - SEC-001 is merged (PR #63).
 - MIG-002 is merged (PR #64).
 - COMP-001 is merged (PR #65): `docs/PROTOCOL-COMPATIBILITY.md` is the compat law; the initialize-with-capabilities freeze test is green on main.
-- OBS-001 is not present as a merged mainline change yet.
-- No merged UPD-001 branch is present.
+- OBS-001 is merged (PR #66): the credential-scrubbed allowlist diagnostics export (palette + `--diagnostics-out`) + the provider-outage record in SUPPORT.md; both CI legs green at merge.
+- No merged UPD-001 branch is present (PR #67 in flight).
 - Wave-7 gate record at `4ed0a0c` records:
   - Linux: 21/21 GREEN.
   - Windows: journey-smoke GREEN within CI bounds.
@@ -62,21 +62,6 @@ post-production Mobile
 ```
 
 ## Active work orders
-
-### OBS-001 — observability
-Expected output:
-- credential-scrubbed diagnostics export;
-- palette + CLI path;
-- allowlist-based export;
-- provider-outage behavior record;
-- unit tests and station evidence.
-
-Acceptance:
-- no secret leakage;
-- named fields only;
-- palette and CLI both work;
-- outage states documented against evidence;
-- CI green.
 
 ### UPD-001 — update check
 Expected output:
