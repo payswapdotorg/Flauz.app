@@ -1390,6 +1390,9 @@ enum BackendCommand {
         api_key: SecretString,
         region: String,
     },
+    WriteDiagnostics {
+        path: PathBuf,
+    },
     Shutdown,
 }
 
@@ -2484,6 +2487,18 @@ impl Backend {
             })
     }
 
+    /// OBS-001: requests the credential-scrubbed diagnostics export. The
+    /// backend thread collects the snapshot (allowlist fields only) and
+    /// writes it to `path`; the result arrives as a status action.
+    pub fn export_diagnostics(&self, path: PathBuf) -> Result<(), &'static str> {
+        self.commands
+            .try_send(BackendCommand::WriteDiagnostics { path })
+            .map_err(|error| match error {
+                crossbeam_channel::TrySendError::Full(_) => "backend command queue is full",
+                crossbeam_channel::TrySendError::Disconnected(_) => "backend is disconnected",
+            })
+    }
+
     pub fn try_recv(&self) -> Result<Option<QueuedAction>, &'static str> {
         if self
             .backpressure
@@ -3385,6 +3400,8 @@ fn run_backend(
         },
     );
     let mut connection: Option<AppServerConnection> = None;
+    // OBS-001: retained handshake facts for the diagnostics export.
+    let mut runtime_facts = crate::diagnostics::RuntimeFacts::default();
     let mut pending_approvals = HashMap::new();
     let mut marketplaces = HashMap::new();
     let mut computer_permissions = HashMap::new();
@@ -3669,7 +3686,9 @@ fn run_backend(
                     pull_request_search.clear();
                     goal_continuations.clear();
                     app_server_reconnect.reset();
-                    if shutdown_failed || connect(&events, &mut connection).is_err() {
+                    if shutdown_failed
+                        || connect(&events, &mut connection, &mut runtime_facts).is_err()
+                    {
                         emit(&events, Action::AccountBedrockRestartFailed);
                     }
                 }
@@ -3693,7 +3712,7 @@ fn run_backend(
                 Effect::ConnectAppServer => {
                     app_server_reconnect.reset();
                     fuzzy_file_search.reset();
-                    if let Err(error) = connect(&events, &mut connection) {
+                    if let Err(error) = connect(&events, &mut connection, &mut runtime_facts) {
                         emit(
                             &events,
                             Action::ConnectionFailed(bounded(error, MAX_STATUS_BYTES)),
@@ -3790,6 +3809,31 @@ fn run_backend(
                     }
                 }
             },
+            Ok(BackendCommand::WriteDiagnostics { path }) => {
+                // OBS-001: collect + write on the backend thread (the
+                // connection history lives here); report via status.
+                let snapshot = crate::diagnostics::collect_diagnostics(
+                    &runtime_facts,
+                    &crate::diagnostics::connection_history(),
+                    storage.as_ref(),
+                );
+                match crate::diagnostics::write_diagnostics_json(&snapshot, &path) {
+                    Ok(()) => emit(
+                        &events,
+                        Action::SetStatus(format!(
+                            "Diagnostics exported to {} — includes version, OS, and connection facts; never credentials or chat content",
+                            path.display()
+                        )),
+                    ),
+                    Err(error) => emit(
+                        &events,
+                        Action::SetStatus(bounded(
+                            format!("Unable to export diagnostics: {error}"),
+                            MAX_STATUS_BYTES,
+                        )),
+                    ),
+                }
+            }
             Ok(BackendCommand::Shutdown)
             | Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
                 break;
@@ -3799,7 +3843,7 @@ fn run_backend(
 
         if let Some(attempt) = app_server_reconnect.take_due(Instant::now()) {
             emit(&events, Action::ConnectionRetryStarted { attempt });
-            match connect(&events, &mut connection) {
+            match connect(&events, &mut connection, &mut runtime_facts) {
                 Ok(()) => app_server_reconnect.reset(),
                 Err(error) => {
                     if let Some((next_attempt, delay)) =
@@ -10810,6 +10854,7 @@ fn map_git_snapshot(snapshot: GitSnapshot) -> GitState {
 fn connect(
     events: &dyn ActionEmitter,
     connection: &mut Option<AppServerConnection>,
+    runtime_facts: &mut crate::diagnostics::RuntimeFacts,
 ) -> Result<(), String> {
     if connection.is_some() {
         emit(events, Action::Connected);
@@ -10831,7 +10876,13 @@ fn connect(
         },
         Some(initialize_capabilities()),
     ) {
-        Ok(_) => {
+        Ok(response) => {
+            // OBS-001: retain the handshake facts for the diagnostics
+            // export (the app-server's reported user agent is the pinned
+            // CLI version source; no subprocess probe).
+            runtime_facts.codex_binary = Some(runtime_binary.clone());
+            runtime_facts.codex_home = Some(runtime_home.clone());
+            runtime_facts.app_server_user_agent = Some(response.user_agent);
             *connection = Some(app_server);
             emit(
                 events,
@@ -17213,6 +17264,8 @@ fn push_bounded(output: &mut String, value: &str, limit: usize) {
 }
 
 fn emit(events: &dyn ActionEmitter, action: Action) {
+    // OBS-001: the single choke point for connection-state history.
+    crate::diagnostics::record_connection_action(&action);
     events.emit(action);
 }
 

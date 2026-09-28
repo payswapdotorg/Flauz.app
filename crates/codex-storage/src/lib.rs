@@ -29,6 +29,17 @@ const MAX_BROWSER_DOWNLOAD_PATH_BYTES: usize = 4 * 1024;
 const MAX_BROWSING_HISTORY_URL_BYTES: usize = 8 * 1024;
 const MAX_BROWSING_HISTORY_TITLE_BYTES: usize = 512;
 
+/// OBS-001: row counts for the named tables, exported by the diagnostics
+/// collector. Counts only — never contents.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DiagnosticsCounts {
+    pub ui_preferences: i64,
+    pub recent_workspaces: i64,
+    pub browser_downloads: i64,
+    pub workspace_folders: i64,
+    pub browsing_history: i64,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EventTooLarge {
     pub actual: usize,
@@ -222,6 +233,34 @@ impl Store {
         Ok(Self {
             connection,
             owner: thread::current().id(),
+        })
+    }
+
+    /// OBS-001: the read-only schema-version accessor. Reports the store's
+    /// current `PRAGMA user_version` (after migration this equals
+    /// `SCHEMA_VERSION`). Read-only: it never mutates state.
+    pub fn schema_version(&self) -> Result<i64, StoreError> {
+        self.ensure_owner()?;
+        let version = self
+            .connection
+            .query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0))?;
+        Ok(version)
+    }
+
+    /// OBS-001: row counts for the named tables — diagnostics export the
+    /// counts, never the contents. Read-only.
+    pub fn diagnostics_counts(&self) -> Result<DiagnosticsCounts, StoreError> {
+        self.ensure_owner()?;
+        let count = |connection: &Connection, table: &str| -> Result<i64, StoreError> {
+            let sql = format!("SELECT COUNT(*) FROM {table}");
+            Ok(connection.query_row(&sql, [], |row| row.get::<_, i64>(0))?)
+        };
+        Ok(DiagnosticsCounts {
+            ui_preferences: count(&self.connection, "ui_preferences")?,
+            recent_workspaces: count(&self.connection, "recent_workspaces")?,
+            browser_downloads: count(&self.connection, "browser_downloads")?,
+            workspace_folders: count(&self.connection, "workspace_folders")?,
+            browsing_history: count(&self.connection, "browsing_history")?,
         })
     }
 
