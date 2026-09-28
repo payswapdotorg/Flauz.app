@@ -105,6 +105,7 @@ use gpui_component::{
 use markdown::{ParseOptions, mdast::Node};
 
 use crate::backend::{Backend, QueuedAction};
+use crate::update_check::{RELEASES_PAGE_URL, UpdateNotice};
 
 mod ui_workflow;
 
@@ -3855,10 +3856,11 @@ enum PaletteCommand {
     SeeWhatNeedsYou,
     TakeOverARunningStep,
     ExportDiagnostics,
+    CheckForUpdates,
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 94] = [
+    const ALL: [Self; 95] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3906,6 +3908,7 @@ impl PaletteCommand {
         Self::Feedback,
         Self::OpenProcessManager,
         Self::ExportDiagnostics,
+        Self::CheckForUpdates,
         Self::OpenRepository,
         Self::CommitOrPush,
         Self::CreatePullRequest,
@@ -3981,6 +3984,7 @@ impl PaletteCommand {
             Self::Feedback => "Feedback",
             Self::OpenProcessManager => "Process Manager",
             Self::ExportDiagnostics => "Export diagnostics",
+            Self::CheckForUpdates => "Check for updates",
             Self::OpenRepository => "Open repository",
             Self::CommitOrPush => "Commit or push",
             Self::CreatePullRequest => "Create PR",
@@ -4099,6 +4103,9 @@ impl PaletteCommand {
             Self::OpenProcessManager => "View and manage processes started by Codex chats",
             Self::ExportDiagnostics => {
                 "Export a support diagnostics bundle (no credentials, no chat content)"
+            }
+            Self::CheckForUpdates => {
+                "Check for a newer release (notify-only: never downloads or installs)"
             }
             Self::OpenRepository => "Open branches, worktrees, and changed files",
             Self::CommitOrPush => "Open commit or push options",
@@ -4359,6 +4366,7 @@ impl PaletteCommand {
             Self::Feedback => IconName::Info,
             Self::OpenProcessManager => IconName::SquareTerminal,
             Self::ExportDiagnostics => IconName::Info,
+            Self::CheckForUpdates => IconName::Redo2,
             Self::OpenRepository => IconName::FolderOpen,
             Self::CommitOrPush => IconName::ArrowUp,
             Self::CreatePullRequest => IconName::GitHub,
@@ -4514,9 +4522,11 @@ impl PaletteCommand {
             | Self::OpenConnectionsSettings
             | Self::DisableGitReview
             | Self::EnableGitReview => PaletteGroup::Configure,
-            Self::LogOut | Self::Feedback | Self::OpenProcessManager | Self::ExportDiagnostics => {
-                PaletteGroup::App
-            }
+            Self::LogOut
+            | Self::Feedback
+            | Self::OpenProcessManager
+            | Self::ExportDiagnostics
+            | Self::CheckForUpdates => PaletteGroup::App,
             Self::OpenProjectsTasks
             | Self::OpenReusableWorkflows
             | Self::OpenArtifacts
@@ -5027,6 +5037,7 @@ impl CommandPaletteView {
             PaletteCommand::Feedback => workspace.open_feedback_modal(window, cx),
             PaletteCommand::OpenProcessManager => workspace.open_process_manager(cx),
             PaletteCommand::ExportDiagnostics => workspace.prompt_for_diagnostics_export(cx),
+            PaletteCommand::CheckForUpdates => workspace.request_update_check(cx),
             PaletteCommand::OpenRepository => workspace.navigate(MainRoute::Repository, cx),
             PaletteCommand::CommitOrPush => workspace.open_commit_modal(window, cx),
             PaletteCommand::CreatePullRequest => {
@@ -11159,6 +11170,25 @@ impl WorkspaceView {
         .detach();
     }
 
+    /// UPD-001: the palette path — the user's explicit update-check request.
+    /// Notify-only by law: the check surfaces the truth through the status
+    /// surface and never downloads or installs anything.
+    fn request_update_check(&mut self, cx: &mut Context<Self>) {
+        let result = self
+            .backend
+            .as_ref()
+            .ok_or("backend is unavailable")
+            .and_then(|backend| backend.request_update_check());
+        if result.is_err() {
+            self.dispatch(
+                Action::SetStatus(
+                    "Unable to check for updates: the backend is busy or closed".to_owned(),
+                ),
+                cx,
+            );
+        }
+    }
+
     fn prompt_for_workspace(&mut self, cx: &mut Context<Self>) {
         let receiver = cx.prompt_for_paths(PathPromptOptions {
             files: false,
@@ -16486,6 +16516,89 @@ impl WorkspaceView {
                         )
                     }),
             )
+            .child(self.render_update_status_row(cx))
+            .into_any_element()
+    }
+
+    /// UPD-001: the status-surface version + update row. Truthful in every
+    /// state: update available (clickable → the releases page, dismissible),
+    /// up to date, couldn't check (with the named reason), or the bare
+    /// version (checks off / nothing checked yet / notice dismissed).
+    /// Notify-only by law: nothing is ever downloaded or installed.
+    fn render_update_status_row(&self, cx: &mut Context<Self>) -> AnyElement {
+        let Some(backend) = self.backend.as_ref() else {
+            return div().into_any_element();
+        };
+        let snapshot = backend.update_check_snapshot();
+        let notice = snapshot.notice();
+        let version = env!("CARGO_PKG_VERSION");
+        let (label, tooltip, available_tag) = match &notice {
+            UpdateNotice::Hidden => {
+                let tooltip = if snapshot.enabled {
+                    "No update check has run yet".to_owned()
+                } else {
+                    "Update checks are off — enable them in Settings".to_owned()
+                };
+                (format!("Version {version}"), tooltip, None)
+            }
+            UpdateNotice::UpdateAvailable { tag } => (
+                format!("Version {version} — update {tag} available →"),
+                "A newer release exists. Click to open the releases page. The app never downloads or installs updates.".to_owned(),
+                Some(tag.clone()),
+            ),
+            UpdateNotice::UpToDate => (
+                format!("Version {version} — up to date"),
+                "The release feed reports no newer release".to_owned(),
+                None,
+            ),
+            UpdateNotice::CouldNotCheck { reason } => (
+                format!("Version {version} — couldn't check for updates"),
+                format!("The release feed was unreachable: {reason}"),
+                None,
+            ),
+        };
+        h_flex()
+            .id("update-check-status")
+            .h(px(24.0))
+            .px_2()
+            .gap_2()
+            .items_center()
+            .tooltip(move |window, cx| Tooltip::new(tooltip.clone()).build(window, cx))
+            .child(
+                div()
+                    .id("update-check-status-link")
+                    .min_w_0()
+                    .truncate()
+                    .text_xs()
+                    .text_color(if available_tag.is_some() {
+                        cx.theme().warning
+                    } else {
+                        cx.theme().muted_foreground
+                    })
+                    .when(available_tag.is_some(), |label| {
+                        label
+                            .cursor_pointer()
+                            .hover(|style| style.bg(cx.theme().list_hover))
+                            .rounded_sm()
+                            .on_click(|_, _, cx| cx.open_url(RELEASES_PAGE_URL))
+                    })
+                    .child(label),
+            )
+            .when(available_tag.is_some(), |row| {
+                row.child(
+                    Button::new("dismiss-update-notice")
+                        .icon(IconName::Close)
+                        .tooltip("Dismiss this update notice until a newer release")
+                        .xsmall()
+                        .ghost()
+                        .high_contrast_focus()
+                        .on_click(cx.listener(|this, _, _, _cx| {
+                            if let Some(backend) = this.backend.as_ref() {
+                                backend.dismiss_update_notice();
+                            }
+                        })),
+                )
+            })
             .into_any_element()
     }
 
@@ -35526,6 +35639,121 @@ impl WorkspaceView {
             .into_any_element()
     }
 
+    /// UPD-001: the update-checks settings card — the persisted knob
+    /// (updates.check = "on"/"off") plus the truthful current state.
+    /// "Off" disables the release-feed fetch entirely; either way the app
+    /// never downloads or installs updates (notify-only by law).
+    fn render_update_checks_card(&mut self, cx: &mut Context<Self>) -> AnyElement {
+        let (enabled, state_line) = match self.backend.as_ref() {
+            None => (true, "Update checks are on.".to_owned()),
+            Some(backend) => {
+                let snapshot = backend.update_check_snapshot();
+                let state_line = if !snapshot.enabled {
+                    "Update checks are off. codexRS never downloads or installs updates either way."
+                        .to_owned()
+                } else {
+                    match snapshot.notice() {
+                        UpdateNotice::Hidden => {
+                            "Update checks are on. No check has completed yet this session."
+                                .to_owned()
+                        }
+                        UpdateNotice::UpdateAvailable { tag } => format!(
+                            "Update {tag} is available — see the update row in the sidebar."
+                        ),
+                        UpdateNotice::UpToDate => {
+                            "Update checks are on. This build is up to date with the release feed."
+                                .to_owned()
+                        }
+                        UpdateNotice::CouldNotCheck { reason } => {
+                            format!("Couldn't check for updates: {reason}")
+                        }
+                    }
+                };
+                (snapshot.enabled, state_line)
+            }
+        };
+        v_flex()
+            .w_full()
+            .max_w(px(760.0))
+            .rounded_lg()
+            .border_1()
+            .border_color(cx.theme().border)
+            .bg(cx.theme().sidebar)
+            .child(
+                v_flex()
+                    .px_4()
+                    .pt_3()
+                    .gap_1()
+                    .child(
+                        div()
+                            .font_weight(gpui::FontWeight::SEMIBOLD)
+                            .child("Update checks"),
+                    )
+                    .child(
+                        div()
+                            .text_sm()
+                            .text_color(cx.theme().muted_foreground)
+                            .child(
+                                "Check the public releases feed at most once a day and surface \
+                                 it when a newer release exists. Notify-only: updates are never \
+                                 downloaded or installed automatically.",
+                            ),
+                    ),
+            )
+            .child(
+                h_flex()
+                    .px_4()
+                    .py_3()
+                    .gap_2()
+                    .items_center()
+                    .child(
+                        div()
+                            .min_w_0()
+                            .flex_1()
+                            .text_sm()
+                            .text_color(cx.theme().muted_foreground)
+                            .child(state_line),
+                    )
+                    .child(
+                        Button::new("updates-check-on")
+                            .label("On")
+                            .small()
+                            .selected(enabled)
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.set_updates_check_enabled(true, cx);
+                            })),
+                    )
+                    .child(
+                        Button::new("updates-check-off")
+                            .label("Off")
+                            .small()
+                            .selected(!enabled)
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.set_updates_check_enabled(false, cx);
+                            })),
+                    ),
+            )
+            .into_any_element()
+    }
+
+    /// UPD-001: the knob write path (the backend persists updates.check).
+    fn set_updates_check_enabled(&mut self, enabled: bool, cx: &mut Context<Self>) {
+        let result = self
+            .backend
+            .as_ref()
+            .ok_or("backend is unavailable")
+            .and_then(|backend| backend.set_updates_check_enabled(enabled));
+        if result.is_err() {
+            self.dispatch(
+                Action::SetStatus(
+                    "Unable to save the update-check setting: the backend is busy or closed"
+                        .to_owned(),
+                ),
+                cx,
+            );
+        }
+    }
+
     fn render_general_settings(&mut self, cx: &mut Context<Self>) -> AnyElement {
         let reference = codex_core::stable_reference();
         let codex_binary = self
@@ -35594,6 +35822,7 @@ impl WorkspaceView {
                         ),
                         cx,
                     ))
+                    .child(self.render_update_checks_card(cx))
                     .child(settings_card(
                         "Official Codex runtime",
                         format!(

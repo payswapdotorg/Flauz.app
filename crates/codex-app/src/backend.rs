@@ -3,8 +3,8 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::Read;
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
@@ -1393,6 +1393,11 @@ enum BackendCommand {
     WriteDiagnostics {
         path: PathBuf,
     },
+    // UPD-001: the notify-only update check.
+    RequestUpdateCheck,
+    SetUpdatesCheckEnabled {
+        enabled: bool,
+    },
     Shutdown,
 }
 
@@ -2419,6 +2424,7 @@ pub struct Backend {
     events: Receiver<QueuedAction>,
     backpressure: Arc<UiBackpressureSignals>,
     shutdown_requested: Arc<AtomicBool>,
+    update_state: Arc<Mutex<crate::update_check::UpdateCheckState>>,
     thread: Option<JoinHandle<()>>,
 }
 
@@ -2442,9 +2448,20 @@ impl Backend {
         let backpressure = Arc::clone(&event_sender.backpressure);
         let shutdown_requested = Arc::new(AtomicBool::new(false));
         let worker_shutdown_requested = Arc::clone(&shutdown_requested);
+        // UPD-001: the shared update-check state (the backend thread runs
+        // the checks; the UI reads snapshots through the Backend handle).
+        let update_state = Arc::new(Mutex::new(crate::update_check::UpdateCheckState::default()));
+        let worker_update_state = Arc::clone(&update_state);
         let thread = thread::Builder::new()
             .name("codex-rs-backend".to_owned())
-            .spawn(move || run_backend(command_receiver, event_sender, worker_shutdown_requested))
+            .spawn(move || {
+                run_backend(
+                    command_receiver,
+                    event_sender,
+                    worker_shutdown_requested,
+                    worker_update_state,
+                )
+            })
             .map_err(|error| format!("failed to start backend: {error}"))?;
 
         Ok(Self {
@@ -2452,6 +2469,7 @@ impl Backend {
             events: event_receiver,
             backpressure,
             shutdown_requested,
+            update_state,
             thread: Some(thread),
         })
     }
@@ -2497,6 +2515,45 @@ impl Backend {
                 crossbeam_channel::TrySendError::Full(_) => "backend command queue is full",
                 crossbeam_channel::TrySendError::Disconnected(_) => "backend is disconnected",
             })
+    }
+
+    /// UPD-001: the current update-check state snapshot for the status
+    /// surface row and the settings card.
+    pub fn update_check_snapshot(&self) -> crate::update_check::UpdateCheckState {
+        self.update_state
+            .lock()
+            .map(|state| state.clone())
+            .unwrap_or_default()
+    }
+
+    /// UPD-001: the palette path — the user's explicit check request.
+    pub fn request_update_check(&self) -> Result<(), &'static str> {
+        self.commands
+            .try_send(BackendCommand::RequestUpdateCheck)
+            .map_err(|error| match error {
+                TrySendError::Full(_) => "backend command queue is full",
+                TrySendError::Disconnected(_) => "backend is disconnected",
+            })
+    }
+
+    /// UPD-001: the config knob (updates.check = "on"/"off").
+    pub fn set_updates_check_enabled(&self, enabled: bool) -> Result<(), &'static str> {
+        self.commands
+            .try_send(BackendCommand::SetUpdatesCheckEnabled { enabled })
+            .map_err(|error| match error {
+                TrySendError::Full(_) => "backend command queue is full",
+                TrySendError::Disconnected(_) => "backend is disconnected",
+            })
+    }
+
+    /// UPD-001: hides the current update notice until a newer tag appears.
+    pub fn dismiss_update_notice(&self) {
+        if let Ok(mut state) = self.update_state.lock()
+            && let crate::update_check::UpdateAvailability::Available { tag } =
+                state.availability.clone()
+        {
+            state.dismissed_tag = Some(tag);
+        }
     }
 
     pub fn try_recv(&self) -> Result<Option<QueuedAction>, &'static str> {
@@ -3337,9 +3394,13 @@ fn run_backend(
     commands: Receiver<BackendCommand>,
     events: UiEventSender,
     shutdown_requested: Arc<AtomicBool>,
+    update_state: Arc<Mutex<crate::update_check::UpdateCheckState>>,
 ) {
     let runtime_policy = RuntimePolicy::default();
     let mut storage = open_storage(&events);
+    // UPD-001: the notify-only update check runtime (reads the persisted
+    // knob + cadence timestamp; the availability always starts NotChecked).
+    let mut updates = crate::update_check::UpdateCheckRuntime::new(update_state, storage.as_ref());
     if let Some(store) = storage.as_ref() {
         match store.browser_downloads(MAX_BROWSER_DOWNLOAD_RECORDS, 0) {
             Ok(page) => emit(
@@ -3834,11 +3895,31 @@ fn run_backend(
                     ),
                 }
             }
+            Ok(BackendCommand::RequestUpdateCheck) => {
+                // UPD-001: the palette path — the user's explicit request;
+                // the outcome reports through the status surface.
+                if let Some(status) = updates.request_manual_check(storage.as_mut()) {
+                    emit(&events, Action::SetStatus(status));
+                }
+            }
+            Ok(BackendCommand::SetUpdatesCheckEnabled { enabled }) => {
+                // UPD-001: the config knob; "off" disables the fetch
+                // entirely.
+                if let Some(status) = updates.set_enabled(storage.as_mut(), enabled) {
+                    emit(&events, Action::SetStatus(status));
+                }
+            }
             Ok(BackendCommand::Shutdown)
             | Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
                 break;
             }
             Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
+        }
+
+        // UPD-001: drain a completed check + maybe start the automatic one
+        // (at most once per day; every attempt counts, offline included).
+        if let Some(status) = updates.poll(storage.as_mut()) {
+            emit(&events, Action::SetStatus(status));
         }
 
         if let Some(attempt) = app_server_reconnect.take_due(Instant::now()) {
@@ -18110,7 +18191,7 @@ mod tests {
     use std::collections::{HashMap, HashSet};
     use std::path::PathBuf;
     use std::sync::{
-        Arc,
+        Arc, Mutex,
         atomic::{AtomicBool, Ordering},
     };
     use std::thread;
@@ -18273,6 +18354,7 @@ mod tests {
             events: receiver,
             backpressure: Arc::clone(&events.backpressure),
             shutdown_requested: Arc::new(AtomicBool::new(false)),
+            update_state: Arc::new(Mutex::new(crate::update_check::UpdateCheckState::default())),
             thread: None,
         };
         events.emit(Action::SetStatus("occupied".to_owned()));
