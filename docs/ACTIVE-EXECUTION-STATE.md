@@ -1,7 +1,7 @@
 # Active Execution State
 
 **Updated:** 2026-09-28  
-**Last product-code main baseline:** `84b9c64aeb62` (OBS-001 merged; PR #66)  
+**Last product-code main baseline:** `8012ed9dfeed` (UPD-001 merged; PR #67 — the last dispatchable Wave-8b order)  
 **Current HEAD rule:** verify with `git rev-parse HEAD`; subsequent documentation-only reconciliation commits may advance HEAD without changing the product-code baseline.  
 **Role:** This file is the current operational state for autonomous execution. It supersedes stale historical handoffs, old chat summaries, and pre-gate roadmap snapshots.
 
@@ -16,21 +16,22 @@ Wave 4 / F7-F9                       ✅ CLOSED 2026-09-23
 Wave 5 / F6 depth                    ✅ CLOSED 2026-09-25  
 Wave 6 / F11 Web client              ✅ CLOSED 2026-09-25  
 Wave 7 / formal verification         ✅ EXECUTED 2026-09-26, Web remains W-AUTH-bound  
-Wave 8 / production hardening        ▶ ACTIVE  
-Wave 8b / production follow-through  ▶ ACTIVE  
+Wave 8 / production hardening        ✅ CLOSED 2026-09-28 (trio merged: PRs #62/#63/#66)  
+Wave 8b / production follow-through  ✅ CLOSED 2026-09-28 except WEB-REL (W-AUTH-blocked; the reconciliation records the recovery path)  
 Production release                   ⬜  
 macOS                                ⏸ DEFERRED UNTIL AFTER PRODUCTION  
 Mobile                               ⏸ DEFERRED UNTIL AFTER PRODUCTION  
 
 ## Verified current-main facts
 
-- Current `main` is `84b9c64aeb62`.
+- Current `main` is `8012ed9dfeed`.
 - REL-001 is merged (PR #62).
 - SEC-001 is merged (PR #63).
 - MIG-002 is merged (PR #64).
 - COMP-001 is merged (PR #65): `docs/PROTOCOL-COMPATIBILITY.md` is the compat law; the initialize-with-capabilities freeze test is green on main.
 - OBS-001 is merged (PR #66): the credential-scrubbed allowlist diagnostics export (palette + `--diagnostics-out`) + the provider-outage record in SUPPORT.md; both CI legs green at merge.
-- No merged UPD-001 branch is present (PR #67 in flight).
+- UPD-001 is merged (PR #67): the notify-only update check (bounded feed reader, 24 h cadence, persisted `updates.check` knob, truthful status row); both CI legs green at merge.
+- The release-readiness reconciliation (rule 10) is recorded at `docs/research/evidence/release-readiness/RELEASE-READINESS-RECONCILIATION.md`: verified-vs-stale evidence and the three operator-owned gaps (W-AUTH, the signing key, the GUI station passes).
 - Wave-7 gate record at `4ed0a0c` records:
   - Linux: 21/21 GREEN.
   - Windows: journey-smoke GREEN within CI bounds.
@@ -63,19 +64,10 @@ post-production Mobile
 
 ## Active work orders
 
-### UPD-001 — update check
-Expected output:
-- notify-only release check;
-- once-per-day cadence;
-- settings switch;
-- truthful update / current / failed states;
-- tests.
-
-Acceptance:
-- never auto-download/install;
-- offline failure is truthful;
-- disabled setting prevents fetch;
-- CI green.
+None dispatchable. WEB-REL remains blocked on W-AUTH (operator-owned). Per
+dispatch rule 10, the Lead has stopped dispatching and produced the
+release-readiness reconciliation
+(`docs/research/evidence/release-readiness/RELEASE-READINESS-RECONCILIATION.md`).
 
 ### WEB-REL — web release channel
 Blocked until W-AUTH is recovered and the authenticated web formal-pass scenes are rerun.
