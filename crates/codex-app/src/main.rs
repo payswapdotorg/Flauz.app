@@ -15,6 +15,7 @@ use codex_platform::{LinuxDesktopEntryError, install_linux_desktop_entry};
 use codex_protocol::ClientInfo;
 
 mod backend;
+mod diagnostics;
 mod ui;
 
 fn main() -> ExitCode {
@@ -40,6 +41,7 @@ fn run() -> Result<(), CliError> {
             Ok(())
         }
         Some(command) if command == "probe" => run_probe(args),
+        Some(command) if command == "--diagnostics-out" => run_diagnostics_out(args),
         Some(command) if command == "--computer-use-helper" => {
             run_computer_use_helper().map_err(CliError::ComputerUse)
         }
@@ -64,12 +66,52 @@ fn run_install_desktop_entry(mut args: impl Iterator<Item = OsString>) -> Result
     Ok(())
 }
 
+/// OBS-001: the CLI diagnostics export. Collects the allowlist snapshot
+/// without the GUI backend: the connection history is empty from this path
+/// (the named honest bound) and the runtime facts carry the resolved binary
+/// path without a handshake (no app-server user agent).
+fn run_diagnostics_out(args: impl Iterator<Item = OsString>) -> Result<(), CliError> {
+    let mut args = args;
+    let Some(path) = args.next() else {
+        return Err(CliError::MissingValue("--diagnostics-out"));
+    };
+    if args.next().is_some() {
+        return Err(CliError::UnexpectedDiagnosticsArguments);
+    }
+    let path = PathBuf::from(path);
+
+    let mut runtime_facts = diagnostics::RuntimeFacts {
+        codex_binary: Some(resolve_codex_binary(None)),
+        ..diagnostics::RuntimeFacts::default()
+    };
+    if let Ok(home) = CodexHome::resolve(None) {
+        runtime_facts.codex_home = Some(home.path().to_path_buf());
+    }
+
+    let storage = codex_platform::codexrs_data_dir()
+        .ok()
+        .map(|directory| directory.join("state.sqlite3"))
+        .and_then(|path| codex_storage::Store::open(&path).ok());
+
+    let snapshot = diagnostics::collect_diagnostics(
+        &runtime_facts,
+        &diagnostics::connection_history(),
+        storage.as_ref(),
+    );
+    diagnostics::write_diagnostics_json(&snapshot, &path).map_err(|error| {
+        eprintln!("codexrs: unable to write diagnostics: {error}");
+        CliError::DiagnosticsWrite
+    })?;
+    println!("diagnostics exported to {}", path.display());
+    println!("includes: version, OS, and connection facts; excludes: credentials and chat content");
+    Ok(())
+}
+
 fn run_probe(args: impl Iterator<Item = OsString>) -> Result<(), CliError> {
     let mut codex_binary = resolve_codex_binary(None);
     let mut codex_home = None;
     let mut limit = DEFAULT_THREAD_PAGE_LIMIT;
     let mut args = args;
-
     while let Some(option) = args.next() {
         match option.to_str() {
             Some("--codex-bin") => {
@@ -154,11 +196,15 @@ fn print_help() {
     println!("  codexrs              open the native desktop client");
     println!("  codexrs info         print bounded runtime information");
     println!("  codexrs probe [OPTIONS]");
+    println!("  codexrs --diagnostics-out <PATH>");
     #[cfg(target_os = "linux")]
     println!("  codexrs --install-desktop-entry");
     println!();
     println!("The probe uses the default ~/.codex unless --codex-home or CODEX_HOME is set.");
     println!("Set CODEX_RS_CODEX_BIN when codex.exe is not available through PATH.");
+    println!("The diagnostics export is credential-scrubbed: named fields only");
+    println!("(version, OS, connection history, storage counts), never credentials");
+    println!("or conversation content.");
 }
 
 fn print_probe_help() {
@@ -176,6 +222,8 @@ enum CliError {
     UnknownOption,
     MissingValue(&'static str),
     InvalidLimit,
+    UnexpectedDiagnosticsArguments,
+    DiagnosticsWrite,
     #[cfg(target_os = "linux")]
     UnexpectedArguments(&'static str),
     AppServer(AppServerError),
@@ -193,6 +241,10 @@ impl fmt::Display for CliError {
             Self::InvalidLimit => {
                 formatter.write_str("limit must be an integer from 1 through 100")
             }
+            Self::UnexpectedDiagnosticsArguments => {
+                formatter.write_str("--diagnostics-out accepts exactly one output path")
+            }
+            Self::DiagnosticsWrite => formatter.write_str("unable to write the diagnostics export"),
             #[cfg(target_os = "linux")]
             Self::UnexpectedArguments(command) => {
                 write!(formatter, "{command} does not accept arguments")
@@ -215,7 +267,9 @@ impl Error for CliError {
             Self::UnknownCommand
             | Self::UnknownOption
             | Self::MissingValue(_)
-            | Self::InvalidLimit => None,
+            | Self::InvalidLimit
+            | Self::UnexpectedDiagnosticsArguments
+            | Self::DiagnosticsWrite => None,
             #[cfg(target_os = "linux")]
             Self::UnexpectedArguments(_) => None,
         }

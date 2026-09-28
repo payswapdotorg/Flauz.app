@@ -64,9 +64,9 @@ use codex_core::{
     reduce, selected_thread_runtime_ready, validate_mcp_form_content,
 };
 use codex_platform::{
-    BackgroundCompletionNotifier, browsing_history_revisit_target, computer_use_platform_available,
-    default_browser_download_dir, desktop_work_areas, normalize_browser_origin,
-    read_artifact_image,
+    BackgroundCompletionNotifier, browsing_history_revisit_target, codexrs_data_dir,
+    computer_use_platform_available, default_browser_download_dir, desktop_work_areas,
+    normalize_browser_origin, read_artifact_image,
 };
 use codex_protocol::SecretString;
 use gpui::{
@@ -3854,10 +3854,11 @@ enum PaletteCommand {
     // TAKE-001: the needs-you review surface rows.
     SeeWhatNeedsYou,
     TakeOverARunningStep,
+    ExportDiagnostics,
 }
 
 impl PaletteCommand {
-    const ALL: [Self; 93] = [
+    const ALL: [Self; 94] = [
         Self::NewChat,
         Self::OpenFolder,
         Self::SearchChats,
@@ -3904,6 +3905,7 @@ impl PaletteCommand {
         Self::LogOut,
         Self::Feedback,
         Self::OpenProcessManager,
+        Self::ExportDiagnostics,
         Self::OpenRepository,
         Self::CommitOrPush,
         Self::CreatePullRequest,
@@ -3978,6 +3980,7 @@ impl PaletteCommand {
             Self::LogOut => "Log out",
             Self::Feedback => "Feedback",
             Self::OpenProcessManager => "Process Manager",
+            Self::ExportDiagnostics => "Export diagnostics",
             Self::OpenRepository => "Open repository",
             Self::CommitOrPush => "Commit or push",
             Self::CreatePullRequest => "Create PR",
@@ -4094,6 +4097,9 @@ impl PaletteCommand {
             Self::LogOut => "Sign out of ChatGPT",
             Self::Feedback => "Send product feedback to the ChatGPT team",
             Self::OpenProcessManager => "View and manage processes started by Codex chats",
+            Self::ExportDiagnostics => {
+                "Export a support diagnostics bundle (no credentials, no chat content)"
+            }
             Self::OpenRepository => "Open branches, worktrees, and changed files",
             Self::CommitOrPush => "Open commit or push options",
             Self::CreatePullRequest => "Open pull request creation options",
@@ -4352,6 +4358,7 @@ impl PaletteCommand {
             Self::LogOut => IconName::ExternalLink,
             Self::Feedback => IconName::Info,
             Self::OpenProcessManager => IconName::SquareTerminal,
+            Self::ExportDiagnostics => IconName::Info,
             Self::OpenRepository => IconName::FolderOpen,
             Self::CommitOrPush => IconName::ArrowUp,
             Self::CreatePullRequest => IconName::GitHub,
@@ -4507,7 +4514,9 @@ impl PaletteCommand {
             | Self::OpenConnectionsSettings
             | Self::DisableGitReview
             | Self::EnableGitReview => PaletteGroup::Configure,
-            Self::LogOut | Self::Feedback | Self::OpenProcessManager => PaletteGroup::App,
+            Self::LogOut | Self::Feedback | Self::OpenProcessManager | Self::ExportDiagnostics => {
+                PaletteGroup::App
+            }
             Self::OpenProjectsTasks
             | Self::OpenReusableWorkflows
             | Self::OpenArtifacts
@@ -5017,6 +5026,7 @@ impl CommandPaletteView {
             PaletteCommand::LogOut => workspace.confirm_account_logout(cx),
             PaletteCommand::Feedback => workspace.open_feedback_modal(window, cx),
             PaletteCommand::OpenProcessManager => workspace.open_process_manager(cx),
+            PaletteCommand::ExportDiagnostics => workspace.prompt_for_diagnostics_export(cx),
             PaletteCommand::OpenRepository => workspace.navigate(MainRoute::Repository, cx),
             PaletteCommand::CommitOrPush => workspace.open_commit_modal(window, cx),
             PaletteCommand::CreatePullRequest => {
@@ -11102,6 +11112,51 @@ impl WorkspaceView {
             }
         }
         cx.stop_propagation();
+    }
+
+    /// OBS-001: the keyboard-reachable diagnostics export. Ctrl+K →
+    /// "Export diagnostics" → choose the destination → the backend thread
+    /// writes the credential-scrubbed allowlist bundle and reports through
+    /// the status surface (no new actions required).
+    fn prompt_for_diagnostics_export(&mut self, cx: &mut Context<Self>) {
+        let directory = codexrs_data_dir().unwrap_or_else(|_| PathBuf::from("."));
+        let receiver = cx.prompt_for_new_path(&directory, Some("codexrs-diagnostics.json"));
+        cx.spawn(async move |view, cx| {
+            let selection = receiver.await;
+            let _ = cx.update(|cx| {
+                let Some(view) = view.upgrade() else {
+                    return;
+                };
+                view.update(cx, |this, cx| match selection {
+                    Ok(Ok(Some(path))) => {
+                        let result = this
+                            .backend
+                            .as_ref()
+                            .ok_or("backend is unavailable")
+                            .and_then(|backend| backend.export_diagnostics(path));
+                        if result.is_err() {
+                            this.dispatch(
+                                Action::SetStatus(
+                                    "Unable to export diagnostics: the backend is busy or closed"
+                                        .to_owned(),
+                                ),
+                                cx,
+                            );
+                        }
+                    }
+                    Ok(Err(_)) => {
+                        this.dispatch(
+                            Action::SetStatus(
+                                "Unable to choose where to save the diagnostics export".to_owned(),
+                            ),
+                            cx,
+                        );
+                    }
+                    Ok(Ok(None)) | Err(_) => {}
+                });
+            });
+        })
+        .detach();
     }
 
     fn prompt_for_workspace(&mut self, cx: &mut Context<Self>) {
