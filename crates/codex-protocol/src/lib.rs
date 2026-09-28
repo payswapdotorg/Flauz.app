@@ -3602,11 +3602,12 @@ mod tests {
         GetAccountTokenUsageResponse, GetAuthStatusParams, GetAuthStatusResponse,
         GitDiffToRemoteParams, GitDiffToRemoteResponse, HistorySortDirection, HookEventName,
         HookHandlerType, HookSource, HookTrustStatus, HooksListParams, HooksListResponse,
-        IncomingMessage, InitializeParams, InstalledApp, ListMcpServerStatusParams,
-        ListMcpServerStatusResponse, LoginAccountParams, LoginAccountResponse,
-        MarketplaceAddParams, MarketplaceRemoveParams, MarketplaceUpgradeParams, McpAuthStatus,
-        McpElicitationPrimitiveSchema, McpResourceReadParams, McpResourceReadResponse,
-        McpServerElicitationAction, McpServerElicitationRequest, McpServerElicitationRequestParams,
+        IncomingMessage, InitializeCapabilities, InitializeParams, InstalledApp,
+        ListMcpServerStatusParams, ListMcpServerStatusResponse, LoginAccountParams,
+        LoginAccountResponse, MarketplaceAddParams, MarketplaceRemoveParams,
+        MarketplaceUpgradeParams, McpAuthStatus, McpElicitationPrimitiveSchema,
+        McpResourceReadParams, McpResourceReadResponse, McpServerElicitationAction,
+        McpServerElicitationRequest, McpServerElicitationRequestParams,
         McpServerElicitationRequestResponse, McpServerOauthLoginParams,
         McpServerStartupFailureReason, McpServerStartupState, McpServerStatusDetail,
         McpServerStatusUpdatedNotification, MemoryResetResponse, ModelListParams,
@@ -3730,6 +3731,43 @@ mod tests {
                 method: "initialized"
             }),
             b"{\"method\":\"initialized\"}\n"
+        );
+    }
+
+    #[test]
+    fn initialize_wire_shape_with_capabilities_matches_generated_schema() {
+        // COMP-001: the production handshake always sends the desktop
+        // capabilities object, so the frozen initialize shape must cover
+        // that variant byte-for-byte, not only the capabilities-less probe
+        // shape. This test pins the SHAPE (camelCase field names, the
+        // always-serialized booleans, the optional elicitation and opt-out
+        // fields); the production VALUE set (the full stable opt-out list)
+        // is asserted app-side by initialize_capabilities_match_the_stable_
+        // desktop_contract in crates/codex-app/src/backend.rs.
+        let request = ClientRequest {
+            method: "initialize",
+            id: 1,
+            params: Some(InitializeParams {
+                client_info: ClientInfo {
+                    name: "codex-rs".to_owned(),
+                    title: Some("codexRS".to_owned()),
+                    version: "0.1.0-rc.14".to_owned(),
+                },
+                capabilities: Some(InitializeCapabilities {
+                    experimental_api: true,
+                    request_attestation: false,
+                    mcp_server_openai_form_elicitation: Some(true),
+                    opt_out_notification_methods: Some(vec![
+                        "thread/environment/connected".to_owned(),
+                        "warning".to_owned(),
+                    ]),
+                }),
+            }),
+        };
+
+        assert_eq!(
+            encoded(&request),
+            b"{\"method\":\"initialize\",\"id\":1,\"params\":{\"clientInfo\":{\"name\":\"codex-rs\",\"title\":\"codexRS\",\"version\":\"0.1.0-rc.14\"},\"capabilities\":{\"experimentalApi\":true,\"requestAttestation\":false,\"mcpServerOpenaiFormElicitation\":true,\"optOutNotificationMethods\":[\"thread/environment/connected\",\"warning\"]}}}\n"
         );
     }
 
