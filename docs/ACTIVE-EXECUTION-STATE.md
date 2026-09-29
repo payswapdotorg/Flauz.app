@@ -1,6 +1,6 @@
 # Active Execution State
 
-**Updated:** 2026-09-28  
+**Updated:** 2026-09-28 (Lead pass: the FV gate record refresh)  
 **Last product-code main baseline:** `8012ed9dfeed` (UPD-001 merged; PR #67 — the last dispatchable Wave-8b order)  
 **Current HEAD rule:** verify with `git rev-parse HEAD`; subsequent documentation-only reconciliation commits may advance HEAD without changing the product-code baseline.  
 **Role:** This file is the current operational state for autonomous execution. It supersedes stale historical handoffs, old chat summaries, and pre-gate roadmap snapshots.
@@ -32,6 +32,7 @@ Mobile                               ⏸ DEFERRED UNTIL AFTER PRODUCTION
 - OBS-001 is merged (PR #66): the credential-scrubbed allowlist diagnostics export (palette + `--diagnostics-out`) + the provider-outage record in SUPPORT.md; both CI legs green at merge.
 - UPD-001 is merged (PR #67): the notify-only update check (bounded feed reader, 24 h cadence, persisted `updates.check` knob, truthful status row); both CI legs green at merge.
 - The release-readiness reconciliation (rule 10) is recorded at `docs/research/evidence/release-readiness/RELEASE-READINESS-RECONCILIATION.md`: verified-vs-stale evidence and the three operator-owned gaps (W-AUTH, the signing key, the GUI station passes).
+- The reconciliation's §5.2 item — the FV gate record refresh — is DONE (2026-09-28 Lead pass): `docs/research/evidence/fv-gate/FV-GATE-RECORD.md` now carries the post-Wave-8/8b refresh addendum; the pin table reads against `8012ed9` (Windows journey battery re-evidenced green on all six post-FV CI heads, Linux startup smoke ×6 + the additive-only bridge, web lane unchanged/W-AUTH). Verified via the GitHub check-runs API at authoring; run IDs recorded in the addendum.
 - Wave-7 gate record at `4ed0a0c` records:
   - Linux: 21/21 GREEN.
   - Windows: journey-smoke GREEN within CI bounds.
@@ -68,6 +69,10 @@ None dispatchable. WEB-REL remains blocked on W-AUTH (operator-owned). Per
 dispatch rule 10, the Lead has stopped dispatching and produced the
 release-readiness reconciliation
 (`docs/research/evidence/release-readiness/RELEASE-READINESS-RECONCILIATION.md`).
+The reconciliation's only Lead-owned item (the FV gate record refresh) is
+done (see above); everything else that remains is operator-owned
+(W-AUTH, `FLAUZ_RELEASE_SIGNING_KEY`, the GUI station passes) or sequenced
+behind them (the F13 production release audit).
 
 ### WEB-REL — web release channel
 Blocked until W-AUTH is recovered and the authenticated web formal-pass scenes are rerun.
