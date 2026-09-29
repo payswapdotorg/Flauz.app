@@ -73,3 +73,107 @@ addendum's honest-bounds law, the FV wave closes its executable scope with
 this record; the web-lane completion is a one-operator-action recovery away
 and does not gate the production-readiness assessment of the Linux and
 Windows clients.
+
+---
+
+# Refresh Addendum — the post-Wave-8/8b pin reconciliation (Lead pass)
+
+**Date:** 2026-09-28
+**Lead:** TL #1 (the Lead pass named by the release-readiness
+reconciliation §3/§5.2)
+**Product-code baseline refreshed to:** `8012ed9dfeed` (the UPD-001 merge,
+PR #67 — the last product-code change on main)
+**Docs head at authoring:** `6cfe0e0` (documentation-only commits may
+advance HEAD past the product baseline without a new pin)
+
+## Why this refresh exists
+
+The Wave-8/8b production-hardening set landed six product-source work
+orders AFTER the FV pin `4ed0a0c`. Per dispatch rule 9 and the
+reconciliation §3, the affected formal-verification evidence was rerun
+against every post-FV merge head by CI, and this record's pin table is now
+refreshed to cite that evidence. No new FV scene execution was needed: the
+change set is additive-only (audited below), and the rerun-at-head evidence
+is the CI-embedded harness.
+
+## The post-FV change set (the complete product delta `4ed0a0c..8012ed9`)
+
+| Order | PR | Merge | CI head (evidence) | Actions run |
+| --- | --- | --- | --- | --- |
+| REL-001 signed-release scaffold | #62 | `354449c` | `f0b459c` | 36219462920 |
+| SEC-001 production security review | #63 | `7b434ca` | `a05f40e` | 36219474671 |
+| MIG-002 migration guarantee | #64 | `fb5c862` | `5f81eb3` | 36258757061 |
+| COMP-001 protocol compatibility | #65 | `5cbfbd8` | `9553de6` | 36384231078 |
+| OBS-001 diagnostics export | #66 | `84b9c64` | `48bf288` | 36396045909 |
+| UPD-001 update check | #67 | `8012ed9` | `1cd4684` | 36399789011 |
+
+Product surface touched (11 files, +3642/−19): the release workflow + the
+verify script (REL-001); the security review docs (SEC-001, docs-only in
+product terms); the migration fixtures/tests (MIG-002, test-only); the
+protocol version-field semantics + the freeze test (COMP-001); the
+diagnostics collector + CLI export flag (OBS-001); the update-check module,
+palette/footer/settings affordances (UPD-001).
+
+## The rerun-at-head evidence (verified via the GitHub check-runs/jobs API on 2026-09-28)
+
+Every one of the six CI heads above shows BOTH matrix legs
+(`ubuntu-24.04`, `windows-latest`) `success`, with the full battery green
+(fmt, clippy `--locked --workspace --all-targets -D warnings`, the
+workspace test suite, the release build) and:
+
+- **"Windows FV journey smoke (FV-002 harness)" — `success` on all six
+  windows legs.** This CI step IS the FV-W01..W12 journey battery (per the
+  Wave-7 record above), so the Windows lane is fully re-evidenced at
+  `8012ed9`.
+- **"Linux desktop startup smoke" — `success` on all six ubuntu legs.**
+  The startup smoke (real app launch under the pinned CLI) is the
+  CI-embeddable Linux rerun; the full 21-scene LINUX_GUI_LAB battery's
+  execution evidence remains pinned at `4ed0a0c`, bridged to current main
+  by the additive-only audit below (no verified surface altered, so the
+  scene-level verdicts transfer).
+- Zero new failures anywhere in the six runs: every step on both legs
+  ended `success` or the leg-appropriate `skipped`.
+
+## The additive-surface audit (Lead judgment, recorded in the reconciliation §3)
+
+- Palette commands: 93 → 95 (`Export diagnostics` [OBS-001], `Check for
+  updates` [UPD-001]); the `PaletteCommand` enum carries 95 variants on
+  current main (verified by count at the `8012ed9` tree).
+- New UI surfaces: the footer update-status row and the updates settings
+  card (UPD-001); no existing row, card, or command altered.
+- Backend: two new commands (diagnostics export, update check) +
+  read-only storage preference accessors; `codex-protocol`'s change is the
+  version-field semantics with the frozen-surface table ENFORCED by the
+  COMP-001 freeze tests (additive by construction).
+- No FV scene asserts the palette command count or the footer row set;
+  the in-app palette registry/coverage tests were updated with the changes
+  and are green in the workspace battery at `8012ed9` (357 codex-app
+  tests, per the reconciliation §2).
+
+## Refreshed pin table
+
+| Lane | Verdict | Pinned SHA | Basis |
+|---|---|---|---|
+| **Linux desktop** | **GREEN** — 21/21 scenes at the original pin; startup smoke re-evidenced at every post-FV head | scenes `4ed0a0c` → bridged to `8012ed9` (additive-only audit; startup smoke green ×6) | original run.json lineage + the six CI runs |
+| **Windows desktop** | **GREEN** — the FV-002 journey battery rerun green at every post-FV head | `4ed0a0c` → `8012ed9` (the CI step is the harness; green ×6) | Actions runs listed above |
+| **Web client** | **PARTIAL — 1/14 green; FV-E01..E13 blocked on W-AUTH** | unchanged (`4ed0a0c` execution; the environment gap is not a code state) | the named gap below stands |
+
+## What this refresh does NOT claim
+
+- No new FV scene execution occurred in this pass (none was required — the
+  change set is additive-only and the CI-embedded harness reran green).
+- The GUI station passes (OBS-001 palette-export drive, UPD-001
+  palette/footer drive) remain the operator-owned gap named in the
+  reconciliation §4.3; CI smokes + the unit suites cover the code paths.
+- W-AUTH remains unrecovered; WEB-REL remains do-not-dispatch; the F13
+  production release audit remains sequenced behind the operator-owned
+  gaps per the reconciliation §5.
+
+## Refresh verdict
+
+The formal-verification gate now reads against `8012ed9`: **Linux GREEN
+(original 21/21 + additive-only bridge + startup-smoke re-evidence),
+Windows GREEN (journey battery re-evidenced ×6 at head), Web PARTIAL
+(1/14 + W-AUTH, unchanged)**. This closes the reconciliation's §5.2 item
+(the FV gate record refresh); the remaining release-readiness items are
+the three operator-owned gaps of reconciliation §4.
